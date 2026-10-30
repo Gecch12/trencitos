@@ -60,6 +60,7 @@ function escapeHTML(x) {
 }
 function status(text) {
   $("connection").textContent = text;
+  $("connection").dataset.online = text.includes("Conectado") ? "true" : "false";
 }
 function send(obj) {
   if (!sock || sock.readyState !== WebSocket.OPEN) {
@@ -224,15 +225,22 @@ $("join").onclick = () => {
 };
 $("start").onclick = () =>
   send({ type: "start", firstSeat: +$("firstSeat").value });
-$("copyLink").onclick = async () => {
+async function copyInvitation() {
   const url = location.origin + "/?room=" + room;
   try {
     await navigator.clipboard.writeText(url);
     $("copyLink").textContent = "✓ Copiado";
+    $("copyRoomInGame").textContent = "✓ Copiado";
+    setTimeout(() => {
+      $("copyRoomInGame").innerHTML = "↗ <span>Invitar</span>";
+    }, 2400);
   } catch {
     $("copyLink").textContent = url;
+    prompt("Copia el enlace de tu sala", url);
   }
-};
+}
+$("copyLink").onclick = copyInvitation;
+$("copyRoomInGame").onclick = copyInvitation;
 function act(type, other = {}) {
   send({ type: "action", action: { type, ...other } });
 }
@@ -244,15 +252,21 @@ function drawAllowed() {
 }
 function colorCard(c, count, click, disabled) {
   const b = document.createElement(click ? "button" : "div");
-  b.className = "traincard";
-  b.style.background = C[c];
-  b.style.color = c === "white" ? "#384859" : "white";
-  b.innerHTML =
-    (c === "wild"
-      ? '<svg viewBox="0 0 40 26" aria-hidden="true"><path d="M20 2l4.5 8.5L34 12l-7 6 2 9-9-4.7L11 27l2-9-7-6 9.5-1.5Z" fill="currentColor"/></svg>'
-      : '<svg viewBox="0 0 40 26" aria-hidden="true"><rect x="3" y="6" width="34" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M8 11h6m5 0h6m5 0h2" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="11" cy="22" r="2.5" fill="currentColor"/><circle cx="29" cy="22" r="2.5" fill="currentColor"/></svg>') +
-    `<small>${click ? escapeHTML(N[c]) : String(count)}</small>`;
+  b.className = "traincard suit-" + c;
+  const image = document.createElement("img");
+  image.src = "assets/cards/" + c + ".svg";
+  image.alt = N[c] || c;
+  image.draggable = false;
+  b.appendChild(image);
+  if (count !== null && count !== undefined) {
+    const tag = document.createElement("span");
+    tag.className = "cardcount";
+    tag.textContent = "×" + count;
+    b.appendChild(tag);
+  }
   if (click) {
+    b.type = "button";
+    b.title = "Robar carta " + N[c];
     b.disabled = disabled;
     b.onclick = click;
   }
@@ -325,6 +339,8 @@ function render() {
   $("deckinfo").textContent =
     `${game.deckCount} cartas ocultas · ${game.ticketDeckCount} destinos por robar`;
   $("drawstats").textContent = active ? `${game.drawCount}/2 cartas` : " ";
+  $("pass").classList.toggle("hidden", !active || game.drawCount > 0 ||
+    game.deckCount + game.discardCount > 0 || game.face.length > 0 || game.ticketDeckCount > 0);
   $("history").innerHTML = game.logs
     .map((t) => "<div>• " + escapeHTML(t) + "</div>")
     .join("");
@@ -334,6 +350,25 @@ function render() {
   applyZoom();
 }
 const LABEL_OFFSETS = RailMap.labels;
+function plural(n, word) {
+  return n + " " + word + (n === 1 ? "" : "s");
+}
+function routeRequirementText(r) {
+  const base = r.n - r.ferry;
+  if (r.color === "gray") {
+    if (r.ferry) return `${base ? plural(base, "carta") + " de un mismo color + " : ""}${plural(r.ferry, "locomotora")}`;
+    return `${plural(r.n, "carta")} de un mismo color`;
+  }
+  const colorName = N[r.color].toLowerCase();
+  if (r.ferry) return `${base ? plural(base, "carta") + " de color " + colorName + " + " : ""}${plural(r.ferry, "locomotora")}`;
+  return `${plural(r.n, "carta")} de color ${colorName}`;
+}
+function routeSummaryText(r) {
+  const tags = [];
+  if (r.tunnel) tags.push("Túnel");
+  if (r.ferry) tags.push("Ferri");
+  return `${CITIES[r.a][2]} — ${CITIES[r.b][2]} · ${plural(r.n, "espacio")}${tags.length ? " · " + tags.join(" · ") : ""} · Requiere ${routeRequirementText(r)}`;
+}
 function svgElements(svg) {
   return (tag, attrs = {}, parent = svg) => {
     const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
@@ -410,7 +445,7 @@ function renderBoard() {
       else if (i < r.ferry) drawTrainGlyph(el, slot, "#405351", true);
     });
     el("title", {}, group).textContent =
-      `${CITIES[r.a][2]} — ${CITIES[r.b][2]} · ${r.n} vagones${r.tunnel ? " · túnel" : ""}${r.ferry ? " · ferri: " + r.ferry + " locomotora(s)" : ""}${owned ? " · ocupada" : ""}`;
+      `${routeSummaryText(r)}${owned ? " · Ocupada" : ""}`;
     el("path", {
       d: geometry.d, class: "route-hit", fill: "none", stroke: "transparent",
       "stroke-width": 11, "pointer-events": "stroke",
@@ -501,14 +536,14 @@ function renderSelection() {
   $("paycolor").innerHTML = "";
   $("wildcount").innerHTML = "";
   $("routeinfo").textContent = r
-    ? `${CITIES[r.a][2]} — ${CITIES[r.b][2]} · ${r.n} vagones · ${r.tunnel ? "Túnel · " : ""}${r.ferry ? "Ferri: " + r.ferry + " locomotora(s) · " : ""}${r.color === "gray" ? "color libre" : N[r.color]}${r.owner !== null ? " · OCUPADA" : ""}`
+    ? `${routeSummaryText(r)}${r.owner !== null ? " · OCUPADA" : ""}`
     : stationCity
       ? `Estación en ${CITIES[stationCity][2]} · ${4 - p.stations} carta(s) del mismo color`
       : "Selecciona una ruta o una ciudad en el mapa.";
   const label = $("mapselection");
   if (label)
     label.textContent = r
-      ? `🚂 ${CITIES[r.a][2]} → ${CITIES[r.b][2]} · ${r.n} vagones${r.tunnel ? " · Túnel" : ""}${r.ferry ? " · Ferri" : ""}${r.owner !== null ? " · Ocupada" : ""}`
+      ? `🚂 ${routeSummaryText(r)}${r.owner !== null ? " · Ocupada" : ""}`
       : stationCity
         ? `🏠 Estación seleccionada: ${CITIES[stationCity][2]}`
         : "Selecciona una ruta o una ciudad. Las líneas resaltadas son interactuables.";
@@ -595,6 +630,7 @@ $("station").onclick = () => {
 };
 $("drawblind").onclick = () => act("draw_train", { index: -1 });
 $("drawtickets").onclick = () => act("draw_tickets");
+$("pass").onclick = () => act("pass");
 function showDialog(title, body, ticketDialog = false) {
   $("overlay").classList.remove("hidden");
   $("dialog").classList.toggle("ticket-dialog", ticketDialog);
@@ -786,6 +822,7 @@ function renderDialog() {
 
 function renderPracticeControls() {
   $("practiceControls").classList.toggle("hidden", !practiceMode || !game);
+  $("copyRoomInGame").classList.toggle("hidden", practiceMode);
   const finished = game?.phase === "finished";
   const online = sock?.readyState === WebSocket.OPEN;
   $("finishTest").classList.toggle("hidden", !!finished);
@@ -938,8 +975,7 @@ $("goMap").onclick = () =>
     .querySelector(".boardcard")
     .scrollIntoView({ behavior: "smooth", block: "start" });
 $("goCards").onclick = () =>
-  document
-    .querySelector(".sidebar .sidepanel")
+  $("handdock")
     .scrollIntoView({ behavior: "smooth", block: "start" });
 $("goBuild").onclick = () =>
   document

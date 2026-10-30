@@ -4,29 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#102638" />
-    <title>Rail Routes Europa · Salas privadas</title>
+    <title>Ferrovía Europa · Salas privadas</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
   </head>
   <body>
     <header class="top">
       <div class="brand">
-        <span class="mark">🚂</span>
+        <span class="mark"><img src="assets/favicon.svg" width="39" height="39" alt="" /></span>
         <div>
-          <strong>RAIL ROUTES</strong><small>EUROPA · edición privada</small>
+          <strong>FERROVÍA</strong><small>EUROPA · rutas &amp; aventuras</small>
         </div>
       </div>
       <div class="topright">
         <span class="pill" id="connection">Conectando…</span
-        ><span class="version">BETA 0.5</span>
+        ><span class="version">BETA 0.6.1</span>
       </div>
     </header>
     <div id="lobby" class="lobby">
       <div class="intro">
-        <span class="eyebrow">UNA AVENTURA EUROPEA</span>
-        <h1>Tu próxima partida empieza aquí.</h1>
+        <div class="hero-emblem">✦ <span>1901</span> ✦</div>
+        <span class="eyebrow">EL GRAN VIAJE FERROVIARIO</span>
+        <h1>Europa te espera.</h1>
         <p>
-          Comparte un enlace privado y compite por las mejores rutas
-          ferroviarias de Europa, con 2 a 5 jugadores desde su propio navegador.
+          Conecta ciudades, colecciona vagones y diseña tu gran viaje.
+          Una mesa privada para 2 a 5 jugadores, desde cualquier navegador.
         </p>
       </div>
       <div class="lobbycard">
@@ -83,11 +85,12 @@
         <div class="boardcard">
           <div class="maptop">
             <div class="maptitle">
-              <span class="eyebrow">EUROPA · 1901</span>
-              <h2>La red ferroviaria</h2>
+              <span class="eyebrow">FERROVÍA · EUROPA 1901</span>
+              <h2>El gran mapa ferroviario</h2>
             </div>
             <div class="boardtools">
               <span id="turntitle" class="turntitle"></span>
+              <button id="copyRoomInGame" class="copy-game" title="Copiar enlace privado">↗ <span>Invitar</span></button>
               <div class="zoomtools" aria-label="Controles del mapa">
                 <button
                   id="zoomout"
@@ -134,6 +137,21 @@
             </p>
           </div>
         </div>
+        <section class="handdock" id="handdock">
+          <div class="dockmain">
+            <div class="dockheading">
+              <div><span class="eyebrow">TU MANO</span><h3>Vagones disponibles</h3></div>
+              <span class="docktip">Cartas privadas · solo tú las ves</span>
+            </div>
+            <div id="hand" class="hand"></div>
+          </div>
+          <div class="docktickets">
+            <div class="dockheading">
+              <div><span class="eyebrow">TU VIAJE</span><h3>Destinos</h3></div>
+            </div>
+            <div id="mytickets" class="tickets-inline"></div>
+          </div>
+        </section>
         <div class="historycard">
           <b>Movimientos recientes</b>
           <div id="history"></div>
@@ -147,18 +165,16 @@
           <h2 id="myname"></h2>
           <p id="turnhint"></p>
           <div class="miniStats" id="stats"></div>
-          <h3>🃏 Mis cartas</h3>
-          <div id="hand" class="hand"></div>
-          <h3>🎫 Mis billetes de destino</h3>
-          <div id="mytickets"></div>
+          <p class="quick-reference">Un turno: robar 2 cartas, reclamar 1 ruta, construir 1 estación o tomar billetes.</p>
         </section>
         <section class="sidepanel">
           <div class="sectiontitle">
             <span>ROBOS</span><span id="drawstats"></span>
           </div>
+          <div class="marketsub">Cartas descubiertas</div>
           <div id="market" class="market"></div>
           <button id="drawblind" class="full secondary">
-            🎴 Robar carta oculta</button
+            🎴 Robar carta del mazo</button
           ><button id="drawtickets" class="full tertiary">
             ✉️ Nuevos destinos
           </button>
@@ -175,6 +191,7 @@
           ><button id="station" class="secondary full">
             Construir estación
           </button>
+          <button id="pass" class="tertiary full hidden">Pasar turno (sin jugadas)</button>
           <p class="smallmuted" id="buildhint"></p>
         </section>
         <details class="sidepanel help">

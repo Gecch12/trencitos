@@ -136,3 +136,110 @@ test("missing rooms return a recoverable code instead of leaving the client stuc
   peer.send({ type: "join", code: "GONE00", token: "expired" });
   assert.equal((await peer.next("error")).code, "ROOM_NOT_FOUND");
 });
+
+test("keepalive replies without game action", async () => {
+  const peer = await client();
+  peer.send({ type: "ping" });
+  assert.equal((await peer.next("pong")).type, "pong");
+});
+
+test("multiplayer enforces turn order, private views, token reconnection and started-room admission", async () => {
+  const host = await client();
+  host.send({ type: "create", name: "Ana" });
+  const lobby = await host.next("lobby");
+  assert.match(lobby.code, /^[A-Z0-9]{6}$/);
+  const guest = await client();
+  guest.send({ type: "join", code: lobby.code, name: "Beto" });
+  const joined = await guest.next("lobby");
+  assert.equal(joined.seat, 1);
+  assert.equal(joined.members.length, 2);
+  await host.next("lobby", (message) => message.members.length === 2);
+  host.send({ type: "start" });
+  const own = (await host.next("state")).game;
+  const other = (await guest.next("state")).game;
+  assert.equal(own.initial.length, 4);
+  assert.equal(other.initial, null);
+  assert.equal(own.hand.length, 4);
+  assert.equal(other.hand.length, 4);
+  assert.ok(!JSON.stringify(own).includes("shortDeck"));
+  assert.equal(own.players[1].hand, undefined);
+  assert.equal(own.players[1].tickets, undefined);
+
+  guest.send({ type: "action", action: { type: "choose_initial", indexes: [0, 1] } });
+  assert.match((await guest.next("error")).message, /turno/);
+  host.send({ type: "action", action: { type: "choose_initial", indexes: [0, 1] } });
+  await guest.next("state", (message) => message.game.current === 1);
+  guest.send({ type: "action", action: { type: "choose_initial", indexes: [0, 1] } });
+  await host.next("state", (message) => message.game.phase === "play");
+  guest.send({ type: "action", action: { type: "draw_train", index: -1 } });
+  assert.match((await guest.next("error")).message, /turno/);
+  host.send({ type: "action", action: { type: "draw_train", index: -1 } });
+  await host.next("state", (message) => message.game.drawCount === 1);
+  host.send({ type: "action", action: { type: "draw_train", index: -1 } });
+  await host.next("state", (message) => message.game.current === 1);
+
+  guest.close();
+  const replacement = await client();
+  replacement.send({ type: "join", code: lobby.code, token: joined.token });
+  assert.equal((await replacement.next("lobby")).seat, 1);
+  assert.equal((await replacement.next("state")).game.current, 1);
+  const outsider = await client();
+  outsider.send({ type: "join", code: lobby.code, name: "Late" });
+  assert.match((await outsider.next("error")).message, /ya comenzó/);
+});
+
+test("five-player room rejects a sixth player and respects the selected starting seat", async () => {
+  const host = await client();
+  host.send({ type: "create", name: "1" });
+  const lobby = await host.next("lobby");
+  for (let i = 2; i <= 5; i++) {
+    const guest = await client();
+    guest.send({ type: "join", code: lobby.code, name: String(i) });
+    assert.equal((await guest.next("lobby")).seat, i - 1);
+  }
+  const extra = await client();
+  extra.send({ type: "join", code: lobby.code, name: "6" });
+  assert.match((await extra.next("error")).message, /completa/);
+  host.send({ type: "start", firstSeat: 4 });
+  const state = (await host.next("state")).game;
+  assert.equal(state.current, 4);
+  assert.equal(state.phase, "initial");
+  assert.equal(state.players.length, 5);
+});
+
+function probeWebSocket(origin, frame) {
+  const net = require("node:net");
+  return new Promise((resolve, reject) => {
+    const socket = net.connect(port, "127.0.0.1");
+    let response = Buffer.alloc(0), sent = false;
+    socket.setTimeout(2000, () => socket.destroy(new Error("WebSocket was not rejected")));
+    socket.on("error", reject);
+    socket.on("close", () => resolve(response));
+    socket.on("connect", () => socket.write(
+      `GET /socket HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nOrigin: ${origin}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n`,
+    ));
+    socket.on("data", (chunk) => {
+      response = Buffer.concat([response, chunk]);
+      if (frame && !sent && response.includes("\r\n\r\n")) {
+        sent = true;
+        socket.write(frame);
+      }
+    });
+  });
+}
+
+test("WebSocket rejects foreign or malformed origins", async () => {
+  for (const origin of ["https://foreign.example", "invalid"]) {
+    assert.equal((await probeWebSocket(origin)).length, 0);
+  }
+});
+
+test("same-origin WebSocket rejects fragmented and reserved-bit frames", async () => {
+  for (const firstByte of [0x01, 0xc1]) {
+    const response = await probeWebSocket(`http://127.0.0.1:${port}`,
+      Buffer.from([firstByte, 0x80, 0, 0, 0, 0]));
+    assert.match(response.toString(), /^HTTP\/1\.1 101/);
+    const end = response.indexOf("\r\n\r\n") + 4;
+    assert.equal(response[end], 0x88);
+  }
+});

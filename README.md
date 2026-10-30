@@ -1,4 +1,4 @@
-# Rail Routes Europa — beta visual privada v0.5
+# Ferrovía Europa — beta privada v0.6.1
 
 Juego ferroviario multijugador web **no oficial**, para 2 a 5 jugadores. Incluye rutas, billetes y mecánicas de la versión base europea; el arte es propio y simplificado. No está afiliado a Days of Wonder ni Asmodee. No se distribuyen ilustraciones oficiales.
 
@@ -49,9 +49,12 @@ Se requieren al menos dos billetes iniciales y uno al robar destinos durante la 
 - `bots.js`, `practice.js`: decisiones automáticas y ciclo de vida de las salas temporales de pruebas.
 - `server.js`: servidor HTTP + WebSocket sin dependencias; salas privadas, validación de turnos, tokens de reconexión, difusión de vistas específicas por jugador.
 - `index.html`, `style.css`, `app.js`: interfaz de escritorio con mapa SVG original.
+- `assets/cards/*.svg`, `assets/ticket.svg`, `assets/favicon.svg`: ilustraciones vectoriales originales de las cartas, billetes y marca Ferrovía. `make_assets.py` permite regenerarlas.
 - `tests/`: pruebas del reglamento y de red, además de simulaciones de partidas completas.
 
-Las cartas del mazo y los billetes de los contrincantes **no** se envían a los navegadores. Las sesiones se guardan en un archivo JSON local configurable; por defecto `room-state.json`, fuera del paquete de distribución. Una sala inactiva caduca en 24 horas.
+Las cartas del mazo y los billetes de los contrincantes **no** se envían a los navegadores. Las salas multijugador se guardan en un archivo JSON local configurable; por defecto `room-state.json`, fuera del paquete de distribución. Una sala multijugador inactiva caduca en 24 horas. Las salas de pruebas se mantienen solo en memoria.
+
+El servidor funciona en una única instancia Node.js. Valida el origen de las conexiones WebSocket y rechaza tramas fragmentadas o con bits reservados. Comprueba las conexiones multijugador cada 25 segundos y cierra las que no responden durante más de 70 segundos, conservando su asiento para reconexión. Las salas con bots usan su propio control de desconexión y limpieza.
 
 ## Despliegue de prueba (similar a compartir un enlace)
 
@@ -83,18 +86,22 @@ Esta versión se entrega como **candidata de pruebas privadas**, no como versió
 
 ## Despliegue gratis en Render
 
-1. Crea un repositorio **privado** en GitHub y sube el contenido de esta carpeta (incluido `render.yaml`).
+1. Crea un repositorio **privado** en GitHub y sube el contenido de esta carpeta (incluidos `render.yaml`, `assets` y los módulos del mapa y de pruebas).
 2. En Render → New → Blueprint, conecta el repositorio y aplica el Blueprint.
 3. Verifica que el servicio esté en plan **Free** y espera a que `/healthz` responda.
 4. Comparte el enlace HTTPS generado. El anfitrión crea una sala; el resto se une desde su propio navegador.
 
 **Limitaciones del plan gratuito:** Render suspende el servicio tras 15 minutos sin tráfico entrante, incluyendo mensajes WebSocket. Cada reinicio o redeploy pierde archivos locales; por tanto, **una partida puede perderse**. No uses este despliegue para partidas que deban sobrevivir a reinicios sin antes incorporar almacenamiento persistente externo. Los códigos de sala no implican acceso autenticado; evita publicar el enlace ampliamente.
 
-## Interfaz v0.5
+## Interfaz Ferrovía v0.6.1
 
 - Mapa como elemento principal, zoom hasta 300% y modo ampliar a pantalla.
 - Etiquetas de ciudades reforzadas, rutas coloreadas con mayor contraste y selección visible.
 - Puntuaciones y vagones en barra compacta.
-- Motor de reglas y protocolo de sala idénticos a v0.4.
+- Cartas SVG ilustradas y billetes debajo del tablero; mercado y construcción en el lateral.
+- Botón **Invitar** durante partidas multijugador; las salas con bots siguen siendo privadas para su creador.
+- Descripción explícita del coste de cada ruta, incluidos los requisitos de locomotoras de los ferris.
+- Botón para pasar cuando se agotan cartas y destinos; el servidor comprueba que no quede otra acción legal.
+- Las pruebas cubren ferris, túneles y rutas dobles, además del mapa y del flujo con bots.
 
 - Durante una sala abierta, los navegadores envían un mensaje de mantenimiento cada 3 minutos para evitar la suspensión por inactividad. Esto no impide reinicios de Render ni sustituye almacenamiento persistente.

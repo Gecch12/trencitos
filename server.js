@@ -9,7 +9,8 @@ const PORT = Number(process.env.PORT || 3000),
   ROOT = __dirname;
 const STORE = process.env.STATE_FILE || path.join(ROOT, "room-state.json");
 const TTL = 24 * 60 * 60 * 1000,
-  rooms = new Map();
+  rooms = new Map(),
+  peers = new Set();
 try {
   let saved = JSON.parse(fs.readFileSync(STORE, "utf8"));
   for (const r of saved) {
@@ -56,12 +57,13 @@ const server = http.createServer((req, res) => {
     return res.end(JSON.stringify({ ok: true, rooms: rooms.size }));
   }
   const file = url.pathname === "/" ? "index.html" : url.pathname.slice(1);
-  if (!TYPES[url.pathname]) {
+  const asset = /^assets\/(?:cards\/[a-z]+|favicon|ticket)\.svg$/.test(file);
+  if ((!TYPES[url.pathname] && !asset) || (asset && !fs.existsSync(path.join(ROOT, file)))) {
     res.writeHead(404);
     return res.end("Not found");
   }
   res.writeHead(200, {
-    "Content-Type": TYPES[url.pathname],
+    "Content-Type": asset ? "image/svg+xml; charset=utf-8" : TYPES[url.pathname],
     "Cache-Control": "no-store",
     "X-Content-Type-Options": "nosniff",
     "Content-Security-Policy":
@@ -105,6 +107,7 @@ function createPeer(socket) {
     close(disconnectedAt = Date.now()) {
       if (!this.closed) {
         this.closed = true;
+        peers.delete(this);
         detachPeer(this, disconnectedAt);
         try {
           this.socket.end(wsFrame(8, ""));
@@ -112,6 +115,7 @@ function createPeer(socket) {
       }
     },
   };
+  peers.add(peer);
   socket.on("data", (chunk) => {
     peer.buffer = Buffer.concat([peer.buffer, chunk]);
     if (peer.buffer.length > 131072) return peer.close();
@@ -119,7 +123,7 @@ function createPeer(socket) {
       const b = peer.buffer,
         opcode = b[0] & 15,
         mask = !!(b[1] & 128);
-      if (!mask) return peer.close();
+      if ((b[0] & 0x80) === 0 || (b[0] & 0x70) !== 0 || !mask) return peer.close();
       let n = b[1] & 127,
         h = 2;
       if (n === 126) {
@@ -158,6 +162,7 @@ function createPeer(socket) {
     }
   });
   socket.on("close", () => {
+    peers.delete(peer);
     peer.closed = true;
     detachPeer(peer);
   });
@@ -326,6 +331,17 @@ server.on("upgrade", (req, socket) => {
     socket.destroy();
     return;
   }
+  const expectedHost = req.headers["x-forwarded-host"] || req.headers.host;
+  let originHost;
+  try {
+    originHost = req.headers.origin ? new URL(req.headers.origin).host : null;
+  } catch {
+    originHost = "invalid";
+  }
+  if (originHost && originHost !== expectedHost) {
+    socket.destroy();
+    return;
+  }
   if (
     url.pathname !== "/socket" ||
     !key ||
@@ -359,8 +375,25 @@ const heartbeat = setInterval(() => {
   }
 }, 5000);
 heartbeat.unref();
+// Multiplayer keeps its longer reconnect window; practice uses the timer above.
+const multiplayerHeartbeat = setInterval(() => {
+  for (const peer of peers) {
+    if (peer.closed || peer.room?.practice) continue;
+    if (Date.now() - peer.lastSeen > 70000) {
+      peer.close();
+      continue;
+    }
+    try {
+      peer.socket.write(wsFrame(9, ""));
+    } catch {
+      peer.close();
+    }
+  }
+}, 25000);
+multiplayerHeartbeat.unref();
 server.on("close", () => {
   clearInterval(heartbeat);
+  clearInterval(multiplayerHeartbeat);
   practice.close();
 });
 setInterval(
@@ -374,6 +407,6 @@ setInterval(
 ).unref();
 if (require.main === module)
   server.listen(PORT, "0.0.0.0", () =>
-    console.log("Rail Routes Europa (private): http://localhost:" + PORT),
+    console.log("Ferrovía Europa (private): http://localhost:" + PORT),
   );
 module.exports = { server, rooms };
