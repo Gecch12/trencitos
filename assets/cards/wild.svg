@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 278" role="img" aria-label="Carta ferroviaria LOCOMOTORA">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3f5471"/><stop offset="1" stop-color="#253048"/></linearGradient><pattern id="grain" width="17" height="17" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r=".8" fill="#ffd986" opacity=".12"/></pattern></defs>
+<rect width="200" height="278" rx="13" fill="url(#bg)"/><rect width="200" height="278" rx="13" fill="url(#grain)"/>
+<rect x="8" y="8" width="184" height="262" rx="10" fill="none" stroke="#ffd986" stroke-width="3" opacity=".85"/>
+<rect x="15" y="15" width="170" height="248" rx="7" fill="none" stroke="#ffd986" stroke-opacity=".45"/>
+<path d="M20 52H180M20 224H180" stroke="#ffd986" stroke-width="2" opacity=".65"/><path d="M32 60 l13 -13" stroke="#ffd986" stroke-opacity=".22" stroke-width="8"/><path d="M56 60 l13 -13" stroke="#ffd986" stroke-opacity=".22" stroke-width="8"/><path d="M80 60 l13 -13" stroke="#ffd986" stroke-opacity=".22" stroke-width="8"/><path d="M104 60 l13 -13" stroke="#ffd986" stroke-opacity=".22" stroke-width="8"/><path d="M128 60 l13 -13" stroke="#ffd986" stroke-opacity=".22" stroke-width="8"/><path d="M152 60 l13 -13" stroke="#ffd986" stroke-opacity=".22" stroke-width="8"/><path d="M176 60 l13 -13" stroke="#ffd986" stroke-opacity=".22" stroke-width="8"/><circle cx="147" cy="84" r="42" fill="#ffd986" opacity=".22"/>
+<g transform="translate(100 166)"><circle r="70" fill="#253048" stroke="#ffd986" stroke-width="6"/><circle r="52" stroke="#ffd986" stroke-opacity=".6" fill="none" stroke-width="2"/><path d="M0 -56 L12 -16 48 0 12 14 0 54 -12 14 -48 0 -12 -16Z" fill="#ffd986"/><circle r="9" fill="#253048"/></g>
+<rect x="31" y="233" width="138" height="22" rx="5" fill="#ffd986" opacity=".95"/>
+<text x="100" y="248" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="12" letter-spacing="2" fill="#253048">LOCOMOTORA</text>
+<text x="100" y="38" text-anchor="middle" font-family="Georgia,serif" font-size="15" font-weight="bold" letter-spacing="3" fill="#ffd986">FERROVÍA</text>
+</svg>

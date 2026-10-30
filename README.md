@@ -1,4 +1,4 @@
-# FERROVÍA EUROPA — v0.6 (private beta)
+# FERROVÍA EUROPA — v0.6.1 (private beta)
 
 A non-commercial, original-illustration railway connection game inspired by the rules of *Ticket to Ride: Europe*. This is an independent fan-made prototype; it is not affiliated with or endorsed by Days of Wonder/Asmodee. **No commercial board, card images, logos, or other official graphical assets are included.**
 
@@ -63,3 +63,8 @@ No remote SDKs or frontend dependencies. Every gameplay action is validated serv
 ## Original vector art
 
 The entire `assets` directory contains SVG illustrations authored specifically for this project. `make_assets.py` can regenerate the card collection and ticket motifs; no third-party images need to be downloaded. The UI and card theme are purposefully distinct from official art.
+
+
+## Route fidelity
+
+This build adds explicit integrity checks for official Europe routes, including Essen–København (double gray ferry, 3 with 1 locomotive each), København–Stockholm (3 yellow / 3 white), London–Dieppe (double gray ferry), Palermo–Smyrna (6 gray with 2 locomotive ferry requirement), and several tunnel/double-route pairs.

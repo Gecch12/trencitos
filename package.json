@@ -1,6 +1,6 @@
 {
   "name": "ferrovia-europa-private",
-  "version": "0.6.0-beta",
+  "version": "0.6.1-beta",
   "description": "Original-asset browser railway game with private authoritative WebSocket rooms for 2\u20135 players",
   "private": true,
   "engines": {

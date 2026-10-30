@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 278" role="img" aria-label="Carta ferroviaria VERDE">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#286d61"/><stop offset="1" stop-color="#1b4a45"/></linearGradient><pattern id="grain" width="17" height="17" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r=".8" fill="#9bc9a5" opacity=".12"/></pattern></defs>
+<rect width="200" height="278" rx="13" fill="url(#bg)"/><rect width="200" height="278" rx="13" fill="url(#grain)"/>
+<rect x="8" y="8" width="184" height="262" rx="10" fill="none" stroke="#9bc9a5" stroke-width="3" opacity=".85"/>
+<rect x="15" y="15" width="170" height="248" rx="7" fill="none" stroke="#9bc9a5" stroke-opacity=".45"/>
+<path d="M20 52H180M20 224H180" stroke="#9bc9a5" stroke-width="2" opacity=".65"/><path d="M32 60 l13 -13" stroke="#9bc9a5" stroke-opacity=".22" stroke-width="8"/><path d="M56 60 l13 -13" stroke="#9bc9a5" stroke-opacity=".22" stroke-width="8"/><path d="M80 60 l13 -13" stroke="#9bc9a5" stroke-opacity=".22" stroke-width="8"/><path d="M104 60 l13 -13" stroke="#9bc9a5" stroke-opacity=".22" stroke-width="8"/><path d="M128 60 l13 -13" stroke="#9bc9a5" stroke-opacity=".22" stroke-width="8"/><path d="M152 60 l13 -13" stroke="#9bc9a5" stroke-opacity=".22" stroke-width="8"/><path d="M176 60 l13 -13" stroke="#9bc9a5" stroke-opacity=".22" stroke-width="8"/><circle cx="147" cy="84" r="42" fill="#9bc9a5" opacity=".22"/>
+<g stroke="#9bc9a5" stroke-linejoin="round" stroke-width="5" fill="#1b4a45">
+    <path d="M40 176 H166 v17 H37 Z"/><path d="M59 139 h80 l16 40 H45 Z"/>
+    <path d="M73 141 v-29 h35 v29"/><path d="M120 141 v-47 h22 v47"/>
+    <path d="M48 158 H152" stroke-width="4"/><path d="M63 153 v18 M98 153 v18 M130 153 v18" stroke-width="3"/>
+    </g><circle cx="62" cy="202" r="13" fill="#1b4a45" stroke="#9bc9a5" stroke-width="5"/><circle cx="62" cy="202" r="4" fill="#9bc9a5"/><circle cx="100" cy="202" r="13" fill="#1b4a45" stroke="#9bc9a5" stroke-width="5"/><circle cx="100" cy="202" r="4" fill="#9bc9a5"/><circle cx="138" cy="202" r="13" fill="#1b4a45" stroke="#9bc9a5" stroke-width="5"/><circle cx="138" cy="202" r="4" fill="#9bc9a5"/><circle cx="97" cy="107" r="12" fill="#9bc9a5" opacity="0.42"/><circle cx="113" cy="90" r="15" fill="#9bc9a5" opacity="0.33999999999999997"/><circle cx="129" cy="73" r="18" fill="#9bc9a5" opacity="0.26"/>
+<rect x="31" y="233" width="138" height="22" rx="5" fill="#9bc9a5" opacity=".95"/>
+<text x="100" y="248" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="12" letter-spacing="2" fill="#1b4a45">VERDE</text>
+<text x="100" y="38" text-anchor="middle" font-family="Georgia,serif" font-size="15" font-weight="bold" letter-spacing="3" fill="#9bc9a5">FERROVÍA</text>
+</svg>

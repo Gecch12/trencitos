@@ -48,6 +48,22 @@ function render(){if(!game)return;
  $('deckinfo').textContent=`${game.deckCount} cartas ocultas · ${game.ticketDeckCount} destinos por robar`;$('drawstats').textContent=active?`${game.drawCount}/2 cartas`:' ';$('pass').classList.toggle('hidden',!active||game.deckCount+game.discardCount>0||game.face.length>0||game.ticketDeckCount>0);$('history').innerHTML=game.logs.map(t=>'<div>• '+escapeHTML(t)+'</div>').join('');
  renderBoard();renderSelection();renderDialog();applyZoom()}
 const LABEL_OFFSETS={EDI:[0,-18],LON:[-18,-16],DIE:[-16,25],BRE:[-15,-16],PAR:[-18,-23],PAM:[-12,-18],MAD:[-10,-20],LIS:[-14,-19],CAD:[-5,25],BAR:[17,18],AMS:[-13,-20],BRU:[-18,-17],ESS:[16,-16],FRA:[15,-22],MUN:[18,-18],ZUR:[-15,-21],MAR:[-20,25],VEN:[17,-18],ROM:[-15,25],BRI:[16,-19],PAL:[0,27],STO:[0,-18],COP:[0,-17],BER:[0,-19],VIE:[-15,-20],BUD:[20,-15],ZAG:[-20,27],SAR:[-19,26],SOF:[18,22],ATH:[0,27],RIG:[15,-18],DAN:[0,-19],WIL:[16,-16],WAR:[-12,25],BUC:[0,-19],CON:[0,25],ANG:[0,-20],SMY:[-5,25],PET:[0,-19],MOS:[0,-19],SMO:[18,-17],KIE:[-12,24],KHA:[17,-18],ROS:[16,-18],SEV:[-20,-18],SOC:[19,23],ERZ:[0,27]};
+function plural(n,word){return n+' '+word+(n===1?'':'s')}
+function routeMarker(r){let parts=[];if(r.tunnel)parts.push('▲');if(r.ferry)parts.push('⚓'.repeat(r.ferry));return parts.join(' ')}
+function routeRequirementText(r){
+ const base=r.n-r.ferry;
+ if(r.color==='gray'){
+  if(r.ferry)return `${base?plural(base,'carta')+' de un mismo color + ':''}${plural(r.ferry,'locomotora')}`;
+  return `${plural(r.n,'carta')} de un mismo color`;
+ }
+ const colorName=N[r.color].toLowerCase();
+ if(r.ferry)return `${base?plural(base,colorName):''}${base?' + ':''}${plural(r.ferry,'locomotora')}`;
+ return plural(r.n,colorName);
+}
+function routeSummaryText(r){
+ const tags=[];if(r.tunnel)tags.push('Túnel');if(r.ferry)tags.push('Ferri');
+ return `${CITIES[r.a][2]} — ${CITIES[r.b][2]} · ${r.n} espacios${tags.length?' · '+tags.join(' · '):''} · Requiere ${routeRequirementText(r)}`
+}
 function renderBoard(){const svg=$('board'),S='http://www.w3.org/2000/svg';svg.innerHTML='';const el=(tag,attrs={},parent=svg)=>{const e=document.createElementNS(S,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);parent.appendChild(e);return e};
  const defs=el('defs');let grad=el('linearGradient',{id:'ocean',x1:0,y1:0,x2:1,y2:1},defs);el('stop',{offset:'0%','stop-color':'#bbd5d8'},grad);el('stop',{offset:'100%','stop-color':'#dae2de'},grad);el('rect',{width:1320,height:790,fill:'url(#ocean)'});
  // Watercolor texture made from original vector ornaments, no commercial game art.
@@ -70,13 +86,13 @@ function renderBoard(){const svg=$('board'),S='http://www.w3.org/2000/svg';svg.i
  const g=el('g',{'class':'route-group'});const group=el('g',{transform:`translate(${ox} ${oy})`},g);let pad=20,usable=dist-2*pad,segment=Math.max(8,usable/r.n-4);
  el('line',{x1:x+dx*pad/dist,y1:y+dy*pad/dist,x2:xx-dx*pad/dist,y2:yy-dy*pad/dist,stroke:'#536269','stroke-opacity':.55,'stroke-width':16},group);
  for(let j=0;j<r.n;j++){let center=pad+(j+.5)*usable/r.n,px=x+dx*center/dist,py=y+dy*center/dist;el('rect',{x:px-segment/2,y:py-7.6,width:segment,height:15.2,rx:3.7,transform:`rotate(${angle} ${px} ${py})`,fill:r.owner!==null?game.players[r.owner].color:r.color==='gray'?'#f9faf5':C[r.color],stroke:selected===r.id?'#ffb02e':r.owner!==null?'#fff':'#254559','stroke-width':selected===r.id?4:1.8,'filter':selected===r.id?'url(#selected-glow)':''},group)}
- const middle=el('text',{x:(x+xx)/2+ox,y:(y+yy)/2+oy-12,'text-anchor':'middle','font-size':16,'font-weight':900,fill:'#163b52',stroke:'#fff9e8','stroke-width':4,'paint-order':'stroke'},g);middle.textContent=(r.tunnel?'▲':'')+(r.ferry?'⚓'+r.ferry:'');
- const hit=el('line',{x1:x+dx*pad/dist,y1:y+dy*pad/dist,x2:xx-dx*pad/dist,y2:yy-dy*pad/dist,stroke:'transparent','stroke-width':28},group);el('title',{},g).textContent=`${CITIES[r.a][2]} — ${CITIES[r.b][2]} · ${r.n} vagones${r.tunnel?' · túnel':''}${r.ferry?' · ferri':''}${r.owner!==null?' · ocupada':''}`;
+ const marker=routeMarker(r);if(marker){const middle=el('text',{x:(x+xx)/2+ox,y:(y+yy)/2+oy-12,'text-anchor':'middle','font-size':16,'font-weight':900,fill:'#163b52',stroke:'#fff9e8','stroke-width':4,'paint-order':'stroke'},g);middle.textContent=marker}
+ const hit=el('line',{x1:x+dx*pad/dist,y1:y+dy*pad/dist,x2:xx-dx*pad/dist,y2:yy-dy*pad/dist,stroke:'transparent','stroke-width':28},group);el('title',{},g).textContent=`${routeSummaryText(r)}${r.owner!==null?' · Ocupada':''}`;
  hit.addEventListener('click',()=>{if(!amIUp()||game.drawCount)return;selected=r.id;stationCity=null;renderSelection();renderBoard()})}
  for(const [key,[x,y,name]] of Object.entries(CITIES)){const occupant=game.players.findIndex(p=>p.placed.includes(key));el('circle',{cx:x,cy:y,r:14,fill:'#ffffff','fill-opacity':.62});let cir=el('circle',{cx:x,cy:y,r:9,fill:occupant>=0?game.players[occupant].color:'#fffdf2',stroke:stationCity===key?'#bc633c':'#36546a','stroke-width':stationCity===key?4:2.6,'class':'city-circle'});el('title',{},cir).textContent=name;cir.addEventListener('click',()=>{if(!amIUp()||game.drawCount)return;stationCity=key;selected=null;renderSelection();renderBoard()});const pos=LABEL_OFFSETS[key]||[0,-19];const t=el('text',{x:x+pos[0],y:y+pos[1],'text-anchor':pos[0]>9?'start':pos[0]<-9?'end':'middle','class':'city-label'});t.textContent=name;if(occupant>=0){el('text',{x:x+14,y:y+5,'font-size':16,'font-weight':900,fill:game.players[occupant].color,stroke:'#fff','stroke-width':3,'paint-order':'stroke'}).textContent='⌂'}}
 }
-function renderSelection(){const active=amIUp()&&!game.drawCount;const r=selected===null?null:game.routes[selected],p=game.players[seat];const previousColor=$('paycolor').value;$('paycolor').innerHTML='';$('wildcount').innerHTML='';$('routeinfo').textContent=r?`${CITIES[r.a][2]} — ${CITIES[r.b][2]} · ${r.n} vagones · ${r.tunnel?'Túnel · ':''}${r.ferry?'Ferri: '+r.ferry+' locomotora(s) · ':''}${r.color==='gray'?'color libre':N[r.color]}${r.owner!==null?' · OCUPADA':''}`:stationCity?`Estación en ${CITIES[stationCity][2]} · ${4-p.stations} carta(s) del mismo color`:'Selecciona una ruta o una ciudad en el mapa.';
- const label=$('mapselection');if(label)label.textContent=r?`🚂 ${CITIES[r.a][2]} → ${CITIES[r.b][2]} · ${r.n} vagones${r.tunnel?' · Túnel':''}${r.ferry?' · Ferri':''}${r.owner!==null?' · Ocupada':''}`:stationCity?`🏠 Estación seleccionada: ${CITIES[stationCity][2]}`:'Selecciona una ruta o una ciudad. Las líneas resaltadas son interactuables.';
+function renderSelection(){const active=amIUp()&&!game.drawCount;const r=selected===null?null:game.routes[selected],p=game.players[seat];const previousColor=$('paycolor').value;$('paycolor').innerHTML='';$('wildcount').innerHTML='';$('routeinfo').textContent=r?`${routeSummaryText(r)}${r.owner!==null?' · OCUPADA':''}`:stationCity?`Estación en ${CITIES[stationCity][2]} · ${4-p.stations} carta(s) del mismo color`:'Selecciona una ruta o una ciudad en el mapa.';
+ const label=$('mapselection');if(label)label.textContent=r?`🚂 ${routeSummaryText(r)}${r.owner!==null?' · Ocupada':''}`:stationCity?`🏠 Estación seleccionada: ${CITIES[stationCity][2]}`:'Selecciona una ruta o una ciudad. Las líneas resaltadas son interactuables.';
  const opts=r?(r.color==='gray'?[...COLORS,'wild']:[r.color,'wild']):[...COLORS,'wild'];for(let c of opts){const o=document.createElement('option');o.value=c;o.textContent=N[c];$('paycolor').appendChild(o)}
  if(opts.includes(previousColor))$('paycolor').value=previousColor;$('paycolor').onchange=renderSelection;$('claim').disabled=!active||!r||r.owner!==null||p.trains<r.n||game.routes.some(x=>r.id!==x.id&&x.owner!==null&&x.a===r.a&&x.b===r.b&&(x.owner===seat||game.players.length<=3));
  $('station').disabled=!active||!stationCity||p.stations===0||game.players.some(p=>p.placed.includes(stationCity));updateWild();$('buildhint').textContent=r&&r.tunnel?'En túneles se revelan 3 cartas; puedes aceptar o rechazar el coste extra.':r&&r.ferry?'Se necesitan locomotoras por cada símbolo ⚓.':'Las locomotoras sustituyen cualquier color.'}

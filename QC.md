@@ -1,8 +1,8 @@
-# Quality check — Ferrovía Europa v0.6
+# Quality check — Ferrovía Europa v0.6.1
 
 ## Automated QA (executed)
 
-**28/28 passing** with `npm test` on Node.js 22.16.0, October 30, 2026.
+**29/29 passing** with `npm test` on Node.js 22.16.0, October 30, 2026.
 
 - Europe data cardinality: 47 cities, 101 routes, 40 regular tickets, six long tickets.
 - Setup, initial ticket selection, deck composition and card conservation.
@@ -34,3 +34,10 @@
 ## Deployment recommendation
 
 **Status:** private beta for controlled testing; **not** stable production. Working server, rules and SVG assets. Do not rely on Render free local disk for game persistence.
+
+
+## Added in v0.6.1
+
+- Official-route integrity test coverage for key ferries, tunnels and double-route colors.
+- UI wording now spells out ferry requirements as e.g. "4 cartas de un mismo color + 2 locomotoras" instead of only showing the ferry icon count.
+- Board preview refreshed so tunnel/ferry markers are easier to spot.
