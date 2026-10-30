@@ -42,7 +42,7 @@ function action(g,seat,msg){if(!msg||typeof msg.type!=='string')fail('Acción in
   if(msg.type!=='keep_tickets')fail('Debes elegir tus billetes.');
   const ix=indices(msg.indexes,g.pending.tickets.length,1);p.tickets.push(...ix.map(i=>g.pending.tickets[i]));
   const rejected=g.pending.tickets.filter((_,i)=>!ix.includes(i));g.shortDeck.push(...rejected);
-  next(g);return;
+  g.phase='play';next(g);return;
  }
  if(g.phase==='tunnel'){
   if(!['pay_tunnel','decline_tunnel'].includes(msg.type))fail('Resuelve el túnel antes de continuar.');
