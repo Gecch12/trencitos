@@ -1,0 +1,1 @@
+{"name":"rail-routes-europa-private","version":"0.4.0-beta","description":"Private multiplayer railway route board game, 2-5 players","private":true,"engines":{"node":">=20"},"scripts":{"start":"node server.js","test":"node --test tests/*.test.js"},"license":"UNLICENSED"}

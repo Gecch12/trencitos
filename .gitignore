@@ -1,0 +1,5 @@
+room-state.json
+room-state.json.tmp
+node_modules/
+*.log
+.DS_Store

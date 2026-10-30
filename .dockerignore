@@ -1,0 +1,5 @@
+preview-*.png
+room-state.json
+*.zip
+tests
+.git
