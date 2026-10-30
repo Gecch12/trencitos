@@ -1,76 +1,65 @@
-# Rail Routes Europa — beta visual privada v0.5
+# FERROVÍA EUROPA — v0.6 (private beta)
 
-Juego ferroviario multijugador web **no oficial**, para 2 a 5 jugadores. Incluye rutas, billetes y mecánicas de la versión base europea; el arte es propio y simplificado. No está afiliado a Days of Wonder ni Asmodee. No se distribuyen ilustraciones oficiales.
+A non-commercial, original-illustration railway connection game inspired by the rules of *Ticket to Ride: Europe*. This is an independent fan-made prototype; it is not affiliated with or endorsed by Days of Wonder/Asmodee. **No commercial board, card images, logos, or other official graphical assets are included.**
 
-## Uso local para pruebas
+## Run locally
 
-Requiere **Node.js 20 o superior**. No hay dependencias externas.
+Requirements: **Node.js 20 or newer**, no npm dependencies or external service required.
 
 ```bash
-npm test
 npm start
 ```
 
-Abre `http://localhost:3000` en tu navegador. Para probar con otro jugador abre una ventana privada y únete mediante el código mostrado; para otros dispositivos, utiliza un servidor accesible desde la red.
+Open `http://localhost:3000`. Create a room and copy its invite URL. Other devices on the same Wi-Fi may use `http://YOUR-LAN-IP:3000` (the Windows/macOS firewall may ask you to allow inbound connections). Hosted HTTPS uses secure `wss://` automatically.
 
-## Flujo de partida
+Run validation:
 
-1. El anfitrión crea sala, comparte enlace y espera 2–5 jugadores.
-2. El anfitrión indica quién visitó más países europeos para iniciar.
-3. Cada jugador elige al menos 2 de sus 4 billetes iniciales.
-4. En cada turno: dos cartas de tren (salvo locomotora visible), construir ruta, sacar destinos o colocar estación.
-5. Una vez activada la última ronda, todos juegan una vez más, incluido el jugador que la activó. Se calculan destinos, estaciones y ruta más larga.
+```bash
+npm test
+```
 
-## Arquitectura
+## Publish free to Render
 
-- `data.js`: 47 ciudades, 101 rutas, 40 billetes ordinarios y 6 largos.
-- `engine.js`: reglas deterministas y puntuación, ejecutadas exclusivamente por el servidor.
-- `server.js`: servidor HTTP + WebSocket sin dependencias; salas privadas, validación de turnos, tokens de reconexión, difusión de vistas específicas por jugador.
-- `index.html`, `style.css`, `app.js`: interfaz responsive con mapa SVG original.
-- `tests/`: pruebas del reglamento y de red, además de simulaciones de partidas completas.
+1. Create a **private GitHub repository**, upload the contents of this ZIP, including `render.yaml`, `assets`, `index.html`, `server.js`.
+2. Go to https://dashboard.render.com → **New → Blueprint**; connect the repository and accept the free web service. Alternatively create a Web Service (`npm start`, Node runtime, free tier).
+3. Wait for deployment, visit the `https://...onrender.com` URL, create a room and share its link.
+4. A room can host **2–5 people**, each in a separate browser/device.
 
-Las cartas del mazo y los billetes de los contrincantes **no** se envían a los navegadores. Las sesiones se guardan en un archivo JSON local configurable; por defecto `room-state.json`, fuera del paquete de distribución. Una sala inactiva caduca en 24 horas.
+**Important:** Render Free uses an ephemeral filesystem. State is checkpointed to a local JSON file to survive *in-process* recovery, but **game rooms can disappear after a Render instance restart or redeploy**. Free services may sleep when inactive, and network interruptions can occur. Treat this as a beta and finish a game in one session. Use persistent external storage before expecting long-running games to survive restarts.
 
-## Despliegue de prueba (similar a compartir un enlace)
+## Architecture
 
-Se necesita un **servicio Node con WebSockets**, como Railway, Render o Fly.io. No basta con publicar el HTML en Netlify sin backend.
+```
+index.html, style.css, app.js        browser UI, SVG renderer, reconnect and private hand
+assets/cards/*.svg                  10 custom vector railway cards, locomotive, card back
+assets/ticket.svg, favicon.svg      original ticket motif and product icon
+data.js                             47 cities, 101 European routes, 46 destination tickets
+engine.js                           server-only, authoritative rules and scoring
+server.js                           HTTP static assets, WebSocket upgrade/frames,
+                                    private rooms, reconnect tokens, state filtering
+render.yaml                         free Render Blueprint setup
+tests/*.test.js                     engine, integration, deployment and simulations
+```
 
-- Publica estos archivos en un repositorio **privado**.
-- Configura el comando de inicio `npm start` o utiliza el `Dockerfile`.
-- Permite que la plataforma asigne la variable `PORT`.
-- Configura HTTPS/WSS (normalmente proporcionado por la plataforma).
-- Usa un volumen persistente para `STATE_FILE=/data/rooms.json`; sin almacenamiento persistente, un reinicio o despliegue puede perder las partidas.
-- El enlace público será una URL HTTPS para crear salas e invitar amigos. Los códigos de sala permiten entrar solo hasta empezar; los participantes se reconectan con un token guardado en ese navegador.
+No remote SDKs or frontend dependencies. Every gameplay action is validated server-side. The browser receives only its own hand, its own ticket selection, public player counts/points and public routes. A random seat token is kept in localStorage to rejoin an in-progress room on that browser. A new visitor cannot join once the game has started.
 
-**No es necesario instalar software en los dispositivos de los invitados.**
+## Rules covered
 
-## QA y limitaciones
+- 2–5 players, 45 trains and three stations each, 110 train cards, 46 tickets (six long).
+- Initial deal: four train cards, three regular destinations and one long destination; keep at least two.
+- Two train-card draws (a face-up locomotive ends the action), destination draws (keep at least one), claim route or build station.
+- Colored and gray routes, tunnel reveal and optional surcharge, ferry locomotive costs, double-route restrictions for 2–3 versus 4–5 players.
+- Destination completion with stations limited to one opponent route per station, final station bonus, European Express longest path (including tied paths), final round and tie-breakers.
+- No spectators, bots, chat or account system yet.
 
-Ejecuta `npm test` para revisar las reglas y la red. Ver `QC.md`.
+## Known beta limitations
 
-Esta versión se entrega como **candidata de pruebas privadas**, no como versión oficialmente certificada ni desplegada. Falta una prueba de aceptación manual completa con 2–5 dispositivos físicos, además de pruebas de carga prolongadas y revisión de accesibilidad. La cartografía SVG es una representación funcional propia, no un facsímil artístico del tablero original. Se recomienda usarla únicamente en círculos privados y gestionar permisos si alguna vez se pretende distribución pública.
+- 47-city diagram is a **stylized European map**, not the official copyrighted board. The central-European routes are dense; use the zoom and enlarged-board controls.
+- Runs as a **single Node.js instance**; multiple horizontally scaled servers would need a shared room store and message transport.
+- Rooms have a 24-hour inactivity TTL and no permanent cloud state. An active in-progress game may still be lost on an instance restart.
+- Browser end-to-end QA on real devices is not complete; see `QC.md` before inviting five players.
+- For an unattended public deployment, a production WebSocket library such as `ws`, a database, load testing, and security review are recommended. The beta includes a small dependency-free WebSocket transport with masked-frame, same-origin and message-size checks.
 
-### Fuentes de verificación
+## Original vector art
 
-- Reglamento inglés de *Ticket to Ride: Europe* (edición 2015): `https://games-for-you.oozmi-cdn.com/products/db57155a-6ffe-45e5-ad38-93b0ee738d8a/pdfs/ticket-to-ride-europe_rulebook_en.pdf`
-- Datos de red y tipos de ruta estudiados: `https://github.com/rkdarst/board-game-networks/blob/master/data/ticket-to-ride/europe.yaml`
-- Comprobación de destinos: `https://github.com/leonsi7/ticket-to-ride-europe/blob/main/destinations.csv`
-
-
-## Despliegue gratis en Render
-
-1. Crea un repositorio **privado** en GitHub y sube el contenido de esta carpeta (incluido `render.yaml`).
-2. En Render → New → Blueprint, conecta el repositorio y aplica el Blueprint.
-3. Verifica que el servicio esté en plan **Free** y espera a que `/healthz` responda.
-4. Comparte el enlace HTTPS generado. El anfitrión crea una sala; el resto se une desde su propio navegador.
-
-**Limitaciones del plan gratuito:** Render suspende el servicio tras 15 minutos sin tráfico entrante, incluyendo mensajes WebSocket. Cada reinicio o redeploy pierde archivos locales; por tanto, **una partida puede perderse**. No uses este despliegue para partidas que deban sobrevivir a reinicios sin antes incorporar almacenamiento persistente externo. Los códigos de sala no implican acceso autenticado; evita publicar el enlace ampliamente.
-
-## Interfaz v0.5
-
-- Mapa como elemento principal, zoom hasta 300% y modo ampliar a pantalla.
-- Etiquetas de ciudades reforzadas, rutas coloreadas con mayor contraste y selección visible.
-- Puntuaciones y vagones en barra compacta; botones móviles para saltar entre mapa, cartas y construcción.
-- Motor de reglas y protocolo de sala idénticos a v0.4.
-
-- Durante una sala abierta, los navegadores envían un mensaje de mantenimiento cada 3 minutos para evitar la suspensión por inactividad. Esto no impide reinicios de Render ni sustituye almacenamiento persistente.
+The entire `assets` directory contains SVG illustrations authored specifically for this project. `make_assets.py` can regenerate the card collection and ticket motifs; no third-party images need to be downloaded. The UI and card theme are purposefully distinct from official art.

@@ -3,12 +3,12 @@ const $=id=>document.getElementById(id);
 const C={red:'#ce554c',blue:'#4d85c3',green:'#46966d',yellow:'#caa23e',black:'#35414d',white:'#dce2e0',orange:'#df8b44',purple:'#956dae',wild:'#6d647f',gray:'#9ba7a8'};
 const N={red:'Rojo',blue:'Azul',green:'Verde',yellow:'Amarillo',black:'Negro',white:'Blanco',orange:'Naranja',purple:'Morado',wild:'Locomotora'};
 let sock=null,game=null,seat=-1,room='',token='',members=[],host=false,selected=null,stationCity=null,attempted=false;
-let zoom=window.innerWidth<650?2.4:1, boardExpanded=false, mapCentered=false;
+let zoom=window.innerWidth<650?2.25:1, boardExpanded=false, mapCentered=false;
 let pendingChoiceKey=null,dialogOpen=false,desiredRoom=new URLSearchParams(location.search).get('room')||'';
 $('code').value=desiredRoom.toUpperCase();
 const savedName=localStorage.getItem('rr-name');if(savedName)$('nickname').value=savedName;
 function escapeHTML(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function status(text){$('connection').textContent=text}
+function status(text){$('connection').textContent=text;$('connection').dataset.online=text.includes('Conectado')?'true':'false'}
 function send(obj){if(!sock||sock.readyState!==WebSocket.OPEN){error('Sin conexión.');return}sock.send(JSON.stringify(obj))}
 function error(s){$('lobbyError').textContent=s;let el=$('errorMsg');if(el)el.textContent=s;status('⚠ '+s.slice(0,35))}
 function identityKey(code){return 'rr-room-'+code}
@@ -22,11 +22,19 @@ function renderLobby(){ $('roompanel').classList.remove('hidden');$('roomcode').
 $('create').onclick=()=>{if(room)return error('Ya perteneces a una sala.');attempted=false;send({type:'create',name:$('nickname').value})};
 $('join').onclick=()=>{if(room)return error('Ya perteneces a una sala.');desiredRoom=$('code').value.trim().toUpperCase();if(!desiredRoom)return error('Introduce un código.');attempted=true;send({type:'join',code:desiredRoom,token:localStorage.getItem(identityKey(desiredRoom))||undefined,name:$('nickname').value})};
 $('start').onclick=()=>send({type:'start',firstSeat:+$('firstSeat').value});
-$('copyLink').onclick=async()=>{const url=location.origin+'/?room='+room;try{await navigator.clipboard.writeText(url);$('copyLink').textContent='✓ Copiado'}catch{$('copyLink').textContent=url}};
+async function copyInvitation(){const url=location.origin+'/?room='+room;try{await navigator.clipboard.writeText(url);$('copyLink').textContent='✓ Copiado';$('copyRoomInGame').textContent='✓ Copiado';setTimeout(()=>{$('copyRoomInGame').innerHTML='↗ <span>Invitar</span>'},2400)}catch{prompt('Copia el enlace de tu sala',url)}}
+$('copyLink').onclick=copyInvitation;
+$('copyRoomInGame').onclick=copyInvitation;
 function act(type,other={}){send({type:'action',action:{type,...other}})}
 function amIUp(){return game&&game.current===seat&&game.phase==='play'}
 function drawAllowed(){return amIUp()&&(game.drawCount<2)}
-function colorCard(c,count,click,disabled){const b=document.createElement(click?'button':'div');b.className='traincard';b.style.background=C[c];b.style.color=c==='white'?'#384859':'white';b.innerHTML=(c==='wild'?'<svg viewBox="0 0 40 26" aria-hidden="true"><path d="M20 2l4.5 8.5L34 12l-7 6 2 9-9-4.7L11 27l2-9-7-6 9.5-1.5Z" fill="currentColor"/></svg>':'<svg viewBox="0 0 40 26" aria-hidden="true"><rect x="3" y="6" width="34" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M8 11h6m5 0h6m5 0h2" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="11" cy="22" r="2.5" fill="currentColor"/><circle cx="29" cy="22" r="2.5" fill="currentColor"/></svg>')+`<small>${click?escapeHTML(N[c]):String(count)}</small>`;if(click){b.disabled=disabled;b.onclick=click}return b}
+function colorCard(c,count,click,disabled){
+ const b=document.createElement(click?'button':'div');b.className='traincard suit-'+c;
+ const image=document.createElement('img');image.src='assets/cards/'+c+'.svg';image.alt=N[c]||c;image.loading='eager';image.draggable=false;b.appendChild(image);
+ if(count!==null&&count!==undefined){const tag=document.createElement('span');tag.className='cardcount';tag.textContent='×'+count;b.appendChild(tag)}
+ if(click){b.type='button';b.title='Robar carta '+N[c];b.disabled=Boolean(disabled);b.onclick=click}
+ return b
+}
 function render(){if(!game)return;
  $('lobby').classList.add('hidden');$('game').classList.remove('hidden');const p=game.players[seat],active=amIUp();
  $('scores').innerHTML=game.players.map((x,i)=>`<div class="scorebadge ${i===game.current?'active':''}" style="--player-color:${x.color}"><span class="player-dot"></span><div class="player-details"><b>${escapeHTML(x.name)} ${i===seat?'<em>TÚ</em>':''}</b><small>🚂 ${x.trains} vagones · 🏠 ${x.stations} estaciones</small></div><strong class="player-points">${x.score}<span>pts</span></strong></div>`).join('');
@@ -37,18 +45,25 @@ function render(){if(!game)return;
  $('mytickets').innerHTML=game.tickets.map(t=>`<div class="ticket ${t.long?'long':''}"><span>${escapeHTML(CITIES[t.a][2])} → ${escapeHTML(CITIES[t.b][2])}</span><b>${t.p}</b></div>`).join('')||'<p class="smallmuted">Todavía sin billetes</p>';
  $('market').innerHTML='';game.face.forEach((c,i)=>$('market').appendChild(colorCard(c,null,()=>act('draw_train',{index:i}),!drawAllowed()||(c==='wild'&&game.drawCount===1))));
  $('drawblind').disabled=!drawAllowed()||(game.deckCount+game.discardCount===0);$('drawtickets').disabled=!active||game.drawCount>0||!game.ticketDeckCount;
- $('deckinfo').textContent=`${game.deckCount} cartas ocultas · ${game.ticketDeckCount} destinos por robar`;$('drawstats').textContent=active?`${game.drawCount}/2 cartas`:' ';$('history').innerHTML=game.logs.map(t=>'<div>• '+escapeHTML(t)+'</div>').join('');
+ $('deckinfo').textContent=`${game.deckCount} cartas ocultas · ${game.ticketDeckCount} destinos por robar`;$('drawstats').textContent=active?`${game.drawCount}/2 cartas`:' ';$('pass').classList.toggle('hidden',!active||game.deckCount+game.discardCount>0||game.face.length>0||game.ticketDeckCount>0);$('history').innerHTML=game.logs.map(t=>'<div>• '+escapeHTML(t)+'</div>').join('');
  renderBoard();renderSelection();renderDialog();applyZoom()}
 const LABEL_OFFSETS={EDI:[0,-18],LON:[-18,-16],DIE:[-16,25],BRE:[-15,-16],PAR:[-18,-23],PAM:[-12,-18],MAD:[-10,-20],LIS:[-14,-19],CAD:[-5,25],BAR:[17,18],AMS:[-13,-20],BRU:[-18,-17],ESS:[16,-16],FRA:[15,-22],MUN:[18,-18],ZUR:[-15,-21],MAR:[-20,25],VEN:[17,-18],ROM:[-15,25],BRI:[16,-19],PAL:[0,27],STO:[0,-18],COP:[0,-17],BER:[0,-19],VIE:[-15,-20],BUD:[20,-15],ZAG:[-20,27],SAR:[-19,26],SOF:[18,22],ATH:[0,27],RIG:[15,-18],DAN:[0,-19],WIL:[16,-16],WAR:[-12,25],BUC:[0,-19],CON:[0,25],ANG:[0,-20],SMY:[-5,25],PET:[0,-19],MOS:[0,-19],SMO:[18,-17],KIE:[-12,24],KHA:[17,-18],ROS:[16,-18],SEV:[-20,-18],SOC:[19,23],ERZ:[0,27]};
 function renderBoard(){const svg=$('board'),S='http://www.w3.org/2000/svg';svg.innerHTML='';const el=(tag,attrs={},parent=svg)=>{const e=document.createElementNS(S,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);parent.appendChild(e);return e};
  const defs=el('defs');let grad=el('linearGradient',{id:'ocean',x1:0,y1:0,x2:1,y2:1},defs);el('stop',{offset:'0%','stop-color':'#bbd5d8'},grad);el('stop',{offset:'100%','stop-color':'#dae2de'},grad);el('rect',{width:1320,height:790,fill:'url(#ocean)'});
+ // Watercolor texture made from original vector ornaments, no commercial game art.
+ const sea=el('g',{opacity:.26});for(let k=0;k<85;k++){let x=(k*157+33)%1300,y=(k*103+19)%770;el('path',{d:`M${x} ${y} q9 -6 18 0 q9 6 18 0`,fill:'none',stroke:'#5e95a7','stroke-width':1.5},sea)}
  // Decorative map grid and horizontal parallels increase navigational clarity.
  for(let x=0;x<1320;x+=110)el('line',{x1:x,y1:0,x2:x,y2:790,stroke:'#fff','stroke-opacity':.11,'stroke-width':1});
  for(let y=0;y<790;y+=110)el('line',{x1:0,y1:y,x2:1320,y2:y,stroke:'#fff','stroke-opacity':.11,'stroke-width':1});
  // Stylised continental silhouette; not copied from the commercial map.
- el('path',{d:'M210 88 L278 97 312 158 400 146 450 100 520 72 616 54 732 95 793 111 895 117 965 130 1050 79 1150 103 1260 179 1270 286 1230 406 1282 466 1270 580 1238 720 1141 728 1055 710 994 625 916 701 825 695 778 599 712 576 683 731 598 713 581 579 505 517 444 578 385 570 354 672 191 719 111 639 125 552 227 492 283 428 270 365 223 310 217 229 Z',fill:'#e9e4cf',stroke:'#a8b5a9','stroke-width':3});
+ el('path',{d:'M210 88 L278 97 312 158 400 146 450 100 520 72 616 54 732 95 793 111 895 117 965 130 1050 79 1150 103 1260 179 1270 286 1230 406 1282 466 1270 580 1238 720 1141 728 1055 710 994 625 916 701 825 695 778 599 712 576 683 731 598 713 581 579 505 517 444 578 385 570 354 672 191 719 111 639 125 552 227 492 283 428 270 365 223 310 217 229 Z',fill:'#e9e4cf',stroke:'#b0b6a5','stroke-width':3});
  el('path',{d:'M231 95 L273 117 268 203 244 221 208 188Z',fill:'#e9e4cf',stroke:'#a8b5a9','stroke-width':2});
- el('text',{x:48,y:111,fill:'#63949c','font-size':30,opacity:.5}).textContent='ATLANTIC';el('text',{x:410,y:732,fill:'#6b9ca6','font-size':20,opacity:.5}).textContent='MEDITERRANEAN';
+ // Hand-drawn relief and country seams add geographical texture behind the routes.
+ const contour=el('g',{fill:'none',stroke:'#a9ad90','stroke-width':1.7,opacity:.34});
+ ['M254 302 Q330 274 443 313 T690 285','M300 430 Q430 395 580 435 T870 420','M520 155 Q665 182 798 165 T1104 210','M450 570 Q600 525 757 590 T1000 600','M920 330 Q1040 370 1218 315'].forEach(d=>el('path',{d,'stroke-dasharray':'8 12'},contour));
+ for(let i=0;i<25;i++){const x=230+(i*179)%1010,y=130+(i*127)%495;el('path',{d:`M${x} ${y+12} l9 -19 9 19 M${x+8} ${y+12} l9 -15 9 15`,stroke:'#8e9b84','stroke-width':2,fill:'none',opacity:.30})}
+ el('text',{x:51,y:126,fill:'#4e899b','font-size':27,opacity:.45,'letter-spacing':5}).textContent='ATLÁNTICO';el('text',{x:378,y:744,fill:'#4d899c','font-size':24,opacity:.5,'letter-spacing':3}).textContent='MEDITERRÁNEO';
+ el('text',{x:760,y:126,fill:'#4e899b','font-size':13,opacity:.45,'letter-spacing':2}).textContent='MAR BÁLTICO';
  const glow=el('filter',{id:'selected-glow',x:'-60%',y:'-90%',width:'220%',height:'280%'},defs);el('feGaussianBlur',{stdDeviation:2.4,result:'blur'},glow);el('feMerge',{},glow).innerHTML='<feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/>';
  const grouped={};for(const r of game.routes){let key=[r.a,r.b].sort().join('-');(grouped[key]??=[]).push(r)}
  for(const r of game.routes){const [x,y]=CITIES[r.a],[xx,yy]=CITIES[r.b],dx=xx-x,dy=yy-y,dist=Math.hypot(dx,dy),pair=grouped[[r.a,r.b].sort().join('-')],off=pair.length>1?(pair.indexOf(r)===0?-10:10):0,ox=-dy/dist*off,oy=dx/dist*off,angle=Math.atan2(dy,dx)*180/Math.PI;
@@ -67,6 +82,7 @@ function renderSelection(){const active=amIUp()&&!game.drawCount;const r=selecte
  $('station').disabled=!active||!stationCity||p.stations===0||game.players.some(p=>p.placed.includes(stationCity));updateWild();$('buildhint').textContent=r&&r.tunnel?'En túneles se revelan 3 cartas; puedes aceptar o rechazar el coste extra.':r&&r.ferry?'Se necesitan locomotoras por cada símbolo ⚓.':'Las locomotoras sustituyen cualquier color.'}
 function updateWild(){let r=selected===null?null:game.routes[selected],p=game.players[seat];const cost=r?r.n:4-p.stations,need=r?r.ferry:0,c=$('paycolor').value,wild=game.hand.filter(x=>x==='wild').length,reg=game.hand.filter(x=>x===c).length,min=c==='wild'?cost:Math.max(need,cost-reg),max=c==='wild'?cost:Math.min(wild,cost);
  $('wildcount').innerHTML='';if(min>max){let o=document.createElement('option');o.textContent='Cartas insuficientes';o.value='-1';$('wildcount').appendChild(o)}else for(let i=min;i<=max;i++){let o=document.createElement('option');o.value=i;o.textContent=i+' locomotora(s)';$('wildcount').appendChild(o)}$('claim').disabled=$('claim').disabled||min>max;$('station').disabled=$('station').disabled||(!r&&min>max)}
+$('pass').onclick=()=>act('pass');
 $('claim').onclick=()=>{if(selected===null||+$('wildcount').value<0)return;act('claim',{routeId:selected,color:$('paycolor').value,wildCount:+$('wildcount').value})};
 $('station').onclick=()=>{if(!stationCity||+$('wildcount').value<0)return;act('station',{city:stationCity,color:$('paycolor').value,wildCount:+$('wildcount').value})};
 $('drawblind').onclick=()=>act('draw_train',{index:-1});$('drawtickets').onclick=()=>act('draw_tickets');

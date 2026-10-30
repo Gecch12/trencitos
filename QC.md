@@ -1,41 +1,36 @@
-# QC / Prepublicación — 30 octubre 2026
+# Quality check — Ferrovía Europa v0.6
 
-## Resultado: candidata de preproducción; no publicada
+## Automated QA (executed)
 
-| Verificación | Resultado |
-| --- | --- |
-| Datos | 47 ciudades, 101 rutas, 46 destinos (40+6) |
-| Reparto y mazo | 110 cartas; 4 iniciales por jugador; 5 visibles |
-| Número de jugadores | 2, 3, 4 y 5; salas rechazan un sexto |
-| Cartas y destinos secretos | Comprobado en pruebas del motor y servidor |
-| Reglas de robo | Locomotora visible, dos cartas, robo a ciegas |
-| Rutas | Longitud/color, dobles, ferris, túneles y pago extra |
-| Estaciones | Costes 1/2/3, ciudad única y elección única de vía prestada |
-| Puntuación | Rutas, billetes +/−, estaciones, ruta continua más larga y empates |
-| Final | Cada jugador, incluido desencadenante, recibe turno adicional |
-| Reunión online | Creación, invitación, inicio, controles de turno y reconexión |
-| Partidas automáticas | 12 partidas completas (3 por cada cantidad de jugadores) |
-| Pruebas automatizadas | 24/24 aprobadas — `npm test` |
-| UI | Render Chromium: 101 rutas, 47 ciudades, lobby móvil, cambio de pago, 0 excepciones JS |
+**28/28 passing** with `npm test` on Node.js 22.16.0, October 30, 2026.
 
-**Limitaciones explícitas**
+- Europe data cardinality: 47 cities, 101 routes, 40 regular tickets, six long tickets.
+- Setup, initial ticket selection, deck composition and card conservation.
+- Client view privacy; public state does not expose opponent hands, destination tickets or deck order.
+- Turn enforcement, invalid moves, double routes by party size.
+- Draw rules (visible/hidden locomotive), train payments, ferry/wild logic.
+- Tunnel reveal, surcharge and decline; stations and destination scoring.
+- Longest path, final turn, winner tiebreaks.
+- WebSocket creation, joining, five-player room limit, player reconnection, started-room admission block.
+- Full simulated games with 2, 3, 4 and 5 players.
+- Serving original SVG assets, unknown-file 404 handling and no external JavaScript in frontend.
 
-- Las pruebas de interfaz Chromium se ejecutaron con transporte simulado porque el navegador de pruebas bloquea las navegaciones a servidores locales. Las pruebas reales de WebSocket se ejecutaron aparte desde el cliente WebSocket de Node.
-- No se ha completado todavía una partida humana en 5 navegadores/dispositivos físicos.
-- No hay hosting HTTPS público ni DNS configurado en esta entrega.
-- En un hosting sin volumen persistente, los estados pueden perderse al reiniciar.
-- El tablero es una representación funcional redibujada; sus proporciones no son idénticas a las del producto comercial.
+**Issues found and fixed this iteration:**
+- Static asset filename accepted but nonexistent caused an unhandled streaming error. Explicit 404 added.
+- WebSocket now rejects fragmented/RSV frames rather than parsing them as independent JSON, and rejects foreign Origin hosts.
+- Heartbeat added to detect disconnected clients and preserve their rejoin slot.
 
-**Recomendación de aceptación antes del enlace público:** ejecutar partida humana de principio a fin con 2 personas y una partida corta dirigida de 5 personas cubriendo ferris, túneles, estaciones, reconexión móvil y cierre. Repetir pruebas tras cada cambio de reglas.
+## Manual checks still required before recommending to friends
 
+1. Create a room on an HTTPS deployment, connect simultaneously from Chrome desktop, Safari iOS, and Android Chrome.
+2. Verify all five players receive different hidden hands and initial tickets, and no hand is visible to another player.
+3. Play a match with tunnels (accept/decline), a ferry, a station and a double route; compare scored outcome to a physical game.
+4. Refresh one client mid-turn and verify the reconnection token restores its seat and hand.
+5. Try weak Wi-Fi, tab suspension and service restart. A restart can currently erase the room on free hosting.
+6. Review map readability at 390px mobile and 1440px desktop, including congested central Europe. Test zoom, tap targets and panel navigation.
 
-## Visual v0.5 — comprobaciones realizadas
+**Browser automation was attempted but the restricted execution environment blocked local-page navigation** (`ERR_BLOCKED_BY_ADMINISTRATOR`). Therefore, no browser end-to-end success claim is made. The supplied `tests/browser_smoke.py` is optional for users with Playwright installed; it was not passed in this environment.
 
-- Aplicación abre sin excepciones JavaScript en una prueba de navegador con estado de partida simulado.
-- 101 grupos de ruta y 47 etiquetas de ciudad renderizados en escritorio y móvil.
-- Selección SVG de una ruta actualiza su descripción.
-- Zoom 100% → 125% en escritorio y 240% → 265% en móvil; modo ampliado activado y desactivado.
-- Controles móviles de salto a mapa, cartas y construcción incluidos.
-- Reglas del motor y salas inalteradas; se añadió intercambio `ping/pong` para conexión activa.
+## Deployment recommendation
 
-**No completado:** prueba manual en dispositivos reales con conexión de red ni prueba de pérdida de conexión o reinicios en Render. La captura visual de QA usa un estado simulado; no prueba infraestructura remota.
+**Status:** private beta for controlled testing; **not** stable production. Working server, rules and SVG assets. Do not rely on Render free local disk for game persistence.
