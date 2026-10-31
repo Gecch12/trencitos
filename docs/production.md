@@ -1,6 +1,30 @@
 # Producción
 
-## Versión actual · 2026-10-31, 16:13 (Lima)
+## Versión actual · 2026-10-31, 16:44 (Lima)
+
+- Código: `23086914b893758b29f3879259e8fa8851f81e9a`, rama `main`.
+  El resaltado muestra solo nombres de los extremos seleccionados y restaura
+  las etiquetas normales al desactivar. Sin cambios de backend, secretos o SQL.
+- [Despliegue Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbj62cnlk1mc738bqq7g):
+  manual del commit exacto, **Live** a las 16:44:57; Node 26.13.0,
+  `npm install --omit=dev` y `npm start`.
+- Antes del despliegue, `/healthz` registraba una sala. El usuario autorizó
+  explícitamente publicar aceptando el reinicio; no se cerró ninguna sala ajena.
+  Tras arrancar: HTTP 200, `ok: true`, `storage: supabase`, cero salas.
+- `app.js` público coincide byte a byte con el publicado; SHA-256:
+  `f65adf0a583b2c9cae79bd48defcb5b83cb6cb37395ac98eaf9c7f0246817f45`.
+- Las 18 pruebas pertinentes y la comprobación local de destino completado están
+  registradas en [M11](work/board-3d.md). Docs y diff verificados antes de publicar.
+- IAB/Chromium sobre HTTPS, práctica invitada con Lisboa–Danzig y Zagrab–Brindisi:
+  a 390×844 solo aparecen sus cuatro nombres, también con zoom. Al desactivar,
+  vuelven las etiquetas normales; sin errores ni avisos de consola. Práctica
+  finalizada mediante su control de pruebas y regreso al inicio. Captura local
+  ignorada: `.qa/destination-labels/production-mobile.png`.
+
+Esta comprobación cubre el ajuste visual; no repite Google, una partida completa,
+recuperación de salas tras reinicio ni pruebas en dispositivos físicos.
+
+## Entrega anterior · 2026-10-31, 16:13 (Lima)
 
 - Código: `2a46f58d96e7254b5ec6d9122c4e052c3bf611cb`, integrado en `main`.
   Incluye siete vagones adicionales (18 en total), grúa telescópica revisada,

@@ -1,5 +1,5 @@
 ---
-{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"integrated","updated":"2026-10-31"}
+{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"released","updated":"2026-10-31"}
 ---
 # Tablero 3D y familia de vagones
 
@@ -8,7 +8,7 @@ Mano, cartas, paneles, etiquetas y mapas de detalle conservan HTML/SVG. Sin fís
 de simulador, cámara libre ni cambios de reglas. Publicado desde `main` en
 `16bf6c3` hasta M9; [entrega y verificación remota](../production.md).
 M10 está publicada en `2a46f58`; evidencia y límites en [producción](../production.md).
-M11 está validada e integrada en `main`; publicación solicitada y en preparación.
+M11 está publicada en `2308691`; evidencia remota en [producción](../production.md).
 
 ## Hitos
 
@@ -45,8 +45,10 @@ conserva los extremos seleccionados; puntos, rutas, vagones y estaciones no camb
   Captura local ignorada: `.qa/destination-labels/mobile.png`.
 - `node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
 
-Siguiente paso de M11: incluir código y documentación en la próxima publicación.
-Esta comprobación usa emulación de tamaño móvil, no Safari/iPhone físico.
+M11 publicada el 2026-10-31 a las 16:44:57 de Lima, tras autorización del reinicio.
+Resaltar/restaurar verificado también en práctica pública; evidencia y límites en
+[producción](../production.md). No quedan pasos de entrega de M11; las pruebas en
+dispositivos físicos siguen en [calidad](quality.md).
 
 ## Ampliación M10
 
