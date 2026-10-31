@@ -15,7 +15,8 @@ validación del checkout actual. [Informes disponibles](../qa-index.md).
 - [x] Registrar base de rendimiento del tablero en Chrome de escritorio:
   [informe del tablero](../qa/threejs-report.json).
 - [ ] Evaluar carga inicial y rendimiento 3D en móvil físico/GPU modesta.
-- [ ] Evaluar animación de construcción 3D; actualmente muestra resultado y sonido.
+- [x] Animación de construcción 3D: rutas, estaciones, túneles, reconexión y
+  movimiento reducido en Chrome local; [evidencia](../qa/threejs-continuity-report.json).
 
 ## Evidencia y siguiente paso
 

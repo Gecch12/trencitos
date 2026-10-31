@@ -1,0 +1,19 @@
+{
+  "seed": 1001,
+  "seeds": 25,
+  "players": 4,
+  "games": 100,
+  "wins": 39,
+  "winPercent": 39,
+  "averageScore": 101.05,
+  "baselineAverageScore": 93.01,
+  "completedTickets": 1.9,
+  "baselineCompletedTickets": 1.89,
+  "destinationScore": 24.13,
+  "averageTurns": 164.85,
+  "decisionMs": {
+    "p50": 1.02,
+    "p95": 2.54,
+    "max": 19.38
+  }
+}

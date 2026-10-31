@@ -12,6 +12,8 @@ comercial: conserva las variantes del proyecto.
   45 vagones, 3 estaciones y 4 cartas. Once colores de jugador no equivalen a
   los ocho colores de cartas/rutas. El lobby reserva colores únicos; iniciada la
   partida quedan fijos. Ver [lobby-ui.js](../lobby-ui.js) y [pruebas](../tests/lobby-server.test.js).
+  La clave persistida de color es estable; cambiar su pintura visible no cambia
+  el propietario, la reserva del lobby ni los colores de cartas/pagos.
 - **Red:** 47 ciudades y 101 rutas, con 300 casillas. Una ruta tiene extremos,
   longitud, color, posibles túnel/ferri y propietario. La geometría no cambia su
   coste ni conectividad.
@@ -74,8 +76,11 @@ Las políticas viven en [multiplayer.js](../multiplayer.js),
 - Todos desconectados: pausa durante 60 s; después se elimina la sala. La
   caducidad general de 24 h no promete una recuperación de 24 h tras abandono.
 - Práctica: un humano y tres bots, sin invitados ni persistencia. Pausa al
-  desconectar; elimina a los 30 s. Los bots de práctica planifican destinos; los
-  reemplazos usan otra política. Ninguno consulta secretos de rivales.
+  desconectar; elimina a los 30 s. Los bots de práctica pueden conservar 2–4
+  billetes iniciales, tomar destinos nuevos y construir estaciones conforme a
+  las mismas reglas del motor. Resuelven ofertas pendientes también fuera de
+  turno y al cerrar. Los reemplazos usan otra política. Ninguno consulta secretos
+  de rivales.
 
 Regresiones: [motor](../tests/engine.test.js), [tickets](../tests/tickets.test.js),
 [privacidad y multijugador](../tests/multiplayer.test.js),

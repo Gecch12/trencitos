@@ -29,7 +29,10 @@ const GameUI = (() => {
     wild: "#c69b45", gray: NEUTRAL,
   });
   // Presentation-only migration: existing rooms keep their stored player colors.
-  function playerColor(color) { return color?.toLowerCase() === "#ddaf40" ? YELLOW : color; }
+  function playerColor(color) {
+    const key = color?.toLowerCase() === YELLOW ? "#ddaf40" : color?.toLowerCase();
+    return palette.find(p => p.color === key)?.paint || color;
+  }
   const palette = typeof module !== "undefined" && module.exports ? require("./data").PLAYER_PALETTE : PLAYER_PALETTE;
   function playerFinish(color) { return palette.find(p => p.color === color?.toLowerCase())?.finish || "paint"; }
   function routeOwner(game, route, seat) {

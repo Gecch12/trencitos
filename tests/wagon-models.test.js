@@ -11,11 +11,11 @@ test('every player color has a wagon, including legacy yellow, without changing 
   for (const { color, finish = 'paint' } of PLAYER_PALETTE) {
     const style = wagonStyle(color);
     assert.equal(style.model, WAGON_STYLES.find(s => s.color === color).model);
-    assert.equal(style.color, color);
+    assert.equal(style.color, UI.playerColor(color));
     assert.equal(style.finish, finish);
     assert.equal(wagonStyle(UI.playerColor(color)).model, style.model);
     const custom = wagonStyle(color, { model: 'tanker', finish: 'paint' });
-    assert.deepEqual(custom, { color, model: 'tanker', finish: 'paint' });
+    assert.deepEqual(custom, { color: UI.playerColor(color), model: 'tanker', finish: 'paint' });
   }
   assert.equal(wagonStyle('#123456').color, '#123456');
   assert.equal(wagonStyle('#123456', { model: 'missing', finish: 'missing' }).model, 'passenger');
@@ -23,7 +23,7 @@ test('every player color has a wagon, including legacy yellow, without changing 
 
 test('wagon primitives stay within their shared footprint and height budget', async () => {
   const { WAGON_STYLES, wagonParts } = await import('../wagon-models.mjs');
-  const shapes = new Set(['box', 'round', 'wheel', 'tank', 'disc', 'rock', 'mound', 'coil', 'roof', 'car-body', 'canopy']);
+  const shapes = new Set(['box', 'round', 'wheel', 'tank', 'disc', 'rock', 'mound', 'coil', 'coil-rings', 'coil-band', 'cradle', 'hopper', 'hopper-rib', 'quarry-block', 'stone-vein', 'envelope-flap', 'envelope-top', 'roof', 'car-body', 'canopy']);
   for (const { model } of WAGON_STYLES) {
     const parts = wagonParts(model);
     assert.ok(parts.length > 10 && parts.length <= 70, model);

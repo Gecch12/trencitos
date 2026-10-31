@@ -1,0 +1,30 @@
+{
+  "seed": 4001,
+  "seeds": 5,
+  "players": 4,
+  "opponent": "heuristic",
+  "actionCounts": {
+    "choose_initial": 20,
+    "claim": 313,
+    "draw_train": 850,
+    "draw_tickets": 20,
+    "keep_tickets": 20,
+    "pay_tunnel": 22,
+    "decline_tunnel": 21,
+    "station": 11
+  },
+  "games": 20,
+  "wins": 4,
+  "winPercent": 20,
+  "averageScore": 101.6,
+  "baselineAverageScore": 102.65,
+  "completedTickets": 3.1,
+  "baselineCompletedTickets": 3.1,
+  "destinationScore": 32.15,
+  "averageTurns": 165.9,
+  "decisionMs": {
+    "p50": 6.07,
+    "p95": 30.26,
+    "max": 107.3
+  }
+}

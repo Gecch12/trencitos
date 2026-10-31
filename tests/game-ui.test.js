@@ -51,10 +51,12 @@ function view(hand = []) {
   state.players[0].hand = hand;
   return E.view(state, 0);
 }
-test("yellow is updated without mutating saved colors", () => {
-  assert.equal(UI.playerColor("#ddaf40"), UI.YELLOW);
-  assert.equal(UI.playerColor("#DDAF40"), UI.YELLOW);
-  assert.equal(UI.playerColor(UI.YELLOW), UI.YELLOW);
+test("yellow and amber are presented without mutating saved color keys", () => {
+  assert.equal(UI.playerColor("#ddaf40"), "#e5a12c");
+  assert.equal(UI.playerColor("#DDAF40"), "#e5a12c");
+  assert.equal(UI.playerColor(UI.YELLOW), "#e5a12c");
+  assert.equal(UI.playerColor("#b88929"), "#f2d33d");
+  assert.equal(UI.playerFinish("#b88929"), "paint");
   assert.equal(UI.playerColor("#458ad4"), "#458ad4");
 });
 test("route ownership identifies seat zero, opponents and individual double-route tracks", () => {
@@ -63,7 +65,7 @@ test("route ownership identifies seat zero, opponents and individual double-rout
   assert.equal(UI.routeOwner(game, route, 0).label, "Esta ruta es tuya");
   assert.equal(UI.routeOwner(game, route, 1).label, "Ocupada por Ana");
   assert.equal("mark" in UI.routeOwner(game, route, 1), false);
-  assert.equal(UI.routeOwner(game, { owner: 3 }, 0).color, UI.YELLOW);
+  assert.equal(UI.routeOwner(game, { owner: 3 }, 0).color, "#e5a12c");
   assert.equal(UI.routeOwner(game, { owner: null }, 0), null);
   assert.equal(UI.routeOwner(game, null, 0), null);
   const pair = [{ id: 1, a: "A", b: "B", owner: 1 }, { id: 2, a: "A", b: "B", owner: null }];

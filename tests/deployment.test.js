@@ -21,7 +21,7 @@ test('map preserves gestures and does not restore the retired zoom toolbar',()=>
 });
 test('Docker includes every local server module, without saved rooms',()=>{
  const docker=fs.readFileSync(path.join(ROOT,'Dockerfile'),'utf8');
- for(const file of ['game-clock.js','multiplayer.js','room-store.js','supabase-store.js','durable-queue.js','bots.js','practice-bot.js','practice.js','lobby-ui.js','lobby.css']) assert.ok(docker.includes(file),file);
+ for(const file of ['game-clock.js','multiplayer.js','room-store.js','supabase-store.js','durable-queue.js','bots.js','practice-bot.js','practice-planner.js','practice-tactics.js','practice-search.js','practice.js','lobby-ui.js','lobby.css']) assert.ok(docker.includes(file),file);
  const ignore=fs.readFileSync(path.join(ROOT,'.dockerignore'),'utf8');
  for(const file of ['room-state.json','room-state.json.tmp','room-state.json.bak']) assert.ok(ignore.split('\n').includes(file));
 });
@@ -71,6 +71,9 @@ test('static SVG is served safely with right MIME and traversal returns 404',asy
  response=await fetch(base+'/assets/cards/unknown.svg');assert.equal(response.status,404);
  response=await fetch(base+'/does-not-exist.html');assert.equal(response.status,404);
  response=await fetch(base+'/practice-bot.js');assert.equal(response.status,404);
+ response=await fetch(base+'/practice-planner.js');assert.equal(response.status,404);
+ response=await fetch(base+'/practice-tactics.js');assert.equal(response.status,404);
+ response=await fetch(base+'/practice-search.js');assert.equal(response.status,404);
  for(const file of ['/board-3d.js','/wagon-renderer.js','/wagon-preview.js','/wagon-models.mjs','/board-camera.js','/vendor/three.module.js','/vendor/three.core.js']) {
   response=await fetch(base+file);assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/javascript/);
   assert.ok((await response.text()).length>100);

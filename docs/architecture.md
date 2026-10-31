@@ -18,7 +18,7 @@ motor de reglas → persistencia de sala normal → vista filtrada para cada jug
 | Reglas, fases, pagos, cierre y privacidad | [engine.js](../engine.js): `newRandomGame`, `action`, `expire`, `finish`, `view` |
 | Ciudades, rutas, billetes y paleta | [data.js](../data.js) |
 | Relojes, desconexiones y recuperación | [game-clock.js](../game-clock.js), [multiplayer.js](../multiplayer.js) |
-| Práctica y políticas de bots | [practice.js](../practice.js), [practice-bot.js](../practice-bot.js), [bots.js](../bots.js) |
+| Práctica y políticas de bots | [practice.js](../practice.js), [practice-bot.js](../practice-bot.js), [practice-planner.js](../practice-planner.js), [practice-tactics.js](../practice-tactics.js), [practice-search.js](../practice-search.js), [bots.js](../bots.js) |
 | Estado local y hash de credenciales | [room-store.js](../room-store.js): `serializableRoom`, `loadRooms`, `saveRooms` |
 | Checkpoint remoto y autoridad única | [supabase-store.js](../supabase-store.js), [SQL](../supabase/001_active_games.sql) |
 | Orden y confirmación durable | [durable-queue.js](../durable-queue.js) |
@@ -41,28 +41,42 @@ motor de reglas → persistencia de sala normal → vista filtrada para cada jug
 - La cámara tiene inclinación fija de 25,7°, sin órbita ni física. Su proyección
   afín mantiene alineados los objetivos SVG y el plano XY de Three. Gestos,
   foco, selección y pagos conservan sus manejadores existentes de `app.js`.
-- El plano usa `CanvasTexture` con cartografía y guías de `RailMap`. Los huecos
-  de rutas y sus marcas de túnel/ferri siguen SVG; vagones, ruedas, tejados y
-  estaciones son mallas instanciadas. Las ciudades no se imprimen en la textura.
+- El plano usa `CanvasTexture` con cartografía y guías de `RailMap`. Casillas
+  libres, marcas de túnel/ferri, círculos de ciudad, vagones y estaciones son
+  mallas instanciadas con profundidad. SVG conserva objetivos transparentes y texto.
+  Las bandas de propiedad y conexión son dos lotes de geometría sobre el suelo,
+  con color/opacidad por ruta y cortes en tramos prestados; quedan bajo las piezas.
 - Las etiquetas SVG se compensan en ambos ejes para mantenerse horizontales y
   de tamaño legible. `placeLabels` admite prioridades, posiciones previas,
   longitud máxima de guía y ocultación de colisiones; estas opciones son optativas
   y solo se activan en 3D. Foco/selección preceden a destinos y secundarios.
-- Mano, cartas, menús, pagos, destinos y resultados conservan HTML/SVG 2D.
+- Mano, cartas, menús, pagos y mapas de detalle conservan HTML/SVG 2D.
   La máscara del túnel también retrasa la pieza 3D hasta terminar la revelación.
-  La caída animada de construcción 2D no se reproduce en 3D.
+  `animateConstruction` traslada las matrices de las piezas aceptadas durante
+  500 ms; los eventos existentes evitan repeticiones al reconectar. Solo renderiza
+  continuamente durante esa caída, con cancelación/restauración al ocultar,
+  redimensionar o desconectar y respeto de movimiento reducido.
+- El resaltado principal entrega a Three solo IDs de rutas, extremos y estaciones
+  de la selección autorizada del cliente. Atenúa el contexto y conserva los mismos
+  vagones y colores; `destinationSpotlight` solo contiene etiquetas e indicadores,
+  sin clonar vagones/estaciones SVG. No entrega manos ni billetes al renderizador.
 - Cada color de jugador tiene un modelo inspirado en las cartas; marrón toma
-  troncos, gris piedra, y dorado/magenta/turquesa amplían la familia. El modelo
+  troncos, gris piedra, y amarillo/magenta/turquesa amplían la familia. El modelo
   depende del propietario, nunca de cartas pagadas ni color de la ruta. No hay
   reglas de carga. Modelo, pintura y acabado son dimensiones separadas, aún sin
   selector de cosméticos ni catálogo comercial. `wagonStyle` conserva el amarillo
   legado y permite un modelo seguro por defecto para colores desconocidos.
+  `PLAYER_PALETTE.color` conserva las claves persistidas; `paint` cambia solo
+  la presentación: `#ddaf40` → ámbar/grano, `#b88929` → amarillo/deportivos.
+  `GameUI.playerColor` y `wagonStyle` admiten también sus tonos de presentación.
 - `createWagonRenderer` agrupa piezas por geometría/material en `InstancedMesh`,
-  compartidos entre colores. El oro usa reflexión metálica con un entorno de
-  estudio generado una vez, sin descargas HDR. Cargas, ventanas y ruedas
-  conservan una huella acotada. El dorado transporta dos deportivos; ya no hay
+  compartidos entre colores. Los metales usan un entorno de estudio generado
+  una vez, sin descargas HDR. Cargas, ventanas y ruedas conservan una huella
+  acotada. El amarillo transporta dos deportivos y usa pintura normal; ya no hay
   símbolos geométricos de puesto en piezas, avatares, menús ni mapas de detalle.
-  El resaltado atenúa todas las piezas.
+  El resaltado atenúa todas las piezas. Tolvas, bloques y bobinas huecas usan
+  geometrías compartidas; las bobinas separan acero satinado, capas y cinchos.
+  Tablero y preview orientan la luz hemisférica al eje vertical Z.
 - Renderizado WebGL bajo demanda y DPR máximo 2. Sin selector ni retorno a 2D;
   se ignoran preferencias/enlaces antiguos de vista. Si falla WebGL, se oculta el
   mapa y se ofrece reintentar 3D, sin modificar sala ni estado del juego.
@@ -88,3 +102,43 @@ motor de reglas → persistencia de sala normal → vista filtrada para cada jug
 Las reglas de juego están en [dominio](domain.md); procedimientos y validaciones
 están en [operación](operations.md). Revisa esos límites al cambiar transporte,
 persistencia o representación del tablero.
+
+## Planificación de práctica
+
+`practice-planner.observe` construye una observación explícita: mano y destinos
+propios, tablero, mercado, cantidades públicas y robos visibles. Las manos
+y destinos ajenos solo aportan sus cantidades públicas; no se leen elementos
+de los mazos, colores de robos ciegos ni detalles de túneles rivales. `practice-bot` conserva planes e inferencias de cada asiento en
+un `WeakMap` privado, sin incluirlos en vistas o persistencia.
+
+El planificador genera hasta tres caminos alternativos por destino y conserva
+hasta doce redes candidatas. Evalúa la unión de tramos, el presupuesto total de
+vagones y una asignación conjunta de cartas. La selección táctica añade urgencia
+por bloqueos, pagos que preserven la red, reserva de túneles y horizonte de
+cierre. El Express usa una búsqueda limitada a 4.000 visitas por estimación;
+la puntuación real continúa calculándose exactamente en el motor.
+
+`practice-tactics` evalúa subconjuntos iniciales de 2–4 billetes, ofertas de
+nuevos destinos y estaciones. Las estimaciones de billetes nuevos usan el
+catálogo público, nunca el contenido real del mazo. Las estaciones se evalúan
+con una asignación compatible para todos los billetes; su préstamo también
+participa en planes con vías propias todavía pendientes. `practice.js` programa
+las elecciones pendientes aunque sea el turno humano o la fase `closing`.
+
+`practice-search` compara hasta tres acciones en dos mundos hipotéticos comunes,
+con hasta tres turnos propios y 48 acciones por rama (288 acciones como máximo).
+Simula respuestas rivales con una política sencilla y sin búsquedas recursivas.
+Las manos muestreadas respetan cantidades públicas y robos visibles recordados;
+los destinos rivales son hipótesis a partir de su red. Cada rama ejecuta el motor
+real sobre un estado independiente. `Engine.action` admite un RNG por acción
+que abarca también reciclados/mercado, guardado temporalmente en un `WeakMap`;
+la ejecución normal conserva `crypto.randomInt`. No modifica el RNG global.
+Se exige una mejora sobre la decisión táctica tras penalizar el desacuerdo
+entre muestras. Se omite búsqueda en elecciones obligatorias, la segunda carta
+y el cierre cercano; se mantiene el control táctico de esos casos.
+
+La comparación reproducible carga módulos y aleatoriedad aislados en
+[bot-match.js](../tests/helpers/bot-match.js), incluyendo todos los barajados del
+motor. Las políticas original y de primera etapa están congeladas en los helpers
+de pruebas y no se cargan en producción. La política `heuristic` permite medir
+la versión completa con la búsqueda desactivada. Resultado y alcance: [ficha de bots](work/practice-ai.md).

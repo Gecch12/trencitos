@@ -10,7 +10,8 @@ export function createWagonPreview({ container, onFailure }) {
   const scene = new THREE.Scene(), meshes = [];
   const camera = new THREE.OrthographicCamera(-18, 18, 10, -10, .1, 200);
   camera.up.set(0, 0, 1); camera.position.set(24, -38, 29); camera.lookAt(0, 0, 4);
-  scene.add(new THREE.HemisphereLight(0xfff9e8, 0x365466, 2.2));
+  const sky = new THREE.HemisphereLight(0xfff9e8, 0x365466, 2.2);
+  sky.position.set(0, 0, 1); scene.add(sky);
   const sun = new THREE.DirectionalLight(0xffffff, 2.5); sun.position.set(-40, 40, 90); scene.add(sun);
   const dummy = new THREE.Object3D(), paint = new THREE.Color();
   const wagons = createWagonRenderer({ renderer, capacity: 1,
@@ -33,7 +34,7 @@ export function createWagonPreview({ container, onFailure }) {
       const w = container.clientWidth, h = container.clientHeight;
       if (disposed || !w || !h || document.hidden) return;
       renderer.setSize(w, h, false);
-      const halfHeight = Math.max(7.5, 15 * h / w);
+      const halfHeight = Math.max(9.2, 15 * h / w);
       camera.top = halfHeight; camera.bottom = -halfHeight;
       camera.left = -halfHeight * w / h; camera.right = halfHeight * w / h;
       camera.updateProjectionMatrix(); renderer.render(scene, camera);

@@ -10,7 +10,6 @@ export function createWagonRenderer({ renderer, instances, put, capacity = 300 }
     disc: new THREE.CylinderGeometry(.5, .5, 1, 12).rotateX(Math.PI / 2),
     rock: new THREE.IcosahedronGeometry(.5, 0),
     mound: new THREE.SphereGeometry(.5, 12, 6),
-    coil: new THREE.TorusGeometry(.34, .16, 6, 12).rotateY(Math.PI / 2).scale(1 / .32, 1, 1),
   };
   const rounded = new THREE.Shape();
   rounded.moveTo(-.42, -.42); rounded.lineTo(.42, -.42); rounded.lineTo(.42, .42); rounded.lineTo(-.42, .42); rounded.closePath();
@@ -30,6 +29,61 @@ export function createWagonRenderer({ renderer, instances, put, capacity = 300 }
   }
   shapes['car-body'] = profilePrism([[-.5,-.5],[.5,-.5],[.48,.05],[.28,.35],[-.27,.5],[-.49,.2]]);
   shapes.canopy = profilePrism([[-.5,-.5],[.5,-.5],[.22,.42],[-.22,.5],[-.44,.03]]);
+  shapes.cradle = profilePrism([[-.5,-.5],[.5,-.5],[.5,.5],[.34,.5],[0,-.28],[-.34,.5],[-.5,.5]]);
+  shapes['hopper-rib'] = profilePrism([[-.5,.5],[-.32,-.5],[.32,-.5],[.5,.5],[.46,.5],[.28,-.43],[-.28,-.43],[-.46,.5]]).rotateZ(Math.PI / 2);
+  const flap = [[-.5,.5],[0,-.12],[.5,.5],[.5,.31],[0,-.32],[-.5,.31]];
+  shapes['envelope-flap'] = profilePrism(flap);
+  shapes['envelope-top'] = profilePrism(flap).rotateX(Math.PI / 2);
+  shapes['stone-vein'] = profilePrism([[-.5,.05],[-.25,.12],[-.09,-.03],[.14,.02],[.35,-.1],[.5,-.03],[.5,-.06],[.34,-.13],[.13,-.01],[-.08,-.06],[-.26,.09],[-.5,.02]]);
+
+  // A hollow tapered hopper, including its inside walls and narrow top rim.
+  const ring = (x, y, z) => [[-x,-y,z],[x,-y,z],[x,y,z],[-x,y,z]];
+  const bottom = ring(.38,.32,-.5), top = ring(.5,.5,.5);
+  const innerTop = ring(.46,.45,.5), innerBottom = ring(.34,.27,-.4);
+  const hopper = [];
+  function quad(a, b, c, d) { hopper.push(...a,...b,...c,...a,...c,...d); }
+  for (let i = 0; i < 4; i++) {
+    const j = (i + 1) % 4;
+    quad(bottom[i],bottom[j],top[j],top[i]);
+    quad(innerTop[i],innerTop[j],innerBottom[j],innerBottom[i]);
+    quad(top[i],top[j],innerTop[j],innerTop[i]);
+  }
+  quad(...innerBottom); quad(...[...bottom].reverse());
+  shapes.hopper = new THREE.BufferGeometry();
+  shapes.hopper.setAttribute('position', new THREE.Float32BufferAttribute(hopper, 3));
+  shapes.hopper.computeVertexNormals();
+
+  // Chamfered quarry blocks retain broad flat faces, unlike the coal shards.
+  const block = new THREE.Shape();
+  for (const [i, [x,y]] of [[-.43,-.5],[.42,-.5],[.5,-.38],[.5,.43],[.4,.5],[-.45,.5],[-.5,.35],[-.5,-.4]].entries()) {
+    if (i) block.lineTo(x * .9,y * .9); else block.moveTo(x * .9,y * .9);
+  }
+  block.closePath();
+  shapes['quarry-block'] = new THREE.ExtrudeGeometry(block, { depth: .9, bevelEnabled: true, bevelSize: .05, bevelThickness: .05, bevelSegments: 1, steps: 1 }).translate(0,0,-.45);
+
+  // Sheet steel rolls: straight cylindrical outside, flat ends and an open bore.
+  // Separate lathe strips preserve hard edges between the end faces and barrel.
+  function latheStrips(profiles, segments = 32) {
+    const positions = [], normals = [];
+    for (const profile of profiles) {
+      const source = new THREE.LatheGeometry(profile.map(p => new THREE.Vector2(...p)), segments);
+      const geometry = source.toNonIndexed();
+      positions.push(...geometry.attributes.position.array); normals.push(...geometry.attributes.normal.array);
+      geometry.dispose(); source.dispose();
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+    return geometry;
+  }
+  shapes.coil = latheStrips([
+    [[.18,-.5],[.48,-.5]], [[.48,-.5],[.5,-.48],[.5,.48],[.48,.5]],
+    [[.48,.5],[.18,.5]], [[.18,.5],[.18,-.5]],
+  ]);
+  shapes['coil-rings'] = latheStrips([.25,.33,.41,.47].flatMap(r => [
+    [[r,-.5],[r + .006,-.5]], [[r + .006,.5],[r,.5]],
+  ]));
+  shapes['coil-band'] = latheStrips([[[.5,-.045],[.5,.045]]]);
 
   // A compact procedural studio provides actual reflections without an HDR download.
   const studio = new THREE.Scene(); studio.background = new THREE.Color('#697d91');
@@ -46,6 +100,7 @@ export function createWagonRenderer({ renderer, instances, put, capacity = 300 }
     paint: new THREE.MeshStandardMaterial({ roughness: .65, metalness: .06 }),
     cargo: new THREE.MeshStandardMaterial({ roughness: .9, metalness: 0, flatShading: true }),
     metal: new THREE.MeshStandardMaterial({ roughness: .38, metalness: .65, envMap: environment.texture, envMapIntensity: .65 }),
+    steel: new THREE.MeshStandardMaterial({ roughness: .48, metalness: .85, envMap: environment.texture, envMapIntensity: .8 }),
     glass: new THREE.MeshStandardMaterial({ roughness: .18, metalness: .25, envMap: environment.texture, envMapIntensity: .5 }),
     gold: new THREE.MeshStandardMaterial({ roughness: .24, metalness: 1, envMap: environment.texture, envMapIntensity: 1.1 }),
   };
@@ -74,7 +129,8 @@ export function createWagonRenderer({ renderer, instances, put, capacity = 300 }
     const gold = style.finish === 'gold';
     const color = new THREE.Color(role === 'paint' ? (gold ? '#eec454' : style.color) : role === 'trim' ? (gold ? '#ffe6a0' : style.color) : role);
     if (role === 'trim' && !gold) color.lerp(new THREE.Color('#ecedd9'), .28);
-    if (faded) color.lerp(muted, .72);
+    if (faded === 'dim') color.multiplyScalar(.28);
+    else if (faded) color.lerp(muted, .72);
     colors.set(key, color); return color;
   }
   function draw(cell, player, faded) {

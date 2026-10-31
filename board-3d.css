@@ -13,13 +13,11 @@
   .game .board-camera-controls button { min-width: 40px; }
 }
 
-/* SVG keeps native focus, hit targets and menu handlers over the ground plane. */
+/* SVG provides only transparent native focus/click targets and readable text. */
 .game .is-3d #board .owned-piece,
 .game .is-3d #board .station-piece,
-.game .is-3d #board .is-owned .train-space,
-.game .is-3d #board .is-owned .tunnel-mark,
-.game .is-3d #board .has-station > circle { opacity: 0; }
-.game .is-3d #board .route-group.is-selected .train-space,
-.game .is-3d #board .route-group:focus-visible .train-space { opacity: 1; fill: transparent; stroke: #cf8419; stroke-width: 2.5; }
-.game .is-3d #board .city-node:focus-visible > .city-circle { opacity: 1; fill: transparent; }
+.game .is-3d #board .train-space,
+.game .is-3d #board .tunnel-mark,
+.game .is-3d #board .ferry-mark,
+.game .is-3d #board .city-node > circle { opacity: 0; }
 .game .is-3d #board .city-label { paint-order: stroke fill; stroke: #faf4df; stroke-width: 3.5px; stroke-linejoin: round; }

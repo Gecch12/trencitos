@@ -63,5 +63,5 @@ function chooseSimpleAction(game, seat, random = randomInt, { randomBuild = fals
 
 // Keep the previously agreed replacement policy independent of practice AI.
 const chooseReplacementAction = (game, seat, random = randomInt) => chooseSimpleAction(game, seat, random, { randomBuild: true });
-const chooseBotAction = (game, seat, random = randomInt) => choosePracticeAction(game, seat, random, chooseSimpleAction);
+const chooseBotAction = (game, seat, random = randomInt, options) => choosePracticeAction(game, seat, random, chooseSimpleAction, options);
 module.exports = { chooseBotAction, chooseReplacementAction };

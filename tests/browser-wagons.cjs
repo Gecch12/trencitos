@@ -17,11 +17,16 @@ const out = path.resolve(__dirname, '../docs/qa');
     await page.goto(base);
     await page.locator('#homeTabPractice').click();
     const { WAGON_STYLES } = await import('../wagon-models.mjs');
+    const refinedModels = ['coal', 'stone', 'steel', 'mail', 'goods'];
     for (const style of WAGON_STYLES) {
       await page.locator(`#practiceColors [data-color="${style.color}"]`).click();
       await page.waitForFunction(model => document.getElementById('wagonPreview').dataset.model === model, style.model);
       assert.equal(await page.locator('#wagonPreviewStage canvas').count(), 1);
       assert.equal(await page.locator('#wagonPreviewName').innerText(), style.label);
+      if (refinedModels.includes(style.model)) {
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        await page.locator('#wagonPreview').screenshot({path:path.join(out,`wagon-${style.model}.png`)});
+      }
     }
     await page.locator('#practiceColors [data-color="#b88929"]').click();
     await page.waitForFunction(() => document.getElementById('wagonPreview').dataset.model === 'auto-carrier');
@@ -53,6 +58,33 @@ const out = path.resolve(__dirname, '../docs/qa');
     await page.evaluate(() => new Promise(requestAnimationFrame));
     const after = await page.evaluate(() => board3D.stats());
     assert.equal(after.geometries,before.geometries); assert.equal(after.textures,before.textures);
+    // Stress the revised families together at the full five-player piece bound.
+    const refinedDense = await page.evaluate(async models => {
+      const { WAGON_STYLES } = await import('/wagon-models.mjs');
+      game.players.forEach((p, i) => { p.color = WAGON_STYLES.find(s => s.model === models[i]).color; });
+      renderBoard(); await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      return board3D.stats();
+    }, refinedModels);
+    assert.equal(refinedDense.wagons,225);
+    assert.deepEqual(Object.keys(refinedDense.models).sort(),[...refinedModels].sort());
+    await page.screenshot({path:path.join(out,'wagons-refined-board.png'),fullPage:true});
+    const refinedPerformance = await page.evaluate(async () => {
+      zoom = 1.8; mapCenter = {x:360,y:310}; applyZoom();
+      const intervals = [], cpu = []; let previous = performance.now();
+      for (let i = 0; i < 90; i++) {
+        await new Promise(requestAnimationFrame); const now = performance.now();
+        if (i > 10) intervals.push(now - previous); previous = now;
+        const start = performance.now(); mapCenter.x += i % 2 ? -2 : 2; applyZoom();
+        if (i > 10) cpu.push(performance.now() - start);
+      }
+      const summary = a => { a.sort((x,y)=>x-y); return {n:a.length,median:a[Math.floor(a.length/2)],p95:a[Math.floor(a.length*.95)]}; };
+      const gl = document.querySelector('.board-3d-canvas').getContext('webgl2'), debug = gl.getExtension('WEBGL_debug_renderer_info');
+      return {cpuCameraMs:summary(cpu),frameIntervalMs:summary(intervals),renderer:debug && gl.getParameter(debug.UNMASKED_RENDERER_WEBGL)};
+    });
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const idleDraws = await page.evaluate(() => board3D.stats().draws);
+    await page.waitForTimeout(200);
+    assert.equal(await page.evaluate(() => board3D.stats().draws),idleDraws);
 
     const unavailable = await context.newPage();
     await unavailable.addInitScript(() => {
@@ -89,7 +121,7 @@ const out = path.resolve(__dirname, '../docs/qa');
       for (const [i, s] of WAGON_STYLES.entries()) {
         const cell = network[i].cells[0], p = board.project(cell.x, cell.y + 8, 0);
         const label = document.createElement('div'); label.className = 'label'; label.style.left = `${p.x}px`; label.style.top = `${p.y + 28}px`;
-        label.innerHTML = `${s.label}<small>${['Rojo','Azul','Verde','Amarillo','Morado','Marrón','Dorado','Negro','Gris','Magenta','Turquesa'][i]}</small>`; container.append(label);
+        label.innerHTML = `${s.label}<small>${['Rojo','Azul','Verde','Ámbar','Morado','Marrón','Amarillo','Negro','Gris','Magenta','Turquesa'][i]}</small>`; container.append(label);
       }
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const stats = board.stats();
@@ -107,8 +139,30 @@ const out = path.resolve(__dirname, '../docs/qa');
       return board.stats();
     });
     assert.deepEqual(reset.models, catalog.models); assert.equal(reset.geometries, catalog.geometries);
+    // Close views of the revised models, rendered live with the actual preview.
+    await page.route('**/__cargo-gallery', route => route.fulfill({contentType:'text/html',body:`<!doctype html><html lang="es"><meta charset="utf-8"><title>Cargas · Trencitos</title><style>
+      *{box-sizing:border-box}body{margin:0;padding:34px 36px;background:#edf2ef;color:#203e46;font-family:system-ui}h1{font-size:30px;letter-spacing:-1px;margin:0 0 6px}header p{margin:0 0 26px;color:#627b7e;font-size:15px}main{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}article{grid-column:span 2;background:#fafaf3;border:1px solid #d2ddd4;border-radius:16px;overflow:hidden}article:nth-child(n+4){grid-column:span 3}.stage{height:224px}canvas{display:block}footer{padding:0 20px 20px}h2{font-size:18px;margin:0 0 5px}footer p{font-size:13px;color:#627b7e;margin:0}
+      </style><header><h1>Cargas con identidad propia</h1><p>Los cinco modelos actualizados · Vista previa real del juego</p></header><main></main></html>`}));
+    await page.setViewportSize({width:1200,height:760});
+    await page.goto(`${base}/__cargo-gallery`);
+    await page.evaluate(async models => {
+      const { createWagonPreview } = await import('/wagon-preview.js');
+      const { WAGON_STYLES } = await import('/wagon-models.mjs');
+      const descriptions = ['Tolva profunda · Carbón fragmentado','Bloques de cantera · Vetas y amarres','Acero laminado · Hueco central y cinchos','Coche postal · Ventanillas y sobres','Contenedores · Paneles acanalados'];
+      window.previews = models.map((model,i) => {
+        const style = WAGON_STYLES.find(s => s.model === model);
+        const article = document.createElement('article'); article.innerHTML = '<div class="stage"></div><footer><h2></h2><p></p></footer>';
+        article.querySelector('h2').textContent = style.label; article.querySelector('p').textContent = descriptions[i];
+        document.querySelector('main').append(article);
+        const preview = createWagonPreview({container:article.querySelector('.stage'),onFailure:()=>{throw new Error('Preview failed');}});
+        preview.update(style.color); return preview;
+      });
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    }, refinedModels);
+    await page.screenshot({path:path.join(out,'wagons-refined.png'),fullPage:true});
+    await page.evaluate(() => previews.forEach(p=>p.dispose()));
     assert.deepEqual(errors, []);
-    const report = { date: new Date().toISOString(), browser: browser.version(), tests: ['all 11 previews match selection', 'gold auto carrier preview', 'mobile without overflow', 'room preview follows authoritative color', '3D ignores old 2D preferences and query', 'no owner symbols', 'resources stable across reload', 'WebGL startup failure and retry preserve the room', 'all 11 board models render', 'highlight/reset preserves model counts'], catalog, dense: after, errors };
+    const report = { date: new Date().toISOString(), browser: browser.version(), tests: ['all 11 previews match selection', 'five revised cargo previews captured', '225 wagons across the five revised families', 'dense revised models pan and remain idle without changes', 'yellow auto carrier preview', 'mobile without overflow', 'room preview follows authoritative color', '3D ignores old 2D preferences and query', 'no owner symbols', 'resources stable across reload', 'WebGL startup failure and retry preserve the room', 'all 11 board models render', 'highlight/reset preserves model counts'], catalog, dense: after, refinedDense, refinedPerformance, errors };
     fs.writeFileSync(path.join(out, 'wagons-report.json'), JSON.stringify(report, null, 2) + '\n');
     console.log(JSON.stringify(report, null, 2));
   } finally { await context.close(); await browser.close(); server.close(); }

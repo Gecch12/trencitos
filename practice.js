@@ -64,8 +64,9 @@ function createPracticeController({
       state.expiry = state.deadline = null;
     }
     const pendingBots = () => room.members.flatMap((member, i) => member.bot && room.game.players[i].pending.length ? [i] : []);
+    const pendingOffers = () => room.members.flatMap((member, i) => member.bot && room.game.players[i].offer ? [i] : []);
     const canAct = () => room.game.phase === "initial" ? pendingBots().length > 0
-      : !["finished", "closing"].includes(room.game.phase) && room.members[room.game.current]?.bot;
+      : room.game.phase !== "finished" && (pendingOffers().length > 0 || room.game.phase !== "closing" && room.members[room.game.current]?.bot);
     if (!canAct()) {
       cancelBot(state);
       return;
@@ -78,8 +79,8 @@ function createPracticeController({
       // is used by action(), so a delayed callback cannot act for the old seat.
       const actionTime = Date.now();
       if (Engine.expire(room.game, actionTime)) { sendRoom(room); return; }
-      if (room.game.phase === "initial") {
-        for (const seat of pendingBots()) {
+      if (room.game.phase === "initial" || pendingOffers().length) {
+        for (const seat of room.game.phase === "initial" ? pendingBots() : pendingOffers()) {
           const action = chooseBotAction(room.game, seat, random);
           if (action) Engine.action(room.game, seat, action, { now: actionTime });
         }
@@ -89,9 +90,9 @@ function createPracticeController({
       if (action) {
         Engine.action(room.game, room.game.current, action, { now: actionTime });
       } else {
-        // Practice bots deliberately do not take destinations or build stations.
-        // If no supported move remains, yield without changing those rules for humans.
-        Engine.note(room.game, `${room.game.players[room.game.current].name} no puede robar ni construir y cede el turno.`, room.game.current);
+        // A temporary practice opponent may yield if all remaining legal
+        // actions are strategically pointless. Human pass rules stay in Engine.
+        Engine.note(room.game, `${room.game.players[room.game.current].name} no encuentra una jugada útil y cede el turno.`, room.game.current);
         Engine.next(room.game);
       }
       sendRoom(room);

@@ -1,0 +1,30 @@
+{
+  "seed": 3001,
+  "seeds": 25,
+  "players": 4,
+  "opponent": "stage1",
+  "actionCounts": {
+    "choose_initial": 100,
+    "claim": 1557,
+    "draw_train": 4079,
+    "pay_tunnel": 69,
+    "draw_tickets": 85,
+    "keep_tickets": 85,
+    "decline_tunnel": 104,
+    "station": 51
+  },
+  "games": 100,
+  "wins": 29,
+  "winPercent": 29,
+  "averageScore": 99.82,
+  "baselineAverageScore": 95.38,
+  "completedTickets": 3.08,
+  "baselineCompletedTickets": 1.89,
+  "destinationScore": 32.85,
+  "averageTurns": 160.66,
+  "decisionMs": {
+    "p50": 7.94,
+    "p95": 28.35,
+    "max": 124.38
+  }
+}

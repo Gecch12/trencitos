@@ -34,6 +34,7 @@ const TICKET_COLORS = ["#b48916", "#c64e48", "#357bb5", "#32815b"];
 let zoom = 1,
   mapCenter = { ...MAP_CENTER };
 let board3D = null, board3DLoading = false, board3DFailed = false;
+let boardSpotlight = null;
 let labelPriority = [];
 let labelPlacements3D = new Map();
 function boardUnavailable() {
@@ -433,7 +434,6 @@ function renderHomeColors() {
   applyPlayerAppearance($("homeAvatar"), preferredColor);
   $("chosenColorName").textContent = LobbyUI.PALETTE.find(p => p.color === preferredColor)?.name || "";
   $("practiceColorName").textContent = $("chosenColorName").textContent;
-  for (const note of document.querySelectorAll(".color-finish-note")) note.hidden = GameUI.playerFinish(preferredColor) !== "gold";
   for (const id of ["practiceColors", "roomColors"]) {
     const root = $(id), focused = root.contains(document.activeElement) ? document.activeElement.dataset.color : null;
     root.replaceChildren();
@@ -443,7 +443,7 @@ function renderHomeColors() {
       button.dataset.finish = GameUI.playerFinish(color);
       button.style.setProperty("--choice-color", GameUI.playerColor(color));
       button.setAttribute("aria-label", owner ? `${name}, ocupado por ${owner.name}` : name);
-      button.title = owner ? `${name} · ${owner.name}` : name + (button.dataset.finish === "gold" ? " · Acabado metálico" : "");
+      button.title = owner ? `${name} · ${owner.name}` : name;
       button.setAttribute("aria-pressed", String(color === preferredColor));
       button.disabled = !!owner || (id === "roomColors" && lobbyStarted);
       if (color === preferredColor) button.innerHTML = '<span aria-hidden="true">✓</span>';
@@ -921,7 +921,11 @@ function constructionTarget(event) {
   return event.routeId !== undefined ? $("board").querySelector(`[data-route-id="${event.routeId}"]`) : $("board").querySelector(`[data-city="${event.city}"]`);
 }
 function animateConstruction(event) {
-  if (board3D || reducedMotion.matches || document.hidden || !constructionTarget(event)) { playSound("build"); return; }
+  if (board3D) {
+    if (reducedMotion.matches || document.hidden || !board3D.animateConstruction(event, () => { if (!document.hidden) playSound("build"); })) playSound("build");
+    return;
+  }
+  if (reducedMotion.matches || document.hidden || !constructionTarget(event)) { playSound("build"); return; }
   const flight = { event, started: performance.now(), animations: [], band: null };
   constructionFlights.set(event.id, flight);
   bindConstruction(flight);
@@ -954,12 +958,14 @@ function bindConstruction(flight) {
   }
 }
 function cancelConstruction() {
+  board3D?.cancelAnimations();
   for (const flight of constructionFlights.values()) {
     clearTimeout(flight.timer); flight.animations.forEach(a => a.cancel()); flight.band?.style.removeProperty("opacity");
   }
   constructionFlights.clear();
 }
 document.addEventListener("visibilitychange", () => { if (document.hidden) { finishTunnelReveal(true); cancelCardFlights(); cancelConstruction(); stopSounds(); } });
+reducedMotion.addEventListener("change", () => { if (reducedMotion.matches) cancelConstruction(); });
 window.addEventListener("resize", () => { cancelCardFlights(); cancelConstruction(); });
 reducedMotion.addEventListener("change", () => { if (reducedMotion.matches) skipTunnelAnimation(); cancelCardFlights(); cancelConstruction(); });
 function layoutHand() {
@@ -1068,9 +1074,13 @@ function syncBoard3D() {
   if (!board3D || !game) return;
   const requested = hoveredPlayer ?? focusedPlayer;
   const highlight = requested !== null && game.routes.some(r => r.owner === requested) ? requested : null;
-  board3D.update({ routes: game.routes.map(({ id, owner }) => ({ id, owner })),
+  const focus = document.activeElement.closest?.("#board [data-route-id]");
+  const cityFocus = document.activeElement.closest?.("#board [data-city]");
+  board3D.update({ routes: game.routes.map(({ id, owner, color, tunnel, ferry, a, b }) => ({ id, owner, color, tunnel, ferry, a, b })),
     players: game.players.map(p => ({ color: GameUI.playerColor(p.color), placed: [...p.placed] })),
-    hiddenRoute: tunnelReveal?.build?.routeId ?? null, highlight });
+    hiddenRoute: tunnelReveal?.build?.routeId ?? null, highlight, spotlight: boardSpotlight,
+    selectedRoute: selected ?? (focus ? +focus.dataset.routeId : null), selectedCity: stationCity ?? cityFocus?.dataset.city ?? null,
+    routeColors: C });
 }
 function highlightPlayerRoutes() {
   syncBoard3D();
@@ -1222,10 +1232,12 @@ function prioritizeCityLabels(element, cities) {
       }
     }
     updateCityLabels();
+    syncBoard3D();
   });
   for (const type of ["pointerleave", "blur"]) element.addEventListener(type, () => {
     labelPriority = [];
     updateCityLabels();
+    syncBoard3D();
   });
 }
 function updateCityLabels() {
@@ -1522,35 +1534,21 @@ function updateDestinationSpotlight() {
   }
   const selection = !uiDialog && $("overlay").classList.contains("hidden") &&
     GameUI.destinationSpotlightSelection(game, hoveredDestination, allDestinationsVisible, resultMapSelection);
+  boardSpotlight = selection ? {
+    routes: selection.routes || [], stationRoutes: selection.stationRoutes || [],
+    stations: selection.stations || [], endpoints: selection.endpoints || [],
+  } : null;
+  syncBoard3D();
   overlay.classList.toggle("is-visible", !!selection);
   overlay.classList.toggle("is-overview", !!selection?.overview);
+  overlay.replaceChildren();
   if (!selection) return;
+  for (const label of $("board").querySelectorAll("[data-city-label]")) label.style.opacity = ".32";
   const view = mapViewSize(); if (!view) return;
   const rect = $("mapscroll").getBoundingClientRect(), safe = mapSafeArea(rect);
-  overlay.setAttribute("viewBox", `0 0 ${rect.width} ${rect.height}`); overlay.replaceChildren();
+  overlay.setAttribute("viewBox", `0 0 ${rect.width} ${rect.height}`);
   const el = svgElements(overlay);
-  // The sidebar includes transparent headings/gaps: leave its entire column
-  // untouched, not just its opaque cards.
-  el("rect", { width: safe.x + safe.width + 8, height: rect.height, fill: "#102c38", opacity: .66 });
-  const context = el("g", { transform: `scale(${1 / view.scale} ${1 / (view.scaleY || view.scale)}) translate(${-view.x} ${-view.y})`, class: "completed-connection" });
-  for (const id of selection.routes || []) {
-    const geometry = MAP_GEOMETRY[id]; if (!geometry) continue;
-    const borrowed = selection.stationRoutes?.includes(id);
-    el("path", { d: geometry.d, class: "connection-halo", fill: "none", stroke: "#ffe08a", "stroke-width": 16, opacity: .85, "stroke-linecap": "round", ...(borrowed ? { "stroke-dasharray": "5 5" } : {}), "data-connection-route": id, "data-borrowed": !!borrowed }, context);
-    const original = $("board").querySelector(`[data-route-id="${id}"]`);
-    if (original) {
-      const copy = original.cloneNode(true);
-      copy.setAttribute("class", "connection-pieces");
-      for (const node of [copy, ...copy.querySelectorAll("*")]) for (const attr of ["tabindex", "role", "data-route-id", "aria-label"]) node.removeAttribute(attr);
-      copy.querySelector(".route-hit")?.remove(); context.appendChild(copy);
-    }
-  }
-  for (const station of selection.stations || []) {
-    const [x, y] = RailMap.cities[station.city];
-    const marker = el("g", { transform: `translate(${x} ${y})`, "data-connection-station": station.city }, context);
-    el("circle", { r: 12 * Math.max(.8, view.scale), fill: "#ffdd7c", opacity: .65 }, marker);
-    drawStation(el, marker, GameUI.playerColor(game.players[station.seat].color), Math.max(.8, view.scale));
-  }
+  // Only readable endpoint labels/numbers belong above the Three.js scene.
   const labels = new Map(), endpoints = [];
   for (const key of new Set(selection.endpoints || [])) {
     $("board").querySelector(`[data-city-label="${key}"]`)?.style.setProperty("opacity", "0");

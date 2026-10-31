@@ -207,7 +207,7 @@ test("leaving deletes the room, releases the socket and cancels every timer", ()
   assert.equal(room.game.initialDone, 0);
 });
 
-test("bots without draw/build options yield their turn without taking destinations or stations", () => {
+test("bots yield when remaining destination draws and stations have no strategic value", () => {
   const { clock, room, controller } = setup();
   room.game.phase = "play";
   room.game.current = 1;
@@ -218,6 +218,52 @@ test("bots without draw/build options yield their turn without taking destinatio
   assert.equal(room.game.current, 2);
   assert.equal(room.game.shortDeck.length, tickets);
   assert.equal(room.game.players[1].stations, 3);
+});
+
+test("a bot settles its ticket offer during the human turn without resetting the human deadline", () => {
+  const { clock, room, controller, updates } = setup();
+  const g = room.game;
+  g.phase = "play"; g.current = 0;
+  g.routes = [{ id: 0, a: "PAR", b: "BRU", n: 2, color: "red", owner: 1, ferry: 0, tunnel: false }];
+  g.players[1].offer = { id: 8, deadline: Date.now() + 60000, tickets: [
+    { id: 100, a: "PAR", b: "BRU", p: 8 }, { id: 101, a: "MAD", b: "BAR", p: 12 },
+  ] };
+  Engine.ensureTiming(g, Date.now());
+  const deadline = g.turnDeadline, serial = g.turnSerial;
+  controller.sync(room); clock.tick(799);
+  assert.ok(g.players[1].offer);
+  clock.tick(1);
+  assert.equal(g.players[1].offer, null);
+  assert.deepEqual(g.players[1].tickets.map(t => t.id), [100]);
+  assert.equal(g.current, 0); assert.equal(g.turnDeadline, deadline); assert.equal(g.turnSerial, serial);
+  assert.deepEqual(updates, [800]);
+  assert.equal(clock.timers.size, 0);
+});
+
+test("closing schedules outstanding bot choices and finishes without waiting for their timeout", () => {
+  const { clock, room, controller } = setup();
+  const g = room.game;
+  g.phase = "closing"; g.finalRemaining = 0; g.current = 0;
+  g.players.forEach(p => { p.pending = []; });
+  g.routes = [{ id: 0, a: "PAR", b: "BRU", n: 2, color: "red", owner: 1, ferry: 0, tunnel: false }];
+  g.players[1].offer = { id: 9, deadline: Date.now() + 60000, tickets: [{ id: 100, a: "PAR", b: "BRU", p: 8 }] };
+  controller.sync(room); clock.tick(800);
+  assert.equal(g.phase, "finished");
+  assert.equal(g.result.find(r => r.seat === 1).destination, 8);
+  assert.equal(clock.timers.size, 0);
+});
+
+test("disconnect pauses pending bot ticket choices and reconnect resumes them", () => {
+  const { clock, room, human, controller, disconnect } = setup();
+  const g = room.game;
+  g.phase = "play"; g.current = 0;
+  g.players[1].offer = { id: 10, deadline: Date.now() + 60000, tickets: [{ id: 100, a: "PAR", b: "BRU", p: 8 }] };
+  controller.sync(room); disconnect(); clock.tick(1000);
+  assert.ok(g.players[1].offer);
+  room.members[0].ws = human;
+  controller.sync(room); clock.tick(800);
+  assert.equal(g.players[1].offer, null);
+  controller.close();
 });
 
 test("ordinary multiplayer rooms are unaffected by practice controls and expiry", () => {

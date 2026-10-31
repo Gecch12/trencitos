@@ -1,5 +1,9 @@
 'use strict';
 const crypto=require('node:crypto');
+// Per-action randomness stays outside serialized state. Simulations can supply
+// an isolated stream for all draws/recycles without patching global crypto.
+const actionRandom=new WeakMap();
+const randomFor=g=>actionRandom.get(g)||crypto.randomInt;
 const {COLORS,PLAYER_COLORS,CITIES,ROUTES,TICKETS}=require('./data');
 const SCORE={1:1,2:2,3:4,4:7,6:15,8:21};
 const TURN_MS=60000, INITIAL_MS=60000, OFFER_MS=60000;
@@ -25,13 +29,13 @@ function ensureTiming(g,now=Date.now()){
  const waiting=!!(g.phase==='play'&&g.players[g.current].offer);
  if(g.turnSeat!==g.current||g.turnClockPhase!==(g.phase==='initial'?'initial':'play')||!!g.turnWaiting!==waiting||(!waiting&&!Number.isFinite(g.turnDeadline)))startTurn(g,now);
 }
-function shuffle(xs){let a=[...xs];for(let i=a.length-1;i>0;i--){let j=crypto.randomInt(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+function shuffle(xs,random=crypto.randomInt){let a=[...xs];for(let i=a.length-1;i>0;i--){let j=random(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
 function fail(message){throw new Error(message)}
 const same=(x,y)=>x.a===y.a&&x.b===y.b||x.a===y.b&&x.b===y.a;
-function draw(g){if(!g.deck.length&&g.discard.length){g.deck=shuffle(g.discard);g.discard=[]}return g.deck.pop()||null}
+function draw(g){if(!g.deck.length&&g.discard.length){g.deck=shuffle(g.discard,randomFor(g));g.discard=[]}return g.deck.pop()||null}
 // House rule: each resolved event returns its whole discard batch to the deck.
 // Pending tunnel reveals are deliberately NOT in discard until resolution.
-function recycleDiscards(g){if(g.discard.length){g.deck=shuffle([...g.deck,...g.discard]);g.discard=[]}}
+function recycleDiscards(g){if(g.discard.length){g.deck=shuffle([...g.deck,...g.discard],randomFor(g));g.discard=[]}}
 function combinations(n,k){if(k<0||k>n)return 0;let total=1;for(let i=1;i<=k;i++)total=total*(n-i+1)/i;return Math.round(total)}
 function refill(g){
  while(g.face.length<5){const c=draw(g);if(!c)break;g.face.push(c)}
@@ -43,14 +47,14 @@ function refill(g){
  const weights=[0,1,2].map(k=>combinations(wild,k)*combinations(regular,5-k));
  const total=weights.reduce((a,b)=>a+b,0);
  if(!total){while(g.face.length<5){const c=draw(g);if(!c)break;g.face.push(c)}return}
- let pick=crypto.randomInt(total),neededWild=0;
+ let pick=randomFor(g)(total),neededWild=0;
  while(pick>=weights[neededWild])pick-=weights[neededWild++];
  let neededRegular=5-neededWild;
  for(let i=g.deck.length-1;i>=0&&(neededWild||neededRegular);i--){
   const isWild=g.deck[i]==='wild';
   if(isWild?neededWild:neededRegular){g.face.push(...g.deck.splice(i,1));if(isWild)neededWild--;else neededRegular--}
  }
- g.face=shuffle(g.face);
+ g.face=shuffle(g.face,randomFor(g));
 }
 function newGame(names,first=0,now=Date.now()){if(!Array.isArray(names)||names.length<2||names.length>5)fail('Se requieren 2–5 jugadores.');
  if(!Number.isInteger(first)||first<0||first>=names.length)fail('Primer jugador inválido.');
@@ -87,7 +91,11 @@ function pay(hand,color,quantity,wildNeeded=0,wildCount){if(!Number.isInteger(qu
 function spend(g,p,comp){for(let k=0;k<comp.regular;k++){const i=p.hand.indexOf(comp.color);if(i<0)throw Error('Descuadre de mano');g.discard.push(...p.hand.splice(i,1))}
  for(let k=0;k<comp.wild;k++){const i=p.hand.indexOf('wild');if(i<0)throw Error('Descuadre de comodines');g.discard.push(...p.hand.splice(i,1))}}
 function block(g,r,seat){return g.routes.some(x=>x.id!==r.id&&same(x,r)&&x.owner!==null&&(x.owner===seat||g.players.length<=3))}
-function action(g,seat,msg,{now=Date.now(),random=crypto.randomInt}={}){expire(g,now,random);const serial=g.turnSerial;applyAction(g,seat,msg,now);if(g.turnSerial!==serial&&g.players[seat])g.players[seat].missedTurns=0;recycleDiscards(g)}
+function action(g,seat,msg,{now=Date.now(),random=crypto.randomInt}={}){
+ const previous=actionRandom.get(g);actionRandom.set(g,random);
+ try{expire(g,now,random);const serial=g.turnSerial;applyAction(g,seat,msg,now);if(g.turnSerial!==serial&&g.players[seat])g.players[seat].missedTurns=0;recycleDiscards(g)}
+ finally{if(previous)actionRandom.set(g,previous);else actionRandom.delete(g)}
+}
 function settleOffer(g,seat,indexes,finalize=true,now=Date.now()){
  const p=g.players[seat],offer=p.offer,ix=indices(indexes,offer.tickets.length,1);
  p.tickets.push(...ix.map(i=>offer.tickets[i]));g.shortDeck.push(...offer.tickets.filter((_,i)=>!ix.includes(i)));p.offer=null;

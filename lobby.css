@@ -7,14 +7,6 @@
 .wagon-preview figcaption strong { font-size: 14px; color: #193b49; text-align: right; }
 .wagon-preview > p { padding: 0 16px 12px; }
 @media (max-width: 480px) { .wagon-preview-stage { height: 150px; } }
-:root { --gold-metal: linear-gradient(135deg, #815019 0%, #d5a43c 18%, #fff0ad 38%, #efcc6c 48%, #b48125 53%, #e8bd57 76%, #91601e 100%); }
-/* The finish follows player identity across the lobby, history and results. */
-[data-finish="gold"] .player-avatar,
-.home-avatar[data-finish="gold"], [data-finish="gold"] > .home-avatar {
-  background: var(--gold-metal); color: #604216;
-  box-shadow: inset 0 1px 1px #fff4bf, inset 0 -1px 2px #68411380, 0 0 0 1px #ab7b30, 0 2px 5px #68411324;
-}
-.game [data-finish="gold"] .player-avatar > svg, [data-finish="gold"] .player-avatar > svg { fill: #fff6d7; stroke: #6c471b; }
 body:not(.is-playing) { min-height: 100dvh; background: #eaf0f0; color: #193b49; }
 .top, .is-playing .top { background: #173b4b; border-bottom: 1px solid #ffffff14; box-shadow: none; }
 .top { height: 68px; padding-inline: 28px; }
@@ -65,9 +57,6 @@ body:not(.is-playing) { min-height: 100dvh; background: #eaf0f0; color: #193b49;
 .color-options { display: flex; gap: 10px; flex-wrap: wrap; }
 .color-options button { position: relative; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; min-height: 44px; border: 2px solid transparent; background: transparent; border-radius: 50%; color: #183744; }
 .color-options button::before { content: ""; width: 30px; height: 30px; border-radius: 50%; background: var(--choice-color); box-shadow: inset 0 0 0 1px #15394925; }
-.color-options button[data-finish="gold"]::before { background: var(--gold-metal); box-shadow: inset 0 0 0 1px #936722, inset 0 2px 2px #fff2b8, 0 2px 4px #80571f30; }
-.color-options button[data-finish="gold"] > span { color: #533811; text-shadow: 0 1px 1px #fff4cc; }
-.color-finish-note { margin: 10px 0 0; color: #78541f; font-size: 12px; }
 .color-options button[aria-pressed="true"] { border-color: #183f50; }
 .color-options button > span { position: absolute; font-size: 20px; color: #fff; text-shadow: 0 1px 2px #102b3db3; }
 .color-options button:disabled { opacity: .5; }

@@ -14,11 +14,22 @@ npm test
 node scripts/check-docs.js
 node scripts/check-docs.js --index
 node scripts/check-docs.js --base HEAD
+node scripts/benchmark-bots.js --seed 3001 --seeds 25 --players 4 --opponent stage1
 ```
 
-El último comando revisa cambios desde una referencia y cambios locales. Sus
+`check-docs.js --base HEAD` revisa cambios desde una referencia y cambios locales. Sus
 avisos de fuentes afectadas solicitan revisión semántica; no exigen editar un
 documento que sigue siendo correcto.
+
+El benchmark enfrenta un bot nuevo con tres rivales (para cuatro jugadores),
+rotándolo por todos los asientos para cada semilla. `--opponent stage1` usa la
+primera mejora, `old` el bot original y `heuristic` la versión completa sin
+búsqueda de turnos futuros. Separa la aleatoriedad de decisiones de la del motor
+y reproduce repartos, mercados y reciclados sin cambiar el RNG de producción.
+`--seeds` cuenta repartos; el total es semillas × jugadores. Informa victorias
+(repartidas en empates), puntos, destinos y latencia de decisiones. Las métricas
+de tiempo dependen de la máquina y de la carga. Los resultados registrados y
+los conjuntos usados para ajuste/evaluación están en [la ficha](work/practice-ai.md).
 
 ## Worktrees y ramas
 
@@ -44,6 +55,7 @@ npm run test:board3d
 # Si 3119 está ocupado:
 QA_PORT=3120 npm run test:board3d
 node tests/browser-wagons.cjs
+node tests/browser-board-continuity.cjs
 ```
 
 Requiere Chrome instalado (Playwright usa `channel: chrome`; se puede elegir
@@ -56,6 +68,9 @@ El segundo conductor usa 3122, comprueba selección/vista previa, ausencia de s�
 reintento ante fallo de WebGL y recursos al recargar. Genera `docs/qa/wagons-catalog.png` con las once piezas reales y su
 informe `wagons-report.json`. La galería es un fixture interceptado por Playwright;
 no se agrega al servidor ni altera las reglas/límite de cinco jugadores.
+El tercero usa 3124 y comprueba profundidad en Frankfurt, conexiones propias y
+prestadas, animaciones reales por WebSocket, reconexión, movimiento reducido y
+paleta compatible. Genera `threejs-continuity-report.json` y capturas asociadas.
 `node tests/helpers/threejs-preview.js` deja disponible una escena densa local
 en 3119 para inspección manual. Los fixtures nunca se sirven al cliente como JS.
 

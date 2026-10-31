@@ -11,15 +11,16 @@ const COLORS = [
   "orange",
   "purple",
 ];
-// Keep the original five first: existing seats and saved games retain their colors.
+// Keep the original five first and color keys stable in saves/protocol.
+// Optional paint changes presentation without changing reservations/ownership.
 const PLAYER_PALETTE = [
   { color: "#d45748", name: "Rojo" },
   { color: "#458ad4", name: "Azul" },
   { color: "#4b9d76", name: "Verde" },
-  { color: "#ddaf40", name: "Amarillo" },
+  { color: "#ddaf40", paint: "#e5a12c", name: "Ámbar" },
   { color: "#9a75ba", name: "Morado" },
   { color: "#88583d", name: "Marrón" },
-  { color: "#b88929", name: "Dorado", finish: "gold" },
+  { color: "#b88929", paint: "#f2d33d", name: "Amarillo" },
   { color: "#242831", name: "Negro" },
   { color: "#7c8796", name: "Gris" },
   { color: "#c43d92", name: "Magenta" },

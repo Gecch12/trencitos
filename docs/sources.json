@@ -6,6 +6,7 @@
     "multiplayer.js",
     "practice.js",
     "practice-bot.js",
+    "practice-planner.js",
     "bots.js",
     "room-store.js",
     "supabase-store.js",
@@ -18,7 +19,10 @@
     "map-layout.js",
     "wagon-models.mjs",
     "wagon-renderer.js",
-    "wagon-preview.js"
+    "practice-tactics.js",
+    "practice-search.js",
+    "wagon-preview.js",
+    "data.js"
   ],
   "domain.md": [
     "engine.js",
@@ -49,10 +53,25 @@
     "wagon-renderer.js",
     "tests/wagon-models.test.js",
     "tests/browser-wagons.cjs",
-    "wagon-preview.js"
+    "wagon-preview.js",
+    "tests/browser-board-continuity.cjs"
   ],
   "work/sounds.md": [
     "app.js"
+  ],
+  "work/practice-ai.md": [
+    "practice-bot.js",
+    "practice-planner.js",
+    "scripts/benchmark-bots.js",
+    "tests/practice-planner.test.js",
+    "tests/practice-strategy.test.js",
+    "tests/helpers/bot-match.js",
+    "practice-tactics.js",
+    "practice-search.js",
+    "engine.js",
+    "practice.js",
+    "tests/practice-advanced.test.js",
+    "tests/practice.test.js"
   ],
   "work/materials.md": [
     "wagon-models.mjs",

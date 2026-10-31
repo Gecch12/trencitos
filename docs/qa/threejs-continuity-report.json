@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-31T19:07:00.783Z",
+  "browser": "156.0.8078.74",
+  "checks": [
+    {
+      "name": "stored color keys display yellow cars and amber grain without gold presentation",
+      "passed": true
+    },
+    {
+      "name": "Frankfurt and free routes share 3D depth; occupied paths have owner bands; no replay on load",
+      "freeCells": 293,
+      "ownershipBands": 3,
+      "visibleSvgPieces": 0,
+      "animations": 0
+    },
+    {
+      "name": "keyboard focus is reflected in depth-tested route/city highlights",
+      "passed": true
+    },
+    {
+      "name": "destination focus preserves 3D models, stations and owner colors; toggle clears it",
+      "passed": true
+    },
+    {
+      "name": "borrowed route keeps its owner and dashed 3D connection; mobile without overflow",
+      "rendered": [
+        28
+      ],
+      "expected": [
+        28
+      ]
+    },
+    {
+      "name": "accepted route animates actual meshes then rests; reconnect does not replay",
+      "key": "route:0",
+      "frames": 32,
+      "maxLift": 18,
+      "minLift": 0
+    },
+    {
+      "name": "station settles with the same construction effect",
+      "key": "city:PAR",
+      "frames": 32,
+      "maxLift": 18,
+      "minLift": 0
+    },
+    {
+      "name": "tunnel remains unbuilt during evidence and animates once after resolution",
+      "key": "route:19",
+      "frames": 31,
+      "maxLift": 18,
+      "minLift": 0
+    },
+    {
+      "name": "reduced motion presents accepted construction immediately",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "passed": true
+}

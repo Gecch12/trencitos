@@ -24,11 +24,15 @@ Implementación y avance viven exclusivamente en [las fichas](../work/README.md)
   etiquetas 2D ancladas. Sin física de simulador ni controles libres de tabletop.
   Se retira la alternativa 2D por decisión posterior del usuario. Ante fallo de
   WebGL, reintentar conservando la sala. Los mapas de detalle mantienen SVG.
+  Vías libres, marcas, piezas y resaltados del tablero principal comparten la
+  profundidad de Three.js; los destinos no sustituyen piezas por copias 2D.
   Ver [tablero](../work/board-3d.md).
 - Vagones 3D inspirados en las cartas para los once colores de jugador: la
   identidad del propietario determina el modelo, nunca el pago de una ruta.
   Modelo, pintura y acabado separados internamente; todo disponible gratis.
-  El dorado transporta deportivos sobre una plataforma metálica. No se reabre la propuesta
+  Amarillo transporta deportivos y ámbar lleva grano. Se retira la identidad
+  dorada y su texto de acabado metálico; las claves guardadas siguen siendo compatibles.
+  No se reabre la propuesta
   descartada de locomotoras independientes ni se agregan reglas de mercancías.
 - Previsualizar el vagón real al elegir color antes de jugar, en práctica y sala.
   Eliminar símbolos geométricos de puesto en toda la interfaz; nombre, color y

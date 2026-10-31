@@ -18,6 +18,10 @@ Para después:
 - [Sonidos](sounds.md).
 - [Verificación pendiente de la beta](quality.md).
 
+Mejoras solicitadas del juego:
+
+- [Inteligencia de bots de práctica](practice-ai.md).
+
 Abre solo la ficha pertinente y sus referencias. El próximo paso está allí.
 Los hitos viven dentro de la ficha hasta necesitar una entrega independiente;
 entonces usa `parent` y `depends_on`, según [el método](../maintenance.md).

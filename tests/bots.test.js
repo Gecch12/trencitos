@@ -25,15 +25,16 @@ function fixture(routes = [route()]) {
   return game;
 }
 
-test("bots choose exactly two distinct initial tickets without mutating the game", () => {
+test("bots choose two to four distinct initial tickets without mutating the game", () => {
   const game = Engine.newGame(["Humano", "Bot 1", "Bot 2", "Bot 3"], 1);
   const before = JSON.stringify(game);
   const action = chooseBotAction(game, 1, random());
   assert.equal(JSON.stringify(game), before);
   assert.equal(action.type, "choose_initial");
-  assert.equal(new Set(action.indexes).size, 2);
+  assert.equal(new Set(action.indexes).size, action.indexes.length);
+  assert.ok(action.indexes.length >= 2 && action.indexes.length <= 4);
   Engine.action(game, 1, action);
-  assert.equal(game.players[1].tickets.length, 2);
+  assert.equal(game.players[1].tickets.length, action.indexes.length);
   assert.equal(game.current, 1);
   assert.equal(chooseBotAction(game, 1), null);
   assert.equal(chooseBotAction(game, 2).type, "choose_initial");
@@ -121,7 +122,9 @@ test("tunnel surcharge is paid only after reserving the base payment", () => {
     const game = fixture([route({ tunnel: true })]);
     game.players[1].hand = ["red", "red", ...(canAfford ? ["wild"] : [])];
     game.deck = ["blue", "green", "red"];
-    Engine.action(game, 1, chooseBotAction(game, 1, first));
+    // Exercise settlement independently: the improved policy may save a
+    // reserve before attempting this tunnel in the first place.
+    Engine.action(game, 1, { type: "claim", routeId: 0, color: "red", wildCount: 0 });
     assert.equal(game.phase, "tunnel");
     assert.equal(game.pending.surcharge, 1);
     const action = chooseBotAction(game, 1, first);
@@ -146,7 +149,7 @@ test("all-locomotive tunnels, including a zero surcharge, resolve legally", () =
   }
 });
 
-test("bots return no move instead of drawing destinations or constructing stations", () => {
+test("bots yield when available stations and destination draws have no strategic value", () => {
   const game = fixture([]);
   game.deck = game.discard = game.face = [];
   game.players[1].hand = ["red", "red", "red"];
@@ -161,17 +164,18 @@ test("complete simulated games preserve cards and reach final-round scoring", ()
     const rng = random(simulation + 1);
     let steps = 0;
     while (game.phase !== "finished" && steps++ < 5000) {
-      const seat = game.phase === "initial" ? game.players.findIndex(p => p.pending.length) : game.current;
+      const offering = game.players.findIndex(p => p.offer);
+      const seat = game.phase === "initial" ? game.players.findIndex(p => p.pending.length) : offering >= 0 ? offering : game.current;
       const action = chooseBotAction(game, seat, rng);
       if (action) {
-        assert.ok(["choose_initial", "claim", "draw_train", "pay_tunnel", "decline_tunnel"].includes(action.type));
+        assert.ok(["choose_initial", "claim", "draw_train", "pay_tunnel", "decline_tunnel", "station", "draw_tickets", "keep_tickets"].includes(action.type));
         Engine.action(game, seat, action);
       } else Engine.next(game);
       const cards = game.deck.length + game.discard.length + game.face.length +
         game.players.reduce((sum, player) => sum + player.hand.length, 0) +
         (game.phase === "tunnel" ? game.pending.revealed.length : 0);
       assert.equal(cards, 110);
-      assert.ok(game.players.every((player) => player.trains >= 0 && player.stations === 3));
+      assert.ok(game.players.every((player) => player.trains >= 0 && player.stations >= 0 && player.stations + player.placed.length === 3));
     }
     assert.equal(game.phase, "finished", `simulation ${simulation} did not finish`);
     assert.equal(game.finalRemaining, 0);
@@ -180,21 +184,22 @@ test("complete simulated games preserve cards and reach final-round scoring", ()
   }
 });
 
-for (const count of [2, 3, 5]) test(`strategic bots finish ${count}-player games without illegal moves or extra abilities`, () => {
+for (const count of [2, 3, 5]) test(`strategic bots finish ${count}-player games without illegal moves, including stations and ticket offers`, () => {
   for (let run = 0; run < 4; run++) {
     const game = Engine.newGame(Array.from({ length: count }, (_, i) => `Bot ${i}`));
     const rng = random(count * 10 + run);
     let steps = 0;
     while (game.phase !== "finished" && steps++ < 3000) {
-      const seat = game.phase === "initial" ? game.players.findIndex(p => p.pending.length) : game.current;
+      const offering = game.players.findIndex(p => p.offer);
+      const seat = game.phase === "initial" ? game.players.findIndex(p => p.pending.length) : offering >= 0 ? offering : game.current;
       const action = chooseBotAction(game, seat, rng);
       if (action) {
-        assert.ok(["choose_initial", "draw_train", "claim", "pay_tunnel", "decline_tunnel"].includes(action.type));
+        assert.ok(["choose_initial", "draw_train", "claim", "pay_tunnel", "decline_tunnel", "station", "draw_tickets", "keep_tickets"].includes(action.type));
         Engine.action(game, seat, action);
       } else Engine.next(game);
       assert.equal(game.deck.length + game.discard.length + game.face.length + game.players.reduce((sum, p) => sum + p.hand.length, 0)
         + (game.phase === "tunnel" ? game.pending.revealed.length : 0), 110);
-      assert.ok(game.players.every(p => p.trains >= 0 && p.stations === 3 && p.tickets.length <= 2));
+      assert.ok(game.players.every(p => p.trains >= 0 && p.stations >= 0 && p.stations + p.placed.length === 3));
     }
     assert.equal(game.phase, "finished", `${count} players, run ${run}, ${steps} steps`);
     assert.equal(game.result.length, count);

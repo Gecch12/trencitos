@@ -68,6 +68,7 @@ test("a blocked target is replaced by an available detour, respecting parallel-t
   const g = fixture([route(0, "PAR", "BRU", 4), route(1, "PAR", "BRU", 4, "green"),
     route(2, "PAR", "AMS", 3, "blue"), route(3, "AMS", "BRU", 3, "blue")], ["red", "red"], [ticket("PAR", "BRU")]);
   g.players.pop();
+  g.players[0].stations = 0; // Exercise detouring when a station cannot rescue the ticket.
   assert.equal(chooseBotAction(g, 0, first).index, 0);
   g.routes[0].owner = 1; g.turnSerial += 3;
   assert.equal(chooseBotAction(g, 0, first).index, 2);
@@ -75,6 +76,7 @@ test("a blocked target is replaced by an available detour, respecting parallel-t
 
 test("a blocked and unreachable destination falls back to available scoring routes", () => {
   const g = fixture([route(0, "PAR", "BRU", 4, "red", { owner: 1 }), route(1, "MAD", "BAR", 2, "blue")], ["blue", "blue"], [ticket("PAR", "BRU")]);
+  g.players[0].stations = 0;
   assert.equal(chooseBotAction(g, 0, first).routeId, 1);
 });
 
@@ -126,7 +128,11 @@ test("plans never inspect opponents' private data or the deck/discard order and 
   const before = JSON.stringify(g);
   const guarded = new Proxy(g, { get(target, key) {
     if (key === "players") return target.players.map((p, i) => i === 0 ? p : new Proxy(p, { get(player, field) {
-      if (["hand", "tickets", "pending", "offer"].includes(field)) throw Error(`Private opponent access: ${field}`);
+      if (["hand", "tickets"].includes(field)) return new Proxy(player[field], { get(cards, key) {
+        if (key !== "length") throw Error(`Private opponent ${field} access: ${String(key)}`);
+        return cards.length;
+      } });
+      if (["pending", "offer"].includes(field)) throw Error(`Private opponent access: ${field}`);
       return player[field];
     } }));
     if (["deck", "discard", "shortDeck"].includes(key)) return new Proxy(target[key], { get(cards, field) {

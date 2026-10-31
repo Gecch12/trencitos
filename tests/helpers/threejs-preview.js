@@ -32,6 +32,20 @@ async function start(port = 3119) {
   dense.game.players.forEach((p, i) => { p.placed = cities.slice(i * 3, i * 3 + 3); p.stations = 0; p.trains = left[i]; });
   add(dense);
   add(tunnelRoom('830105', 'zero', true));
+  // Regressions: Frankfurt roof against the free Essen route; London–Berlin
+  // completed directly or by borrowing an opponent's route through a station.
+  for (const [code, borrowed] of [['830106',false],['830107',true]]) {
+    const r = structuredClone(base); r.code = code;
+    r.game.routes.forEach(route => { route.owner = null; });
+    r.game.players[0].color = '#b88929';
+    r.game.players[0].placed = ['FRA']; r.game.players[0].stations = 2;
+    r.game.players[0].tickets = [E.TICKETS.find(t=>t.a==='LON' && t.b==='BER')];
+    for (const [a,b] of [['LON','AMS'],['AMS','FRA'],['FRA','BER']]) {
+      const route = r.game.routes.find(route=>route.a===a && route.b===b || route.a===b && route.b===a);
+      route.owner = borrowed && a === 'AMS' ? 1 : 0;
+    }
+    add(r);
+  }
   await new Promise(resolve => server.listen(port, '127.0.0.1', resolve));
   return { server, rooms, token, port: server.address().port };
 }
