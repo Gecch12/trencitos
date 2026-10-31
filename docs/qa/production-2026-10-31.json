@@ -1,0 +1,116 @@
+{
+  "checkedAt": "2026-10-31T19:32:18.550Z",
+  "base": "https://trencitos-swamp.onrender.com",
+  "commit": "16bf6c3bd1a1f90a3997378ae940b3fe13536d21",
+  "health": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 0
+  },
+  "assets": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "sha256": "2e83e66b5faf96017e34efd4c69265989a8e9ac36e083a0a3be360c0a2c45ba6",
+      "bytes": 17215
+    },
+    {
+      "file": "app.js",
+      "status": 200,
+      "sha256": "4b44e79b5b169c8c7f817b92cbe27669ca29dd180a393bc5e5ee190bb5001182",
+      "bytes": 160075
+    },
+    {
+      "file": "board-3d.js",
+      "status": 200,
+      "sha256": "a90e06ae7c6aedbe15e6141ed899a7915c63c5baa25694d3dd79f0f8fef97a0e",
+      "bytes": 17356
+    },
+    {
+      "file": "board-3d.css",
+      "status": 200,
+      "sha256": "3fe26ee62ae63f239d839d9988bccda5e844ab31ae764adf882c656a6e5577a5",
+      "bytes": 1326
+    },
+    {
+      "file": "board-camera.js",
+      "status": 200,
+      "sha256": "f97b8a79a1687529857b71d182dbe24c3dfac74ec24f8848c3b3c6cfa73ed583",
+      "bytes": 767
+    },
+    {
+      "file": "wagon-models.mjs",
+      "status": 200,
+      "sha256": "468899a5dd3be505dfc9097e4254973dabb15a2ca28a3e2fa8b974ab02cbe9ba",
+      "bytes": 10353
+    },
+    {
+      "file": "wagon-renderer.js",
+      "status": 200,
+      "sha256": "c1864e9c320888b8840d49de9f52c62f311e4dac375902258b6e6ddf910492a3",
+      "bytes": 8872
+    },
+    {
+      "file": "wagon-preview.js",
+      "status": 200,
+      "sha256": "4067dd72ad2472e9af8e312aa95709fea9fa32454bc8d8b420e9bb8fcca5acf4",
+      "bytes": 3858
+    },
+    {
+      "file": "game-ui.js",
+      "status": 200,
+      "sha256": "3aa58f7365ecc125156fc3133bc105b29bccab491c50a8ef0ec0ca1d31b4b245",
+      "bytes": 16288
+    },
+    {
+      "file": "data.js",
+      "status": 200,
+      "sha256": "3159fadfc74d6103b4ea39d8ac49dc700635272db328321513e341d640e102f0",
+      "bytes": 5453
+    },
+    {
+      "file": "lobby.css",
+      "status": 200,
+      "sha256": "b6c0fa3ba8a113876cb870f62cb33437e4992cc5d512cefe99d8b60a593b7f9b",
+      "bytes": 8807
+    },
+    {
+      "file": "vendor/three.module.js",
+      "status": 200,
+      "sha256": "104f56145899722094556490d787aae0617cc2fc3382f31df02d724ea1aee341",
+      "bytes": 658900
+    },
+    {
+      "file": "vendor/three.core.js",
+      "status": 200,
+      "sha256": "613e370f76638fdef83926642bf256dc9615684922de1ce1f63a8583e5d78578",
+      "bytes": 1474799
+    }
+  ],
+  "privatePaths": [
+    {
+      "file": "/.env",
+      "status": 404
+    },
+    {
+      "file": "/supabase-store.js",
+      "status": 404
+    },
+    {
+      "file": "/room-state.json",
+      "status": 404
+    },
+    {
+      "file": "/practice-planner.js",
+      "status": 404
+    },
+    {
+      "file": "/practice-search.js",
+      "status": 404
+    },
+    {
+      "file": "/practice-tactics.js",
+      "status": 404
+    }
+  ]
+}

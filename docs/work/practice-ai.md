@@ -1,5 +1,5 @@
 ---
-{"id":"practice-ai","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"worktree","updated":"2026-10-31"}
+{"id":"practice-ai","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"released","updated":"2026-10-31"}
 ---
 # Inteligencia de bots de práctica
 
@@ -27,7 +27,8 @@ de práctica; los reemplazos de jugadores ausentes mantienen su estrategia.
 
 2026-10-31, macOS, Node v25.6.1. Entrega local en `main`, referencia al cierre
 `bc5666c`, más estos cambios sin commit. Durante el trabajo se integró el tablero
-3D desde otro frente; se conservaron sus cambios. No se desplegó esta mejora.
+3D desde otro frente; se conservaron sus cambios. La publicación posterior está
+registrada en [producción](../production.md), revisión `16bf6c3`.
 
 ### Versión completa
 
@@ -88,8 +89,7 @@ en ejecución; no son límites garantizados.
 
 ## Siguiente paso
 
-Todas las capacidades acordadas están implementadas y validadas en este checkout.
-Para observarlas en una sala local hay que reiniciar su proceso Node y abrir
-Practicar; recargar el navegador no carga el nuevo backend. El commit y el
-despliegue quedan fuera de esta entrega local. El índice documental está en
-[docs/README.md](../README.md).
+Todas las capacidades acordadas están implementadas y publicadas. Siguiente paso:
+observar el rendimiento y las decisiones en partidas humanas de práctica.
+En local hay que reiniciar el proceso Node para cargar la nueva estrategia.
+El índice documental está en [docs/README.md](../README.md).

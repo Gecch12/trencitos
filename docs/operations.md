@@ -95,4 +95,5 @@ informe enlazado. No copies conteos antiguos de QA como resultado nuevo. Un
 checkpoint local, un commit y un despliegue son evidencias distintas.
 
 Despliegue, recuperación y validación remota: [Render/Supabase](RENDER_SUPABASE.md).
-No se despliega ni se migra producción como parte de preparar documentación o 3D.
+Revisión publicada y evidencia: [Producción](production.md). La preparación local
+no implica despliegue; la entrega del 2026-10-31 fue solicitada explícitamente.

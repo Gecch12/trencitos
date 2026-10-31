@@ -1,12 +1,12 @@
 ---
-{"id":"board-3d","status":"done","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"integrated","updated":"2026-10-31"}
+{"id":"board-3d","status":"done","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"released","updated":"2026-10-31"}
 ---
 # Tablero 3D y familia de vagones
 
 Objetivo: tablero principal exclusivamente Three.js, mapa plano y piezas 3D.
 Mano, cartas, paneles, etiquetas y mapas de detalle conservan HTML/SVG. Sin física
-de simulador, cámara libre ni cambios de reglas. Cambios en el checkout local
-`main`; no se ha desplegado producción.
+de simulador, cámara libre ni cambios de reglas. Publicado desde `main` en
+`16bf6c3`; [entrega y verificación remota](../production.md).
 
 ## Hitos
 
@@ -97,4 +97,4 @@ M1–M7 están registrados en `0177ab0`/`bc5666c`; las capturas `threejs-m1`,
 carga inicial de Three y legibilidad humana de vías paralelas. Al alejar se ocultan
 nombres en conflicto y se priorizan al enfocar/acercar. Siguiente frente de producto:
 [identidad](identity.md); materiales y sonidos mantienen fichas independientes.
-Este cierre local no certifica publicación remota ni aceptación en equipos físicos.
+La publicación remota está registrada por separado; no certifica otros equipos físicos.
