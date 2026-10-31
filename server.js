@@ -13,6 +13,8 @@ const { createSupabaseStore } = require("./supabase-store");
 const { createDurableQueue } = require("./durable-queue");
 const { createAccountAuth } = require("./account-auth");
 const { createAccountSeats } = require("./account-seats");
+const Directory = require("./room-directory");
+const { createRoomBots } = require("./room-bots");
 const PORT = Number(process.env.PORT || 3000),
   ROOT = __dirname;
 const STORE = process.env.STATE_FILE || path.join(ROOT, "room-state.json");
@@ -45,10 +47,10 @@ function captureRuntime() {
   return { failureAt: storageFailureAt,
     rooms: [...rooms.values()].map(r => ({ room: r, data: { ...r, game: r.game ? structuredClone(r.game) : null },
       members: r.members.map(member => ({ member, data: { ...member, actionIds: [...(member.actionIds || [])] } })) })),
-    peers: [...peers].map(peer => ({ peer, room: peer.room, seat: peer.seat, token: peer.token })) };
+    peers: [...peers].map(peer => ({ peer, room: peer.room, watching: peer.watching, seat: peer.seat, token: peer.token })) };
 }
 function restoreRuntime(saved) {
-  for (const r of rooms.values()) { clocks.cancel(r); multiplayer.cancel(r); }
+  for (const r of rooms.values()) { clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r); }
   rooms.clear();
   for (const { room, data, members } of saved.rooms) {
     for (const key of Object.keys(room)) delete room[key];
@@ -59,7 +61,7 @@ function restoreRuntime(saved) {
     });
     rooms.set(room.code, room);
   }
-  for (const { peer, room, seat, token } of saved.peers) Object.assign(peer, { room, seat, token });
+  for (const { peer, room, watching, seat, token } of saved.peers) Object.assign(peer, { room, watching, seat, token });
   storageFailureAt = saved.failureAt;
 }
 const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, restore: restoreRuntime,
@@ -67,7 +69,7 @@ const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, rest
   onFailure: error => {
     console.error("Remote storage paused:", error.code || "INTERNAL");
     storageFailureAt ??= Date.now();
-    for (const r of rooms.values()) if (!r.practice) { clocks.cancel(r); multiplayer.cancel(r); }
+    for (const r of rooms.values()) if (!r.practice) { clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r); }
     for (const peer of peers) if (!peer.room?.practice) {
       peer.send({ type: "storage", paused: true, requiresRestart: true });
       peer.send({ type: "error", code: "STORAGE_FAILED", message: "No se pudo confirmar el guardado. La partida está pausada; reinicia el servidor y reconecta para recuperar el estado guardado." });
@@ -83,10 +85,12 @@ const multiplayer = createMultiplayerController({ rooms, sendRoom, removeRoom, d
   blocked: () => storageFailureAt !== null,
   expireGame: r => { if (!Engine.expire(r.game)) return false; r.revision = (r.revision || 0) + 1; sendRoom(r, true); return true; },
   performAction: (r, seat, action) => { try { Engine.action(r.game, seat, action); r.revision = (r.revision || 0) + 1; sendRoom(r, true); } catch (e) { console.error("Replacement bot:", e.message); } } });
+const roomBots = createRoomBots({ rooms, sendRoom, dispatch, blocked: () => storageFailureAt !== null });
 function snapshot(r) {
   return { game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
+    hostSeat: r.hostSeat, visibility: r.visibility, maxPlayers: r.maxPlayers,
     members: r.members.map(m => ({ member: m, data: { token: m.token || m.ws?.token, tokenHash: m.tokenHash,
-      color: m.color, accountId: m.accountId, actionIds: [...(m.actionIds || [])], autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
+      name: m.name, bot: m.bot, color: m.color, accountId: m.accountId, actionIds: [...(m.actionIds || [])], autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
 }
 function persist() {
   if (remoteStore) {
@@ -106,23 +110,38 @@ function persist() {
       const saved = committed.get(r);
       if (saved) {
         r.game = structuredClone(saved.game); r.revision = saved.revision;
-        for (const { member, data } of saved.members) if (r.members.includes(member)) {
+        r.hostSeat = saved.hostSeat; r.visibility = saved.visibility; r.maxPlayers = saved.maxPlayers;
+        for (const member of r.members) if (!saved.members.some(entry => entry.member === member) && member.ws) {
+          const peer = member.ws;
+          peer.room = null; peer.seat = -1; member.ws = null;
+          peer.send({ type: "room_closed", message: "No se pudo guardar tu entrada. Reinténtalo cuando se recupere el servicio." });
+        }
+        r.members = saved.members.map(({member}) => member);
+        for (const [seat, { member, data }] of saved.members.entries()) {
           Object.assign(member, data);
+          // A removed peer may already have returned to the directory. Restore
+          // its reserved seat without silently attaching that connection again.
+          if (member.ws?.room !== r) member.ws = null;
+          if (member.ws) member.ws.seat = seat;
           if (member.ws && data.token) member.ws.token = data.token;
         }
       }
-      clocks.cancel(r); multiplayer.cancel(r);
+      clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r);
       for (const member of r.members) member.ws?.send({ type: "storage", paused: true });
     }
     return false;
   }
 }
 function removeRoom(r, message = "La sala ya no existe.") {
-  clocks.cancel(r); multiplayer.cancel(r); rooms.delete(r.code);
+  clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r); rooms.delete(r.code);
   for (const m of r.members) if (m.ws) {
     m.ws.send({ type: "room_closed", message }); m.ws.room = null; m.ws.seat = -1; m.ws = null;
   }
+  for (const peer of peers) if (peer.watching === r) {
+    peer.watching = null; peer.send({ type: "room_closed", message });
+  }
   if (!r.practice) persist();
+  sendDirectory();
 }
 const TYPES = {
   "/": "text/html; charset=utf-8",
@@ -147,7 +166,11 @@ const TYPES = {
   "/lobby.css": "text/css; charset=utf-8",
   "/lobby-ui.js": "text/javascript; charset=utf-8",
   "/account-ui.js": "text/javascript; charset=utf-8",
+  "/shell.js": "text/javascript; charset=utf-8",
+  "/shell.css": "text/css; charset=utf-8",
+  "/shell-icons.js": "text/javascript; charset=utf-8",
 };
+const APP_ROUTES = new Set(["/rooms", "/play", "/more", "/profile"]);
 const accountAuth = createAccountAuth({seats:createAccountSeats({rooms,dispatch,sendRoom,
   unavailable:()=>!storageReady || stopping || storageFailureAt!==null})});
 const server = http.createServer(async (req, res) => {
@@ -157,6 +180,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(405);
     return res.end();
   }
+  if (APP_ROUTES.has(url.pathname)) url = new URL("/", url);
   if (url.pathname === "/healthz") {
     const ok = storageReady && storageFailureAt === null && !stopping;
     res.writeHead(ok ? 200 : 503, { "Content-Type": "application/json" });
@@ -286,6 +310,7 @@ function createPeer(socket) {
   return peer;
 }
 function detachPeer(peer, disconnectedAt = Date.now()) {
+  peer.watching = null;
   const r = peer.room;
   if (!r || r.members[peer.seat]?.ws !== peer) return;
   r.members[peer.seat].ws = null;
@@ -311,6 +336,8 @@ function sendRoom(r, automatic = false) {
       host: i === (r.hostSeat ?? 0),
       started: !!r.game,
       practice: !!r.practice,
+      visibility: Directory.isPublic(r) ? "public" : "private",
+      maxPlayers: Directory.capacity(r),
       sessionVersion: 1,
       members: r.members.map((x, j) => ({
         name: x.name,
@@ -327,10 +354,25 @@ function sendRoom(r, automatic = false) {
     if (r.game) m.ws.send({ type: "state", game: { ...Engine.view(r.game, i), earlyFinish: !!r.earlyFinish,
       revision: r.revision || 0, storagePaused: !r.practice && storageFailureAt !== null } });
   });
+  for (const peer of peers) if (peer.watching === r) sendSpectator(peer, r);
   if (r.practice) practice.sync(r);
-  else multiplayer.sync(r);
+  else { multiplayer.sync(r); roomBots.sync(r); }
   clocks.sync(r);
+  sendDirectory();
   return r.practice || storageFailureAt === null;
+}
+function sendDirectory() {
+  const message = { type: "directory", rooms: storageFailureAt === null ? Directory.listRooms(rooms) : [], unavailable: storageFailureAt !== null };
+  for (const peer of peers) if (peer.directory) peer.send(message);
+}
+function sendSpectator(peer, r) {
+  if (!Directory.isPublic(r) || !r.game) {
+    peer.watching = null; peer.send({ type: "room_closed", message: "Esta partida ya no está disponible para observar." }); return;
+  }
+  peer.send({ type: "lobby", code: r.code, seat: -1, spectator: true, host: false, started: true,
+    sessionVersion: 1, visibility: "public", maxPlayers: Directory.capacity(r),
+    members: r.members.map(m => ({ name: m.name, color: m.color, bot: !!m.bot, connected: !!m.bot || !!(m.ws && !m.ws.closed), autopilot: !!m.autopilot })) });
+  peer.send({ type: "state", game: { ...Engine.view(r.game, -1), revision: r.revision || 0, storagePaused: storageFailureAt !== null } });
 }
 function deny(peer, msg, code) {
   peer.send({ type: "error", message: msg, code });
@@ -345,6 +387,18 @@ function onMessage(peer, msg) {
   if (msg.type === "ping") {
     peer.send({ type: "pong" });
     return;
+  }
+  if (msg.type === "list_rooms") { peer.directory = true; sendDirectory(); return; }
+  if (msg.type === "spectate") {
+    if (peer.room) return deny(peer, "Sal de tu sala antes de observar otra partida.");
+    const code = String(msg.code || "").trim().toUpperCase(), r = rooms.get(code);
+    if (!r || !Directory.isPublic(r) || !r.game || r.emptySince != null)
+      return deny(peer, "Esta partida no está disponible para observar.", "ROOM_NOT_FOUND");
+    peer.watching = r; sendSpectator(peer, r); return;
+  }
+  if (peer.watching) {
+    if (msg.type === "leave") { peer.watching = null; peer.send({ type: "room_closed" }); return; }
+    return deny(peer, "Estás observando. No puedes modificar la partida.", "SPECTATOR_READ_ONLY");
   }
   if (msg.type === "retry_save" && peer.room && !peer.room.practice && storageFailureAt !== null) {
     if (remoteStore) return deny(peer, "El guardado remoto requiere reiniciar el servidor y reconectar para recuperar el checkpoint.", "STORAGE_FAILED");
@@ -371,13 +425,16 @@ function onMessage(peer, msg) {
   if (storageFailureAt !== null && !peer.room?.practice && !["join", "leave", "create_test"].includes(msg.type))
     return deny(peer, "Partida pausada: no se pudo guardar. Reintenta el guardado.", "STORAGE_FAILED");
   if (["create", "create_test"].includes(msg.type) && !peer.room) {
+    if (msg.visibility !== undefined && !["public", "private"].includes(msg.visibility)) return deny(peer, "Visibilidad inválida.");
+    if (msg.maxPlayers !== undefined && (!Number.isInteger(msg.maxPlayers) || msg.maxPlayers < 2 || msg.maxPlayers > 5)) return deny(peer, "Elige entre 2 y 5 jugadores.");
     if (msg.color !== undefined && !LobbyUI.isColor(msg.color)) return deny(peer, "Color inválido.", "INVALID_COLOR");
     let code = msg.type === "create" ? msg.code : undefined;
     if (code !== undefined) {
       if (!LobbyUI.isNewCode(code)) return deny(peer, "El código debe tener entre 6 y 10 números.", "INVALID_CODE");
       if (rooms.has(code)) return deny(peer, "Ese código ya está en uso. Elige otro o genera uno nuevo.", "CODE_TAKEN");
     } else do { code = LobbyUI.randomCode(crypto.randomInt); } while (rooms.has(code));
-    const r = { code, hostSeat: 0, updated: Date.now(), game: null, members: [], revision: 0 };
+    const r = { code, hostSeat: 0, updated: Date.now(), game: null, members: [], revision: 0,
+      visibility: msg.type === "create_test" ? "private" : msg.visibility || "public", maxPlayers: msg.maxPlayers || 5 };
     rooms.set(code, r);
     const human = {
       name: cleanName(msg.name),
@@ -433,7 +490,7 @@ function onMessage(peer, msg) {
         peer,
         "La partida ya comenzó. Solo pueden reconectarse quienes estaban dentro.",
       );
-    if (r.members.length >= 5) return deny(peer, "La sala está completa.");
+    if (r.members.length >= Directory.capacity(r)) return deny(peer, "La sala está completa.", "ROOM_FULL");
     if (msg.color !== undefined && !LobbyUI.isColor(msg.color)) return deny(peer, "Color inválido.", "INVALID_COLOR");
     return attach(peer, r, {
       name: cleanName(msg.name),
@@ -446,6 +503,21 @@ function onMessage(peer, msg) {
   if (rooms.get(r.code) !== r) { peer.room = null; return deny(peer, "La sala ya no existe.", "ROOM_NOT_FOUND"); }
   if (r.members[peer.seat]?.ws !== peer)
     return deny(peer, "Esta sesión fue reemplazada por otra conexión.");
+  if (msg.type === "room_settings" || msg.type === "add_bot") {
+    if (r.practice || r.game || peer.seat !== (r.hostSeat ?? 0)) return deny(peer, "Solo el anfitrión puede configurar la sala antes de empezar.", "HOST_ONLY");
+    if (msg.type === "add_bot") {
+      if (r.members.length >= Directory.capacity(r)) return deny(peer, "La sala está llena. No puedes añadir más bots.", "ROOM_FULL");
+      let n = 1; while (r.members.some(m => m.name === `Bot ${n}`)) n++;
+      r.members.push({ name: `Bot ${n}`, bot: true, color: LobbyUI.freeColor(r.members) });
+    } else {
+      if (!["public", "private"].includes(msg.visibility) || !Number.isInteger(msg.maxPlayers) || msg.maxPlayers < 2 || msg.maxPlayers > 5)
+        return deny(peer, "Elige una visibilidad y una capacidad de 2 a 5 jugadores.");
+      if (msg.maxPlayers < r.members.length) return deny(peer, "Retira participantes antes de reducir las plazas.");
+      r.visibility = msg.visibility; r.maxPlayers = msg.maxPlayers;
+    }
+    if (!sendRoom(r)) deny(peer, "No se pudo guardar la configuración de la sala.", "STORAGE_FAILED");
+    return;
+  }
   if (msg.type === "select_color") {
     if (r.game) return deny(peer, "Solo puedes cambiar de color antes de empezar.", "COLOR_LOCKED");
     if (!LobbyUI.isColor(msg.color)) return deny(peer, "Color inválido.", "INVALID_COLOR");
@@ -489,7 +561,8 @@ function onMessage(peer, msg) {
     if (!rooms.has(r.rematchCode)) {
       let code; do { code = LobbyUI.randomCode(crypto.randomInt); } while (rooms.has(code));
       r.rematchCode = code;
-      rooms.set(code, { code, updated: Date.now(), hostSeat: 0, members: [], game: null, revision: 0 });
+      rooms.set(code, { code, updated: Date.now(), hostSeat: 0, members: [], game: null, revision: 0,
+        visibility: r.visibility || "private", maxPlayers: Directory.capacity(r) });
     }
     const next = rooms.get(r.rematchCode), member = r.members[peer.seat];
     if (next.game) return deny(peer, "La revancha ya empezó. Crea otra sala desde el inicio.");
@@ -510,7 +583,7 @@ function onMessage(peer, msg) {
     if (r.game) return deny(peer, "La partida ya comenzó.");
     if (r.members.length < 2)
       return deny(peer, "Se necesitan al menos dos jugadores.");
-    if (r.members.some((m) => !m.ws || m.ws.closed))
+    if (r.members.some((m) => !m.bot && (!m.ws || m.ws.closed)))
       return deny(peer, "Todos deben estar conectados para iniciar.");
     r.game = startRoomGame(r);
     return sendRoom(r);
@@ -552,7 +625,13 @@ function attach(peer, r, m) {
   peer.token = m.token;
   m.tokenHash = hashToken(m.token);
   r.members.push(m);
-  sendRoom(r);
+  if (!sendRoom(r)) {
+    if (!committed.has(r)) {
+      rooms.delete(r.code); peer.room = null; peer.seat = -1; m.ws = null;
+      peer.send({ type: "room_closed", message: "No se pudo guardar la sala. Reinténtalo cuando se recupere el servicio." });
+    }
+    deny(peer, "No se pudo guardar tu entrada a la sala.", "STORAGE_FAILED");
+  }
 }
 function startRoomGame(r) {
   const game = Engine.newRandomGame(r.members.map(m => m.name));
@@ -644,6 +723,7 @@ server.on("close", () => {
   practice.close();
   clocks.close();
   multiplayer.close();
+  roomBots.close();
 });
 const cleanup = setInterval(
   () => dispatch(() => {
@@ -659,11 +739,11 @@ cleanup.unref();
 server.on("close", () => clearInterval(cleanup));
 const ready = (remoteStore ? remoteStore.load().then(restoreLoaded) : Promise.resolve()).then(() => {
   storageReady = true;
-  for (const room of rooms.values()) { multiplayer.sync(room); clocks.sync(room); }
+  for (const room of rooms.values()) { multiplayer.sync(room); clocks.sync(room); roomBots.sync(room); }
 });
 async function shutdown() {
   if (stopping) return;
-  stopping = true; clocks.close(); multiplayer.close();
+  stopping = true; clocks.close(); multiplayer.close(); roomBots.close();
   // Finish an in-flight durable commit, then disconnect without recording a
   // voluntary abandonment. The next process restores the saved clock budget.
   await durable?.idle();

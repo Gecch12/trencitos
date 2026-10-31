@@ -1,5 +1,5 @@
 ---
-{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"released","updated":"2026-10-31"}
+{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"integrated","updated":"2026-10-31"}
 ---
 # Tablero 3D y familia de vagones
 
@@ -9,6 +9,7 @@ de simulador, cámara libre ni cambios de reglas. Publicado desde `main` en
 `16bf6c3` hasta M9; [entrega y verificación remota](../production.md).
 M10 está publicada en `2a46f58`; evidencia y límites en [producción](../production.md).
 M11 está publicada en `2308691`; evidencia remota en [producción](../production.md).
+M12 está validada e integrada junto con la navegación; pendiente de publicación.
 
 ## Hitos
 
@@ -29,6 +30,48 @@ M11 está publicada en `2308691`; evidencia remota en [producción](../productio
 - [x] M11: al resaltar destinos, ocultar los nombres y guías de las ciudades ajenas
   a la selección; conservar etiquetas/números de los extremos, incluidos billetes
   completados, y restaurar los nombres habituales al desactivar.
+- [x] M12: cartas sin recorte adicional, cámara sin botones de zoom/centrado,
+  barra de turno y tarjetas de jugadores más compactas en móvil.
+
+## Ajuste M12 — espacio y cartas en móvil
+
+2026-10-31, `main` sobre `bcee9b4` más cambios locales:
+
+- Las cartas conservan el redondeado de su SVG; se elimina el radio CSS que
+  cortaba el marco. La mano móvil mantiene desplazamiento horizontal, sin barra
+  que reste altura ni elevación al tocar/pasar el cursor que recorte el contador.
+- Se eliminan los tres botones de cámara en móvil/escritorio y sus listeners.
+  `Inicio` centra directamente; se conservan rueda, arrastre, pellizco y teclado.
+  El conductor histórico de navegador usa ahora ese atajo para centrar.
+- Móvil: turno de 36 px, reloj de 20 px, sin subtítulo ni «Solo tú la ves».
+  Jugadores de 64 px (58 px en pantallas bajas), sin estado/etiqueta «En turno»
+  duplicados. Se mantienen nombre, avatar y las tres métricas. La altura reservada
+  de paneles se reduce junto con la barra para recuperar espacio útil del mapa.
+
+Validación local, sin certificar Safari/iPhone físico:
+
+- `node --test tests/mobile-ui.test.js tests/presentation-controls.test.js tests/turn-presentation.test.js tests/board-3d.test.js`:
+  19 pruebas correctas.
+- IAB en `127.0.0.1:3145`, fixture `QAPLAY` con backend de archivo aislado, cinco
+  jugadores y nueve tipos de cartas: 390×844 y 375×667, cartas/contadores dentro
+  de la mano, sin desbordamiento horizontal de página, métricas y mercado legibles.
+  844×390 confirma alturas y ausencia de desbordamiento. En 1440×900, `+` cambia
+  el encuadre e `Inicio` lo restaura exactamente; no hay botones eliminados ni
+  errores/avisos de consola. El subtítulo y reloj de escritorio se conservan.
+  Captura local ignorada: `.qa/compact-interface/mobile.png`.
+- `node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
+
+Siguiente paso de M12: comprobar la publicación junto con navegación y salas.
+
+## Regresión con la nueva navegación
+
+2026-10-31: los conductores `browser-threejs.cjs` y `browser-wagons.cjs` usan ahora
+Create Room y el código asignado por el servidor; la selección de vagones se
+verifica en la sala, dado que Play queda vacío. Ejecución local correcta:
+partida completa de 231 acciones con reconexión y resultados; 18 previews y
+225 piezas, cambio de color confirmado, recarga y reintento WebGL sin errores.
+Los informes/capturas `qa/threejs-*` y `qa/wagons-*` corresponden a esta nueva
+corrida. Alcance del inicio y matriz responsive: [navegación y salas](navigation-rooms.md).
 
 ## Ajuste M11 — etiquetas del resaltado
 

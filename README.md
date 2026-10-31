@@ -19,21 +19,46 @@ npm start
 
 Abre `http://localhost:3000` en tu navegador. Para probar con otro jugador abre una ventana privada y únete mediante el código mostrado; para otros dispositivos, utiliza un servidor accesible desde la red.
 
-## Inicio y salas privadas
+## Inicio, perfil y salas
 
-El inicio separa **Crear sala**, **Unirme** y **Practicar**. Para crear se propone un código aleatorio de ocho números, editable antes de confirmar (entre seis y diez dígitos, incluidos ceros iniciales). Si está ocupado se muestra un error, sin cambiarlo ni entrar en otra sala. Una vez creada la sala, el código queda fijo. Las invitaciones antiguas de seis letras/números y los enlaces privados de recuperación siguen funcionando.
+La navegación principal tiene **Rooms**, **Play**, **More** y **Profile**. En
+escritorio está a la izquierda; en tablet y móvil, abajo. La cabecera agrupa el
+nombre y avatar junto a la campanita provisional. **Profile → Edit Profile**
+permite cambiar el nombre y conserva el avatar básico. El nombre se guarda en la
+cuenta si has iniciado sesión, o en este dispositivo si juegas como invitado.
+Account conserva acceso y recuperación de salas; Friends, History, Overview y
+Play quedan vacíos. More organiza las secciones futuras y el idioma **ESP**;
+los seis iconos sociales no tienen enlaces. Privacy abre el aviso existente.
+
+**Rooms → Open Rooms** muestra las salas públicas en espera. **Create Room** crea
+una sala con código numérico automático; **Join Room** permite entrar por código.
+Las nuevas salas son públicas por defecto. El anfitrión puede hacerlas privadas,
+elegir entre 2 y 5 plazas, añadir o retirar bots e iniciar la partida. Las salas
+anteriores sin visibilidad explícita siguen siendo privadas. Las invitaciones
+antiguas y los enlaces privados de recuperación siguen funcionando.
+
+**Spectate** lista partidas públicas en curso. Observar no ocupa un puesto,
+no permite jugar y no entrega manos, destinos, ofertas ni credenciales privadas.
+Los espectadores tampoco prolongan la vida de una sala abandonada. Las salas
+privadas solo admiten jugadores con invitación; no se pueden observar.
+
+La sala de espera distribuye jugadores/amigos, configuración y chat en tres
+columnas; en pantallas pequeñas se usan pestañas. Amigos y chat son componentes
+preparados para una integración posterior. Modo Clásico, mapa Europa, 60 segundos
+por turno y primer jugador al azar conservan las reglas actuales.
 
 En la sala de espera cada participante elige uno de dieciocho colores libres: rojo, azul, verde, ámbar, morado, marrón, amarillo, negro, gris, magenta, turquesa, azul noche, borgoña, verde oliva, marfil, coral, lavanda y azul hielo. Amarillo lleva deportivos y ámbar lleva grano; ambos usan pintura normal, sin presentación dorada. El servidor reserva el color incluso durante la ventana de reconexión, rechaza elecciones simultáneas duplicadas y lo guarda tanto en disco como en Supabase. Cambiar de puesto por la salida de otro participante no cambia tu color. Tras empezar, la elección queda bloqueada y se usa en trenes, estaciones, avatar e historial. El navegador recuerda nombre y color preferido (si está libre); al recargar una sala conocida recupera el puesto con su credencial local.
 
-La cabecera muestra **Trencitos** y un botón de sonido sin texto, con estado accesible. La conexión solo se muestra cuando requiere atención; los avisos de desconexión y fallos de guardado no se ocultan.
-
-El panel de inicio se centra en el espacio disponible bajo la cabecera. Si su contenido supera la altura de la pantalla, conserva un margen de 24 px (16 px en móvil) y permite desplazarse sin recortar controles.
+Durante una partida, la cabecera conserva la marca y el botón de sonido. La
+conexión solo aparece cuando requiere atención; los avisos de desconexión y
+fallos de guardado no se ocultan. Las listas y paneles tienen desplazamiento
+propio para conservar navegación y controles en pantallas bajas.
 
 ## Sala de pruebas con bots
 
-En el inicio, abre **Practicar**, elige tu color y pulsa **Jugar** para enfrentarte a tres bots. El primer jugador se sortea entre los cuatro; todos eligen los billetes iniciales a la vez. Los tres bots confirman entre dos y cuatro billetes compatibles tras 800–1000 ms sin esperar al humano; conservan los adicionales cuando comparten un recorrido viable. Comparan recorridos alternativos y redes que conecten varios destinos, calculando las cartas y los vagones necesarios para el conjunto. Ahorran para tramos útiles, prefieren las cartas de la mesa que necesitan y varían entre opciones de valor parecido.
+El nuevo inicio conserva **Play** vacío. La implementación de práctica y sus controles de prueba siguen disponibles en código para una futura integración; no tienen acceso visible en esta etapa. Para jugar con bots desde la interfaz actual, crea una sala y pulsa **Añadir bot**. La práctica original enfrenta a un humano con tres bots. El primer jugador se sortea entre los cuatro; todos eligen los billetes iniciales a la vez. Los tres bots confirman entre dos y cuatro billetes compatibles tras 800–1000 ms sin esperar al humano; conservan los adicionales cuando comparten un recorrido viable. Comparan recorridos alternativos y redes que conecten varios destinos, calculando las cartas y los vagones necesarios para el conjunto. Ahorran para tramos útiles, prefieren las cartas de la mesa que necesitan y varían entre opciones de valor parecido.
 
-Cada bot conserva planes viables y los replantea ante bloqueos, amenazas o falta de progreso. Prioriza conexiones difíciles de sustituir cuando un rival se acerca, reserva colores para los siguientes tramos y estima el riesgo de los túneles. Puede desistir de un suplemento que perjudique un destino más valioso. Estima los turnos restantes a partir de las construcciones, vagones y cantidades de cartas públicos; al cerrar compara puntos de vías, destinos y la posibilidad de conseguir el Express. Solo consulta su propia mano y destinos, las vías y demás información pública; no conoce el orden de los mazos ni las cartas o destinos privados de rivales. Puede colocar estaciones si compensan su coste y pedir nuevos destinos cuando su red ofrece buenas oportunidades. Resuelve las ofertas también fuera de turno y durante el cierre, conservando al menos un billete. Antes de algunas decisiones compara continuaciones de hasta tres turnos propios y posibles respuestas rivales, con manos y robos hipotéticos. Cada acción de un turno automático se separa entre 800 y 1000 ms, incluida la segunda carta y la decisión de pagar o desistir de un túnel. Los bots que sustituyen a jugadores ausentes mantienen su política independiente de robo/construcción aleatoria; esta estrategia solo se usa en la sala de pruebas.
+Cada bot conserva planes viables y los replantea ante bloqueos, amenazas o falta de progreso. Prioriza conexiones difíciles de sustituir cuando un rival se acerca, reserva colores para los siguientes tramos y estima el riesgo de los túneles. Puede desistir de un suplemento que perjudique un destino más valioso. Estima los turnos restantes a partir de las construcciones, vagones y cantidades de cartas públicos; al cerrar compara puntos de vías, destinos y la posibilidad de conseguir el Express. Solo consulta su propia mano y destinos, las vías y demás información pública; no conoce el orden de los mazos ni las cartas o destinos privados de rivales. Puede colocar estaciones si compensan su coste y pedir nuevos destinos cuando su red ofrece buenas oportunidades. Resuelve las ofertas también fuera de turno y durante el cierre, conservando al menos un billete. Antes de algunas decisiones compara continuaciones de hasta tres turnos propios y posibles respuestas rivales, con manos y robos hipotéticos. Cada acción de un turno automático se separa entre 800 y 1000 ms, incluida la segunda carta y la decisión de pagar o desistir de un túnel. Los bots que sustituyen a jugadores ausentes mantienen su política independiente de robo/construcción aleatoria; esta estrategia se usa en práctica y en los bots añadidos a salas normales; estos últimos actúan cada 900 ms y se guardan con la sala.
 
 El panel **Controles de prueba** aparece abajo a la izquierda, separado de la interfaz del juego y sobre sus diálogos. Arrástralo desde su encabezado con el ratón, o enfoca el encabezado y usa las flechas del teclado. **Terminar partida de pruebas** detiene los bots inmediatamente y muestra la puntuación actual como cierre anticipado. **Volver al inicio** elimina la sala y permite crear otra prueba.
 
@@ -51,6 +76,17 @@ El tablero principal solo usa 3D: si WebGL falla, ofrece **Reintentar** conserva
 la sala. Acercar permite ver los detalles; las etiquetas permanecen horizontales.
 Antes de comenzar, el selector de color en práctica y sala de espera muestra una
 previsualización del mismo vagón que se colocará en el tablero.
+
+El mapa se mueve arrastrando y se acerca con rueda o pellizco, sin botones de
+menos, más o centrado. Con el mapa enfocado, las flechas desplazan, `+`/`−`
+cambian el zoom e **Inicio** restaura el encuadre.
+
+En móvil, las tarjetas de jugadores conservan avatar, nombre, puntos, vagones y
+estaciones en menos altura, sin la etiqueta duplicada «En turno». La barra
+inferior muestra el turno y un reloj más pequeño en una sola línea, con los
+colores y la banda de tiempo habituales. Se ocultan el subtítulo de ayuda y
+«Solo tú la ves». La mano permite deslizar las cartas horizontalmente sin
+recortar sus contadores; las esquinas redondeadas pertenecen al propio dibujo.
 
 La mesa ocupa la pantalla sin scroll de página: el mapa y el mar forman un fondo continuo, visible entre los paneles flotantes. La mano permanece abajo. La columna derecha contiene **Historial**, siempre abierto con scroll interno; **Robos**, en dos filas de tres posiciones (cinco cartas y el mazo); y **Jugadores**, anclados abajo con altura reservada para cinco, sin tarjetas vacías. El historial muestra los últimos 25 movimientos en orden cronológico: los nuevos aparecen abajo y, si hay pocos, se apoyan en el borde inferior. Sigue los nuevos eventos solo si estás al final; al leer movimientos anteriores conserva la posición y ofrece **Nuevos ↓**. Su barra permanece visible cuando hay desbordamiento, independientemente de la configuración de macOS, y admite arrastre, rueda y teclado. **Encajar** centra la cartografía al 100% en el espacio libre hasta la mano. El zoom permite alejar hasta **25%** y acercar hasta **600%**: con el puntero sobre el mapa, la rueda cambia la escala alrededor del cursor. Arrastra con el botón izquierdo a cualquier escala, incluso al 25% y al 100%; un clic sin arrastre sigue seleccionando una ruta o ciudad. El botón ⛶ activa pantalla completa sin ocultar la mano ni las acciones. El sidebar tiene scroll propio solo cuando falta altura; su rueda no altera el mapa. El icono **i** junto a ROBOS muestra las cantidades restantes de ambos mazos al pasar el ratón o enfocarlo con teclado.
 

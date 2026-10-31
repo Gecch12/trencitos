@@ -11,8 +11,20 @@
     <link rel="stylesheet" href="lobby.css" />
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
     <link rel="stylesheet" href="board-3d.css" />
+    <link rel="stylesheet" href="shell.css" />
   </head>
   <body>
+    <a href="#lobby" class="skip-link">Saltar al contenido</a>
+    <aside id="appSidebar" class="app-sidebar" aria-label="Navegación principal">
+      <a class="sidebar-brand" href="/rooms" data-page="rooms" aria-label="Trencitos, inicio"><img src="/assets/favicon.svg" alt="" /><strong>Trencitos</strong></a>
+      <nav class="app-nav">
+        <a href="/rooms" data-page="rooms" data-icon="rooms"><span>Rooms</span></a>
+        <a href="/play" data-page="play" data-icon="play"><span>Play</span></a>
+        <a href="/more" data-page="more" data-icon="more"><span>More</span></a>
+        <a href="/profile" data-page="profile" data-icon="user"><span>Profile</span></a>
+      </nav>
+      <button class="sidebar-language" type="button" data-language data-icon="globe"><span>ESP</span></button>
+    </aside>
     <header class="top">
       <div class="brand">
         <span class="mark"><img src="assets/favicon.svg" width="39" height="39" alt="" /></span>
@@ -21,6 +33,8 @@
         </div>
       </div>
       <div class="topright">
+        <button id="returnRoom" class="return-room" type="button" hidden>Volver a mi sala</button>
+        <button id="leaveWatch" class="leave-watch" type="button" hidden>Dejar de observar</button>
         <details id="sessionControls" class="session-controls hidden"><summary>Partida</summary><div>
           <button id="copyRecovery" type="button">Copiar mi enlace de recuperación</button>
           <small>Es privado: quien lo tenga podrá jugar en tu puesto. No es una invitación.</small>
@@ -29,71 +43,104 @@
           <button id="leaveRoom" type="button">Salir de la sala</button>
         </div></details>
         <button id="soundToggle" class="sound-toggle" type="button" aria-label="Sonido" title="Silenciar sonidos" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3Z"/><path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg></button>
+        <a class="header-user" href="/profile" data-page="profile"><span class="identity-avatar" data-icon="user"></span><strong data-username>Jugador</strong></a>
+        <button class="notification-bell" type="button" aria-label="Notificaciones, próximamente" title="Notificaciones · Próximamente" disabled data-icon="bell"></button>
         <span id="serverWarning" class="server-warning hidden" tabindex="0" role="status">⚠ Servidor anterior<span>Falta el nuevo manejo de sesiones y ausencias. Reinicia el backend al terminar: las partidas de pruebas se perderán.</span></span>
         <span class="pill hidden" id="connection" role="status">Conectando…</span>
       </div>
     </header>
     <div id="sessionNotice" class="session-notice hidden" role="status"><span></span><button id="takeOver" class="hidden" type="button">Recuperar esta pestaña</button><button id="retrySave" class="hidden" type="button">Reintentar guardado</button></div>
-    <main id="lobby" class="lobby" aria-label="Inicio de Trencitos">
-      <div class="lobbycard">
-        <div id="homeSetup">
-          <div class="home-heading"><h1>Jugar</h1><span>2–5 jugadores</span></div>
-          <section class="account-panel" aria-label="Tu cuenta">
-            <div class="account-row"><span id="accountLabel">Juega como invitado o guarda tu perfil</span><button id="googleLogin" type="button" disabled>Continuar con Google</button><button id="accountLogout" type="button" hidden>Cerrar sesión</button></div>
-            <p id="accountStatus" role="status">Comprobando tu cuenta…</p>
-            <p class="account-privacy"><a href="/privacy.html" target="_blank" rel="noopener">Privacidad y eliminación de cuenta</a></p>
-            <button id="accountRetry" type="button" hidden>Reintentar guardado</button>
-            <div id="accountRooms" class="account-rooms"></div>
-          </section>
-          <div class="home-identity"><span id="homeAvatar" class="home-avatar" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M7 27v-4a9 9 0 0 1 18 0v4Z"/></svg></span><div><label for="nickname">Tu nombre</label><input id="nickname" maxlength="24" placeholder="Tu nombre" value="Jugador" autocomplete="nickname" /></div></div>
-          <div class="home-tabs" role="tablist" aria-label="Cómo quieres jugar">
-            <button id="homeTabCreate" type="button" role="tab" aria-selected="true" aria-controls="homeCreate" data-home-tab="create"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Crear sala</button>
-            <button id="homeTabJoin" type="button" role="tab" aria-selected="false" aria-controls="homeJoin" tabindex="-1" data-home-tab="join"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v16h-6M3 12h12m-5-5 5 5-5 5"/></svg>Unirme</button>
-            <button id="homeTabPractice" type="button" role="tab" aria-selected="false" aria-controls="homePractice" tabindex="-1" data-home-tab="practice"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="7" width="14" height="13" rx="2"/><path d="M12 3v4M9 16h6M2 11v5m20-5v5M8 11h2m4 0h2"/></svg>Practicar</button>
-          </div>
-          <form id="homeCreate" class="home-pane" role="tabpanel" aria-labelledby="homeTabCreate" novalidate>
-            <label for="createCode">Código de tu sala</label>
-            <div class="code-editor"><input id="createCode" type="text" inputmode="numeric" minlength="6" maxlength="10" pattern="[0-9]{6,10}" autocomplete="off" spellcheck="false" aria-describedby="createCodeHint createCodeError" required /><button id="regenerateCode" type="button" aria-label="Generar otro código" title="Generar otro código"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8a8 8 0 1 0 1 8M19 3v6h-6"/></svg></button></div>
-            <p id="createCodeHint" class="home-hint">Puedes cambiarlo. De 6 a 10 números.</p>
-            <p id="createCodeError" class="field-error" role="alert"></p>
-            <button class="primary home-submit" id="create" type="submit">Crear sala <span aria-hidden="true">→</span></button>
-          </form>
-          <form id="homeJoin" class="home-pane" role="tabpanel" aria-labelledby="homeTabJoin" novalidate hidden>
-            <label for="code">Código de invitación</label>
-            <input id="code" type="text" maxlength="10" placeholder="Introduce el código" autocomplete="off" spellcheck="false" autocapitalize="characters" aria-describedby="joinCodeHint joinCodeError" required />
-            <p id="joinCodeHint" class="home-hint">Pídeselo a quien creó la sala.</p>
-            <p id="joinCodeError" class="field-error" role="alert"></p>
-            <button class="primary home-submit" id="join" type="submit">Unirme a la sala <span aria-hidden="true">→</span></button>
-          </form>
-          <section id="homePractice" class="home-pane" role="tabpanel" aria-labelledby="homeTabPractice" hidden>
-            <div class="practice-description"><strong>Tú contra 3 bots</strong><p>Una partida privada para practicar.</p></div>
-            <fieldset class="color-choice"><legend>Tu color <span id="practiceColorName"></span></legend><div id="practiceColors" class="color-options"></div></fieldset>
-            <button class="primary home-submit" id="createTest" type="button">Jugar <span aria-hidden="true">→</span></button>
-          </section>
-        </div>
-        <div class="roompanel hidden" id="roompanel">
-          <div class="home-heading"><h1>Sala de espera</h1><span id="roomCount"></span></div>
-          <div class="roomheading">
-            <div>
-              <span class="room-code-label">Código de sala</span>
-              <h2 id="roomcode">------</h2>
+    <main id="lobby" class="app-workspace" tabindex="-1" aria-label="Inicio de Trencitos">
+      <section id="roomsPage" class="shell-page rooms-page" aria-label="Rooms">
+        <div class="directory-layout">
+          <div class="directory-main">
+            <div class="segmented directory-tabs" role="tablist" aria-label="Tipo de salas">
+              <button id="openRoomsTab" type="button" role="tab" aria-selected="true" aria-controls="roomDirectory" data-directory="open">Open Rooms</button>
+              <button id="spectateTab" type="button" role="tab" aria-selected="false" aria-controls="roomDirectory" tabindex="-1" data-directory="spectate">Spectate</button>
             </div>
-            <button id="copyLink" type="button">Copiar invitación</button>
+            <div id="roomDirectory" class="directory-table" role="tabpanel" aria-labelledby="openRoomsTab">
+              <table><caption class="sr-only">Salas públicas de Trencitos</caption><colgroup><col /><col /><col class="time-column" /><col class="players-column" /></colgroup><thead><tr><th scope="col">Modo</th><th scope="col">Mapa</th><th scope="col">Turno</th><th scope="col"><span class="sr-only">Jugadores</span></th></tr></thead><tbody id="directoryRows"></tbody></table>
+              <div id="directoryEmpty" class="directory-empty" role="status"><span data-icon="rooms"></span><h1>No hay salas abiertas</h1><p>Crea una sala e invita a jugar.</p></div>
+            </div>
+            <div class="directory-actions">
+              <button id="create" class="shell-primary" type="submit" form="homeCreate">Create Room</button>
+              <button id="openJoin" class="shell-accent" type="button">Join Room</button>
+            </div>
           </div>
-          <div class="memberlist" id="members" aria-label="Jugadores en la sala"></div>
-          <fieldset class="color-choice"><legend>Tu color <span id="chosenColorName"></span></legend><div id="roomColors" class="color-options"></div><p class="home-hint">Los colores ocupados están reservados.</p></fieldset>
-          <p class="home-hint" id="roomNote" role="status"></p>
-          <button class="primary home-submit hidden" id="start" type="button">Iniciar partida <span aria-hidden="true">→</span></button>
-          <button class="home-leave" id="leaveLobby" type="button">Salir de la sala</button>
+          <aside class="directory-aside" aria-hidden="true"></aside>
         </div>
-        <figure id="wagonPreview" class="wagon-preview" hidden>
-          <div id="wagonPreviewStage" class="wagon-preview-stage" role="img" aria-label="Vista previa de tu vagón"></div>
-          <figcaption><span>Tu vagón</span><strong id="wagonPreviewName" aria-live="polite">Cargando…</strong></figcaption>
-          <p id="wagonPreviewError" class="home-hint" hidden>La vista previa no está disponible.</p>
-        </figure>
-        <p class="err" id="lobbyError" role="alert"></p>
-      </div>
+      </section>
+      <section id="playPage" class="shell-page" aria-label="Play" hidden></section>
+      <section id="morePage" class="shell-page more-page" aria-label="More" hidden>
+        <div class="more-columns"><div id="moreGroups" class="more-groups"></div><aside class="follow-us"><h2>Follow us</h2><div id="socialIcons" class="social-icons"></div></aside></div>
+      </section>
+      <section id="contentPage" class="shell-page content-page" hidden><button id="backMore" class="text-button" type="button" data-icon="back">More</button><h1 id="contentTitle"></h1></section>
+      <section id="profilePage" class="shell-page profile-page" aria-label="Profile" hidden>
+        <div class="profile-heading"><span class="profile-avatar" data-icon="user"></span><h1 data-username>Jugador</h1><button id="editProfile" class="text-button" type="button" data-icon="edit">Edit Profile</button></div>
+        <div class="profile-layout">
+          <nav class="profile-nav" aria-label="Secciones del perfil">
+            <a href="/profile?tab=account" data-profile="account" data-icon="settings">Account</a>
+            <a href="/profile?tab=friends" data-profile="friends" data-icon="friends">Friends</a>
+            <a href="/profile?tab=history" data-profile="history" data-icon="history">History</a>
+            <a href="/profile?tab=overview" data-profile="overview" data-icon="user">Overview</a>
+          </nav>
+          <div class="profile-content"><h2 id="profileTitle">Account</h2>
+            <section id="accountPanel" class="account-panel" aria-label="Tu cuenta">
+              <h3>Tu cuenta</h3>
+              <div class="account-row"><span id="accountLabel">Juega como invitado o guarda tu perfil</span><button id="googleLogin" class="shell-primary" type="button" disabled>Continuar con Google</button><button id="accountLogout" class="shell-outline" type="button" hidden>Cerrar sesión</button></div>
+              <p id="accountStatus" role="status">Comprobando tu cuenta…</p>
+              <button id="accountRetry" type="button" hidden>Reintentar guardado</button>
+              <div id="accountRooms" class="account-rooms"></div>
+              <a class="privacy-link" href="/privacy.html">Privacidad y eliminación de cuenta</a>
+            </section>
+          </div>
+        </div>
+      </section>
+      <section id="roompanel" class="room-layout hidden" aria-label="Sala de espera" data-room-tab="players">
+        <div class="room-mobile-heading"><strong>Sala: <span id="mobileRoomCode"></span></strong><button id="leaveMobileRoom" type="button" class="icon-button" aria-label="Salir de la sala" data-icon="close"></button></div>
+        <div class="room-mobile-tabs segmented" role="tablist" aria-label="Sala de espera">
+          <button type="button" role="tab" data-room-tab="players" aria-selected="true" aria-controls="roomPlayersPanel">Jugadores</button>
+          <button type="button" role="tab" data-room-tab="settings" aria-selected="false" tabindex="-1" aria-controls="roomSettingsPanel">Configuración</button>
+          <button type="button" role="tab" data-room-tab="chat" aria-selected="false" tabindex="-1" aria-controls="roomChatPanel">Chat</button>
+        </div>
+        <aside id="roomPlayersPanel" class="room-players-panel">
+          <div class="room-player-list"><h2>Jugadores (<span id="roomCount">1/5</span>)</h2><div id="members" class="memberlist" aria-label="Jugadores en la sala"></div><div id="emptySeats" class="empty-seats"></div></div>
+          <section class="room-friends"><h2>Amigos (0/0)</h2><p id="roomFriendsMessage">Tus amigos aparecerán aquí.</p></section>
+        </aside>
+        <section id="roomSettingsPanel" class="room-settings-panel">
+          <header class="room-title"><h1>Sala: <span id="roomcode"></span></h1><button id="leaveLobby" type="button" class="icon-button" aria-label="Salir de la sala" data-icon="close"></button></header>
+          <div class="room-settings-scroll">
+            <section class="room-invitation"><h2>Invitar amigos</h2><div><input id="roomInviteLink" readonly aria-label="Enlace de invitación" /><button id="copyLink" class="shell-primary" type="button">Copiar</button></div></section>
+            <section class="room-setting-group"><h2>Modo de juego</h2><div class="setting-cards"><div class="setting-card selected" data-icon="play"><strong>Clásico</strong></div></div></section>
+            <section class="room-setting-group"><h2>Mapa</h2><div class="setting-cards"><div class="setting-card selected" data-icon="map"><strong>Europa</strong></div></div></section>
+            <section class="room-setting-group"><h2>Configuración</h2><div class="room-setting-fields">
+              <label>Visibilidad<select id="roomVisibility"><option value="public">Pública</option><option value="private">Privada</option></select></label>
+              <label>Jugadores<select id="roomCapacity"><option value="2">2 jugadores</option><option value="3">3 jugadores</option><option value="4">4 jugadores</option><option value="5" selected>5 jugadores</option></select></label>
+              <div class="fixed-setting"><span>Tiempo por turno</span><strong>60 segundos</strong></div><div class="fixed-setting"><span>Primer turno</span><strong>Al azar</strong></div>
+            </div><p id="roomVisibilityHint" class="shell-muted">Visible en Open Rooms. La partida se podrá observar.</p></section>
+            <section class="room-setting-group appearance-setting"><fieldset class="color-choice"><legend>Tu color <span id="chosenColorName"></span></legend><div id="roomColors" class="color-options"></div></fieldset>
+              <figure id="wagonPreview" class="wagon-preview" hidden><div id="wagonPreviewStage" class="wagon-preview-stage" role="img" aria-label="Vista previa de tu vagón"></div><figcaption><span>Tu vagón</span><strong id="wagonPreviewName">Cargando…</strong></figcaption><p id="wagonPreviewError" hidden>La vista previa no está disponible.</p></figure>
+              <p id="roomNote" class="shell-muted" role="status"></p>
+            </section>
+          </div>
+          <footer class="room-start"><button id="start" class="shell-primary" type="button">Iniciar partida</button><span id="waitingHost" hidden>Esperando al anfitrión</span></footer>
+        </section>
+        <aside id="roomChatPanel" class="room-chat-panel"><h2>Chat</h2><p class="chat-placeholder">Próximamente</p><div class="chat-compose"><input placeholder="Enviar un mensaje" aria-label="Chat, próximamente" disabled /><button type="button" aria-label="Enviar mensaje, próximamente" disabled data-icon="send"></button></div></aside>
+      </section>
+      <p id="lobbyError" class="shell-error" role="alert"></p>
     </main>
+    <dialog id="joinDialog" class="shell-dialog" aria-labelledby="joinTitle"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button><h2 id="joinTitle">Join Room</h2>
+      <form id="homeJoin" novalidate><label for="code">Código de invitación</label><input id="code" maxlength="10" autocomplete="off" spellcheck="false" placeholder="Introduce el código" aria-describedby="joinCodeHint joinCodeError" required /><p id="joinCodeHint" class="shell-muted">Pídeselo a quien creó la sala.</p><p id="joinCodeError" class="field-error" role="alert"></p><button id="join" type="submit" class="shell-primary full">Unirme a la sala</button></form>
+    </dialog>
+    <dialog id="profileDialog" class="shell-dialog" aria-labelledby="editTitle"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button><h2 id="editTitle">Edit Profile</h2>
+      <form id="profileForm"><label for="profileName">Nombre de usuario</label><input id="profileName" maxlength="24" required autocomplete="nickname" aria-describedby="profileError" /><fieldset class="avatar-options"><legend>Avatar</legend><button type="button" class="avatar-option" aria-label="Avatar básico" aria-pressed="true" data-icon="user"><span>Básico</span></button></fieldset><p id="profileError" class="field-error" role="alert"></p><div class="dialog-actions"><button type="button" data-close-dialog>Cancelar</button><button id="saveProfile" type="submit" class="shell-primary">Guardar</button></div></form>
+    </dialog>
+    <dialog id="languageDialog" class="shell-dialog" aria-labelledby="languageTitle"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button><h2 id="languageTitle">Idioma</h2><label for="languageSelect">Idioma de la aplicación</label><select id="languageSelect"><option value="es">Español (ESP)</option></select><button type="button" class="shell-primary full" data-close-dialog>Listo</button></dialog>
+    <div id="homeSetup" hidden>
+      <input id="nickname" maxlength="24" value="Jugador" /><span id="homeAvatar"></span>
+      <form id="homeCreate"><input id="createCode" /><button id="regenerateCode" type="button">Generar código</button><p id="createCodeError"></p></form>
+      <section id="homePractice" hidden><span id="practiceColorName"></span><div id="practiceColors"></div><button id="createTest" type="button">Practicar</button></section>
+    </div>
     <div id="game" class="game hidden">
       <main class="game-stage" aria-label="Mesa de juego">
           <div class="mapscroll is-3d" id="mapscroll">
@@ -104,7 +151,6 @@
           </div>
           <p id="maphint" class="sr-only">Pellizca con dos dedos o usa la rueda para acercar y alejar. Arrastra para mover el mapa. Toca una ruta o ciudad para construir.</p>
           <div class="boardtools" id="boardtools">
-              <div class="board-camera-controls" aria-label="Cámara del mapa"><button id="boardZoomOut" type="button" aria-label="Alejar mapa">−</button><button id="boardFit" type="button" aria-label="Centrar mapa">⌂</button><button id="boardZoomIn" type="button" aria-label="Acercar mapa">+</button></div>
               <button id="copyRoomInGame" class="copy-game" title="Copiar enlace privado">↗ <span>Invitar</span></button>
               <button
                 class="boardexpand hidden"
@@ -206,6 +252,8 @@
     <script src="lobby-ui.js"></script>
     <script src="board-camera.js"></script>
     <script src="account-ui.js"></script>
+    <script src="shell-icons.js"></script>
+    <script src="shell.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

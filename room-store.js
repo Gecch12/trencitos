@@ -4,10 +4,10 @@ const crypto = require("node:crypto");
 const hashToken = token => crypto.createHash("sha256").update(token).digest("hex");
 
 function serializableRoom(room) {
-  const { code, updated, game, hostSeat = 0, revision = 0, emptySince, savedAt, rematchCode } = room;
-  return { code, updated, game, hostSeat, revision, emptySince, savedAt, rematchCode,
-    members: room.members.map(({ name, color, accountId, token, tokenHash, autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds }) =>
-      ({ name, color, accountId, tokenHash: tokenHash || (token ? hashToken(token) : undefined), autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds })) };
+  const { code, updated, game, hostSeat = 0, revision = 0, emptySince, savedAt, rematchCode, visibility = "private", maxPlayers = 5 } = room;
+  return { code, updated, game, hostSeat, revision, emptySince, savedAt, rematchCode, visibility, maxPlayers,
+    members: room.members.map(({ name, color, accountId, token, tokenHash, bot, autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds }) =>
+      ({ name, color, accountId, bot: !!bot, tokenHash: tokenHash || (token ? hashToken(token) : undefined), autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds })) };
 }
 function loadRooms(file) {
   function read(candidate) {

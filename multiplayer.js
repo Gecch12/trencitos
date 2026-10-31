@@ -47,6 +47,7 @@ function createMultiplayerController({ rooms, sendRoom, removeRoom, expireGame, 
     const time = now();
     room.hostSeat ??= 0;
     for (const member of room.members) {
+      if (member.bot) { member.disconnectedAt = null; continue; }
       if (connected(member)) member.disconnectedAt = null;
       else member.disconnectedAt ??= time;
     }
@@ -61,13 +62,14 @@ function createMultiplayerController({ rooms, sendRoom, removeRoom, expireGame, 
     if (!room.game) {
       for (let i = room.members.length - 1; i >= 0; i--) {
         const member = room.members[i];
-        if (!connected(member) && time >= member.disconnectedAt + GRACE_MS) removeSeat(room, i);
+        if (!member.bot && !connected(member) && time >= member.disconnectedAt + GRACE_MS) removeSeat(room, i);
       }
       if (room.hostSeat < 0 || !room.members[room.hostSeat]) room.hostSeat = room.members.findIndex(connected);
     } else {
       const host = room.members[room.hostSeat];
       if (!host || (!connected(host) && time >= host.disconnectedAt + GRACE_MS)) room.hostSeat = room.members.findIndex(connected);
       room.members.forEach((member, seat) => {
+        if (member.bot) return;
         if ((room.game.players[seat].missedTurns || 0) >= 2 && !member.autopilot) {
           member.autopilot = true;
           Engine.note(room.game, `${member.name}: bot de reemplazo tras dos turnos agotados.`, seat);
@@ -85,7 +87,7 @@ function createMultiplayerController({ rooms, sendRoom, removeRoom, expireGame, 
     if (!live(room) || blocked()) return;
     const state = { lifecycle: null, bot: null }; active.set(room, state);
     const deadlines = room.emptySince != null ? [room.emptySince + GRACE_MS]
-      : room.members.flatMap(m => !connected(m) && (!room.game || room.members[room.hostSeat] === m) ? [m.disconnectedAt + GRACE_MS] : []);
+      : room.members.flatMap(m => !m.bot && !connected(m) && (!room.game || room.members[room.hostSeat] === m) ? [m.disconnectedAt + GRACE_MS] : []);
     if (deadlines.length) {
       state.lifecycle = setTimer(() => dispatch(() => { reconcile(room); if (live(room)) sendRoom(room); }), Math.max(0, Math.min(...deadlines) - now()));
       state.lifecycle.unref?.();

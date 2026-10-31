@@ -8,6 +8,9 @@ comercial: conserva las variantes del proyecto.
 
 - **Sala:** código público, anfitrión y 2–5 puestos para iniciar. La credencial
   privada recupera un puesto; el código público no autentica a su propietario.
+  Las nuevas salas son públicas por defecto, con opción privada; las antiguas sin
+  este campo siguen privadas. El anfitrión fija capacidad 2–5 y añade/retira bots
+  antes de empezar. La capacidad incluye humanos y bots.
 - **Jugador:** puesto, nombre, color, mano privada, destinos y piezas. Empieza con
   45 vagones, 3 estaciones y 4 cartas. Dieciocho colores de jugador no equivalen a
   los ocho colores de cartas/rutas. El lobby reserva colores únicos; iniciada la
@@ -18,6 +21,9 @@ comercial: conserva las variantes del proyecto.
   vincular exige la credencial privada y recuperar exige la cuenta propietaria. Nunca
   concede otra mano ni prolonga la vida de una sala. Práctica invitada sigue disponible.
   Contrato y activación: [identidad](GOOGLE_AUTH.md).
+- **Espectador:** observa una partida pública sin ocupar puesto ni recibir secretos.
+  No ejecuta acciones ni mantiene la sala viva. El listado excluye salas privadas,
+  práctica, abandonadas y partidas terminadas.
 - **Red:** 47 ciudades y 101 rutas, con 300 casillas. Una ruta tiene extremos,
   longitud, color, posibles túnel/ferri y propietario. La geometría no cambia su
   coste ni conectividad.
@@ -74,7 +80,9 @@ el robo; no se puede cambiar a construcción.
 Las políticas viven en [multiplayer.js](../multiplayer.js),
 [game-clock.js](../game-clock.js) y [practice.js](../practice.js):
 
-- Sala previa: desconexión reserva puesto 60 s; salida explícita lo libera.
+- Sala previa: desconexión reserva puesto humano 60 s; salida explícita lo libera.
+  Los bots añadidos permanecen en su plaza hasta retirarlos o eliminar la sala.
+  En salas normales usan la política estratégica de práctica y se guardan con ella.
 - Partida: dos turnos consecutivos agotados activan reemplazo; salida voluntaria
   lo activa directamente. Recuperar control respeta el turno automático en curso.
 - Todos desconectados: pausa durante 60 s; después se elimina la sala. La

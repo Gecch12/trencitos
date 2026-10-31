@@ -26,7 +26,9 @@ let sock = null,
 let sessionReplaced = false, storagePaused = false, pendingAction = null, resendPending = false, sessionSupported = false;
 let homeMode = "create", homeBusy = false, lobbyStarted = false;
 let preferredColor = localStorage.getItem("rr-color");
-let account = null;
+let account = null, shell = null;
+let spectating = false, roomCapacity = 5, roomVisibility = 'private';
+let desiredWatch = new URLSearchParams(location.search).get('watch') || '';
 if (!LobbyUI.isColor(preferredColor)) preferredColor = LobbyUI.PALETTE[0].color;
 const MAP_BOUNDS = RailMap.bounds;
 const MAP_GEOMETRY = RailMap.createNetwork(ROUTES);
@@ -156,6 +158,7 @@ function send(obj) {
 }
 function error(s) {
   $("lobbyError").textContent = s;
+  if ($("joinDialog").open) $("joinCodeError").textContent = s;
   let el = $("errorMsg");
   if (el) el.textContent = s;
   if (game) toast(s);
@@ -175,7 +178,8 @@ function identityKey(code) {
 }
 function resetToLobby(message = "", preserveIdentity = false) {
   cancelTunnelReveal();
-  if (!preserveIdentity && (room || desiredRoom)) localStorage.removeItem(identityKey(room || desiredRoom));
+  if (!spectating && !preserveIdentity && (room || desiredRoom)) localStorage.removeItem(identityKey(room || desiredRoom));
+  spectating = false; desiredWatch = ''; roomCapacity = 5;
   room = desiredRoom = token = "";
   game = null;
   seat = -1;
@@ -227,7 +231,8 @@ function resetToLobby(message = "", preserveIdentity = false) {
   $("lobbyError").textContent = message;
   history.replaceState(null, "", "/");
   status(sock?.readyState === WebSocket.OPEN ? "● Conectado" : "○ Desconectado");
-  $("nickname").focus();
+  shell?.reset();
+  account?.listRooms().catch(() => {});
 }
 function connect() {
   if (sessionReplaced) return;
@@ -239,7 +244,9 @@ function connect() {
     lastDrawId = null; // The reconnect snapshot is not a new draw.
     lastEffectId = null;
     status("● Conectado");
-    if (attempted && desiredRoom) {
+    send({type:'list_rooms'});
+    if (desiredWatch) send({type:'spectate',code:desiredWatch});
+    else if (attempted && desiredRoom) {
       let t = incomingRecovery || localStorage.getItem(identityKey(desiredRoom));
       send({
         type: "join",
@@ -257,13 +264,17 @@ function connect() {
     } catch {
       return;
     }
+    if (m.type === 'directory') { shell?.receiveDirectory(m); return; }
     if (m.type === "error") {
       homeBusy = false; syncHomeAvailability();
       pendingAction = null;
+      if (desiredWatch && !room) { desiredWatch=''; error(m.message); return; }
       if (!room && ["CODE_TAKEN", "INVALID_CODE", "ROOM_NOT_FOUND"].includes(m.code)) {
         attempted = false;
+        if (m.code === "CODE_TAKEN") $("createCode").value = LobbyUI.randomCode();
         if (m.code === "ROOM_NOT_FOUND") setHomeMode("join");
         homeCodeError(homeMode === "create" ? "create" : "join", m.message);
+        error(m.message);
         return;
       }
       if (["ROOM_NOT_FOUND", "INVALID_TOKEN"].includes(m.code)) {
@@ -299,11 +310,15 @@ function connect() {
       return;
     }
     if (m.type === "lobby") {
+      const enteringRoom = room !== m.code;
       homeBusy = false;
       lobbyStarted = !!m.started;
       $("lobbyError").textContent = "";
       if (!m.started) waitingForGameStart = true;
       room = m.code;
+      spectating = !!m.spectator;
+      desiredWatch = spectating ? room : '';
+      roomCapacity = m.maxPlayers || 5; roomVisibility = m.visibility || 'private';
       desiredRoom = room;
       seat = m.seat;
       token = m.token;
@@ -318,15 +333,16 @@ function connect() {
       host = m.host;
       practiceMode = !!m.practice;
       sessionSupported = m.sessionVersion >= 1;
-      $("sessionControls").classList.toggle("hidden", practiceMode || !sessionSupported);
+      $("sessionControls").classList.toggle("hidden", spectating || practiceMode || !sessionSupported);
       $("reclaimControl").classList.toggle("hidden", !members[seat]?.autopilot);
       $("reclaimControl").disabled = !!members[seat]?.reclaim;
       $("reclaimControl").textContent = members[seat]?.reclaim ? "Volverás en tu siguiente turno" : "Recuperar control";
-      localStorage.setItem(identityKey(room), token);
+      if (!spectating) localStorage.setItem(identityKey(room), token);
       localStorage.setItem("rr-name", $("nickname").value);
-      history.replaceState(null, "", "/?room=" + room);
+      if (enteringRoom || m.started) history.replaceState(null, "", spectating ? '/rooms?watch='+room : "/rooms?room=" + room);
       renderLobby();
-      account?.linkSeat();
+      shell?.joined();
+      if (!spectating) account?.linkSeat();
       if (resendPending) { resendPending = false; if (pendingAction) send(pendingAction); }
       return;
     }
@@ -382,7 +398,7 @@ function renderLobby() {
   $("homeSetup").classList.add("hidden");
   $("roompanel").classList.remove("hidden");
   $("roomcode").textContent = room;
-  $("roomCount").textContent = `${members.length}/5 jugadores`;
+  $("roomCount").textContent = `${members.length}/${roomCapacity}`;
   $("members").innerHTML = members
     .map(
       (m, i) =>
@@ -399,6 +415,7 @@ function renderLobby() {
   $("roomNote").textContent =
     practiceMode ? "Sala de pruebas temporal · Tú y 3 bots." :
       members.length < 2 ? "Invita a alguien para empezar." : members.some(m => !m.connected) ? "Esperando a que todos estén conectados." : host ? "Todo listo. El primer turno se sortea al empezar." : "Esperando a que el anfitrión inicie la partida.";
+  shell?.renderRoom();
 }
 function homeAvatarMarkup() {
   return '<span class="home-avatar" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M7 27v-4a9 9 0 0 1 18 0v4Z"/></svg></span>';
@@ -413,6 +430,7 @@ function syncHomeAvailability() {
   $("roomColors").querySelectorAll("button").forEach(button => {
     button.disabled = unavailable || lobbyStarted || members.some((m, i) => i !== seat && m.color === button.dataset.color);
   });
+  shell?.availability();
 }
 function homeCodeError(mode, message = "") {
   $(mode === "create" ? "createCodeError" : "joinCodeError").textContent = message;
@@ -478,7 +496,7 @@ function initializeHome() {
   $("regenerateCode").onclick = () => { $("createCode").value = LobbyUI.randomCode(); homeCodeError("create"); };
   $("createCode").oninput = () => homeCodeError("create");
   $("code").oninput = () => homeCodeError("join");
-  $("nickname").oninput = () => { localStorage.setItem("rr-name", $("nickname").value); account?.changed(); };
+  $("nickname").oninput = () => { localStorage.setItem("rr-name", $("nickname").value); account?.changed(); shell?.identity(); };
   $("nickname").onkeydown = event => { if (event.key === "Enter") { event.preventDefault(); $(homeMode === "practice" ? "createTest" : homeMode === "join" ? "join" : "create").click(); } };
   $("leaveLobby").onclick = () => $("leaveRoom").click();
 }
@@ -490,7 +508,7 @@ $("homeCreate").onsubmit = event => {
   if (!LobbyUI.isNewCode(code)) { homeCodeError("create", "Usa entre 6 y 10 números, sin espacios."); $("createCode").focus(); return; }
   attempted = false;
   homeBusy = true; syncHomeAvailability();
-  send({ type: "create", name: $("nickname").value, code, color: preferredColor });
+  send({ type: "create", name: $("nickname").value, code, color: preferredColor, visibility:'public', maxPlayers:5 });
 };
 $("createTest").onclick = () => {
   if (homeBusy) return;
@@ -558,9 +576,10 @@ $("rotateRecovery").onclick = () => {
 };
 $("reclaimControl").onclick = () => send({ type: "reclaim" });
 $("leaveRoom").onclick = () => {
-  if (!game || game.phase === "finished" || confirm("¿Salir de la partida? Un bot tomará tu puesto. Si todos salen, la partida se abandonará tras 60 segundos sin conexiones.")) send({ type: "leave" });
+  if (spectating || !game || game.phase === "finished" || confirm("¿Salir de la partida? Un bot tomará tu puesto. Si todos salen, la partida se abandonará tras 60 segundos sin conexiones.")) send({ type: "leave" });
 };
 function act(type, other = {}) {
+  if (spectating) return;
   if (sessionReplaced || storagePaused || members[seat]?.autopilot) { error("No tienes el control de este puesto."); return; }
   if (pendingAction) return;
   if (sock?.readyState !== WebSocket.OPEN) { error("Sin conexión."); return; }
@@ -654,7 +673,7 @@ function render() {
           : `Turno de ${game.players[game.current].name}`;
   $("roundStatus").textContent = game.phase === "finished" ? "Final" : game.phase === "initial" ? `${game.initialReadyCount}/${game.players.length} listos` : game.finalRemaining !== null ? "Última ronda" : "";
   $("initialStatus").classList.toggle("hidden", game.phase !== "initial");
-  $("initialStatusText").textContent = `${game.initialReadyCount}/${game.players.length} listos · ${game.players[seat].initialReady ? "Puedes explorar el mapa mientras esperas" : "Todos eligen a la vez"}`;
+  $("initialStatusText").textContent = `${game.initialReadyCount}/${game.players.length} listos · ${game.players[seat]?.initialReady ? "Puedes explorar el mapa mientras esperas" : "Todos eligen a la vez"}`;
   $("viewResults").classList.toggle("hidden", game.phase !== "finished");
   if (game.phase === "closing") $("roundStatus").innerHTML = 'Últimos billetes <span data-clock="closing"></span>';
   $("hand").innerHTML = "";
@@ -1322,7 +1341,7 @@ function showMapMenu(event, target) {
   const r = target.routeId === undefined ? null : game.routes.find(r => r.id === target.routeId);
   const stationOwner = target.city === undefined ? -1 : game.players.findIndex(p => p.placed.includes(target.city));
   const owner = r ? GameUI.routeOwner(game, r, seat) : stationOwner < 0 ? null : { seat: stationOwner, color: GameUI.playerColor(game.players[stationOwner].color), label: `Estación de ${game.players[stationOwner].name}` };
-  const stationsLeft = game.players[seat].stations;
+  const stationsLeft = game.players[seat]?.stations || 0;
   const canBuild = !owner && amIUp() && !game.drawCount && (r || stationsLeft > 0);
   const title = r ? `${CITIES[r.a][2]} — ${CITIES[r.b][2]}` : CITIES[target.city][2];
   const detail = r ? `${routeRequirementText(r)}${r.tunnel ? " · Túnel" : ""}${r.ferry ? " · Ferri" : ""}`
@@ -1984,7 +2003,8 @@ function showResults() {
   if (practiceMode) $("practiceHome").onclick = () => send({ type: "leave_test" });
   else {
     $("multiplayerHome").onclick = () => send({ type: "leave" });
-    $("rematch").onclick = () => send({ type: "rematch" });
+    $("rematch").hidden = spectating;
+    $("rematch").onclick = () => { if (!spectating) send({ type: "rematch" }); };
   }
 }
 function renderResultMap(result, selection) {
@@ -2406,6 +2426,7 @@ function updateCompactStatus() {
   if (!game) return;
   const controlled = sock?.readyState === WebSocket.OPEN && !sessionReplaced && !storagePaused && !members[seat]?.autopilot;
   const state = GameUI.turnPresentation(game, seat, controlled);
+  if (spectating && game.phase !== 'finished') state.hint = 'Observando la partida';
   if ($("compactTurn").textContent !== state.title) $("compactTurn").textContent = state.title;
   if ($("turnHint").textContent !== state.hint) $("turnHint").textContent = state.hint;
   turnBanner.classList.toggle("is-mine", state.mine);
@@ -2672,14 +2693,23 @@ account = AccountUI.create({
   applyProfile(profile) {
     $("nickname").value=profile.nickname; preferredColor=profile.color;
     localStorage.setItem("rr-name",profile.nickname);localStorage.setItem("rr-color",profile.color);renderHomeColors();
+    shell?.identity();
   },
+});
+shell = AppShell.create({
+  state:()=>({room,game,members,host,seat,spectator:spectating,maxPlayers:roomCapacity,visibility:roomVisibility,started:lobbyStarted,
+    busy:homeBusy || sock?.readyState !== WebSocket.OPEN || sessionReplaced || storagePaused}),
+  send, saveProfile:name=>account.updateNickname(name),
+  joinRoom(code) { $('code').value=code; $('homeJoin').requestSubmit(); },
+  watchRoom(code) {
+    if (room) { error('Sal de tu sala antes de observar otra partida.'); return; }
+    desiredWatch=code; send({type:'spectate',code});
+  },
+  leaveRoom:()=>send({type:'leave'}),
 });
 connect();
 
 $("retryBoard").onclick = initializeBoard3D;
-$("boardZoomIn").onclick = () => setZoom(zoom * 1.25);
-$("boardZoomOut").onclick = () => setZoom(zoom / 1.25);
-$("boardFit").onclick = () => { zoom = 1; mapCenter = { ...MAP_CENTER }; applyZoom(); };
 $("mapscroll").tabIndex = 0;
 $("mapscroll").setAttribute("aria-label", "Mapa: flechas para mover, más y menos para zoom, Inicio para centrar");
 $("mapscroll").addEventListener("keydown", event => {
@@ -2692,7 +2722,7 @@ $("mapscroll").addEventListener("keydown", event => {
     applyZoom();
   } else if (["+", "=", "-", "Home"].includes(event.key)) {
     event.preventDefault();
-    if (event.key === "Home") $("boardFit").click();
+    if (event.key === "Home") { zoom = 1; mapCenter = { ...MAP_CENTER }; applyZoom(); }
     else setZoom(zoom * (event.key === "-" ? .8 : 1.25));
   }
 });

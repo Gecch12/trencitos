@@ -25,7 +25,12 @@
     "data.js",
     "account-auth.js",
     "account-seats.js",
-    "account-ui.js"
+    "account-ui.js",
+    "room-directory.js",
+    "room-bots.js",
+    "shell.js",
+    "shell.css",
+    "shell-icons.js"
   ],
   "domain.md": [
     "engine.js",
@@ -34,7 +39,9 @@
     "practice.js",
     "game-clock.js",
     "lobby-ui.js",
-    "account-seats.js"
+    "account-seats.js",
+    "room-directory.js",
+    "room-bots.js"
   ],
   "operations.md": [
     "package.json",
@@ -99,5 +106,16 @@
     ".env.example",
     "privacy.html",
     "privacy.css"
+  ],
+  "work/navigation-rooms.md": [
+    "shell.js",
+    "shell.css",
+    "shell-icons.js",
+    "index.html",
+    "room-directory.js",
+    "room-bots.js",
+    "tests/browser-shell.cjs",
+    "tests/room-directory.test.js",
+    "tests/room-bots.test.js"
   ]
 }

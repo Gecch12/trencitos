@@ -47,8 +47,21 @@ STATE_BACKEND=file STATE_FILE="$PWD/room-state.json" PORT=3118 node server.js
 ```
 
 Abrir `http://localhost:3118/`. El tablero principal usa solo 3D.
-`−`, `+` y centrar complementan rueda, arrastre, pellizco y
-teclado (flechas, `+`/`−`, Inicio al enfocar el mapa).
+La cámara usa rueda, arrastre, pellizco y teclado (flechas, `+`/`−`, Inicio al
+enfocar el mapa), sin botones visibles de zoom o centrado.
+
+Verificación del inicio, perfil y salas:
+
+```sh
+node tests/browser-shell.cjs
+```
+
+Abre Chrome y un servidor de archivo aislado en un puerto libre de loopback.
+Comprueba navegación, cambios responsive, tres sesiones independientes,
+creación/unión, bots, visibilidad y espectadores. Guarda capturas e informe
+`docs/qa/shell-*`. Usa un doble HTTP para éxito/error de perfil, sin cuentas de
+producción. La prueba adicional del recorrido OAuth/API/SQL local utiliza
+`node tests/helpers/identity-preview.js` (puertos 3141/3142, proveedor simulado).
 
 Verificación reproducible del tablero y los vagones:
 

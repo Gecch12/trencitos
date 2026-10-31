@@ -1434,7 +1434,8 @@ body{background:linear-gradient(135deg,#dce6e3,#ebe7dc 60%,#d7e4e5);color:var(--
 .market .traincard:hover:not(:disabled){transform:translateY(-8px) scale(1.04);z-index:2;filter:drop-shadow(0 8px 10px #192d2d55)}
 .market .traincard:disabled{opacity:.8;cursor:not-allowed;filter:drop-shadow(0 2px 4px #192d2d20)}
 .traincard{display:block;position:relative;min-height:0;aspect-ratio:200/278;padding:0;border:0;border-radius:8px;overflow:visible;text-align:center;background:transparent;box-shadow:none;text-shadow:none}
-.traincard img{width:100%;height:100%;display:block;object-fit:contain;border-radius:8px;user-select:none;pointer-events:none}
+/* The SVG supplies rounded corners; a second CSS radius clips its engraved frame. */
+.traincard img{width:100%;height:100%;display:block;object-fit:contain;border-radius:0;user-select:none;pointer-events:none}
 .traincard .cardcount{position:absolute;right:-5px;top:-7px;background:#142e41;color:#fff8db;border:2px solid #fff9ee;border-radius:100px;font-family:Georgia,serif;font-weight:900;font-size:14px;min-width:28px;height:28px;display:grid;place-items:center;box-shadow:0 3px 5px #102a3b3d;padding:0 4px;z-index:2}
 .handdock{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:14px;background:#fffcf5;border:1px solid #d5d2c4;box-shadow:0 3px 14px #223d3c1a;border-radius:13px;padding:14px 18px;margin-top:12px}
 .dockmain{min-width:0}.docktickets{min-width:0;border-left:1px solid #dfddcf;padding-left:14px}

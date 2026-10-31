@@ -10,6 +10,8 @@ Orden de trabajo acordado:
 3. [Tablero 3D y familia de vagones](board-3d.md): presentación oficial aceptada;
    evidencia, avance de integración y límites en la ficha.
 
+4. [Navegación y salas públicas](navigation-rooms.md): inicio adaptable, perfil y sala de espera.
+
 Para después:
 
 - [Preparación comercial y personalización](commerce.md).

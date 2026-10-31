@@ -110,7 +110,7 @@ const save = () => fs.writeFileSync(path.join(out, 'threejs-report.json'), JSON.
         assert.deepEqual(check.overlaps, []); assert.equal(check.overflow,false); assert.ok(check.projectionError < .01);
         report.legibility.push({width,height,zoom:z,...check});
       }
-      await page.locator('#boardFit').click();
+      await page.locator('#mapscroll').press('Home');
       if (width===390) await page.screenshot({path:path.join(out,'threejs-mobile.png')});
     }
     // Real touch events through CDP (viewport emulation, not a physical phone).
@@ -136,10 +136,11 @@ const save = () => fs.writeFileSync(path.join(out, 'threejs-report.json'), JSON.
     // Complete normal game: one rendered client, three independent WS peers.
     await page.setViewportSize({width:1460,height:940});
     await page.goto(base + '/?board=3d');
-    await page.locator('#createCode').fill('839001'); await page.locator('#create').click();
-    for (let i=1;i<4;i++) { const peer=await connect(port); peers.push(peer); peer.send({type:'join',code:'839001',name:`QA ${i}`}); await peer.next('lobby'); }
+    await page.locator('#create').click(); await page.waitForFunction(()=>!!room);
+    const matchCode = await page.locator('#roomcode').textContent();
+    for (let i=1;i<4;i++) { const peer=await connect(port); peers.push(peer); peer.send({type:'join',code:matchCode,name:`QA ${i}`}); await peer.next('lobby'); }
     await page.locator('#start').click(); await page.waitForFunction(()=>game?.phase==='initial');
-    const r = rooms.get('839001'); const counts = {}; let actions=0, reconnect=false;
+    const r = rooms.get(matchCode); const counts = {}; let actions=0, reconnect=false;
     while(r.game.phase !== 'finished' && actions < 1000) {
       const g=r.game;
       let seat=g.phase==='initial'?g.players.findIndex(p=>p.pending.length):g.players.findIndex(p=>p.offer);

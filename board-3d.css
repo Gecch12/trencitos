@@ -7,11 +7,6 @@
 .board-status { position: absolute; top: 36%; left: 50%; transform: translateX(-50%); max-width: min(360px, 85%); padding: 18px 24px; text-align: center; background: #fcfdfb; color: #193b49; border: 1px solid #ccd9d7; border-radius: 10px; }
 .board-status p { margin: 0; }
 .board-status button { margin-top: 14px; }
-.game .board-camera-controls { display: flex; gap: 4px; }
-.game .board-camera-controls button { min-width: 36px; }
-@media (max-width: 700px) {
-  .game .board-camera-controls button { min-width: 40px; }
-}
 
 /* SVG provides only transparent native focus/click targets and readable text. */
 .game .is-3d #board .owned-piece,

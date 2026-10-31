@@ -1,0 +1,1223 @@
+{
+  "date": "2026-10-31T23:10:24.979Z",
+  "tests": [
+    "Navigation, profile local persistence/cancel, More placeholders/socials/language, responsive boundaries and landscape touch tablet",
+    "Real public/private directory, create/join, independent host/guest, settings authorization, full room, durable bots, initial selection, spectator privacy/reload/exit",
+    "Profile API success/reload and failure keeps modal/name unchanged (HTTP double, no production account)"
+  ],
+  "responsive": [
+    {
+      "label": "more",
+      "width": 1920,
+      "height": 929,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 929
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1790,
+        "h": 843
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 1920,
+      "height": 929,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 929
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1790,
+        "h": 843
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 1920,
+      "height": 929,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 929
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1790,
+        "h": 843
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 900
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1310,
+        "h": 814
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 900
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1310,
+        "h": 814
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 900
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1310,
+        "h": 814
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 800
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1150,
+        "h": 714
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 800
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1150,
+        "h": 714
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 800
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1150,
+        "h": 714
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 1181,
+      "height": 820,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 820
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1051,
+        "h": 734
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 1181,
+      "height": 820,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 820
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1051,
+        "h": 734
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 1181,
+      "height": 820,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 820
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1051,
+        "h": 734
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 1180,
+      "height": 820,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 820
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1050,
+        "h": 734
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 1180,
+      "height": 820,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 820
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1050,
+        "h": 734
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 1180,
+      "height": 820,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 820
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1050,
+        "h": 734
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 1025,
+      "height": 768,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 768
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 895,
+        "h": 682
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 1025,
+      "height": 768,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 768
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 895,
+        "h": 682
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 1025,
+      "height": 768,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 768
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 895,
+        "h": 682
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 1024,
+      "height": 768,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 698,
+        "w": 1024,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 1024,
+        "h": 566
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 1024,
+      "height": 768,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 698,
+        "w": 1024,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 1024,
+        "h": 566
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 1024,
+      "height": 768,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 698,
+        "w": 1024,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 1024,
+        "h": 566
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 992,
+      "height": 900,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 830,
+        "w": 992,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 992,
+        "h": 698
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 992,
+      "height": 900,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 830,
+        "w": 992,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 992,
+        "h": 698
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 992,
+      "height": 900,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 830,
+        "w": 992,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 992,
+        "h": 698
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 991,
+      "height": 900,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 830,
+        "w": 991,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 991,
+        "h": 698
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 991,
+      "height": 900,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 830,
+        "w": 991,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 991,
+        "h": 698
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 991,
+      "height": 900,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 830,
+        "w": 991,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 991,
+        "h": 698
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 954,
+        "w": 768,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 768,
+        "h": 822
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 954,
+        "w": 768,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 768,
+        "h": 822
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 954,
+        "w": 768,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 768,
+        "h": 822
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 767,
+      "height": 1024,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 954,
+        "w": 767,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 767,
+        "h": 822
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 767,
+      "height": 1024,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 954,
+        "w": 767,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 767,
+        "h": 822
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 767,
+      "height": 1024,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 954,
+        "w": 767,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 767,
+        "h": 822
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 521,
+      "height": 844,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 774,
+        "w": 521,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 521,
+        "h": 642
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 521,
+      "height": 844,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 774,
+        "w": 521,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 521,
+        "h": 642
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 521,
+      "height": 844,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 774,
+        "w": 521,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 521,
+        "h": 642
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 520,
+      "height": 844,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 774,
+        "w": 520,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 520,
+        "h": 642
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 520,
+      "height": 844,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 774,
+        "w": 520,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 520,
+        "h": 642
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 520,
+      "height": 844,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 774,
+        "w": 520,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 520,
+        "h": 642
+      },
+      "actions": "column-reverse",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 774,
+        "w": 390,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 390,
+        "h": 642
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 774,
+        "w": 390,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 390,
+        "h": 642
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 774,
+        "w": 390,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 390,
+        "h": 642
+      },
+      "actions": "column-reverse",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 360,
+      "height": 800,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 730,
+        "w": 360,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 360,
+        "h": 598
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 360,
+      "height": 800,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 730,
+        "w": 360,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 360,
+        "h": 598
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 360,
+      "height": 800,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 730,
+        "w": 360,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 360,
+        "h": 598
+      },
+      "actions": "column-reverse",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "more",
+      "width": 844,
+      "height": 390,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 320,
+        "w": 844,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 54,
+        "w": 844,
+        "h": 266
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "profile",
+      "width": 844,
+      "height": 390,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 320,
+        "w": 844,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 54,
+        "w": 844,
+        "h": 266
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "rooms",
+      "width": 844,
+      "height": 390,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 320,
+        "w": 844,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 54,
+        "w": 844,
+        "h": 266
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "waiting",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 900
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 1310,
+        "h": 814
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "waiting",
+      "width": 1025,
+      "height": 768,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 768
+      },
+      "content": {
+        "x": 130,
+        "y": 86,
+        "w": 895,
+        "h": 682
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "waiting",
+      "width": 1024,
+      "height": 768,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 698,
+        "w": 1024,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 1024,
+        "h": 566
+      },
+      "actions": "row",
+      "more": "grid",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "waiting",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 954,
+        "w": 768,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 768,
+        "h": 822
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "grid",
+      "clipped": []
+    },
+    {
+      "label": "waiting",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 774,
+        "w": 390,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 390,
+        "h": 642
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "waiting",
+      "width": 360,
+      "height": 800,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 730,
+        "w": 360,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 132,
+        "w": 360,
+        "h": 598
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "flex",
+      "clipped": []
+    },
+    {
+      "label": "waiting",
+      "width": 844,
+      "height": 390,
+      "overflow": false,
+      "nav": {
+        "x": 0,
+        "y": 320,
+        "w": 844,
+        "h": 70
+      },
+      "content": {
+        "x": 0,
+        "y": 54,
+        "w": 844,
+        "h": 266
+      },
+      "actions": "row",
+      "more": "flex",
+      "profile": "grid",
+      "clipped": []
+    }
+  ],
+  "errors": [],
+  "browser": "156.0.8078.74",
+  "passed": true
+}

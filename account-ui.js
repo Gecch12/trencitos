@@ -3,7 +3,7 @@ const AccountUI = (() => {
   function create({selection,applyProfile,currentSeat}) {
     const el = id=>document.getElementById(id);
     let profile=null, enabled=false, timer=null, saving=Promise.resolve(), linked='', binding='';
-    let editing=0, loading=true, stopped=false;
+    let editing=0, loading=true, stopped=false, accountKnown=false;
     const initial = selection();
     async function api(path,data) {
       const response = await fetch('/api/account'+path,{credentials:'same-origin',cache:'no-store',
@@ -88,7 +88,7 @@ const AccountUI = (() => {
     async function load(){
       loading=true;
       try {
-        const value=await api('');enabled=value.enabled;profile=value.profile;loading=false;render();
+        const value=await api('');enabled=value.enabled;profile=value.profile;loading=false;accountKnown=true;render();
         if (profile) {
           if (!profile.initialized) { save(); await saving; }
           else if (!editing && !currentSeat() && JSON.stringify(selection())===JSON.stringify(initial)) applyProfile(profile);
@@ -104,7 +104,25 @@ const AccountUI = (() => {
       }
     }
     const ready=load();
-    return {changed,linkSeat,ready};
+    async function updateNickname(nickname) {
+      await ready;
+      if (loading || stopped) throw Error('Espera a que termine la conexión con tu cuenta.');
+      if (!accountKnown) throw Error('No pudimos comprobar tu cuenta. Reintenta la conexión antes de guardar.');
+      clearTimeout(timer); editing++;
+      await saving;
+      const data={...selection(),nickname};
+      if (profile) {
+        const accountId=profile.id, value=await api('/profile',data);
+        if (!profile || profile.id!==accountId) throw Error('Tu sesión cambió. Vuelve a intentarlo.');
+        profile=value.profile;
+        applyProfile(profile);
+        message('Perfil guardado en tu cuenta.');
+      } else {
+        applyProfile({...data,avatar:'person'});
+        message('Perfil guardado en este dispositivo.');
+      }
+    }
+    return {changed,linkSeat,ready,updateNickname,listRooms};
   }
   return {create};
 })();

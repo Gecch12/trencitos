@@ -23,12 +23,14 @@ test("color preferences never duplicate reservations and restoration preserves l
   assert.deepEqual(Lobby.restoreColors([{ color: red }, { color: red }, {}]), [red, blue, green]);
   assert.deepEqual(Lobby.restoreColors([{}, {}, {}, {}], [yellow, purple, green, red].map(color => ({ color }))), [yellow, purple, green, red]);
 });
-test("new home removes marketing copy and exposes separate accessible create/join/practice panels", () => {
+test("home exposes room directory tabs, join dialog and a separate profile route", () => {
   const html = fs.readFileSync(require.resolve("../index.html"), "utf8");
   assert.match(html, /<title>Trencitos<\/title>/);
   assert.doesNotMatch(html, /1901|Europa te espera|EL GRAN VIAJE|Proyecto personal no oficial|Sonido activado|EUROPA ·/);
-  for (const id of ["homeCreate", "homeJoin", "homePractice"]) assert.match(html, new RegExp(`id="${id}"[^>]*role="tabpanel"`));
-  assert.match(html, /id="createCode"[^>]*inputmode="numeric"[^>]*maxlength="10"/);
+  assert.match(html, /id="roomDirectory"[^>]*role="tabpanel"/);
+  assert.match(html, /<dialog id="joinDialog"/);
+  assert.match(html, /id="create"[^>]*form="homeCreate"/);
+  assert.match(html, /href="\/profile"[^>]*data-page="profile"/);
   assert.match(html, /id="code"[^>]*maxlength="10"/);
   assert.ok(html.indexOf('src="lobby-ui.js"') < html.indexOf('src="app.js"'));
 });

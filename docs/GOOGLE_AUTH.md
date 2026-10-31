@@ -71,7 +71,10 @@ renovación. Logout revoca la sesión local en Supabase y elimina cookies.
 `game_profiles.id` es un UUID del juego, separado de `auth.users.id` y de email.
 El primer acceso conserva el apodo y color elegidos como invitado. Otro dispositivo
 carga el perfil persistente; cambios manuales posteriores guardan apodo/color.
-El avatar actual sigue siendo la personita del juego. Foto/nombre de Google no
+`/profile` concentra Account y el botón **Edit Profile**. Su modal valida el
+apodo y espera la respuesta de `/api/account/profile`; un fallo deja el modal
+abierto y no sustituye el nombre mostrado. Sin cuenta se guarda localmente.
+El avatar actual sigue siendo la personita del juego, única opción del modal. Foto/nombre de Google no
 se publican; accesorios, tonos de piel y emblemas siguen en [personalización](work/commerce.md).
 `game_profile` y `game_update_profile` comprueban `auth.sessions`/`session_id`,
 incluida revocación y `not_after`, además de la verificación del servidor.

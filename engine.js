@@ -261,7 +261,8 @@ function addScoreDetails(g,trails=g.players.map((_,i)=>longestTrail(g,i))){
  }
 }
 function drawEvent(g,seat){const e=g.lastDraw;if(!e)return null;return {id:e.id,seat:e.seat,index:e.index,...(e.index>=0||e.seat===seat?{color:e.color}:{})}}
-function view(g,seat){const p=g.players[seat],own=seat===g.current,details=destinationDetails(g,seat);if(g.phase==='finished'&&g.result.some(r=>!r.details))addScoreDetails(g);return {
+function view(g,seat){const spectator=seat===-1,p=spectator?{hand:[],tickets:[],pending:[],offer:null}:g.players[seat],own=seat===g.current,details=spectator?{progress:[],paths:[]}:destinationDetails(g,seat);if(g.phase==='finished'&&g.result.some(r=>!r.details))addScoreDetails(g);return {
+ spectator,
  uiVersion:5,serverNow:Date.now(),turnDeadline:g.turnDeadline,turnSerial:g.turnSerial,turnWaiting:!!g.turnWaiting,
  initialDeadline:g.initialDeadline,initialReadyCount:g.players.filter(p=>!p.pending.length).length,
  waitingDeadline:g.turnWaiting?g.players[g.current].offer?.deadline:null,

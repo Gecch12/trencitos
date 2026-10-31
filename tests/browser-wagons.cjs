@@ -15,11 +15,11 @@ const out = path.resolve(__dirname, '../docs/qa');
   const base = `http://127.0.0.1:${port}`;
   try {
     await page.goto(base);
-    await page.locator('#homeTabPractice').click();
+    await page.locator('#create').click(); await page.waitForFunction(()=>!!room && !!wagonPreview);
     const { WAGON_STYLES } = await import('../wagon-models.mjs');
     const refinedModels = ['coal', 'stone', 'steel', 'mail', 'goods'];
     for (const style of WAGON_STYLES) {
-      await page.locator(`#practiceColors [data-color="${style.color}"]`).click();
+      await page.locator(`#roomColors [data-color="${style.color}"]`).click();
       await page.waitForFunction(model => document.getElementById('wagonPreview').dataset.model === model, style.model);
       assert.equal(await page.locator('#wagonPreviewStage canvas').count(), 1);
       assert.equal(await page.locator('#wagonPreviewName').innerText(), style.label);
@@ -28,19 +28,21 @@ const out = path.resolve(__dirname, '../docs/qa');
         await page.locator('#wagonPreview').screenshot({path:path.join(out,`wagon-${style.model}.png`)});
       }
     }
-    await page.locator('#practiceColors [data-color="#b88929"]').click();
+    await page.locator('#roomColors [data-color="#b88929"]').click();
     await page.waitForFunction(() => document.getElementById('wagonPreview').dataset.model === 'auto-carrier');
     await page.waitForTimeout(150);
     await page.screenshot({path:path.join(out,'wagon-preview-desktop.png'),fullPage:true});
     await page.locator('#wagonPreview').screenshot({path:path.join(out,'wagon-preview-detail.png')});
     await page.setViewportSize({width:390,height:844});
+    await page.locator('button[data-room-tab="settings"]').click();
+    await page.locator('#wagonPreview').scrollIntoViewIfNeeded();
     await page.waitForTimeout(150);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     await page.screenshot({path:path.join(out,'wagon-preview-mobile.png'),fullPage:true});
     await page.setViewportSize({width:1440,height:1060});
-    await page.locator('#homeTabCreate').click();
+    await page.locator('#leaveLobby').click(); await page.waitForFunction(()=>!room);
     assert.equal(await page.locator('#wagonPreviewStage canvas').count(),0);
-    await page.locator('#createCode').fill('838301'); await page.locator('#create').click();
+    await page.locator('#create').click();
     await page.waitForFunction(()=>!!room && !!wagonPreview);
     assert.equal(await page.locator('#roompanel #wagonPreview').count(),1);
     await page.locator('#roomColors [data-color="#458ad4"]').click();

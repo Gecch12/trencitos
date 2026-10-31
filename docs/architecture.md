@@ -23,6 +23,8 @@ motor de reglas → persistencia de sala normal → vista filtrada para cada jug
 | Checkpoint remoto y autoridad única | [supabase-store.js](../supabase-store.js), [SQL](../supabase/001_active_games.sql) |
 | Orden y confirmación durable | [durable-queue.js](../durable-queue.js) |
 | Conexión, interfaz y efectos del navegador | [app.js](../app.js), [index.html](../index.html) |
+| Navegación, directorio y perfil responsive | [shell.js](../shell.js), [shell.css](../shell.css), [shell-icons.js](../shell-icons.js) |
+| Listado público y bots persistentes | [room-directory.js](../room-directory.js), [room-bots.js](../room-bots.js) |
 | Cálculos de presentación y lobby | [game-ui.js](../game-ui.js), [lobby-ui.js](../lobby-ui.js) |
 | Escena 3D, textura cartográfica y piezas instanciadas | [board-3d.js](../board-3d.js): `createBoard3D`, `update`, `resize`, `dispose` |
 | Familias de vagones por color, geometrías y acabados | [wagon-models.mjs](../wagon-models.mjs): `wagonStyle`, `wagonParts`; [wagon-renderer.js](../wagon-renderer.js): `createWagonRenderer` |
@@ -157,3 +159,27 @@ checkpoint guarda `members.accountId`, que nunca entra en `sendRoom`/`engine.vie
 viva, además del usuario verificado por Node. Tabla privada con RLS y RPC de cuenta
 propia; sin clave secreta para Auth. Contrato, activación y límites en
 [Google Auth](GOOGLE_AUTH.md). Activación y prueba real: ver [identidad](work/identity.md).
+
+## Inicio y directorio público
+
+`/rooms`, `/play`, `/more` y `/profile` sirven el mismo documento; `shell.js`
+administra navegación e historial sin desconectar la sala de espera. `app.js`
+conserva transporte, partida y tablero. Actualizaciones del roster no cambian la
+pestaña elegida. El modal de perfil confirma el guardado mediante `account-ui`
+antes de cerrar; ante fallo conserva el nombre anterior.
+
+`list_rooms` suscribe una conexión al directorio WebSocket. `room-directory`
+publica solo resúmenes de salas públicas activas: código, ocupación, capacidad,
+modo/mapa y nombres/colores públicos. Excluye práctica, privadas, abandonadas y
+terminadas. `spectate` vincula `peer.watching`, separado de `peer.room`/puesto.
+`Engine.view(game, -1)` produce la proyección pública; el servidor bloquea las
+mutaciones del observador. No expone tokens ni IDs de cuenta. Al terminar, los
+resultados siguen siendo públicos como para los jugadores.
+
+El checkpoint JSON añade `visibility`, `maxPlayers` y `members.bot`, sin migración
+SQL. Ausencia de `visibility` equivale a privada. `room_settings` y `add_bot`
+requieren anfitrión y sala sin iniciar. `room-bots` utiliza la política de práctica,
+pero pasa por la cola durable y los mismos plazos/guardados de salas normales.
+Solo conexiones humanas mantienen la sala viva; los bots y observadores no evitan
+la pausa o caducidad. El rollback local restaura ajustes y composición de la sala,
+y libera conexiones cuya entrada no pudo guardarse.
