@@ -1,6 +1,7 @@
 # Google y perfiles: operación
 
-El código existe en este checkout; **no está activado en la aplicación de producción**.
+El código está integrado en `main` (`2a46f58`); **no está activado en producción**.
+El usuario pidió esperar a que termine la sala abierta antes de desplegarlo.
 El 2026-10-31 se verificó que el usuario creó el cliente OAuth y habilitó Google en
 Supabase Trencitos (`xnvskxwbibrxhozgcube`); migración y callbacks aplicados después
 con su autorización. Variables de Render guardadas por el usuario y verificadas; faltan

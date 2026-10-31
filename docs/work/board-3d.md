@@ -1,5 +1,5 @@
 ---
-{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"worktree","updated":"2026-10-31"}
+{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"integrated","updated":"2026-10-31"}
 ---
 # Tablero 3D y familia de vagones
 
@@ -136,3 +136,8 @@ carga inicial de Three y legibilidad humana de vías paralelas. Al alejar se ocu
 nombres en conflicto y se priorizan al enfocar/acercar. Siguiente frente de producto:
 [identidad](identity.md); materiales y sonidos mantienen fichas independientes.
 La publicación remota está registrada por separado; no certifica otros equipos físicos.
+
+2026-10-31: catálogo nuevo y grúa revisada integrados en `main`, commit `2a46f58`
+subido con `[skip render]`. Publicación pendiente: el usuario pidió esperar a que
+termine la sala abierta de producción. La revisión publicada sigue registrada en
+[producción](../production.md).

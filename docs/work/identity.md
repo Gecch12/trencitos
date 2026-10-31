@@ -1,10 +1,10 @@
 ---
-{"id":"identity","status":"active","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"worktree","updated":"2026-10-31"}
+{"id":"identity","status":"active","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"integrated","updated":"2026-10-31"}
 ---
 # Identidad persistente
 
 Objetivo aprobado: comenzar con Google mediante Supabase Auth, separado del
-checkpoint. Código local preparado; proveedor Google, perfiles SQL y callbacks
+checkpoint. Código integrado en `main` (`2a46f58`); proveedor Google, perfiles SQL y callbacks
 configurados en Supabase. Aplicación todavía sin activar ni probar con Google real.
 
 ## Hitos y aceptación
@@ -41,7 +41,12 @@ en 3143 y enlace accesible desde el inicio; rutas públicas verificadas por HTTP
 
 Decisión: proyecto Google separado «Trencitos», aprobado y creado el 2026-10-31
 con ID `trencitos-game`; `trencitos-hq` permanece sin modificar. Siguiente paso:
-publicar código y probar acceso real; variables guardadas por el usuario y verificadas.
+desplegar `2a46f58` cuando termine la sala abierta y probar acceso real;
+variables guardadas por el usuario y verificadas. El usuario pidió esperar a que
+termine la sala. `/healthz` indicó `ok: true`, `storage: supabase`, `rooms: 1`;
+no se inició ningún despliegue. Commit subido con `[skip render]`: el dashboard
+tenía Auto-Deploy en On Commit. Publicación manual preparada con ese commit exacto;
+el diálogo indica que desactivará Auto-Deploy al ejecutarla.
 Marca guardada tras
 aceptar la política de Google con autorización explícita del usuario. Correo personal
 de soporte aprobado; público externo en modo Testing. Cliente `Trencitos web — producción`
