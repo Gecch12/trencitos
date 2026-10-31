@@ -79,19 +79,24 @@
           <button class="primary home-submit hidden" id="start" type="button">Iniciar partida <span aria-hidden="true">→</span></button>
           <button class="home-leave" id="leaveLobby" type="button">Salir de la sala</button>
         </div>
+        <figure id="wagonPreview" class="wagon-preview" hidden>
+          <div id="wagonPreviewStage" class="wagon-preview-stage" role="img" aria-label="Vista previa de tu vagón"></div>
+          <figcaption><span>Tu vagón</span><strong id="wagonPreviewName" aria-live="polite">Cargando…</strong></figcaption>
+          <p id="wagonPreviewError" class="home-hint" hidden>La vista previa no está disponible.</p>
+        </figure>
         <p class="err" id="lobbyError" role="alert"></p>
       </div>
     </main>
     <div id="game" class="game hidden">
       <main class="game-stage" aria-label="Mesa de juego">
-          <div class="mapscroll" id="mapscroll">
+          <div class="mapscroll is-3d" id="mapscroll">
             <svg id="board" viewBox="-60 -10 980 660"
               aria-label="Mapa interactivo de las rutas ferroviarias de Europa"
               aria-describedby="maphint"></svg>
+            <div id="boardStatus" class="board-status" role="status"><p id="boardStatusText">Preparando el tablero…</p><button id="retryBoard" type="button" hidden>Reintentar</button></div>
           </div>
           <p id="maphint" class="sr-only">Pellizca con dos dedos o usa la rueda para acercar y alejar. Arrastra para mover el mapa. Toca una ruta o ciudad para construir.</p>
           <div class="boardtools" id="boardtools">
-              <button id="boardMode" class="board-mode" type="button" aria-pressed="false" title="Cambiar vista del tablero">3D</button>
               <div class="board-camera-controls" aria-label="Cámara del mapa"><button id="boardZoomOut" type="button" aria-label="Alejar mapa">−</button><button id="boardFit" type="button" aria-label="Centrar mapa">⌂</button><button id="boardZoomIn" type="button" aria-label="Acercar mapa">+</button></div>
               <button id="copyRoomInGame" class="copy-game" title="Copiar enlace privado">↗ <span>Invitar</span></button>
               <button

@@ -12,7 +12,7 @@ validación del checkout actual. [Informes disponibles](../qa-index.md).
   Android, con privacidad, reconexión, gestos y resultados.
 - [ ] Prueba remota controlada de checkpoint/reinicio según [la guía](../RENDER_SUPABASE.md),
   cuando se aborde una entrega de despliegue; los tests actuales simulan Supabase.
-- [x] Registrar base de rendimiento 2D/3D en Chrome de escritorio:
+- [x] Registrar base de rendimiento del tablero en Chrome de escritorio:
   [informe del tablero](../qa/threejs-report.json).
 - [ ] Evaluar carga inicial y rendimiento 3D en móvil físico/GPU modesta.
 - [ ] Evaluar animación de construcción 3D; actualmente muestra resultado y sonido.

@@ -33,32 +33,61 @@ const MAP_CENTER = { x: MAP_BOUNDS.x + MAP_BOUNDS.width / 2, y: MAP_BOUNDS.y + M
 const TICKET_COLORS = ["#b48916", "#c64e48", "#357bb5", "#32815b"];
 let zoom = 1,
   mapCenter = { ...MAP_CENTER };
-let board3D = null, board3DLoading = false;
+let board3D = null, board3DLoading = false, board3DFailed = false;
 let labelPriority = [];
 let labelPlacements3D = new Map();
-async function setBoardMode(enabled) {
-  if (board3DLoading || !!board3D === enabled) return;
-  closeMapMenu(); cancelConstruction();
-  if (enabled) {
-    board3DLoading = true; $("boardMode").disabled = true;
-    try {
-      const { createBoard3D } = await import("./board-3d.js");
-      board3D = createBoard3D({ container: $("mapscroll"), map: RailMap, network: MAP_GEOMETRY,
-        onFailure: () => { setBoardMode(false); toast("3D no disponible. Puedes seguir jugando en 2D."); } });
-    } catch (error) {
-      console.warn("Tablero 3D no disponible:", error.message);
-      toast("3D no disponible. Puedes seguir jugando en 2D.");
-    } finally { board3DLoading = false; $("boardMode").disabled = false; }
-  } else { board3D.dispose(); board3D = null; }
-  localStorage.setItem("rr-board", board3D ? "3d" : "2d");
-  labelPlacements3D.clear();
-  $("mapscroll").classList.toggle("is-3d", !!board3D);
-  $("board").setAttribute("preserveAspectRatio", board3D ? "none" : "xMidYMid meet");
-  $("boardMode").setAttribute("aria-pressed", String(!!board3D));
-  $("boardMode").textContent = board3D ? "2D" : "3D";
-  $("boardMode").setAttribute("aria-label", board3D ? "Cambiar a tablero 2D" : "Cambiar a tablero 3D");
-  if (game) renderBoard();
-  applyZoom();
+function boardUnavailable() {
+  board3D?.dispose(); board3D = null; board3DFailed = true;
+  $("mapscroll").classList.remove("board-ready");
+  $("boardStatus").hidden = false;
+  $("boardStatusText").textContent = "No pudimos cargar el tablero 3D. Prueba a reintentarlo o recarga la página.";
+  $("retryBoard").hidden = false;
+  closeMapMenu();
+}
+async function initializeBoard3D() {
+  if (board3DLoading || board3D) return;
+  board3DLoading = true; board3DFailed = false;
+  $("boardStatus").hidden = false; $("retryBoard").hidden = true;
+  $("boardStatusText").textContent = "Preparando el tablero…";
+  try {
+    const { createBoard3D } = await import("./board-3d.js");
+    board3D = createBoard3D({ container: $("mapscroll"), map: RailMap, network: MAP_GEOMETRY, onFailure: boardUnavailable });
+    $("board").setAttribute("preserveAspectRatio", "none");
+    $("mapscroll").classList.add("board-ready"); $("boardStatus").hidden = true;
+    labelPlacements3D.clear();
+    if (game) renderBoard();
+    applyZoom();
+  } catch (error) {
+    console.warn("Tablero 3D no disponible:", error.message); boardUnavailable();
+  } finally { board3DLoading = false; }
+}
+let wagonPreview = null, wagonPreviewLoading = false;
+function hideWagonPreview() {
+  wagonPreview?.dispose(); wagonPreview = null; $("wagonPreview").hidden = true;
+}
+async function syncWagonPreview() {
+  const inRoom = !!room && !lobbyStarted;
+  if (game || (!inRoom && homeMode !== "practice")) { hideWagonPreview(); return; }
+  const figure = $("wagonPreview"), anchor = $(inRoom ? "roomNote" : "createTest");
+  if (figure.nextElementSibling !== anchor) anchor.before(figure);
+  figure.hidden = false;
+  if (wagonPreviewLoading) return;
+  wagonPreviewLoading = true;
+  try {
+    const { createWagonPreview } = await import("./wagon-preview.js");
+    if (game || (!room && homeMode !== "practice")) return;
+    wagonPreview ||= createWagonPreview({ container: $("wagonPreviewStage"), onFailure: () => {
+      wagonPreview?.dispose(); wagonPreview = null; $("wagonPreviewError").hidden = false;
+    } });
+    const description = wagonPreview.update(preferredColor);
+    figure.dataset.model = description.model;
+    $("wagonPreviewName").textContent = description.label;
+    $("wagonPreviewStage").setAttribute("aria-label", `${description.label}, color ${LobbyUI.PALETTE.find(p => p.color === preferredColor)?.name}`);
+    $("wagonPreviewError").hidden = true;
+  } catch (error) {
+    $("wagonPreviewName").textContent = "Tu selección"; $("wagonPreviewError").hidden = false;
+    console.warn("Vista previa no disponible:", error.message);
+  } finally { wagonPreviewLoading = false; }
 }
 
 let hoveredPlayer = null, focusedPlayer = null;
@@ -394,6 +423,7 @@ function setHomeMode(mode, focus = false) {
   }
   $("lobbyError").textContent = "";
   homeCodeError("create"); homeCodeError("join");
+  syncWagonPreview();
 }
 function applyPlayerAppearance(element, color) {
   element.style.setProperty("--player-color", GameUI.playerColor(color));
@@ -426,6 +456,7 @@ function renderHomeColors() {
     if (focused) root.querySelector(`[data-color="${focused}"]`)?.focus({ preventScroll: true });
   }
   syncHomeAvailability();
+  syncWagonPreview();
 }
 function initializeHome() {
   $("createCode").value = LobbyUI.randomCode();
@@ -567,15 +598,13 @@ function colorCard(c, count, click, disabled) {
   }
   return b;
 }
-function playerInsignia(index) {
-  const mark = GameUI.playerMark(index);
-  return `<svg class="player-insignia" viewBox="-4 -4 8 8" aria-hidden="true"><path d="${mark.path}"/></svg>`;
-}
 function playerAvatar(index, compact = false) {
-  return `<span class="player-avatar${compact ? " history-avatar" : ""}" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M7 27v-4a9 9 0 0 1 18 0v4Z"/></svg>${compact ? "" : `<span class="avatar-insignia">${playerInsignia(index)}</span>`}</span>`;
+  return `<span class="player-avatar${compact ? " history-avatar" : ""}" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M7 27v-4a9 9 0 0 1 18 0v4Z"/></svg></span>`;
 }
 function render() {
   if (!game) return;
+  hideWagonPreview();
+  if (!board3D && !board3DLoading && !board3DFailed) initializeBoard3D();
   document.body.classList.add("is-playing");
   $("lobby").classList.add("hidden");
   $("game").classList.remove("hidden");
@@ -587,7 +616,7 @@ function render() {
   $("scores").innerHTML = game.players
     .map(
       (x, i) =>
-        `<div class="scorebadge ${i === game.current && ["play", "tunnel"].includes(game.phase) ? "active" : ""}" data-player="${i}" tabindex="0" aria-label="${escapeHTML(x.name)}. Símbolo: ${GameUI.playerMark(i).name}. ${game.result?.find(r => r.seat === i)?.score ?? x.score} puntos, ${x.trains} vagones, ${x.stations} estaciones. Enfoca para resaltar sus rutas.">
+        `<div class="scorebadge ${i === game.current && ["play", "tunnel"].includes(game.phase) ? "active" : ""}" data-player="${i}" tabindex="0" aria-label="${escapeHTML(x.name)}. ${game.result?.find(r => r.seat === i)?.score ?? x.score} puntos, ${x.trains} vagones, ${x.stations} estaciones. Enfoca para resaltar sus rutas.">
           <div class="player-heading">${playerAvatar(i)}<div class="player-details"><b title="${escapeHTML(x.name)}">${escapeHTML(x.name)}</b><div class="player-status"><span class="player-turn-tag">EN TURNO</span><span class="player-state">${[i === seat ? "Tú" : "", members[i]?.autopilot ? "Bot de reemplazo" : !members[i]?.connected ? "Sin conexión" : "", game.phase === "initial" ? (x.initialReady ? "✓ Listo" : "Eligiendo billetes") : ""].filter(Boolean).join(" · ")}</span></div></div></div>
           <div class="player-metrics">${playerMetric("points", "Puntos", game.result?.find(r => r.seat === i)?.score ?? x.score)}${playerMetric("trains", "Vagones", x.trains)}${playerMetric("stations", "Estaciones", x.stations)}</div>
         </div>`,
@@ -1040,7 +1069,7 @@ function syncBoard3D() {
   const requested = hoveredPlayer ?? focusedPlayer;
   const highlight = requested !== null && game.routes.some(r => r.owner === requested) ? requested : null;
   board3D.update({ routes: game.routes.map(({ id, owner }) => ({ id, owner })),
-    players: game.players.map((p, i) => ({ color: GameUI.playerColor(p.color), placed: [...p.placed], mark: GameUI.playerMark(i).path })),
+    players: game.players.map(p => ({ color: GameUI.playerColor(p.color), placed: [...p.placed] })),
     hiddenRoute: tunnelReveal?.build?.routeId ?? null, highlight });
 }
 function highlightPlayerRoutes() {
@@ -1067,8 +1096,6 @@ function drawOwnedPiece(el, slot, cell, owner, prefix) {
     el("path", { d: `M${gx} ${top + 1.2}V${bottom - 1.1}`, stroke: "#172a30", "stroke-opacity": .5, "stroke-width": .9 }, piece);
     el("path", { d: `M${gx + .7} ${top + 1.2}V${bottom - 1.1}`, stroke: "#fffce5", "stroke-opacity": .65, "stroke-width": .55 }, piece);
   }
-  el("path", { class: "ownership-mark", d: owner.mark.path, "data-symbol": owner.mark.name,
-    transform: `translate(0 -.5) rotate(${-cell.angle}) scale(${GameUI.OWNER_MARK_SCALE})` }, piece);
 }
 function drawStation(el, parent, color, scale = 1, prefix = "board") {
   const piece = el("g", { class: "station-piece", "pointer-events": "none" }, parent);
@@ -1099,7 +1126,7 @@ function renderBoard() {
     const geometry = MAP_GEOMETRY[r.id];
     const owner = GameUI.routeOwner(game, r, seat), owned = owner !== null;
     const color = owned ? owner.color : C[r.color];
-    const description = `${routeSummaryText(r)}${owned ? ` · ${owner.label} · Símbolo: ${owner.mark.name}` : ""}`;
+    const description = `${routeSummaryText(r)}${owned ? ` · ${owner.label}` : ""}`;
     const group = el("g", {
       class: `route-group${owned ? " is-owned" : ""}${selected === r.id ? " is-selected" : ""}`,
       "data-route-id": r.id,
@@ -1286,7 +1313,7 @@ function showMapMenu(event, target) {
     : stationsLeft > 0 ? `Estación · ${plural(4 - stationsLeft, "carta")} del mismo color` : "Ya construiste tus 3 estaciones";
   const menu = $("mapMenu");
   menu.innerHTML = `<button class="menu-close" aria-label="Cerrar menú">×</button><h3>${escapeHTML(title)}</h3>${owner
-    ? `<p class="route-ownership"><span class="owner-seal">${playerInsignia(owner.seat)}</span><span>${escapeHTML(owner.label)}</span></p>`
+    ? `<p class="route-ownership"><span>${escapeHTML(owner.label)}</span></p>`
     : `<p>${escapeHTML(detail)}</p>${canBuild ? `<button id="startBuild" class="primary full">${r ? "Construir" : "Construir estación"}</button>` : ""}`}`;
   if (owner) {
     menu.style.setProperty("--owner-color", owner.color);
@@ -2465,8 +2492,7 @@ function mapSafeArea(rect, forCamera = false) {
 function mapViewSize() {
   const rect = $("mapscroll").getBoundingClientRect(), { width, height } = rect;
   if (!width || !height) return null;
-  if (board3D) return BoardCamera.view(MAP_BOUNDS, { width, height }, mapSafeArea(rect, true), zoom, mapCenter, GameUI.camera);
-  return GameUI.camera(MAP_BOUNDS, { width, height }, mapSafeArea(rect, true), zoom, mapCenter);
+  return BoardCamera.view(MAP_BOUNDS, { width, height }, mapSafeArea(rect, true), zoom, mapCenter, GameUI.camera);
 }
 function applyZoom() {
   const view = mapViewSize();
@@ -2640,7 +2666,7 @@ if (desiredRoom && localStorage.getItem(identityKey(desiredRoom))) {
 initializeHome();
 connect();
 
-$("boardMode").onclick = () => setBoardMode(!board3D);
+$("retryBoard").onclick = initializeBoard3D;
 $("boardZoomIn").onclick = () => setZoom(zoom * 1.25);
 $("boardZoomOut").onclick = () => setZoom(zoom / 1.25);
 $("boardFit").onclick = () => { zoom = 1; mapCenter = { ...MAP_CENTER }; applyZoom(); };
@@ -2660,4 +2686,3 @@ $("mapscroll").addEventListener("keydown", event => {
     else setZoom(zoom * (event.key === "-" ? .8 : 1.25));
   }
 });
-if ((new URLSearchParams(location.search).get("board") || localStorage.getItem("rr-board") || "3d") === "3d") setBoardMode(true);

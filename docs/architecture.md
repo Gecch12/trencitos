@@ -1,6 +1,6 @@
 # Arquitectura existente
 
-Tablero Three.js por defecto, con SVG 2D como alternativa conmutable;
+Tablero principal exclusivamente Three.js; SVG conserva interacción y mapas de detalle;
 Google Auth y catálogo comercial siguen fuera de esta implementación.
 Evidencia, integración y límites en [la ficha del tablero](work/board-3d.md).
 
@@ -32,11 +32,11 @@ motor de reglas → persistencia de sala normal → vista filtrada para cada jug
 ## Límites que deben conservarse
 
 - Node sirve frontend y backend juntos. El cliente usa HTML/CSS/JS y SVG;
-  Three.js `0.187.0` se importa localmente bajo demanda al activar 3D. Se fija
-  con `package-lock.json`; no hay CDN ni framework. El servidor solo expone los
+  Three.js `0.187.0` se importa localmente bajo demanda al mostrar la vista previa o
+  entrar en una partida. Se fija con `package-lock.json`; no hay CDN ni framework. El servidor solo expone los
   dos módulos ES necesarios de Three, mediante rutas explícitas.
-- `syncBoard3D` reduce la vista autorizada a propietarios de rutas, colores,
-  símbolos y estaciones públicas. La escena no recibe manos, destinos,
+- `syncBoard3D` reduce la vista autorizada a propietarios de rutas, colores
+  y estaciones públicas. La escena no recibe manos, destinos,
   credenciales ni el estado del motor. No abre conexiones.
 - La cámara tiene inclinación fija de 25,7°, sin órbita ni física. Su proyección
   afín mantiene alineados los objetivos SVG y el plano XY de Three. Gestos,
@@ -59,12 +59,18 @@ motor de reglas → persistencia de sala normal → vista filtrada para cada jug
   legado y permite un modelo seguro por defecto para colores desconocidos.
 - `createWagonRenderer` agrupa piezas por geometría/material en `InstancedMesh`,
   compartidos entre colores. El oro usa reflexión metálica con un entorno de
-  estudio generado una vez, sin descargas HDR. Cargas, ventanas, ruedas y símbolo
-  superior conservan una huella acotada. El resaltado atenúa todas las piezas.
-- Renderizado WebGL bajo demanda, DPR máximo 2 y liberación de recursos al
-  cambiar a 2D. Fallo de inicialización o pérdida de contexto retorna al tablero
-  2D y conserva la partida. La preferencia local `rr-board` sobrevive a recargas;
-  `?board=2d`/`?board=3d` permite elegir explícitamente. Sin preferencia, inicia 3D.
+  estudio generado una vez, sin descargas HDR. Cargas, ventanas y ruedas
+  conservan una huella acotada. El dorado transporta dos deportivos; ya no hay
+  símbolos geométricos de puesto en piezas, avatares, menús ni mapas de detalle.
+  El resaltado atenúa todas las piezas.
+- Renderizado WebGL bajo demanda y DPR máximo 2. Sin selector ni retorno a 2D;
+  se ignoran preferencias/enlaces antiguos de vista. Si falla WebGL, se oculta el
+  mapa y se ofrece reintentar 3D, sin modificar sala ni estado del juego.
+- [wagon-preview.js](../wagon-preview.js) comparte `createWagonRenderer` con el
+  tablero, con capacidad de una pieza y cámara cercana. `syncWagonPreview` sigue
+  el color elegido en práctica y el confirmado por el servidor en la sala. Solo
+  existe un canvas de previsualización; se libera al salir del selector o jugar.
+  ResizeObserver actualiza el encuadre; no hay bucle de animación continuo.
 - El estado completo de la partida permanece en el servidor. `view` entrega
   mano/destinos propios y datos públicos; los destinos rivales se revelan al final.
 - Credencial de puesto y cuenta persistente son conceptos diferentes. Actualmente

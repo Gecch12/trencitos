@@ -33,8 +33,8 @@ Para ejecutar un servidor aislado, desde **su** checkout, con puerto libre:
 STATE_BACKEND=file STATE_FILE="$PWD/room-state.json" PORT=3118 node server.js
 ```
 
-Abrir `http://localhost:3118/?board=3d`. El botón 2D/3D cambia de representación
-sin cambiar de sala; `−`, `+` y centrar complementan rueda, arrastre, pellizco y
+Abrir `http://localhost:3118/`. El tablero principal usa solo 3D.
+`−`, `+` y centrar complementan rueda, arrastre, pellizco y
 teclado (flechas, `+`/`−`, Inicio al enfocar el mapa).
 
 Verificación reproducible del tablero y los vagones:
@@ -52,8 +52,8 @@ Requiere Chrome instalado (Playwright usa `channel: chrome`; se puede elegir
 completa por WebSocket, y cierra servidor/navegador al terminar. Las capturas y
 métricas se escriben en `docs/qa/threejs-*`; el informe explica qué es emulación.
 El conductor respeta el límite existente de acciones del servidor.
-El segundo conductor usa 3122, comprueba preferencia 3D/2D y recreación de
-recursos, y genera `docs/qa/wagons-catalog.png` con las once piezas reales y su
+El segundo conductor usa 3122, comprueba selección/vista previa, ausencia de símbolos,
+reintento ante fallo de WebGL y recursos al recargar. Genera `docs/qa/wagons-catalog.png` con las once piezas reales y su
 informe `wagons-report.json`. La galería es un fixture interceptado por Playwright;
 no se agrega al servidor ni altera las reglas/límite de cinco jugadores.
 `node tests/helpers/threejs-preview.js` deja disponible una escena densa local

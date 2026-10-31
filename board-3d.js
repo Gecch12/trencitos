@@ -45,7 +45,7 @@ export function createBoard3D({ container, map, network, onFailure }) {
   roofShape.moveTo(-9, 0); roofShape.lineTo(0, 7); roofShape.lineTo(9, 0); roofShape.closePath();
   const roofGeometry = new THREE.ExtrudeGeometry(roofShape, { depth: 14, bevelEnabled: false });
   roofGeometry.rotateX(Math.PI / 2); roofGeometry.translate(0, 7, 11);
-  const meshes = [], symbolTextures = [];
+  const meshes = [];
   function instances(geometry, capacity, material = new THREE.MeshStandardMaterial({ roughness: .55, metalness: .1 })) {
     const mesh = new THREE.InstancedMesh(geometry, material, capacity);
     mesh.count = 0; mesh.frustumCulled = false;
@@ -53,23 +53,13 @@ export function createBoard3D({ container, map, network, onFailure }) {
   }
   const stations = instances(box, 15), stationRoofs = instances(roofGeometry, 15);
   const doors = instances(box, 15);
-  const marks = new Map(), dummy = new THREE.Object3D(), color = new THREE.Color();
+  const dummy = new THREE.Object3D(), color = new THREE.Color();
   function put(mesh, x, y, z, angle, sx, sy, sz, tint) {
     const i = mesh.count++;
     dummy.position.set(x, -y, z); dummy.rotation.set(0, 0, -angle * Math.PI / 180); dummy.scale.set(sx, sy, sz); dummy.updateMatrix();
     mesh.setMatrixAt(i, dummy.matrix); mesh.setColorAt(i, color.set(tint));
   }
   const wagons = createWagonRenderer({ renderer, scene, instances, put });
-  function markFor(player, index) {
-    if (marks.has(index)) return marks.get(index);
-    const c = document.createElement('canvas'); c.width = 64; c.height = 32;
-    const ink = c.getContext('2d'); ink.translate(32, 16); ink.scale(3, 3);
-    const path = new Path2D(player.mark);
-    ink.strokeStyle = '#172f3c'; ink.lineWidth = 1.1; ink.stroke(path); ink.fillStyle = '#fff7dd'; ink.fill(path);
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; symbolTextures.push(t);
-    const m = instances(new THREE.PlaneGeometry(1, 1), 300, new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false }));
-    marks.set(index, m); return m;
-  }
   let boardKey = '', pieceCount = 0, stationCount = 0, modelCounts = {};
   function update({ routes, players, hiddenRoute = null, highlight = null }) {
     // The caller deliberately supplies public board fields only (never hands or tickets).
@@ -81,10 +71,8 @@ export function createBoard3D({ container, map, network, onFailure }) {
     for (const route of routes) {
       if (route.owner === null || route.id === hiddenRoute) continue;
       const player = players[route.owner]; if (!player) continue;
-      const mark = markFor(player, route.owner);
       for (const cell of network[route.id].cells) {
         const piece = wagons.draw(cell, player, highlight !== null && route.owner !== highlight);
-        put(mark, piece.mark.x, piece.mark.y, piece.mark.z, 0, 7.5, 3.75, 1, tint('#ffffff', route.owner));
         modelCounts[piece.model] = (modelCounts[piece.model] || 0) + 1;
         pieceCount++;
       }
@@ -148,7 +136,6 @@ export function createBoard3D({ container, map, network, onFailure }) {
       const geometries = new Set(), materials = new Set();
       scene.traverse(node => { if (node.geometry) geometries.add(node.geometry); if (node.material) materials.add(node.material); if (node.isInstancedMesh) node.dispose(); });
       geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose());
-      symbolTextures.forEach(t => t.dispose());
       wagons.dispose(); texture.dispose(); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove();
     },
   };

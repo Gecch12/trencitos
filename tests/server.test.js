@@ -322,7 +322,7 @@ test("WebSocket tunnel payments accept color, mixed and wild options and preserv
   }
 });
 
-test("authoritative ownership exposes stable player marks and preserves the free parallel track", async () => {
+test("authoritative ownership identifies players by color and preserves the free parallel track", async () => {
   const { ownershipRoom } = require("./helpers/ownership-preview");
   const UI = require("../game-ui");
   const room = ownershipRoom("MARKS1");
@@ -335,7 +335,7 @@ test("authoritative ownership exposes stable player marks and preserves the free
   for (const [seat, id] of [7, 8, 12, 15, 18].entries()) {
     const owner = UI.routeOwner(before, before.routes[id], 0);
     assert.equal(owner.seat, seat);
-    assert.equal(owner.mark, UI.playerMark(seat));
+    assert.equal(owner.color, UI.playerColor(before.players[seat].color));
   }
   assert.equal(before.players[3].color, "#ddaf40");
   assert.equal(UI.routeOwner(before, before.routes[15], 0).color, UI.YELLOW);

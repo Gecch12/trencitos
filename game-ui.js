@@ -28,15 +28,6 @@ const GameUI = (() => {
     black: "#1c2025", white: WHITE, orange: "#df8b44", purple: "#956dae",
     wild: "#c69b45", gray: NEUTRAL,
   });
-  const OWNER_MARK_SCALE = .8;
-  const playerMarks = [
-    { name: "círculo", path: "M-2.6 0a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0-5.2 0" },
-    { name: "triángulo", path: "M0-3L3 2.5H-3Z" },
-    { name: "rombo", path: "M0-3.2L3 0 0 3.2-3 0Z" },
-    { name: "cruz", path: "M-1-3H1V-1H3V1H1V3H-1V1H-3V-1H-1Z" },
-    { name: "estrella", path: "M0-3.2L.95-1 3.2-1 1.4.5 2.1 3 0 1.5-2.1 3-1.4.5-3.2-1-.95-1Z" },
-  ].map(Object.freeze);
-  function playerMark(seat) { return playerMarks[seat]; }
   // Presentation-only migration: existing rooms keep their stored player colors.
   function playerColor(color) { return color?.toLowerCase() === "#ddaf40" ? YELLOW : color; }
   const palette = typeof module !== "undefined" && module.exports ? require("./data").PLAYER_PALETTE : PLAYER_PALETTE;
@@ -45,7 +36,7 @@ const GameUI = (() => {
     if (!route || route.owner === null || !Number.isInteger(route.owner)) return null;
     const player = game.players[route.owner];
     if (!player) return null;
-    return { seat: route.owner, name: player.name, color: playerColor(player.color), mark: playerMark(route.owner),
+    return { seat: route.owner, name: player.name, color: playerColor(player.color),
       label: route.owner === seat ? "Esta ruta es tuya" : `Ocupada por ${player.name}` };
   }
   // Logs arrive newest first and are capped on the server. Find the retained
@@ -252,6 +243,6 @@ const GameUI = (() => {
     }
     return base;
   }
-  return { resultStandings, resultSelection, payments, paymentGroups, tunnelPayments, construction, canPass, camera, safeArea, pinchZoom, pinchTransform, zoomTransform, cityLabelScale, turnPresentation, needsSecondDraw, ROUTE_POINTS, overviewLabels, endpointPosition, playerMark, playerColor, playerFinish, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, destinationEntries, destinationNumber, destinationSpotlightSelection, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, OWNER_MARK_SCALE, MIN_ZOOM, MAX_ZOOM };
+  return { resultStandings, resultSelection, payments, paymentGroups, tunnelPayments, construction, canPass, camera, safeArea, pinchZoom, pinchTransform, zoomTransform, cityLabelScale, turnPresentation, needsSecondDraw, ROUTE_POINTS, overviewLabels, endpointPosition, playerColor, playerFinish, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, destinationEntries, destinationNumber, destinationSpotlightSelection, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, MIN_ZOOM, MAX_ZOOM };
 })();
 if (typeof module !== "undefined") module.exports = GameUI;

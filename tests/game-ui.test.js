@@ -43,7 +43,6 @@ test("missing destination progress is unknown, never falsely pending", () => {
   assert.equal(UI.destinationStatus({ ticketProgress: [{ id: 15, completed: false }] }, 15).completed, false);
   assert.equal(UI.destinationStatus({ ticketProgress: [{ id: 15, completed: true }] }, 15).completed, true);
   assert.notEqual(UI.WHITE, UI.NEUTRAL);
-  assert.equal(UI.OWNER_MARK_SCALE, .8);
 });
 
 function view(hand = []) {
@@ -52,11 +51,7 @@ function view(hand = []) {
   state.players[0].hand = hand;
   return E.view(state, 0);
 }
-test("five stable player symbols are distinct and yellow is updated without mutating saved colors", () => {
-  const marks = Array.from({ length: 5 }, (_, i) => UI.playerMark(i));
-  assert.deepEqual(marks.map(mark => mark.name), ["círculo", "triángulo", "rombo", "cruz", "estrella"]);
-  assert.equal(new Set(marks.map(mark => mark.path)).size, 5);
-  assert.ok(marks.every(Object.isFrozen));
+test("yellow is updated without mutating saved colors", () => {
   assert.equal(UI.playerColor("#ddaf40"), UI.YELLOW);
   assert.equal(UI.playerColor("#DDAF40"), UI.YELLOW);
   assert.equal(UI.playerColor(UI.YELLOW), UI.YELLOW);
@@ -67,7 +62,7 @@ test("route ownership identifies seat zero, opponents and individual double-rout
   const route = { owner: 0 };
   assert.equal(UI.routeOwner(game, route, 0).label, "Esta ruta es tuya");
   assert.equal(UI.routeOwner(game, route, 1).label, "Ocupada por Ana");
-  assert.equal(UI.routeOwner(game, route, 1).mark, UI.playerMark(0));
+  assert.equal("mark" in UI.routeOwner(game, route, 1), false);
   assert.equal(UI.routeOwner(game, { owner: 3 }, 0).color, UI.YELLOW);
   assert.equal(UI.routeOwner(game, { owner: null }, 0), null);
   assert.equal(UI.routeOwner(game, null, 0), null);

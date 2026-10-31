@@ -12,8 +12,8 @@ locales antes de asumir que algo está integrado o publicado.
 - Respeta cambios locales ajenos. El repo está en esta carpeta, aunque el proyecto
   de Codex pueda estar registrado en la carpeta superior `trains`.
 - El servidor decide las reglas y filtra secretos mediante `engine.view`.
-  La presentación 2D/3D no decide jugadas ni recibe información privada rival.
-- Three.js es la presentación oficial, con respaldo 2D. Para nuevos experimentos
+  La presentación no decide jugadas ni recibe información privada rival.
+- Three.js es la única vista del tablero principal. Para nuevos experimentos
   usa una rama/worktree propio. Para servidores locales usa puerto y
   `STATE_FILE` propios con `STATE_BACKEND=file`; no copies configuración de
   producción. Un segundo servidor Supabase puede invalidar al primero.

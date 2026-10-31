@@ -43,7 +43,6 @@ body.is-playing {
 @media (prefers-reduced-motion: reduce) { .game #destinationSpotlight { transition: none; } }
 .game .route-group.is-selected .train-space { stroke: #cc861f; stroke-width: 2; }
 .owned-piece { filter: drop-shadow(0 .7px .4px #162f4270); }
-.ownership-mark { fill: #172a30; stroke: #fff9df; stroke-width: .55; stroke-linejoin: round; paint-order: stroke fill; }
 .ownership-band { transition: opacity .15s; }
 .is-owned:hover .ownership-band, .owner-highlight .ownership-band { opacity: .48; }
 .game .is-owned:hover .owned-piece, .game .is-owned:focus-visible .owned-piece,
@@ -115,8 +114,6 @@ body.is-playing {
 .game .player-heading { display: flex; gap: 6px; align-items: center; min-width: 0; }
 .game .player-avatar { position: relative; display: grid; place-items: center; flex: 0 0 34px; width: 34px; height: 34px; border-radius: 50%; background: var(--player-color); border: 2px solid #fffdf4; box-shadow: 0 0 0 1px #748d7f80; }
 .game .player-avatar > svg { width: 26px; height: 26px; fill: #fff9e9; stroke: #21414e; stroke-width: 1.1; stroke-linejoin: round; }
-.game .avatar-insignia { position: absolute; right: -4px; bottom: -3px; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: var(--player-color); border: 1px solid #fff9e9; box-shadow: 0 1px 2px #173d4540; }
-.game .player-insignia { display: block; width: 13px; height: 13px; fill: #172a30; stroke: #fff9df; stroke-width: .45; stroke-linejoin: round; paint-order: stroke fill; }
 .game .scorebadge.active .player-avatar { box-shadow: 0 0 0 1px #9f7c35; }
 .game .player-details { min-width: 0; }
 .game .player-status { display: flex; align-items: center; gap: 4px; min-width: 0; }
@@ -221,8 +218,6 @@ body.is-playing {
 .map-menu h3 { font: 700 17px Georgia, serif; margin: 0 18px 8px 0; }
 .map-menu p { font-size: 12px; color: #60777a; line-height: 1.5; margin: 0; }
 .map-menu .route-ownership { display: flex; align-items: center; gap: 10px; color: #29434a; font-size: 14px; font-weight: 700; }
-.map-menu .owner-seal { flex: 0 0 27px; display: grid; place-items: center; width: 27px; height: 27px; background: var(--owner-surface, var(--owner-color)); border: 2px solid #fff9df; border-radius: 50%; box-shadow: 0 0 0 1px #71847b; }
-.map-menu .owner-seal .player-insignia { width: 20px; height: 20px; }
 .menu-close, .dialog-close { position: absolute; right: 10px; top: 10px; padding: 4px 9px; font-size: 20px; background: transparent; }
 .map-menu .full { font-size: 13px; }
 .toast {
@@ -367,7 +362,6 @@ button:focus-visible, summary:focus-visible, [tabindex="0"]:focus-visible { outl
 .result-card[open] > .result-heading .result-chevron { transform: rotate(180deg); }
 .result-heading .player-avatar, .score-trail-ranking .player-avatar { width: 34px; height: 34px; flex: 0 0 34px; background: var(--player-color); border: 2px solid #fff9df; outline: 1px solid #97a69c; border-radius: 50%; }
 .result-heading .player-avatar > svg, .score-trail-ranking .player-avatar > svg { width: 100%; height: 100%; fill: #fff9e8; stroke: #253e49; stroke-width: 1; }
-.result-heading .avatar-insignia, .score-trail-ranking .avatar-insignia { display: none; }
 .score-breakdown { padding: 0 14px 14px; }
 .score-categories { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid #d8d7c9; }
 .score-categories button { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; min-height: 68px; padding: 10px 5px 7px; border-radius: 0; background: transparent; border-bottom: 3px solid transparent; color: #657874; font-size: 12px; }
@@ -383,7 +377,6 @@ button:focus-visible, summary:focus-visible, [tabindex="0"]:focus-visible { outl
 .score-map-stage > svg { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; user-select: none; }
 .score-map-stage > svg:active { cursor: grabbing; }
 .score-map-stage .map-geography { opacity: .7; }
-.score-map-stage .ownership-mark { fill: #153e47; stroke: #fff8dc; stroke-width: .4; }
 .score-map-panel figcaption { min-height: 36px; padding: 9px 12px; font-size: 12px; color: #36535b; line-height: 1.5; }
 .score-map-stage .score-map-expand { position: absolute; top: 8px; right: 8px; width: 36px; height: 36px; min-height: 36px; padding: 0; border-radius: 5px; background: #fffcf3ed; color: #244a58; font-size: 23px; border: 1px solid #afc4bf; }
 .score-map-empty { position: absolute; top: 50%; left: 12px; right: 12px; text-align: center; color: #38565a; font-size: 13px; pointer-events: none; }

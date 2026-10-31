@@ -22,13 +22,17 @@ Implementación y avance viven exclusivamente en [las fichas](../work/README.md)
   rama/worktree propio: mapa plano con textura, vagones y
   estaciones 3D. Mano, cartas, paneles y controles siguen 2D. Cámara guiada y
   etiquetas 2D ancladas. Sin física de simulador ni controles libres de tabletop.
-  Mantener alternativa 2D y retorno automático si falla WebGL.
+  Se retira la alternativa 2D por decisión posterior del usuario. Ante fallo de
+  WebGL, reintentar conservando la sala. Los mapas de detalle mantienen SVG.
   Ver [tablero](../work/board-3d.md).
 - Vagones 3D inspirados en las cartas para los once colores de jugador: la
   identidad del propietario determina el modelo, nunca el pago de una ruta.
   Modelo, pintura y acabado separados internamente; todo disponible gratis.
-  El dorado recibe acabado metálico de coche de lujo. No se reabre la propuesta
+  El dorado transporta deportivos sobre una plataforma metálica. No se reabre la propuesta
   descartada de locomotoras independientes ni se agregan reglas de mercancías.
+- Previsualizar el vagón real al elegir color antes de jugar, en práctica y sala.
+  Eliminar símbolos geométricos de puesto en toda la interfaz; nombre, color y
+  modelo identifican al jugador, incluido el fondo del avatar.
 - Materiales madera/mate/cromado/cobre se estudian si 3D aporta valor; deben
   conservar identificación por color. Ver [materiales](../work/materials.md).
 - Pulir sonidos de cartas y construcción queda pendiente; ya existe audio

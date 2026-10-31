@@ -1,7 +1,15 @@
 /* Trencitos entry and shared branding. Scoped to avoid changing the game HUD. */
+.wagon-preview { margin: 18px 0 8px; overflow: hidden; border: 1px solid #d9e1d9; border-radius: 9px; background: radial-gradient(ellipse at 50% 38%, #fffef6, #eff1e9); }
+.wagon-preview-stage { height: 174px; width: 100%; }
+.wagon-preview-stage canvas { display: block; width: 100%; height: 100%; }
+.wagon-preview figcaption { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 0 16px 14px; }
+.wagon-preview figcaption span { color: #647a7b; font-size: 12px; }
+.wagon-preview figcaption strong { font-size: 14px; color: #193b49; text-align: right; }
+.wagon-preview > p { padding: 0 16px 12px; }
+@media (max-width: 480px) { .wagon-preview-stage { height: 150px; } }
 :root { --gold-metal: linear-gradient(135deg, #815019 0%, #d5a43c 18%, #fff0ad 38%, #efcc6c 48%, #b48125 53%, #e8bd57 76%, #91601e 100%); }
 /* The finish follows player identity across the lobby, history and results. */
-[data-finish="gold"] .player-avatar, [data-finish="gold"] .avatar-insignia,
+[data-finish="gold"] .player-avatar,
 .home-avatar[data-finish="gold"], [data-finish="gold"] > .home-avatar {
   background: var(--gold-metal); color: #604216;
   box-shadow: inset 0 1px 1px #fff4bf, inset 0 -1px 2px #68411380, 0 0 0 1px #ab7b30, 0 2px 5px #68411324;

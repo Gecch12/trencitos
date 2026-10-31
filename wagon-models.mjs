@@ -6,7 +6,7 @@ export const WAGON_STYLES = Object.freeze([
   { color: '#ddaf40', model: 'grain', label: 'Grano' },
   { color: '#9a75ba', model: 'goods', label: 'Mercancías' },
   { color: '#88583d', model: 'timber', label: 'Troncos' },
-  { color: '#b88929', model: 'luxury', label: 'Coche de oro', finish: 'gold' },
+  { color: '#b88929', model: 'auto-carrier', label: 'Transporte de deportivos', finish: 'gold' },
   { color: '#242831', model: 'coal', label: 'Carbón' },
   { color: '#7c8796', model: 'stone', label: 'Piedra' },
   { color: '#c43d92', model: 'mail', label: 'Correo' },
@@ -116,7 +116,32 @@ export function wagonParts(model) {
         box([0, y * 1.05, 4.5], [.25, .2, 1.5], '#263b40', 'metal');
       }
       break;
-    case 'luxury':
+    case 'auto-carrier':
+      // Two sports cars on an open carrier; dark glazing reads from above.
+      round([0, 0, 3.1], [19.6, 8, .85]);
+      for (const y of [-3.75, 3.75]) {
+        box([0, y, 3.9], [19, .45, 1.1], 'trim');
+        box([0, y, 3.3], [18.5, .5, .3], '#43351f', 'metal');
+      }
+      for (const x of [-9.3, 9.3]) box([x, 0, 3.6], [.55, 7.8, .4], 'trim');
+      for (const x of [-4.65, 4.65]) {
+        round([x, 0, 4.25], [8.4, 4.25, 1.05], '#17232c', 'metal');
+        add('car-body', [x, 0, 5.25], [8.5, 4.4, 1.55]);
+        add('canopy', [x - .55, 0, 6.65], [3.9, 3.4, 1.45], '#152d38', 'glass');
+        round([x - .9, 0, 7.35], [1.5, 2.9, .14], 'trim');
+        box([x + 2.7, 0, 5.92], [2, .28, .1], '#26343a', 'metal');
+        box([x + 4.06, 0, 4.7], [.25, 3.9, .25], '#17232c', 'metal');
+        box([x - 3.35, 0, 6.15], [.65, 4.6, .25], '#26343a', 'metal');
+        for (const y of [-1.5, 1.5]) {
+          box([x + 3.85, y, 5.55], [.3, .8, .28], '#f5f7e4', 'glass');
+          box([x - 4, y, 5.3], [.18, .8, .24], '#9e302b', 'glass');
+        }
+        for (const axle of [-2.6, 2.55]) for (const y of [-2.12, 2.12]) {
+          add('wheel', [x + axle, y, 4.65], [1.6, .55, 1.6], '#17232c', 'cargo');
+          add('wheel', [x + axle, y * 1.12, 4.65], [1, .12, 1], 'trim');
+        }
+      }
+      break;
     case 'passenger':
     default:
       round([0, 0, 5.1], [18.3, 7.4, 4.7]);
@@ -125,10 +150,6 @@ export function wagonParts(model) {
       for (const y of [-3.76, 3.76]) {
         box([0, y, 3.7], [17.4, .18, .45], 'trim');
         box([0, y, 6.7], [17.4, .18, .3], 'trim');
-      }
-      if (model === 'luxury') {
-        for (const x of [-7.9, 7.9]) box([x, 0, 7.5], [.35, 7.8, .3], 'trim');
-        round([0, 0, 9.15], [9.8, 3.9, .85], 'trim');
       }
       break;
   }

@@ -17,7 +17,8 @@
     "board-camera.js",
     "map-layout.js",
     "wagon-models.mjs",
-    "wagon-renderer.js"
+    "wagon-renderer.js",
+    "wagon-preview.js"
   ],
   "domain.md": [
     "engine.js",
@@ -47,7 +48,8 @@
     "wagon-models.mjs",
     "wagon-renderer.js",
     "tests/wagon-models.test.js",
-    "tests/browser-wagons.cjs"
+    "tests/browser-wagons.cjs",
+    "wagon-preview.js"
   ],
   "work/sounds.md": [
     "app.js"

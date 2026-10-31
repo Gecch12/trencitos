@@ -72,8 +72,6 @@
   .game .compact-players .player-heading { gap: 4px; width: 100%; }
   .game .compact-players .player-avatar { width: 20px; height: 20px; flex: 0 0 20px; }
   .game .compact-players .player-avatar > svg { width: 88%; height: 88%; }
-  .game .compact-players .avatar-insignia { width: 11px; height: 11px; right: -2px; bottom: -2px; }
-  .game .compact-players .avatar-insignia > svg { width: 85%; height: 85%; }
   .game .compact-players .player-details b { font-size: 11px; }
   .compact-players .player-state { display: none; }
   .game .compact-players .player-turn-tag { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); margin: 0; padding: 0 5px; font-size: 7px; line-height: 11px; white-space: nowrap; }

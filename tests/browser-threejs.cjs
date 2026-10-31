@@ -31,7 +31,7 @@ const save = () => fs.writeFileSync(path.join(out, 'threejs-report.json'), JSON.
   try {
     // Pointer click -> shared menu -> payment -> real WS -> authoritative view.
     const results = [];
-    for (const [code, mode] of [['830101', '2d'], ['830102', '3d']]) {
+    for (const [code, mode] of [['830101', '3d'], ['830102', '3d']]) {
       await open(code, mode);
       const target = await page.evaluate(() => {
         const r = game.routes.find(r => !r.tunnel && !GameUI.construction(game, seat, { routeId: r.id }).reason);
@@ -46,7 +46,7 @@ const save = () => fs.writeFileSync(path.join(out, 'threejs-report.json'), JSON.
     }
     const { wagons, ...threeResult } = results[1]; const { wagons: unused, ...twoResult } = results[0];
     assert.deepEqual(threeResult, twoResult); assert.ok(wagons > 0); assert.equal(threeResult.private, true);
-    report.tests.push({ name: 'same route/payment/result in 2D and 3D via pointer UI', results }); save();
+    report.tests.push({ name: 'same route/payment/result in independent 3D rooms via pointer UI', results }); save();
     await open('830103');
     await page.locator('#board [data-city="PAR"]').focus(); await page.keyboard.press('Enter');
     await page.locator('#startBuild').click(); await page.locator('#confirmBuild').click();
@@ -71,8 +71,8 @@ const save = () => fs.writeFileSync(path.join(out, 'threejs-report.json'), JSON.
     report.tests.push({name:'pointer selects elevated station roof',passed:true});
     // Performance: warm render; alternate panning on consecutive animation frames.
     report.performance = [];
-    for (const mode of ['2d', '3d']) {
-      await page.evaluate(async mode => { await setBoardMode(mode === '3d'); zoom = 1.8; mapCenter = { x: 360, y: 310 }; applyZoom(); }, mode);
+    for (const mode of ['3d']) {
+      await page.evaluate(async mode => { zoom = 1.8; mapCenter = { x: 360, y: 310 }; applyZoom(); }, mode);
       await page.evaluate(() => new Promise(requestAnimationFrame));
       const measured = await page.evaluate(async () => {
         const samples = [], intervals = []; let previous = performance.now();
@@ -126,12 +126,13 @@ const save = () => fs.writeFileSync(path.join(out, 'threejs-report.json'), JSON.
     assert.equal(await page.locator('#board [data-city-label="MOS"]').evaluate(g=>getComputedStyle(g).display !== 'none'),true);
     await page.keyboard.press('Enter'); assert.equal(await page.locator('#mapMenu').isVisible(),true);
     report.tests.push({name:'keyboard focuses offscreen city, reveals its label and opens menu',passed:true});
-    // Context loss must return to the playable 2D board, then allow recreation.
+    // Context loss preserves the room and offers explicit 3D retry.
     await page.evaluate(() => document.querySelector('.board-3d-canvas').getContext('webgl2').getExtension('WEBGL_lose_context').loseContext());
     await page.waitForFunction(() => !board3D);
     assert.equal(await page.locator('#board .route-group').count(),101);
-    await page.evaluate(() => setBoardMode(true)); await page.waitForFunction(() => !!board3D);
-    report.tests.push({name:'context loss falls back to 2D; 3D can be re-enabled',passed:true}); save();
+    assert.equal(await page.locator('#boardStatus').isVisible(),true);
+    await page.locator('#retryBoard').click(); await page.waitForFunction(() => !!board3D);
+    report.tests.push({name:'context loss offers 3D retry without losing the room',passed:true}); save();
     // Complete normal game: one rendered client, three independent WS peers.
     await page.setViewportSize({width:1460,height:940});
     await page.goto(base + '/?board=3d');

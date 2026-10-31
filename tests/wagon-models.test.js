@@ -23,10 +23,10 @@ test('every player color has a wagon, including legacy yellow, without changing 
 
 test('wagon primitives stay within their shared footprint and height budget', async () => {
   const { WAGON_STYLES, wagonParts } = await import('../wagon-models.mjs');
-  const shapes = new Set(['box', 'round', 'wheel', 'tank', 'disc', 'rock', 'mound', 'coil', 'roof']);
+  const shapes = new Set(['box', 'round', 'wheel', 'tank', 'disc', 'rock', 'mound', 'coil', 'roof', 'car-body', 'canopy']);
   for (const { model } of WAGON_STYLES) {
     const parts = wagonParts(model);
-    assert.ok(parts.length > 10 && parts.length < 60, model);
+    assert.ok(parts.length > 10 && parts.length <= 70, model);
     for (const part of parts) {
       assert.ok(shapes.has(part.shape));
       assert.ok(part.size.every(n => n > 0 && Number.isFinite(n)));

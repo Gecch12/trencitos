@@ -127,6 +127,7 @@ const TYPES = {
   "/index.html": "text/html; charset=utf-8",
   "/board-3d.js": "text/javascript; charset=utf-8",
   "/wagon-renderer.js": "text/javascript; charset=utf-8",
+  "/wagon-preview.js": "text/javascript; charset=utf-8",
   "/wagon-models.mjs": "text/javascript; charset=utf-8",
   "/board-camera.js": "text/javascript; charset=utf-8",
   "/board-3d.css": "text/css; charset=utf-8",

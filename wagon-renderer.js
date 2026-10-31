@@ -2,7 +2,7 @@ import * as THREE from './vendor/three.module.js';
 import { WAGON_STYLES, wagonParts, wagonStyle } from './wagon-models.mjs';
 
 // Share batches across colors and models. No mesh per wagon, no perpetual animation.
-export function createWagonRenderer({ renderer, instances, put }) {
+export function createWagonRenderer({ renderer, instances, put, capacity = 300 }) {
   const shapes = {
     box: new THREE.BoxGeometry(1, 1, 1),
     wheel: new THREE.CylinderGeometry(.5, .5, 1, 10),
@@ -20,6 +20,16 @@ export function createWagonRenderer({ renderer, instances, put }) {
   shapes.roof = new THREE.ExtrudeGeometry(arch, { depth: 1, steps: 1, bevelEnabled: false, curveSegments: 6 });
   // Original x/y/z = width/height/length -> length/width/height.
   shapes.roof.applyMatrix4(new THREE.Matrix4().set(0, 0, 1, -.5, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1));
+
+  function profilePrism(points) {
+    const profile = new THREE.Shape();
+    points.forEach(([x, z], i) => i ? profile.lineTo(x, z) : profile.moveTo(x, z)); profile.closePath();
+    const geometry = new THREE.ExtrudeGeometry(profile, { depth: 1, bevelEnabled: false, steps: 1 });
+    geometry.applyMatrix4(new THREE.Matrix4().set(1, 0, 0, 0, 0, 0, -1, .5, 0, 1, 0, 0, 0, 0, 0, 1));
+    return geometry;
+  }
+  shapes['car-body'] = profilePrism([[-.5,-.5],[.5,-.5],[.48,.05],[.28,.35],[-.27,.5],[-.49,.2]]);
+  shapes.canopy = profilePrism([[-.5,-.5],[.5,-.5],[.22,.42],[-.22,.5],[-.44,.03]]);
 
   // A compact procedural studio provides actual reflections without an HDR download.
   const studio = new THREE.Scene(); studio.background = new THREE.Color('#697d91');
@@ -53,8 +63,8 @@ export function createWagonRenderer({ renderer, instances, put }) {
   }
   for (const [key, count] of capacities) {
     const [shape, material] = key.split(':');
-    batches.set(key, instances(shapes[shape], count * 300, materials[material]));
-    if (material === 'paint') batches.set(`${shape}:gold`, instances(shapes[shape], count * 300, materials.gold));
+    batches.set(key, instances(shapes[shape], count * capacity, materials[material]));
+    if (material === 'paint') batches.set(`${shape}:gold`, instances(shapes[shape], count * capacity, materials.gold));
   }
   const muted = new THREE.Color('#bbd6d9');
   const colors = new Map();
@@ -75,11 +85,7 @@ export function createWagonRenderer({ renderer, instances, put }) {
       const [x, y, z] = part.xyz;
       put(batches.get(`${part.shape}:${material}`), cell.x + x * cos - y * sin, cell.y + x * sin + y * cos, z, cell.angle, ...part.size, paintFor(style, part.color, faded));
     }
-    // A small, consistent medallion keeps seat identity visible from above.
-    const x = cell.x + 6.3 * cos, y = cell.y + 6.3 * sin;
-    put(badge, x, y, 10.15, 0, 3.7, 3.7, .22, paintFor(style, 'paint', faded));
-    return { model: style.model, mark: { x, y, z: 10.3 } };
+    return { model: style.model };
   }
-  const badge = instances(shapes.disc, 300, materials.paint);
   return { draw, dispose() { environment.dispose(); Object.values(shapes).forEach(g => g.dispose()); Object.values(materials).forEach(m => m.dispose()); } };
 }
