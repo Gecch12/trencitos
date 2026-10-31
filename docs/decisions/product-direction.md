@@ -7,7 +7,7 @@ Implementación y avance viven exclusivamente en [las fichas](../work/README.md)
   cosméticos para monetización futura, sin activar cobros. Acceso gratuito de
   beta no implica propiedad permanente. Vendedor en Perú; proveedor pendiente
   de evaluar y contratar. Ver [comercio](../work/commerce.md).
-- Identidad persistente empezando por Google; camino propuesto Supabase Auth.
+- Identidad persistente empezando por Google; mediante Supabase Auth.
   Apodo/avatar del juego independientes de nombre/foto de Google. Mantener
   práctica como invitado. Ver [identidad](../work/identity.md).
 - Fondo del avatar conserva el color del jugador. Se consideran accesorios,
@@ -27,12 +27,13 @@ Implementación y avance viven exclusivamente en [las fichas](../work/README.md)
   Vías libres, marcas, piezas y resaltados del tablero principal comparten la
   profundidad de Three.js; los destinos no sustituyen piezas por copias 2D.
   Ver [tablero](../work/board-3d.md).
-- Vagones 3D inspirados en las cartas para los once colores de jugador: la
+- Vagones 3D inspirados en las cartas para los colores de jugador: la
   identidad del propietario determina el modelo, nunca el pago de una ruta.
   Modelo, pintura y acabado separados internamente; todo disponible gratis.
   Amarillo transporta deportivos y ámbar lleva grano. Se retira la identidad
   dorada y su texto de acabado metálico; las claves guardadas siguen siendo compatibles.
-  No se reabre la propuesta
+  Se aprueban siete familias adicionales con siluetas propias: grúa, vino, tractores,
+  cemento, fruta, flores y lancha. No se reabre la propuesta
   descartada de locomotoras independientes ni se agregan reglas de mercancías.
 - Previsualizar el vagón real al elegir color antes de jugar, en práctica y sala.
   Eliminar símbolos geométricos de puesto en toda la interfaz; nombre, color y

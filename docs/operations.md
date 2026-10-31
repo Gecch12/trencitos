@@ -4,6 +4,8 @@
 
 Node >=20; comandos en la raíz Git (la carpeta que contiene `package.json`).
 Ejecutar `npm ci` para instalar Three.js y las herramientas de QA.
+PGlite es dependencia solo de desarrollo para comprobar SQL/permisos de identidad;
+no se carga en producción. Auth es optativo: [configuración Google](GOOGLE_AUTH.md).
 `npm ci --omit=dev` basta para servir el juego; no requiere proceso de build.
 `npm start` sirve HTTP y WebSocket en el mismo proceso, puerto 3000 por defecto.
 Las pruebas usan `node --test` y abren puertos de loopback; un `listen EPERM`

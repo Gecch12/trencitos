@@ -85,6 +85,62 @@ export function createWagonRenderer({ renderer, instances, put, capacity = 300 }
   ]));
   shapes['coil-band'] = latheStrips([[[.5,-.045],[.5,.045]]]);
 
+  // Small cargo details are combined into reusable geometry, never meshes per detail.
+  function combine(geometries) {
+    const positions = [], normals = [];
+    for (const source of geometries) {
+      const g = source.index ? source.toNonIndexed() : source;
+      positions.push(...g.attributes.position.array); normals.push(...g.attributes.normal.array);
+      if (g !== source) g.dispose(); source.dispose();
+    }
+    const result = new THREE.BufferGeometry();
+    result.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    result.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+    return result;
+  }
+  // Inclined and tapered in its own geometry, so the shared route transform stays flat.
+  shapes.boom = profilePrism([[-.5,-.5],[.5,.25],[.5,.5],[-.5,-.08]]).rotateZ(Math.PI);
+  shapes.hook = profilePrism([[-.12,.5],[.16,.5],[.16,-.05],[.38,-.05],[.48,-.28],[.28,-.5],[-.2,-.5],[-.48,-.22],[-.4,.04],[-.19,-.1],[-.2,-.26],[.16,-.28],[.22,-.2],[-.12,-.17]]);
+  const barrelProfile = [[0,-.5],[.39,-.5],[.46,-.3],[.5,0],[.46,.3],[.39,.5],[0,.5]];
+  shapes.barrel = latheStrips([barrelProfile], 16).rotateZ(Math.PI / 2);
+  shapes['barrel-hoop'] = new THREE.CylinderGeometry(.5,.5,1,32,1,true).rotateZ(Math.PI/2);
+  shapes['barrel-staves'] = combine(Array.from({ length: 16 }, (_, i) => {
+    const geometry = new THREE.LatheGeometry(barrelProfile.slice(1,-1).map(p => new THREE.Vector2(p[0]+.001,p[1])), 1, i*Math.PI/8, .016);
+    return geometry.rotateZ(Math.PI/2);
+  }));
+  shapes.tire = combine([
+    new THREE.CylinderGeometry(.46,.46,.9,12),
+    ...Array.from({length:12}, (_, i) => new THREE.BoxGeometry(.18,1,.1).translate(0,0,.45).rotateY(i*Math.PI/6)),
+  ]);
+  shapes.crate = combine([
+    new THREE.BoxGeometry(1,1,.1).translate(0,0,-.45),
+    ...[-.46,.46].map(x=>new THREE.BoxGeometry(.08,1,1).translate(x,0,0)),
+    ...[-.46,.46].map(y=>new THREE.BoxGeometry(1,.08,1).translate(0,y,0)),
+  ]);
+  shapes['silo-cone'] = new THREE.CylinderGeometry(.5,.16,1,16).rotateX(Math.PI/2);
+  shapes.pot = new THREE.CylinderGeometry(.5,.32,1,10).rotateX(Math.PI/2);
+  shapes.flower = combine(Array.from({length:6}, (_,i) => {
+    const a = i*Math.PI/3;
+    return new THREE.SphereGeometry(1,8,4).scale(.23,.23,.45).translate(.27*Math.cos(a),.27*Math.sin(a),0);
+  }));
+  // A pointed hull and a broad stern, unlike the symmetric tanker and road cars.
+  const hullOutline = [[-.5,-.42],[.16,-.5],[.35,-.32],[.5,0],[.35,.32],[.16,.5],[-.5,.42]];
+  const hull = [], bottomHull = hullOutline.map(([x,y]) => [x*.88,y*.45,-.5]);
+  const topHull = hullOutline.map(([x,y]) => [x,y,.5]);
+  for (let i=0;i<hullOutline.length;i++) {
+    const j=(i+1)%hullOutline.length;
+    hull.push(...bottomHull[i],...bottomHull[j],...topHull[j],...bottomHull[i],...topHull[j],...topHull[i]);
+  }
+  shapes['boat-hull'] = new THREE.BufferGeometry();
+  shapes['boat-hull'].setAttribute('position',new THREE.Float32BufferAttribute(hull,3));
+  shapes['boat-hull'].computeVertexNormals();
+  const deck = new THREE.Shape(hullOutline.map(p=>new THREE.Vector2(...p)));
+  shapes['boat-deck'] = new THREE.ExtrudeGeometry(deck,{depth:1,bevelEnabled:false,steps:1}).translate(0,0,-.5);
+  shapes.windshield = combine([
+    profilePrism([[-.5,-.5],[.5,-.5],[.12,.5],[.01,.5],[.38,-.38],[-.5,-.38]]),
+    ...[-.48,.48].map(y=>profilePrism([[-.5,-.5],[.5,-.5],[.12,.5],[-.5,.13]]).scale(1,.04,1).translate(0,y,0)),
+  ]);
+
   // A compact procedural studio provides actual reflections without an HDR download.
   const studio = new THREE.Scene(); studio.background = new THREE.Color('#697d91');
   for (const [position, size, intensity] of [

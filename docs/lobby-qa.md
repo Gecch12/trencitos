@@ -25,3 +25,16 @@ Revisión en la sesión local de Chrome del usuario con un servidor de prueba ai
 - Sin errores ni avisos de consola en los recorridos comprobados.
 
 No es una certificación de Safari/iPhone físico. Los cambios permanecen locales; esta revisión no publica ni cambia la configuración de Render o Supabase.
+
+## Ajuste de centrado — 2026-10-31
+
+Revisión posterior sobre `fb57265` con el cambio de `lobby.css`. Se reemplaza el
+margen superior `8vh` por distribución flexible bajo la cabecera, sin reducirla.
+Las tres pestañas se revisaron en Chromium del navegador integrado, emulando
+1728×900, 1440×1200, 1366×768, 390×844 y 320×568: 15 combinaciones sin
+desbordamiento horizontal. Cuando el panel cabe, los márgenes superior/inferior
+coinciden; cuando no cabe, quedan 24 px en escritorio y 16 px en móvil, con scroll.
+En práctica a 1728×900 el margen superior baja de 72 a 33,15 px y deja de necesitar
+scroll; a 390×844 quedan 32,35 px en ambos lados. Sin errores/avisos de consola.
+Capturas [escritorio](qa/lobby-centered-desktop.png) y
+[móvil emulado](qa/lobby-centered-mobile.png). No certifica dispositivos físicos.

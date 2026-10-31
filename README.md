@@ -23,9 +23,11 @@ Abre `http://localhost:3000` en tu navegador. Para probar con otro jugador abre 
 
 El inicio separa **Crear sala**, **Unirme** y **Practicar**. Para crear se propone un código aleatorio de ocho números, editable antes de confirmar (entre seis y diez dígitos, incluidos ceros iniciales). Si está ocupado se muestra un error, sin cambiarlo ni entrar en otra sala. Una vez creada la sala, el código queda fijo. Las invitaciones antiguas de seis letras/números y los enlaces privados de recuperación siguen funcionando.
 
-En la sala de espera cada participante elige uno de once colores libres: rojo, azul, verde, ámbar, morado, marrón, amarillo, negro, gris, magenta y turquesa. Amarillo lleva deportivos y ámbar lleva grano; ambos usan pintura normal, sin presentación dorada. El servidor reserva el color incluso durante la ventana de reconexión, rechaza elecciones simultáneas duplicadas y lo guarda tanto en disco como en Supabase. Cambiar de puesto por la salida de otro participante no cambia tu color. Tras empezar, la elección queda bloqueada y se usa en trenes, estaciones, avatar e historial. El navegador recuerda nombre y color preferido (si está libre); al recargar una sala conocida recupera el puesto con su credencial local.
+En la sala de espera cada participante elige uno de dieciocho colores libres: rojo, azul, verde, ámbar, morado, marrón, amarillo, negro, gris, magenta, turquesa, azul noche, borgoña, verde oliva, marfil, coral, lavanda y azul hielo. Amarillo lleva deportivos y ámbar lleva grano; ambos usan pintura normal, sin presentación dorada. El servidor reserva el color incluso durante la ventana de reconexión, rechaza elecciones simultáneas duplicadas y lo guarda tanto en disco como en Supabase. Cambiar de puesto por la salida de otro participante no cambia tu color. Tras empezar, la elección queda bloqueada y se usa en trenes, estaciones, avatar e historial. El navegador recuerda nombre y color preferido (si está libre); al recargar una sala conocida recupera el puesto con su credencial local.
 
 La cabecera muestra **Trencitos** y un botón de sonido sin texto, con estado accesible. La conexión solo se muestra cuando requiere atención; los avisos de desconexión y fallos de guardado no se ocultan.
+
+El panel de inicio se centra en el espacio disponible bajo la cabecera. Si su contenido supera la altura de la pantalla, conserva un margen de 24 px (16 px en móvil) y permite desplazarse sin recortar controles.
 
 ## Sala de pruebas con bots
 
@@ -103,7 +105,7 @@ Una construcción aceptada hace descender las piezas 3D, ya orientadas sobre sus
 
 - Los billetes iniciales y las ofertas nuevas empiezan sin casillas marcadas. La confirmación requiere el mínimo y los borradores manuales sobreviven a recargas. Sin confirmar, sigue aplicándose la selección aleatoria al vencer los 60 segundos.
 - Solo hay tres estaciones por jugador, con costes 1/2/3. Una vez agotadas, el menú informa de ello sin ofrecer construcción ni un coste de cuatro cartas.
-- **Partida**, en la cabecera, permite salir, copiar el **enlace privado de recuperación** y renovarlo. La invitación pública solo contiene el código de sala; el enlace de recuperación contiene una credencial en el fragmento, se limpia de la barra al entrar y nunca debe compartirse. En disco se guarda su hash. Renovarlo revoca el anterior. No hay cuentas de Google configuradas.
+- **Partida**, en la cabecera, permite salir, copiar el **enlace privado de recuperación** y renovarlo. La invitación pública solo contiene el código de sala; el enlace de recuperación contiene una credencial en el fragmento, se limpia de la barra al entrar y nunca debe compartirse. En disco se guarda su hash. Renovarlo revoca el anterior. La cuenta opcional de Google añade recuperación de salas vinculadas; requiere [activación](docs/GOOGLE_AUTH.md).
 - En la sala previa, salir libera el puesto inmediatamente; una desconexión lo reserva 60 segundos. El anfitrión puede retirar a otro participante antes de empezar. Si sale, la autoridad pasa a otro conectado; si pierde conexión, se espera el margen de 60 segundos.
 - En partida, los puestos y las piezas nunca se eliminan por desconexión. Después de **dos turnos consecutivos agotados**, un bot de reemplazo decide al azar entre construir una ruta pagable o robar una fuente legal de mesa/mazo. No pide destinos, no coloca estaciones ni consulta cartas rivales. Resuelve el suplemento de sus túneles según pueda pagarlo. Una salida voluntaria activa el bot directamente.
 - Si el bot tiene el control, usa **Partida → Recuperar control**; una reconexión lo solicita automáticamente. Se devuelve al siguiente turno humano, sin interrumpir una primera carta o un túnel del bot. Completar un turno manual rompe la racha de ausencias; tomar solo una carta no la rompe.
@@ -190,7 +192,7 @@ Si falla el guardado remoto, no hay fallback al disco efímero: se pausa y no se
 
 **Límites:** Render Free puede dormir tras 15 minutos sin tráfico y tardar aproximadamente un minuto en despertar, además de reiniciarse en cualquier momento; Supabase Free puede pausar el proyecto tras una semana de inactividad. El almacenamiento externo conserva datos confirmados, no garantiza disponibilidad continua. Evita deploys durante partidas, desactiva auto-deploy y no conectes servidores locales o previews al proyecto de producción: cada arranque reclama su control. No se ha contratado un plan de pago. [Render Free](https://render.com/docs/free) · [Supabase Free](https://supabase.com/pricing).
 
-**Identidad persistente, pendiente:** se acordó comenzar con Google, con Supabase Auth como camino propuesto. Todavía no está implementado ni configurado. El alcance, los hitos y el próximo paso se mantienen en la [ficha de identidad](docs/work/identity.md).
+**Cuenta Google opcional:** el código permite guardar apodo y vagón, cerrar sesión y retomar salas vinculadas desde la cuenta. Conserva la práctica invitada y no publica tu foto/nombre de Google. La activación en la aplicación y la prueba real siguen pendientes; [configuración](docs/GOOGLE_AUTH.md) y [avance](docs/work/identity.md).
 
 ## Interfaz Trencitos v0.6.1
 

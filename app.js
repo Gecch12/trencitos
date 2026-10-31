@@ -26,6 +26,7 @@ let sock = null,
 let sessionReplaced = false, storagePaused = false, pendingAction = null, resendPending = false, sessionSupported = false;
 let homeMode = "create", homeBusy = false, lobbyStarted = false;
 let preferredColor = localStorage.getItem("rr-color");
+let account = null;
 if (!LobbyUI.isColor(preferredColor)) preferredColor = LobbyUI.PALETTE[0].color;
 const MAP_BOUNDS = RailMap.bounds;
 const MAP_GEOMETRY = RailMap.createNetwork(ROUTES);
@@ -309,8 +310,10 @@ function connect() {
       incomingRecovery = null;
       members = m.members;
       if (LobbyUI.isColor(members[seat]?.color)) {
+        const colorChanged = preferredColor !== members[seat].color;
         preferredColor = members[seat].color;
         localStorage.setItem("rr-color", preferredColor);
+        if (colorChanged) account?.changed();
       }
       host = m.host;
       practiceMode = !!m.practice;
@@ -323,6 +326,7 @@ function connect() {
       localStorage.setItem("rr-name", $("nickname").value);
       history.replaceState(null, "", "/?room=" + room);
       renderLobby();
+      account?.linkSeat();
       if (resendPending) { resendPending = false; if (pendingAction) send(pendingAction); }
       return;
     }
@@ -449,7 +453,7 @@ function renderHomeColors() {
       if (color === preferredColor) button.innerHTML = '<span aria-hidden="true">✓</span>';
       button.onclick = () => {
         if (id === "roomColors") send({ type: "select_color", color });
-        else { preferredColor = color; localStorage.setItem("rr-color", color); renderHomeColors(); }
+        else { preferredColor = color; localStorage.setItem("rr-color", color); renderHomeColors(); account?.changed(); }
       };
       root.appendChild(button);
     }
@@ -474,7 +478,7 @@ function initializeHome() {
   $("regenerateCode").onclick = () => { $("createCode").value = LobbyUI.randomCode(); homeCodeError("create"); };
   $("createCode").oninput = () => homeCodeError("create");
   $("code").oninput = () => homeCodeError("join");
-  $("nickname").oninput = () => localStorage.setItem("rr-name", $("nickname").value);
+  $("nickname").oninput = () => { localStorage.setItem("rr-name", $("nickname").value); account?.changed(); };
   $("nickname").onkeydown = event => { if (event.key === "Enter") { event.preventDefault(); $(homeMode === "practice" ? "createTest" : homeMode === "join" ? "join" : "create").click(); } };
   $("leaveLobby").onclick = () => $("leaveRoom").click();
 }
@@ -2662,6 +2666,14 @@ if (desiredRoom && localStorage.getItem(identityKey(desiredRoom))) {
   attempted = true;
 }
 initializeHome();
+account = AccountUI.create({
+  selection:()=>({nickname:$("nickname").value,color:preferredColor}),
+  currentSeat:()=>room?{code:room,token,practice:practiceMode}:null,
+  applyProfile(profile) {
+    $("nickname").value=profile.nickname; preferredColor=profile.color;
+    localStorage.setItem("rr-name",profile.nickname);localStorage.setItem("rr-color",profile.color);renderHomeColors();
+  },
+});
 connect();
 
 $("retryBoard").onclick = initializeBoard3D;

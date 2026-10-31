@@ -38,6 +38,13 @@
       <div class="lobbycard">
         <div id="homeSetup">
           <div class="home-heading"><h1>Jugar</h1><span>2–5 jugadores</span></div>
+          <section class="account-panel" aria-label="Tu cuenta">
+            <div class="account-row"><span id="accountLabel">Juega como invitado o guarda tu perfil</span><button id="googleLogin" type="button" disabled>Continuar con Google</button><button id="accountLogout" type="button" hidden>Cerrar sesión</button></div>
+            <p id="accountStatus" role="status">Comprobando tu cuenta…</p>
+            <p class="account-privacy"><a href="/privacy.html" target="_blank" rel="noopener">Privacidad y eliminación de cuenta</a></p>
+            <button id="accountRetry" type="button" hidden>Reintentar guardado</button>
+            <div id="accountRooms" class="account-rooms"></div>
+          </section>
           <div class="home-identity"><span id="homeAvatar" class="home-avatar" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M7 27v-4a9 9 0 0 1 18 0v4Z"/></svg></span><div><label for="nickname">Tu nombre</label><input id="nickname" maxlength="24" placeholder="Tu nombre" value="Jugador" autocomplete="nickname" /></div></div>
           <div class="home-tabs" role="tablist" aria-label="Cómo quieres jugar">
             <button id="homeTabCreate" type="button" role="tab" aria-selected="true" aria-controls="homeCreate" data-home-tab="create"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Crear sala</button>
@@ -198,6 +205,7 @@
     <script src="game-ui.js"></script>
     <script src="lobby-ui.js"></script>
     <script src="board-camera.js"></script>
+    <script src="account-ui.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

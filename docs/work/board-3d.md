@@ -1,12 +1,13 @@
 ---
-{"id":"board-3d","status":"done","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"released","updated":"2026-10-31"}
+{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"worktree","updated":"2026-10-31"}
 ---
 # Tablero 3D y familia de vagones
 
 Objetivo: tablero principal exclusivamente Three.js, mapa plano y piezas 3D.
 Mano, cartas, paneles, etiquetas y mapas de detalle conservan HTML/SVG. Sin física
 de simulador, cámara libre ni cambios de reglas. Publicado desde `main` en
-`16bf6c3`; [entrega y verificación remota](../production.md).
+`16bf6c3` hasta M9; [entrega y verificación remota](../production.md).
+M10 es una ampliación local posterior, todavía sin publicar.
 
 ## Hitos
 
@@ -21,6 +22,43 @@ de simulador, cámara libre ni cambios de reglas. Publicado desde `main` en
   iluminación al eje Z y encuadre de piezas altas.
 - [x] M9: profundidad de vías/estaciones, bandas de propiedad, caída de piezas,
   destinos con modelos 3D y paleta amarillo/ámbar compatible con partidas guardadas.
+- [x] M10: siete colores/familias adicionales, gratis: azul noche/grúa, borgoña/vino,
+  oliva/tractores, marfil/cemento, coral/fruta, lavanda/flores, azul hielo/lancha.
+  18 selecciones válidas; modelos compartidos por preview/tablero, sin cambiar reglas.
+
+## Ampliación local M10
+
+[Catálogo inicial renderizado](../qa/wagons-seven-new.png): dos toneles
+con duelas y aros; tractores con neumáticos y motor; silos cónicos con escalerilla;
+cajones abiertos de fruta; macetas y flores; casco de lancha, asientos y cubierta.
+Todos conservan la huella y el presupuesto máximo de 70 piezas por modelo.
+
+Revisión de grúa el 2026-10-31: la celosía horizontal resultaba poco reconocible.
+Se reemplazó por pluma telescópica inclinada, pistón, polea, doble cable y bloque
+rayado con gancho suspendido; cabina azul, contrapeso y estabilizadores diferenciados.
+[Preview actual en el juego](../qa/wagon-crane-telescopic.png). Conserva límites de
+pieza y el mismo modelo en el tablero. Pruebas de catálogo/huella correctas; 225
+vagones incluyendo 45 grúas, resaltar/restaurar sin errores (29 llamadas, 464.762
+triángulos, 18 geometrías; DPR 2). No reemplaza la medición histórica de FPS.
+
+Referencias aprobadas, adaptadas sin marcas:
+[grúa](https://www.techne-kirow.de/en/railway-logistics),
+[vino](https://www.marklin.com/products/details/article/4432),
+[tractores](https://www.marklin.com/products/details/article/46948),
+[cemento](https://www.roco.cc/ren/products/coaches-and-wagons/coach-and-wagon-sets/6600180-3-piece-set-silo-wagons-cd.html),
+[fruta](https://www.reynaulds.com/products/Faller/180605.aspx),
+[flores](https://www.noch.com/flowers-in-pots/14031/),
+[lancha](https://www.mariostrains.com/index.php?Itemid=480&option=com_virtuemart&view=productdetails&virtuemart_category_id=47&virtuemart_product_id=8244).
+Fruta/flores son propuestas estilizadas basadas en cargas de miniatura.
+
+2026-10-31, navegador IAB/Chromium local: siete selecciones muestran el modelo correcto;
+225 vagones en dos grupos cubren las siete familias (27/26 llamadas, 457.202/541.172
+triángulos); resaltar/restaurar conserva modelos y geometrías, sin errores de consola.
+Fixture reproducible: `node tests/helpers/catalog-preview.js`, ruta local `/__catalog`.
+No es una medición nueva de FPS ni una prueba en dispositivos físicos.
+Suite completa `npm test`: 317 pruebas correctas, sin fallos (43,8 s).
+Siguiente paso de M10: integrar y publicar con identidad una vez configurada/validada;
+la entrega histórica siguiente solo describe M1–M9.
 
 ## Implementación actual
 

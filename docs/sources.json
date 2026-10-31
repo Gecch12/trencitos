@@ -22,7 +22,10 @@
     "practice-tactics.js",
     "practice-search.js",
     "wagon-preview.js",
-    "data.js"
+    "data.js",
+    "account-auth.js",
+    "account-seats.js",
+    "account-ui.js"
   ],
   "domain.md": [
     "engine.js",
@@ -30,7 +33,8 @@
     "multiplayer.js",
     "practice.js",
     "game-clock.js",
-    "lobby-ui.js"
+    "lobby-ui.js",
+    "account-seats.js"
   ],
   "operations.md": [
     "package.json",
@@ -76,5 +80,24 @@
   "work/materials.md": [
     "wagon-models.mjs",
     "wagon-renderer.js"
+  ],
+  "work/identity.md": [
+    "account-auth.js",
+    "account-seats.js",
+    "account-ui.js",
+    "supabase/002_identity.sql",
+    "tests/account-auth.test.js",
+    "tests/account-seats.test.js",
+    "tests/identity-sql.test.js",
+    "tests/helpers/identity-preview.js"
+  ],
+  "GOOGLE_AUTH.md": [
+    "account-auth.js",
+    "account-seats.js",
+    "account-ui.js",
+    "supabase/002_identity.sql",
+    ".env.example",
+    "privacy.html",
+    "privacy.css"
   ]
 }

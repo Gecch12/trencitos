@@ -1,6 +1,9 @@
 # Render Free + Supabase Free
 
-El juego sigue siendo una aplicación Node con WebSockets y enlaces privados sin registro. Supabase solo guarda el estado del servidor: **no añade login de Google, Realtime ni acceso directo del navegador a la base**.
+El juego es una aplicación Node con WebSockets y enlaces privados. Esta guía configura
+el checkpoint de salas. El acceso opcional con Google requiere además
+[su configuración independiente](GOOGLE_AUTH.md); no se activa por configurar
+el guardado ni usa su clave secreta. El navegador no accede directamente a la base.
 
 ## 1. Preparar Supabase
 

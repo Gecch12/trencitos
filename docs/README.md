@@ -13,6 +13,7 @@ No cargues todos los documentos ni todos los informes de QA al iniciar un chat.
 | Mantener docs o reconciliar ramas | [Método](maintenance.md) |
 | Experiencia de usuario detallada | [Guía del juego](../README.md) |
 | Desplegar en Render/Supabase | [Guía de despliegue](RENDER_SUPABASE.md) |
+| Configurar Google y perfiles | [Google Auth](GOOGLE_AUTH.md) |
 | Qué revisión está publicada y cómo se verificó | [Producción](production.md) |
 | Evidencia de verificaciones anteriores | [Índice de QA](qa-index.md) |
 

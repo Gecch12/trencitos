@@ -11,6 +11,13 @@ export const WAGON_STYLES = Object.freeze([
   { color: '#7c8796', model: 'stone', label: 'Piedra' },
   { color: '#c43d92', model: 'mail', label: 'Correo' },
   { color: '#1baaa6', model: 'steel', label: 'Bobinas' },
+  { color: '#253b73', model: 'crane', label: 'Grúa ferroviaria' },
+  { color: '#782f49', model: 'wine', label: 'Toneles de vino' },
+  { color: '#78833c', model: 'tractors', label: 'Tractores' },
+  { color: '#e4dcc2', model: 'cement', label: 'Silos de cemento' },
+  { color: '#ed897c', model: 'fruit', label: 'Fruta' },
+  { color: '#b9ace2', model: 'flowers', label: 'Flores' },
+  { color: '#9ed7ed', model: 'boat', label: 'Lancha' },
 ].map(style => Object.freeze({ finish: 'paint', ...style })));
 
 export function wagonStyle(color, customization = {}) {
@@ -51,6 +58,141 @@ export function wagonParts(model) {
     add('wheel', [x, y * 1.13, 1.4], [1.25, .18, 1.25], '#84918e', 'metal');
   }
   switch (model) {
+    case 'crane': {
+      const superstructure = parts.length;
+      box([0, 0, 3.2], [19.5, 7.8, .7]);
+      // A raised telescopic jib leaves clear air around a suspended hook.
+      // The blue machinery/cab identifies its owner; yellow marks working parts.
+      add('disc', [-4.7, 0, 3.95], [6.3, 6.3, .8], '#8b9693', 'metal');
+      round([-5.2, 0, 4.85], [6.8, 6.5, 1.4]);
+      box([-7.6, -.25, 5.95], [2.7, 6, 2.4], 'trim');
+      box([-7.6, -.25, 7.25], [2.7, 6, .35], '#b7bdc1', 'metal');
+      for (const z of [5.35, 5.85, 6.35]) box([-9, -.25, z], [.15, 4.9, .15], '#24323a', 'metal');
+      box([-4.8, 2.1, 6.65], [3.4, 2.8, 3.3]);
+      box([-4.8, 3.53, 7], [2.8, .12, 1.9], '#96c4d7', 'glass');
+      box([-3.06, 2.1, 7], [.12, 2.35, 1.9], '#96c4d7', 'glass');
+      box([-4.8, 3.62, 7], [.18, .12, 2], '#24323a', 'metal');
+      box([-4.8, 2.1, 8.4], [3.8, 3.1, .3], 'trim');
+      add('disc', [-5.6, 2.1, 8.8], [.6, .6, .5], '#edb43b', 'glass');
+      box([-2.9, -.65, 5.3], [2.1, 3.4, 2.5]);
+      add('wheel', [-2.9, 1.1, 5.8], [1.15, .2, 1.15], '#bcc6c7', 'metal');
+      add('boom', [.3, -.65, 7.05], [8.2, 1.9, 4.2], '#e1ac36');
+      add('boom', [5.1, -.65, 8.72], [5.5, 1.25, 2.3], '#b4c3c9', 'metal');
+      add('boom', [-.1, .55, 6.3], [5.4, .55, 2.7], '#283b42', 'metal');
+      add('boom', [1.7, .55, 7.2], [3.3, .3, 1.6], '#cbd2cb', 'metal');
+      add('wheel', [7.75, -.65, 9.35], [1.2, 1.5, 1.2], '#dca832');
+      for (const x of [7.48, 8.02]) box([x, -.65, 7.8], [.14, .16, 2.8], '#26343a', 'metal');
+      round([7.75, -.65, 6.3], [2.1, 1.4, 1.5], '#efbb3c');
+      for (const x of [7.2, 7.75, 8.3]) box([x, .08, 6.3], [.3, .1, 1.15], '#293b40', 'metal');
+      add('hook', [7.75, -.65, 4.8], [1.8, .7, 1.8], '#273940', 'metal');
+      for (const x of [-7.6, 6.6]) {
+        box([x, 0, 3.7], [1.3, 8.4, .6], '#b9bcb0', 'metal');
+        for (const y of [-3.7, 3.7]) {
+          box([x, y, 3.6], [.65, .65, 1.55], '#e6b541');
+          box([x, y, 2.85], [1.5, 1.2, .3], '#34484b', 'metal');
+        }
+      }
+      // Face the jib towards -X: its rise and hanging hook remain distinct in
+      // the shared showroom camera, instead of flattening into the cab roof.
+      for (const part of parts.slice(superstructure)) part.xyz[0] *= -1;
+      break;
+    }
+    case 'wine':
+      box([0, 0, 3.2], [19.4, 7.8, .8]);
+      for (const x of [-4.6, 4.6]) {
+        add('cradle', [x, 0, 4.1], [7.9, 7.4, 1.1], 'paint');
+        add('barrel', [x, 0, 6.4], [8.1, 6.5, 6.5], '#a9703c', 'cargo');
+        add('barrel-staves', [x, 0, 6.4], [8.1, 6.52, 6.52], '#6e452a', 'cargo');
+        for (const dx of [-3.1, 0, 3.1]) add('barrel-hoop', [x + dx, 0, 6.4], [.38, dx ? 5.95 : 6.7, dx ? 5.95 : 6.7], '#444b4b', 'metal');
+        for (const dx of [-4.08, 4.08]) {
+          add('tank', [x + dx, 0, 6.4], [.12, 4.9, 4.9], '#c09259', 'cargo');
+          box([x + dx, 0, 6.4], [.17, .17, 4.5], '#7e5835', 'cargo');
+        }
+        add('disc', [x, 0, 9.7], [1, 1, .35], '#523927', 'cargo');
+      }
+      for (const y of [-3.9, 3.9]) box([0, y, 3.9], [18.8, .3, .8]);
+      break;
+    case 'tractors':
+      box([0, 0, 3.2], [19.5, 7.8, .7]);
+      for (const y of [-2.3, 2.3]) box([0, y, 3.7], [18.5, 1.35, .3], '#a9ab8a', 'metal');
+      for (const x of [-4.65, 4.65]) {
+        box([x, 0, 4.5], [7.6, 2.2, .8], '#3e4940', 'metal');
+        round([x + 1.1, 0, 5.8], [4.3, 2.6, 2.6]);
+        box([x + 3.3, 0, 5.8], [.18, 2.3, 1.7], '#354141', 'metal');
+        for (const y of [-.7, 0, .7]) box([x + 3.42, y, 5.8], [.1, .14, 1.3], '#b7bfad', 'metal');
+        box([x - 1.8, 0, 7], [2.5, 2.45, 2.5], '#263c46', 'glass');
+        box([x - 1.8, 0, 8.4], [3.1, 3.4, .35], 'trim');
+        for (const y of [-1.22, 1.22]) box([x - 1.8, y, 7.05], [.25, .15, 2.7], 'trim');
+        for (const y of [-2.05, 2.05]) {
+          add('tire', [x - 2.1, y, 5.2], [3.8, 1.15, 3.8], '#252e2c', 'cargo');
+          add('wheel', [x - 2.1, y * 1.29, 5.2], [1.9, .12, 1.9], '#e1c578', 'metal');
+          add('tire', [x + 2.5, y, 4.75], [2.7, .9, 2.7], '#252e2c', 'cargo');
+          add('wheel', [x + 2.5, y * 1.23, 4.75], [1.35, .12, 1.35], '#e1c578', 'metal');
+          box([x - 2.1, y, 7.2], [4, 1.3, .25], 'trim');
+        }
+        add('disc', [x + 1.2, -.9, 8], [.4, .4, 2.1], '#394746', 'metal');
+        box([x + 3.15, 0, 7.05], [.3, 1.8, .3], '#f5e6b1', 'glass');
+      }
+      break;
+    case 'cement':
+      box([0, 0, 3.2], [19.5, 7.7, .7]);
+      for (const x of [-5.7, 0, 5.7]) {
+        add('silo-cone', [x, 0, 4.6], [5.4, 5.7, 2.1]);
+        add('disc', [x, 0, 7.15], [5.4, 5.7, 3.3]);
+        add('mound', [x, 0, 8.6], [5.4, 5.7, 1.7], 'trim');
+        add('disc', [x, 0, 9.5], [1.6, 1.6, .35], '#6b7879', 'metal');
+        for (const y of [-2.8, 2.8]) box([x, y, 4.5], [.6, .6, 2.6], '#8b9691', 'metal');
+        add('disc', [x, 0, 3.7], [1, 1, 1], '#7e8e88', 'metal');
+      }
+      box([0, -3.5, 4], [17, .35, .4], '#657c7a', 'metal');
+      box([0, 0, 9.7], [15, .75, .2], '#7e8c86', 'metal');
+      for (const y of [-1, 1]) box([-8.5, y, 6.4], [.25, .25, 6.2], '#718580', 'metal');
+      for (const z of [3.9, 5.1, 6.3, 7.5, 8.7]) box([-8.65, 0, z], [.28, 2.2, .23], '#718580', 'metal');
+      break;
+    case 'fruit':
+      openBed(1.3);
+      for (const x of [-5.8, 0, 5.8]) for (const y of [-1.8, 1.8]) {
+        add('crate', [x, y, 5.1], [5.3, 3.2, 2.4], '#8a5937', 'cargo');
+        for (const dy of [-1.62, 1.62]) for (const z of [4.4, 5.5]) box([x, y + dy, z], [5.3, .15, .65], '#d2a777', 'cargo');
+        for (const [dx, dy] of [[-1.2,-.65],[1.2,-.65],[0,.65]]) {
+          add('mound', [x + dx, y + dy, 6.3], [1.85, 1.55, 1.5], x === 0 ? '#bb3d36' : '#eda432', 'cargo');
+        }
+      }
+      break;
+    case 'flowers':
+      box([0, 0, 3.2], [19.4, 7.8, .8]);
+      for (const x of [-6.4, 0, 6.4]) {
+        box([x, 0, 4], [5.7, 6.9, .8], '#786c56', 'cargo');
+        for (const y of [-1.9, 1.9]) {
+          add('pot', [x, y, 5], [2.4, 2.4, 2], '#b47d61', 'cargo');
+          add('disc', [x, y, 6.3], [.3, .3, 2], '#527746', 'cargo');
+          add('mound', [x, y, 6.25], [3.5, 2.7, 1.7], '#598351', 'cargo');
+          add('flower', [x, y, 7.3], [4.3, 3.1, 1.7], x < 0 ? '#f0c85c' : x > 0 ? '#e3abd8' : '#ec8a9b', 'cargo');
+          add('disc', [x, y, 8], [.9, .9, .25], '#a76a30', 'cargo');
+        }
+      }
+      for (const y of [-3.7, 3.7]) {
+        for (const x of [-9, 9]) box([x, y, 5.5], [.4, .4, 4.6]);
+        box([0, y, 7.7], [18.4, .4, .35], 'trim');
+        box([0, y, 4.3], [18.8, .4, 1.3]);
+      }
+      break;
+    case 'boat':
+      box([0, 0, 3.2], [19.5, 7.8, .8]);
+      for (const x of [-5.6, 4.5]) add('cradle', [x, 0, 4.2], [2.4, 6.8, 1.7], '#8b795b', 'cargo');
+      add('boat-hull', [0, 0, 5.6], [17.9, 6.6, 3], '#f1f0df');
+      add('boat-deck', [0, 0, 7.12], [17.7, 6.4, .22], '#ba8551', 'cargo');
+      for (const y of [-1.8, -.9, 0, .9, 1.8]) box([5.5, y, 7.27], [3.5, .08, .1], '#e4c99c', 'cargo');
+      round([-2.2, 0, 7.28], [6.8, 4.5, .25], '#233e4e', 'glass');
+      for (const y of [-1.05, 1.05]) {
+        round([-3.2, y, 7.55], [2.2, 1.6, .45], '#e6dfc5');
+        round([-4.2, y, 8.05], [.5, 1.7, 1.5], '#e6dfc5');
+      }
+      add('windshield', [1.6, 0, 8.1], [1.5, 4.7, 1.9], '#557f90', 'glass');
+      for (const y of [-3.25, 3.25]) box([-2.5, y, 6.4], [11, .12, .35], 'paint');
+      box([-9.15, 0, 5.7], [1, 1.5, 2.1], '#374850', 'metal');
+      box([-8.35, 0, 7.3], [.6, 5.1, .18], '#ced6cb', 'metal');
+      break;
     case 'tanker':
       for (const x of [-5.9, 5.9]) box([x, 0, 3.5], [2, 7.1, 2]);
       add('tank', [0, 0, 6.1], [17.8, 7.3, 7.3]);

@@ -1,0 +1,28 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><title>Nuevos vagones · Trencitos</title>
+<style>*{box-sizing:border-box}body{margin:0;padding:28px;background:#edf2ef;font-family:system-ui;color:#203e46}h1{margin:0;font-size:28px;letter-spacing:-1px}header p{margin:8px 0 24px;color:#617a7b}main{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}article{background:#fafaf3;border:1px solid #d2ddd4;border-radius:12px;overflow:hidden}.stage{height:180px}footer{padding:0 16px 16px}h2{font-size:16px;margin:0 0 5px}footer p{font-size:12px;margin:0;color:#617a7b}canvas{display:block}.stage canvas{width:100%;height:100%}#stress{height:520px;position:relative;margin-top:24px}pre{white-space:pre-wrap;font-size:12px}button{padding:10px;margin:8px 8px 0 0}</style>
+<header><h1>Siete nuevas cargas</h1><p>Modelos reales del juego · El mismo diseño en la selección y en el tablero</p></header>
+<main></main><button id="stressButton">Probar 225 vagones</button><button id="highlightButton">Resaltar y restaurar</button><div id="stress"></div><pre id="stats"></pre>
+<script type="module">
+import {createWagonPreview} from '/wagon-preview.js';
+import {createBoard3D} from '/board-3d.js';
+import {WAGON_STYLES} from '/wagon-models.mjs';
+const labels=['Azul noche · Pluma telescópica, cable y gancho','Borgoña · Toneles de madera y aros','Verde oliva · Neumáticos y motor','Marfil · Silos, escalerilla y tuberías','Coral · Cajones de manzanas y naranjas','Lavanda · Macetas y flores abiertas','Azul hielo · Casco, cubierta y parabrisas'];
+const styles=WAGON_STYLES.slice(11),previews=[];
+for(const [i,s] of styles.entries()){
+ const article=document.createElement('article');article.innerHTML='<div class="stage"></div><footer><h2></h2><p></p></footer>';
+ article.querySelector('h2').textContent=s.label;article.querySelector('p').textContent=labels[i];document.querySelector('main').append(article);
+ const preview=createWagonPreview({container:article.querySelector('.stage'),onFailure:()=>{throw Error('Preview WebGL failure');}});preview.update(s.color);previews.push(preview);
+}
+const container=document.querySelector('#stress'),network=Array.from({length:225},(_,i)=>({d:'',cells:[{x:18+i%15*26,y:15+Math.floor(i/15)*18,angle:0}]}));
+const board=createBoard3D({container,map:{bounds:{x:0,y:0,width:420,height:300},land:['M0 0H420V300H0Z'],details:[],cities:{}},network,onFailure:()=>{throw Error('Board WebGL failure');}});
+let group=0,players,routes;
+function draw(){
+ players=styles.slice(group?2:0,group?7:5).map(s=>({color:s.color,placed:[]}));
+ routes=network.map((_,i)=>({id:i,owner:Math.floor(i/45)}));
+ board.resize({x:0,y:0,width:410,height:300,scale:410/container.clientWidth,scaleY:300/container.clientHeight});board.update({routes,players});
+ requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelector('#stats').textContent=JSON.stringify(board.stats(),null,2)));
+}
+document.querySelector('#stressButton').onclick=()=>{group=1-group;draw();};
+document.querySelector('#highlightButton').onclick=()=>{board.update({routes,players,highlight:2});requestAnimationFrame(()=>{board.update({routes,players});requestAnimationFrame(()=>document.querySelector('#stats').textContent=JSON.stringify(board.stats(),null,2));});};
+draw();
+</script></html>

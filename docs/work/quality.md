@@ -17,6 +17,8 @@ validación del checkout actual. [Informes disponibles](../qa-index.md).
 - [ ] Evaluar carga inicial y rendimiento 3D en móvil físico/GPU modesta.
 - [x] Animación de construcción 3D: rutas, estaciones, túneles, reconexión y
   movimiento reducido en Chrome local; [evidencia](../qa/threejs-continuity-report.json).
+- [x] Centrado del inicio bajo la cabecera y scroll cuando no cabe: tres pestañas
+  en cinco tamaños de navegador; [evidencia](../lobby-qa.md#ajuste-de-centrado--2026-10-31).
 
 ## Evidencia y siguiente paso
 

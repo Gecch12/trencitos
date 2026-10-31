@@ -6,8 +6,8 @@ const hashToken = token => crypto.createHash("sha256").update(token).digest("hex
 function serializableRoom(room) {
   const { code, updated, game, hostSeat = 0, revision = 0, emptySince, savedAt, rematchCode } = room;
   return { code, updated, game, hostSeat, revision, emptySince, savedAt, rematchCode,
-    members: room.members.map(({ name, color, token, tokenHash, autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds }) =>
-      ({ name, color, tokenHash: tokenHash || (token ? hashToken(token) : undefined), autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds })) };
+    members: room.members.map(({ name, color, accountId, token, tokenHash, autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds }) =>
+      ({ name, color, accountId, tokenHash: tokenHash || (token ? hashToken(token) : undefined), autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds })) };
 }
 function loadRooms(file) {
   function read(candidate) {

@@ -9,11 +9,15 @@ comercial: conserva las variantes del proyecto.
 - **Sala:** código público, anfitrión y 2–5 puestos para iniciar. La credencial
   privada recupera un puesto; el código público no autentica a su propietario.
 - **Jugador:** puesto, nombre, color, mano privada, destinos y piezas. Empieza con
-  45 vagones, 3 estaciones y 4 cartas. Once colores de jugador no equivalen a
+  45 vagones, 3 estaciones y 4 cartas. Dieciocho colores de jugador no equivalen a
   los ocho colores de cartas/rutas. El lobby reserva colores únicos; iniciada la
   partida quedan fijos. Ver [lobby-ui.js](../lobby-ui.js) y [pruebas](../tests/lobby-server.test.js).
   La clave persistida de color es estable; cambiar su pintura visible no cambia
   el propietario, la reserva del lobby ni los colores de cartas/pagos.
+- **Cuenta opcional:** UUID persistente distinto del puesto. Guarda apodo y color/vagón;
+  vincular exige la credencial privada y recuperar exige la cuenta propietaria. Nunca
+  concede otra mano ni prolonga la vida de una sala. Práctica invitada sigue disponible.
+  Contrato y activación: [identidad](GOOGLE_AUTH.md).
 - **Red:** 47 ciudades y 101 rutas, con 300 casillas. Una ruta tiene extremos,
   longitud, color, posibles túnel/ferri y propietario. La geometría no cambia su
   coste ni conectividad.

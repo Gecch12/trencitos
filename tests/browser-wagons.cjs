@@ -105,8 +105,8 @@ const out = path.resolve(__dirname, '../docs/qa');
     await unavailable.close();
 
     await page.route('**/__wagon-gallery', route => route.fulfill({ contentType: 'text/html', body: `<!doctype html><html lang="es"><meta charset="utf-8"><title>Vagones · Trencitos</title><style>
-      *{box-sizing:border-box}body{margin:0;background:#eee6d2;font-family:system-ui;color:#203e46}header{padding:42px 60px 0;height:140px}h1{margin:0;font-size:36px;letter-spacing:-1.4px}p{color:#5f716d;margin:10px 0}#stage{position:relative;width:1440px;height:900px}canvas{position:absolute;inset:0}.label{position:absolute;transform:translateX(-50%);text-align:center;font-size:17px;font-weight:650;white-space:nowrap}.label small{display:block;font-weight:450;font-size:13px;color:#65756e;margin-top:5px}
-      </style><header><h1>Una familia de vagones</h1><p>Once colores · Cargas y siluetas propias · Piezas reales del tablero 3D</p></header><div id="stage"></div></html>` }));
+      *{box-sizing:border-box}body{margin:0;background:#eee6d2;font-family:system-ui;color:#203e46}header{padding:42px 60px 0;height:140px}h1{margin:0;font-size:36px;letter-spacing:-1.4px}p{color:#5f716d;margin:10px 0}#stage{position:relative;width:1440px;height:1600px}canvas{position:absolute;inset:0}.label{position:absolute;transform:translateX(-50%);text-align:center;font-size:17px;font-weight:650;white-space:nowrap}.label small{display:block;font-weight:450;font-size:13px;color:#65756e;margin-top:5px}
+      </style><header><h1>Una familia de vagones</h1><p>Dieciocho colores · Cargas y siluetas propias · Piezas reales del tablero 3D</p></header><div id="stage"></div></html>` }));
     await page.goto(`${base}/__wagon-gallery`);
     const catalog = await page.evaluate(async () => {
       const { createBoard3D } = await import('/board-3d.js');
@@ -117,18 +117,18 @@ const out = path.resolve(__dirname, '../docs/qa');
       const board = createBoard3D({ container, map, network, onFailure: e => { throw e; } });
       const routes = network.map((_, id) => ({ id, owner: id }));
       const players = WAGON_STYLES.map(s => ({ color: s.color, placed: [] }));
-      board.resize({ x: 0, y: 0, width: 290, height: 900 * 290 / 1440, scale: 290 / 1440 }); board.update({ routes, players });
+      board.resize({ x: 0, y: 0, width: 290, height: 1600 * 290 / 1440, scale: 290 / 1440 }); board.update({ routes, players });
       for (const [i, s] of WAGON_STYLES.entries()) {
         const cell = network[i].cells[0], p = board.project(cell.x, cell.y + 8, 0);
         const label = document.createElement('div'); label.className = 'label'; label.style.left = `${p.x}px`; label.style.top = `${p.y + 28}px`;
-        label.innerHTML = `${s.label}<small>${['Rojo','Azul','Verde','Ámbar','Morado','Marrón','Amarillo','Negro','Gris','Magenta','Turquesa'][i]}</small>`; container.append(label);
+        label.innerHTML = `${s.label}<small>${['Rojo','Azul','Verde','Ámbar','Morado','Marrón','Amarillo','Negro','Gris','Magenta','Turquesa','Azul noche','Borgoña','Verde oliva','Marfil','Coral','Lavanda','Azul hielo'][i]}</small>`; container.append(label);
       }
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const stats = board.stats();
       window.gallery = { board, network, routes, players };
       return stats;
     });
-    assert.equal(catalog.wagons, 11); assert.equal(Object.keys(catalog.models).length, 11);
+    assert.equal(catalog.wagons, WAGON_STYLES.length); assert.equal(Object.keys(catalog.models).length, WAGON_STYLES.length);
     await page.screenshot({ path: path.join(out, 'wagons-catalog.png'), fullPage: true });
     // Highlight/reset redraws all parts, preserving every model and owner.
     const reset = await page.evaluate(async () => {
@@ -162,7 +162,7 @@ const out = path.resolve(__dirname, '../docs/qa');
     await page.screenshot({path:path.join(out,'wagons-refined.png'),fullPage:true});
     await page.evaluate(() => previews.forEach(p=>p.dispose()));
     assert.deepEqual(errors, []);
-    const report = { date: new Date().toISOString(), browser: browser.version(), tests: ['all 11 previews match selection', 'five revised cargo previews captured', '225 wagons across the five revised families', 'dense revised models pan and remain idle without changes', 'yellow auto carrier preview', 'mobile without overflow', 'room preview follows authoritative color', '3D ignores old 2D preferences and query', 'no owner symbols', 'resources stable across reload', 'WebGL startup failure and retry preserve the room', 'all 11 board models render', 'highlight/reset preserves model counts'], catalog, dense: after, refinedDense, refinedPerformance, errors };
+    const report = { date: new Date().toISOString(), browser: browser.version(), tests: ['all 18 previews match selection', 'five revised cargo previews captured', '225 wagons across the five revised families', 'dense revised models pan and remain idle without changes', 'yellow auto carrier preview', 'mobile without overflow', 'room preview follows authoritative color', '3D ignores old 2D preferences and query', 'no owner symbols', 'resources stable across reload', 'WebGL startup failure and retry preserve the room', 'all 18 board models render', 'highlight/reset preserves model counts'], catalog, dense: after, refinedDense, refinedPerformance, errors };
     fs.writeFileSync(path.join(out, 'wagons-report.json'), JSON.stringify(report, null, 2) + '\n');
     console.log(JSON.stringify(report, null, 2));
   } finally { await context.close(); await browser.close(); server.close(); }

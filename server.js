@@ -11,6 +11,8 @@ const { createMultiplayerController, shiftDeadlines, GRACE_MS } = require("./mul
 const { hashToken, loadRooms, saveRooms } = require("./room-store");
 const { createSupabaseStore } = require("./supabase-store");
 const { createDurableQueue } = require("./durable-queue");
+const { createAccountAuth } = require("./account-auth");
+const { createAccountSeats } = require("./account-seats");
 const PORT = Number(process.env.PORT || 3000),
   ROOT = __dirname;
 const STORE = process.env.STATE_FILE || path.join(ROOT, "room-state.json");
@@ -84,7 +86,7 @@ const multiplayer = createMultiplayerController({ rooms, sendRoom, removeRoom, d
 function snapshot(r) {
   return { game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
     members: r.members.map(m => ({ member: m, data: { token: m.token || m.ws?.token, tokenHash: m.tokenHash,
-      color: m.color, actionIds: [...(m.actionIds || [])], autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
+      color: m.color, accountId: m.accountId, actionIds: [...(m.actionIds || [])], autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
 }
 function persist() {
   if (remoteStore) {
@@ -125,6 +127,8 @@ function removeRoom(r, message = "La sala ya no existe.") {
 const TYPES = {
   "/": "text/html; charset=utf-8",
   "/index.html": "text/html; charset=utf-8",
+  "/privacy.html": "text/html; charset=utf-8",
+  "/privacy.css": "text/css; charset=utf-8",
   "/board-3d.js": "text/javascript; charset=utf-8",
   "/wagon-renderer.js": "text/javascript; charset=utf-8",
   "/wagon-preview.js": "text/javascript; charset=utf-8",
@@ -142,9 +146,13 @@ const TYPES = {
   "/responsive.css": "text/css; charset=utf-8",
   "/lobby.css": "text/css; charset=utf-8",
   "/lobby-ui.js": "text/javascript; charset=utf-8",
+  "/account-ui.js": "text/javascript; charset=utf-8",
 };
-const server = http.createServer((req, res) => {
+const accountAuth = createAccountAuth({seats:createAccountSeats({rooms,dispatch,sendRoom,
+  unavailable:()=>!storageReady || stopping || storageFailureAt!==null})});
+const server = http.createServer(async (req, res) => {
   let url = new URL(req.url, "http://localhost");
+  if (await accountAuth.handle(req,res,url)) return;
   if (req.method !== "GET") {
     res.writeHead(405);
     return res.end();
@@ -488,7 +496,7 @@ function onMessage(peer, msg) {
     member.ws = null; member.disconnectedAt = Date.now();
     peer.send({ type: "room_closed", preserveIdentity: true }); peer.room = null; peer.seat = -1;
     sendRoom(r);
-    return attach(peer, next, { name: member.name, color: LobbyUI.freeColor(next.members, member.color), token: crypto.randomBytes(24).toString("hex") });
+    return attach(peer, next, { name: member.name, accountId:member.accountId, color: LobbyUI.freeColor(next.members, member.color), token: crypto.randomBytes(24).toString("hex") });
   }
   if (msg.type === "finish_test" || msg.type === "leave_test") {
     if (!r.practice || peer.seat !== 0)

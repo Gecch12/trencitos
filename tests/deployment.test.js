@@ -21,7 +21,7 @@ test('map preserves gestures and does not restore the retired zoom toolbar',()=>
 });
 test('Docker includes every local server module, without saved rooms',()=>{
  const docker=fs.readFileSync(path.join(ROOT,'Dockerfile'),'utf8');
- for(const file of ['game-clock.js','multiplayer.js','room-store.js','supabase-store.js','durable-queue.js','bots.js','practice-bot.js','practice-planner.js','practice-tactics.js','practice-search.js','practice.js','lobby-ui.js','lobby.css']) assert.ok(docker.includes(file),file);
+ for(const file of ['game-clock.js','multiplayer.js','room-store.js','supabase-store.js','durable-queue.js','account-auth.js','account-seats.js','account-ui.js','privacy.html','privacy.css','bots.js','practice-bot.js','practice-planner.js','practice-tactics.js','practice-search.js','practice.js','lobby-ui.js','lobby.css']) assert.ok(docker.includes(file),file);
  const ignore=fs.readFileSync(path.join(ROOT,'.dockerignore'),'utf8');
  for(const file of ['room-state.json','room-state.json.tmp','room-state.json.bak']) assert.ok(ignore.split('\n').includes(file));
 });
@@ -69,7 +69,10 @@ test('static SVG is served safely with right MIME and traversal returns 404',asy
  if(!server.listening)await new Promise(ok=>server.listen(0,'127.0.0.1',ok));const base='http://127.0.0.1:'+server.address().port;
  let response=await fetch(base+'/assets/cards/red.svg');assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/image\/svg\+xml/);assert.match(await response.text(),/TRENCITOS/);
  response=await fetch(base+'/assets/cards/unknown.svg');assert.equal(response.status,404);
+ response=await fetch(base+'/privacy.html');assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/text\/html/);
+ response=await fetch(base+'/privacy.css');assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/text\/css/);
  response=await fetch(base+'/does-not-exist.html');assert.equal(response.status,404);
+ for(const file of ['/account-auth.js','/account-seats.js','/supabase/002_identity.sql']) assert.equal((await fetch(base+file)).status,404);
  response=await fetch(base+'/practice-bot.js');assert.equal(response.status,404);
  response=await fetch(base+'/practice-planner.js');assert.equal(response.status,404);
  response=await fetch(base+'/practice-tactics.js');assert.equal(response.status,404);

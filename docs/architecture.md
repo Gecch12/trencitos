@@ -1,7 +1,7 @@
 # Arquitectura existente
 
 Tablero principal exclusivamente Three.js; SVG conserva interacción y mapas de detalle;
-Google Auth y catálogo comercial siguen fuera de esta implementación.
+Google Auth tiene implementación opcional; el catálogo comercial continúa pendiente.
 Evidencia, integración y límites en [la ficha del tablero](work/board-3d.md).
 
 ## Recorrido de una jugada
@@ -60,8 +60,8 @@ motor de reglas → persistencia de sala normal → vista filtrada para cada jug
   de la selección autorizada del cliente. Atenúa el contexto y conserva los mismos
   vagones y colores; `destinationSpotlight` solo contiene etiquetas e indicadores,
   sin clonar vagones/estaciones SVG. No entrega manos ni billetes al renderizador.
-- Cada color de jugador tiene un modelo inspirado en las cartas; marrón toma
-  troncos, gris piedra, y amarillo/magenta/turquesa amplían la familia. El modelo
+- Cada uno de los 18 colores tiene un modelo propio. A la familia inspirada en
+  cartas se suman grúa, vino, tractores, cemento, fruta, flores y lancha. El modelo
   depende del propietario, nunca de cartas pagadas ni color de la ruta. No hay
   reglas de carga. Modelo, pintura y acabado son dimensiones separadas, aún sin
   selector de cosméticos ni catálogo comercial. `wagonStyle` conserva el amarillo
@@ -88,13 +88,15 @@ motor de reglas → persistencia de sala normal → vista filtrada para cada jug
 - El estado completo de la partida permanece en el servidor. `view` entrega
   mano/destinos propios y datos públicos; los destinos rivales se revelan al final.
 - Credencial de puesto y cuenta persistente son conceptos diferentes. Actualmente
-  existen enlaces privados de recuperación y hashes guardados, sin login Google.
+  existen enlaces privados de recuperación y hashes guardados, más cuenta opcional
+  de Supabase Auth. La cuenta no aparece en vistas rivales ni sustituye el puesto.
 - La cartografía visual está separada de `data.js`/`engine.js`. Three.js debe
   consumir la misma vista autorizada, sin duplicar el motor.
 - La práctica es efímera. Las salas normales se guardan como snapshot local o
   checkpoint remoto; el checkpoint no es un archivo histórico de partidas.
 - Supabase se usa desde Node con clave secreta, sin acceso del navegador a la
-  tabla. RLS y permisos están definidos en SQL. Esto no implementa Supabase Auth.
+  tabla de checkpoint. RLS y permisos están definidos en SQL. Auth es un módulo
+  independiente y utiliza la clave publicable y el token del propio usuario.
 - Una instancia reclama la autoridad del checkpoint. La cola remota serializa
   cambios y retiene confirmaciones hasta guardar. Un fallo incierto pausa y
   requiere recuperar el checkpoint, sin sobrescribirlo con memoria antigua.
@@ -142,3 +144,16 @@ La comparación reproducible carga módulos y aleatoriedad aislados en
 motor. Las políticas original y de primera etapa están congeladas en los helpers
 de pruebas y no se cargan en producción. La política `heuristic` permite medir
 la versión completa con la búsqueda desactivada. Resultado y alcance: [ficha de bots](work/practice-ai.md).
+
+## Cuenta opcional
+
+`account-auth.js` sirve OAuth PKCE y API HTTP de perfil con cookies cifradas
+HttpOnly, renovación y logout. `account-ui.js` sincroniza nombre/color sin
+publicar metadata Google. `account-seats.js` verifica prueba del puesto antes de
+vincular un UUID y serializa cambios mediante la cola durable existente. El
+checkpoint guarda `members.accountId`, que nunca entra en `sendRoom`/`engine.view`.
+
+`supabase/002_identity.sql` mantiene perfiles separados de partidas y valida sesión
+viva, además del usuario verificado por Node. Tabla privada con RLS y RPC de cuenta
+propia; sin clave secreta para Auth. Contrato, activación y límites en
+[Google Auth](GOOGLE_AUTH.md). Activación y prueba real: ver [identidad](work/identity.md).

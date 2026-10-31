@@ -7,7 +7,8 @@
 .wagon-preview figcaption strong { font-size: 14px; color: #193b49; text-align: right; }
 .wagon-preview > p { padding: 0 16px 12px; }
 @media (max-width: 480px) { .wagon-preview-stage { height: 150px; } }
-body:not(.is-playing) { min-height: 100dvh; background: #eaf0f0; color: #193b49; }
+body:not(.is-playing) { display: flex; flex-direction: column; min-height: 100dvh; background: #eaf0f0; color: #193b49; }
+body:not(.is-playing) > .top { flex-shrink: 0; }
 .top, .is-playing .top { background: #173b4b; border-bottom: 1px solid #ffffff14; box-shadow: none; }
 .top { height: 68px; padding-inline: 28px; }
 .top .brand strong { font-family: inherit; font-size: 23px; font-weight: 800; letter-spacing: -.045em; color: #f6f9f8; }
@@ -15,7 +16,7 @@ body:not(.is-playing) { min-height: 100dvh; background: #eaf0f0; color: #193b49;
 .top .sound-toggle { width: 42px; height: 42px; min-height: 42px; padding: 0; border-radius: 6px; color: #e3eded; background: transparent; border: 1px solid #ffffff28; }
 .top .sound-toggle[aria-pressed="false"] { color: #adc2c9; background: #ffffff08; border-color: #ffffff28; }
 .top .pill { background: #fff3d9; color: #674817; border: 0; border-radius: 4px; letter-spacing: 0; }
-.lobby { width: 100%; max-width: 580px; margin: clamp(28px, 8vh, 88px) auto 32px; padding: 0 20px; }
+.lobby { display: flex; flex: 1; flex-direction: column; justify-content: center; width: 100%; max-width: 580px; margin: 0 auto; padding: 24px 20px; }
 .lobbycard { max-width: none; margin: 0; padding: 30px; background: #fcfdfb; border: 1px solid #d2dfdf; border-radius: 12px; box-shadow: 0 5px 18px #173b4b06; overflow: visible; }
 .lobbycard::before { content: none; }
 .home-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
@@ -24,7 +25,7 @@ body:not(.is-playing) { min-height: 100dvh; background: #eaf0f0; color: #193b49;
 .home-identity { display: flex; align-items: center; gap: 14px; margin-bottom: 26px; }
 .home-identity > div { flex: 1; min-width: 0; }
 .home-avatar { width: 48px; height: 48px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; background: color-mix(in srgb, var(--player-color, #d45748) 18%, #fff); color: var(--player-color, #d45748); }
-.home-avatar svg { width: 33px; height: 33px; fill: currentColor; }
+.home-avatar svg { width: 33px; height: 33px; fill: currentColor; stroke: #38515c80; stroke-width: .45; }
 .lobbycard label { margin: 0 0 8px; font-size: 12px; color: #536c75; font-weight: 650; }
 .lobbycard input { border: 1px solid #c6d3d5; border-radius: 5px; min-height: 46px; font-size: 16px; padding: 11px 12px; background: #fff; color: #193b49; }
 .lobbycard input::placeholder { color: #7a8f96; letter-spacing: 0; }
@@ -81,7 +82,7 @@ body:not(.is-playing) { min-height: 100dvh; background: #eaf0f0; color: #193b49;
   .top .brand strong { font-size: 21px; }
   .top .mark img { width: 30px; height: 30px; }
   .top .sound-toggle { min-width: 44px; width: 44px; height: 44px; min-height: 44px; }
-  .lobby { margin-top: 26px; padding: 0 max(14px, env(safe-area-inset-left)) env(safe-area-inset-bottom); }
+  .lobby { padding: 16px max(14px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
   .lobbycard { padding: 24px 20px; border-radius: 9px; }
   .home-heading { margin-bottom: 22px; }
   .home-heading h1 { font-size: 24px; }
@@ -99,3 +100,12 @@ body:not(.is-playing) { min-height: 100dvh; background: #eaf0f0; color: #193b49;
   .color-options { gap: 6px; }
   .home-heading > span { font-size: 11px; }
 }
+/* Account identity is optional; game identity stays in the existing color avatar. */
+.account-panel { margin: -4px 0 22px; padding: 12px 14px; border: 1px solid #d7e1e1; border-radius: 8px; background: #f4f7f5; }
+.account-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.account-row > span { font-size: 12px; font-weight: 650; color: #506e79; }
+.account-row button, .account-rooms button, #accountRetry { font-size: 12px; min-height: 36px; padding: 7px 12px; background: #fff; color: #193f4e; border: 1px solid #b9cbd0; border-radius: 6px; }
+.account-panel p { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: #536e77; }
+.account-privacy a { color: #236478; text-underline-offset: 3px; }
+.account-rooms { display: flex; flex-wrap: wrap; gap: 8px; }
+.account-rooms:not(:empty) { margin-top: 10px; }
