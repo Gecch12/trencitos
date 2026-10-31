@@ -1,5 +1,5 @@
 ---
-{"id":"docs-system","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"worktree","updated":"2026-10-31"}
+{"id":"docs-system","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-10-31"}
 ---
 # Centro documental
 
@@ -17,7 +17,7 @@ método reutilizable fuera de Trencitos. Decisión: [documentación](../decision
 ## Evidencia
 
 Inspección de `main` en `3494d01` más cambios locales preexistentes el 2026-10-31.
-No se han integrado ni desplegado esos cambios como parte de la documentación.
+En esa ejecución los cambios eran locales; la integración posterior se registra abajo.
 - `npm test`: 267 correctas, 0 fallos en la base local; los tests de red requirieron
   permiso de loopback. Sin acceso a Supabase/Render reales.
 - `node --test tests/docs-check.test.js`: 4 correctas, 0 fallos; enlaces rotos,
@@ -32,11 +32,12 @@ No se han integrado ni desplegado esos cambios como parte de la documentación.
   `experiment/threejs-board`, desde snapshot local `9aa687c`. Incluye los cambios
   de juego preexistentes y docs, sin archivos de estado ni configuración privada.
   Se comprobó que HEAD, índice y cambios del checkout original se conservaron.
-- El snapshot es una base para experimentar, no una integración ni publicación.
-  En el checkout original los documentos siguen como cambios locales.
+- El snapshot fue la base del experimento. El 2026-10-31 sus documentos se
+  integraron junto con el tablero 3D en `main` (`0177ab0`), reconciliando cambios
+  comunes y conservando trabajo concurrente sin commit. No hay despliegue.
 
 ## Siguiente paso
 
-Usar el método al abordar [identidad](identity.md) o [el experimento](board-3d.md).
-El encargo 3D y su seguimiento pertenecen a la rama experimental; esta ficha
-conserva la evidencia de la preparación documental.
+Usar el método al abordar [identidad](identity.md) o nuevos hitos del juego.
+[El tablero 3D](board-3d.md) conserva la evidencia de implementación e integración;
+esta ficha conserva la preparación documental.

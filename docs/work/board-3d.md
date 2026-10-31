@@ -1,12 +1,12 @@
 ---
-{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"experiment/threejs-board","delivery":"worktree","updated":"2026-10-31"}
+{"id":"board-3d","status":"done","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"integrated","updated":"2026-10-31"}
 ---
 # Tablero 3D y familia de vagones
 
 Objetivo aceptado: Three.js como presentación oficial predeterminada; mapa plano,
 vagones y estaciones 3D. Mano, cartas, paneles y etiquetas siguen HTML/SVG.
 Sin física de simulador, cámara libre, cambios de reglas, auth ni pagos.
-El usuario aprobó integrar en `main`; este checkpoint está validado en el worktree.
+Integrado en `main` el 2026-10-31 mediante avance hasta `0177ab0`; sin despliegue.
 
 ## Hitos
 
@@ -16,7 +16,7 @@ El usuario aprobó integrar en `main`; este checkpoint está validado en el work
 - [x] M4: partida normal completa, reconexión, caída a 2D y rendimiento medidos.
 - [x] M5: once familias inspiradas en cartas, cargas reconocibles, oro metálico,
   marca de propietario y huella compartida. Modelo/pintura/acabado independientes.
-- [ ] M6: integrar código y documentos en `main`, preservando el trabajo concurrente.
+- [x] M6: integrar código y documentos en `main`, preservando el trabajo concurrente.
 
 ## Implementación y decisiones
 
@@ -76,4 +76,19 @@ humana de vías paralelas y animación de caída de construcción: en 3D actualm
 aparecen las piezas aceptadas y su sonido. Al alejar se ocultan nombres en conflicto;
 al enfocar o acercar se priorizan. La integración local no implica despliegue.
 
-Próximo paso: promoción local autorizada a `main` y comprobación del resultado.
+Integración: se reconciliaron por archivo los cambios comunes de código y docs,
+incluidos módulos Docker y mapa de fuentes. Se preservó sin commit el trabajo
+concurrente de bots; no se hizo checkout destructivo ni se copiaron árboles de docs.
+La verificación Chrome del catálogo se repitió desde `main` correctamente.
+También pasaron las 32 pruebas pertinentes en `main`: `node --test
+tests/board-3d.test.js tests/wagon-models.test.js tests/deployment.test.js
+tests/turn-tunnel-ui.test.js tests/docs-check.test.js`; validador documental y
+`git diff --check` correctos.
+La suite completa de ese checkout durante cambios activos de bots dio 288
+correctas y 1 fallo en `practice-strategy.test.js`: el proxy de privacidad detectó
+lectura de `tickets` rivales en `practice-planner.js:observe`. Pertenece al trabajo
+local de bots y no al commit 3D; no se certifica esa implementación concurrente.
+
+Próximo paso de producto: [identidad persistente](identity.md), y las pruebas de
+hardware real/carga en [calidad](quality.md). El renderizador queda integrado;
+las mejoras de materiales y sonidos conservan sus fichas independientes.
