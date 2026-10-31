@@ -1,5 +1,5 @@
 ---
-{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"integrated","updated":"2026-10-31"}
+{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"released","updated":"2026-10-31"}
 ---
 # Tablero 3D y familia de vagones
 
@@ -7,7 +7,7 @@ Objetivo: tablero principal exclusivamente Three.js, mapa plano y piezas 3D.
 Mano, cartas, paneles, etiquetas y mapas de detalle conservan HTML/SVG. Sin física
 de simulador, cámara libre ni cambios de reglas. Publicado desde `main` en
 `16bf6c3` hasta M9; [entrega y verificación remota](../production.md).
-M10 es una ampliación local posterior, todavía sin publicar.
+M10 está publicada en `2a46f58`; evidencia y límites en [producción](../production.md).
 
 ## Hitos
 
@@ -26,7 +26,7 @@ M10 es una ampliación local posterior, todavía sin publicar.
   oliva/tractores, marfil/cemento, coral/fruta, lavanda/flores, azul hielo/lancha.
   18 selecciones válidas; modelos compartidos por preview/tablero, sin cambiar reglas.
 
-## Ampliación local M10
+## Ampliación M10
 
 [Catálogo inicial renderizado](../qa/wagons-seven-new.png): dos toneles
 con duelas y aros; tractores con neumáticos y motor; silos cónicos con escalerilla;
@@ -57,7 +57,7 @@ triángulos); resaltar/restaurar conserva modelos y geometrías, sin errores de 
 Fixture reproducible: `node tests/helpers/catalog-preview.js`, ruta local `/__catalog`.
 No es una medición nueva de FPS ni una prueba en dispositivos físicos.
 Suite completa `npm test`: 317 pruebas correctas, sin fallos (43,8 s).
-Siguiente paso de M10: integrar y publicar con identidad una vez configurada/validada;
+M10 integrada y publicada junto con identidad;
 la entrega histórica siguiente solo describe M1–M9.
 
 ## Implementación actual
@@ -138,6 +138,6 @@ nombres en conflicto y se priorizan al enfocar/acercar. Siguiente frente de prod
 La publicación remota está registrada por separado; no certifica otros equipos físicos.
 
 2026-10-31: catálogo nuevo y grúa revisada integrados en `main`, commit `2a46f58`
-subido con `[skip render]`. Publicación pendiente: el usuario pidió esperar a que
-termine la sala abierta de producción. La revisión publicada sigue registrada en
-[producción](../production.md).
+subido con `[skip render]`. Tras esperar la indicación del usuario, publicado y
+verificado en navegador: selector, Essen–Berlin con grúas y cierre de práctica.
+Evidencia de la revisión publicada en [producción](../production.md).

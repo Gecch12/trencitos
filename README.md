@@ -192,7 +192,7 @@ Si falla el guardado remoto, no hay fallback al disco efímero: se pausa y no se
 
 **Límites:** Render Free puede dormir tras 15 minutos sin tráfico y tardar aproximadamente un minuto en despertar, además de reiniciarse en cualquier momento; Supabase Free puede pausar el proyecto tras una semana de inactividad. El almacenamiento externo conserva datos confirmados, no garantiza disponibilidad continua. Evita deploys durante partidas, desactiva auto-deploy y no conectes servidores locales o previews al proyecto de producción: cada arranque reclama su control. No se ha contratado un plan de pago. [Render Free](https://render.com/docs/free) · [Supabase Free](https://supabase.com/pricing).
 
-**Cuenta Google opcional:** el código permite guardar apodo y vagón, cerrar sesión y retomar salas vinculadas desde la cuenta. Conserva la práctica invitada y no publica tu foto/nombre de Google. La activación en la aplicación y la prueba real siguen pendientes; [configuración](docs/GOOGLE_AUTH.md) y [avance](docs/work/identity.md).
+**Cuenta Google opcional:** el código permite guardar apodo y vagón, cerrar sesión y retomar salas vinculadas desde la cuenta. Conserva la práctica invitada y no publica tu foto/nombre de Google. La aplicación publicada tiene el acceso habilitado; la validación completa con cuentas reales sigue en curso; [configuración](docs/GOOGLE_AUTH.md) y [avance](docs/work/identity.md).
 
 ## Interfaz Trencitos v0.6.1
 

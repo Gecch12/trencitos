@@ -1,12 +1,10 @@
 # Google y perfiles: operación
 
-El código está integrado en `main` (`2a46f58`); **no está activado en producción**.
-El usuario pidió esperar a que termine la sala abierta antes de desplegarlo.
-El 2026-10-31 se verificó que el usuario creó el cliente OAuth y habilitó Google en
-Supabase Trencitos (`xnvskxwbibrxhozgcube`); migración y callbacks aplicados después
-con su autorización. Variables de Render guardadas por el usuario y verificadas; faltan
-publicación y prueba real. El avance
-y la aceptación reales viven en [identidad](work/identity.md).
+El código está publicado y Auth habilitado en la [versión actual](production.md).
+El cliente/proveedor, perfiles SQL, callbacks y variables de Render están configurados.
+Una cuenta real autorizada completó acceso, perfil, recarga, recuperación, logout
+y segundo acceso. La marca de Google continúa en modo Testing; la matriz restante
+se registra en [identidad](work/identity.md).
 
 ## Configuración necesaria
 
@@ -52,7 +50,7 @@ y la aceptación reales viven en [identidad](work/identity.md).
 
 El 2026-10-31 el usuario introdujo las dos claves y guardó las cinco variables
 en Render con **Save only**. Verificadas las filas guardadas sin revelar valores;
-esto todavía no certifica que el proceso publicado las utilice. No usar una clave `service_role`
+El proceso publicado confirma Auth habilitado y redirige al proveedor Google. No usar una clave `service_role`
 para Auth ni el Client Secret de Google como secreto de cookie.
 
 El backend de salas conserva `STATE_BACKEND` y sus variables separadas. Un
@@ -91,7 +89,10 @@ distintas, y el enlace conserva su advertencia y control para renovarlo.
 Aviso público: `/privacy.html`, enlazado desde el panel de cuenta. Describe los
 datos básicos que recibe Supabase de Google, el perfil público del juego, proveedores,
 almacenamiento local y separación entre sesión de cuenta y credencial de sala.
-El canal inicial es el mismo correo de soporte aprobado para Google.
+El canal inicial es el mismo correo de soporte aprobado para Google. Inicio y aviso
+enlazados en la marca de Google; dominio `trencitos-swamp.onrender.com` registrado
+para esos enlaces. Guardado verificado el 2026-10-31; la pantalla de Google enlaza
+el aviso correcto. Esto no equivale a publicación/verificación de marca.
 
 Ante una solicitud de eliminación, verificar la titularidad desde el correo
 asociado, localizar únicamente esa cuenta en Supabase Auth y pedir confirmación

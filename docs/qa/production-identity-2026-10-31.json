@@ -1,0 +1,147 @@
+{
+  "revision": "2a46f58d96e7254b5ec6d9122c4e052c3bf611cb",
+  "checkedAt": "2026-10-31T21:13:34.462Z",
+  "health": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 0
+  },
+  "account": {
+    "status": 200,
+    "body": "{\"enabled\":true,\"profile\":null}"
+  },
+  "assets": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "sha256": "62f4b5975421f95566ea9ac5a82ea4fa128aacc81a0dfd2f8dd8f73d2e95ff46",
+      "matches": true
+    },
+    {
+      "file": "app.js",
+      "status": 200,
+      "sha256": "5316be3a80f7ff69d4a2e15de3c9953e95c2be8b55278c7446601ee2df4fee09",
+      "matches": true
+    },
+    {
+      "file": "data.js",
+      "status": 200,
+      "sha256": "d8b5ea6097f3642a480a3a712fdee00fbf5067bd16a61564027de56c38567cea",
+      "matches": true
+    },
+    {
+      "file": "lobby.css",
+      "status": 200,
+      "sha256": "881b226d84879ab9f89852328610fa936977ed410de5b9adae0bce51ba1a7cdd",
+      "matches": true
+    },
+    {
+      "file": "account-ui.js",
+      "status": 200,
+      "sha256": "170a1a12b2fb43cf43c01ba8da4029cdd138a8aed241c4e8fc3927bc6328034a",
+      "matches": true
+    },
+    {
+      "file": "privacy.html",
+      "status": 200,
+      "sha256": "532295b25a8078ae4a6102bc2ac0f6849087e5d3fa0276e5714b5ab9bdc29e85",
+      "matches": true
+    },
+    {
+      "file": "privacy.css",
+      "status": 200,
+      "sha256": "18ec0a1416f764be1826e29915ec5979ecf9d904e1b46abf5c6f18fd208c1829",
+      "matches": true
+    },
+    {
+      "file": "wagon-models.mjs",
+      "status": 200,
+      "sha256": "a6c2a3833da80e76e4191c568f65c72ad9bc7025ba79e0948995d0c12b78fa20",
+      "matches": true
+    },
+    {
+      "file": "wagon-renderer.js",
+      "status": 200,
+      "sha256": "89eb7f3cf52484b634da91bd512ab49a0fdd537bafa21f0b8a3df7346cd54ecc",
+      "matches": true
+    },
+    {
+      "file": "wagon-preview.js",
+      "status": 200,
+      "sha256": "4067dd72ad2472e9af8e312aa95709fea9fa32454bc8d8b420e9bb8fcca5acf4",
+      "matches": true
+    },
+    {
+      "file": "board-3d.js",
+      "status": 200,
+      "sha256": "a90e06ae7c6aedbe15e6141ed899a7915c63c5baa25694d3dd79f0f8fef97a0e",
+      "matches": true
+    },
+    {
+      "file": "board-3d.css",
+      "status": 200,
+      "sha256": "3fe26ee62ae63f239d839d9988bccda5e844ab31ae764adf882c656a6e5577a5",
+      "matches": true
+    },
+    {
+      "file": "style.css",
+      "status": 200,
+      "sha256": "64776ce67147138c1626c4ce38d268c63674f9acd89c62d343e3d11a7ea98eae",
+      "matches": true
+    },
+    {
+      "file": "game-ui.js",
+      "status": 200,
+      "sha256": "3aa58f7365ecc125156fc3133bc105b29bccab491c50a8ef0ec0ca1d31b4b245",
+      "matches": true
+    },
+    {
+      "file": "lobby-ui.js",
+      "status": 200,
+      "sha256": "daa48f1a71e9661945b55082b0ddf76d6d32fe5731161eaf000d088856ed0b36",
+      "matches": true
+    },
+    {
+      "file": "vendor/three.module.js",
+      "status": 200,
+      "sha256": "104f56145899722094556490d787aae0617cc2fc3382f31df02d724ea1aee341",
+      "matches": true
+    },
+    {
+      "file": "vendor/three.core.js",
+      "status": 200,
+      "sha256": "613e370f76638fdef83926642bf256dc9615684922de1ce1f63a8583e5d78578",
+      "matches": true
+    }
+  ],
+  "privatePaths": [
+    {
+      "path": "/account-auth.js",
+      "status": 404
+    },
+    {
+      "path": "/account-seats.js",
+      "status": 404
+    },
+    {
+      "path": "/supabase/002_identity.sql",
+      "status": 404
+    },
+    {
+      "path": "/supabase-store.js",
+      "status": 404
+    },
+    {
+      "path": "/.env",
+      "status": 404
+    },
+    {
+      "path": "/room-state.json",
+      "status": 404
+    },
+    {
+      "path": "/tests/helpers/identity-preview.js",
+      "status": 404
+    }
+  ]
+}

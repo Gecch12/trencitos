@@ -1,11 +1,12 @@
 ---
-{"id":"identity","status":"active","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"integrated","updated":"2026-10-31"}
+{"id":"identity","status":"active","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"released","updated":"2026-10-31"}
 ---
 # Identidad persistente
 
 Objetivo aprobado: comenzar con Google mediante Supabase Auth, separado del
 checkpoint. Código integrado en `main` (`2a46f58`); proveedor Google, perfiles SQL y callbacks
-configurados en Supabase. Aplicación todavía sin activar ni probar con Google real.
+configurados en Supabase. Publicado y habilitado; acceso real verificado con una
+cuenta autorizada. La aceptación completa con dos cuentas sigue pendiente.
 
 ## Hitos y aceptación
 
@@ -18,10 +19,15 @@ configurados en Supabase. Aplicación todavía sin activar ni probar con Google 
 - [x] Pruebas de CSRF, manipulación, caducidad y revocación; permisos SQL ejecutados
   con dos usuarios. Flujo navegador probado con proveedor simulado y SQL real local.
 - [x] Configurar proyecto/cliente Google y proveedor; aplicar migración y callbacks.
-- [ ] Completar variables de Render, publicar código y validar consentimiento,
-  perfil/recuperación y logout con dos cuentas reales.
-- [ ] Publicar el aviso de privacidad y definir eliminación de cuenta antes de
-  abrir Google al público, según el procedimiento de activación.
+- [x] Completar variables de Render y publicar el código; acceso real, perfil,
+  recarga, recuperación propia y logout con la cuenta autorizada.
+- [ ] Completar la matriz con una segunda cuenta real, aislamiento entre cuentas,
+  otro dispositivo, cancelación y expiración.
+- [x] Publicar el aviso de privacidad, enlazarlo en Google y definir eliminación
+  manual por el canal de soporte aprobado.
+- [ ] Revisar/verificar la marca Google antes de pasar de Testing a acceso general.
+- [ ] Refrescar la lista de salas al salir: puede mostrar un botón obsoleto hasta
+  recargar. El servidor ya elimina el puesto; no permite recuperarlo después.
 
 ## Evidencia y siguiente paso
 
@@ -41,12 +47,10 @@ en 3143 y enlace accesible desde el inicio; rutas públicas verificadas por HTTP
 
 Decisión: proyecto Google separado «Trencitos», aprobado y creado el 2026-10-31
 con ID `trencitos-game`; `trencitos-hq` permanece sin modificar. Siguiente paso:
-desplegar `2a46f58` cuando termine la sala abierta y probar acceso real;
-variables guardadas por el usuario y verificadas. El usuario pidió esperar a que
-termine la sala. `/healthz` indicó `ok: true`, `storage: supabase`, `rooms: 1`;
-no se inició ningún despliegue. Commit subido con `[skip render]`: el dashboard
-tenía Auto-Deploy en On Commit. Publicación manual preparada con ese commit exacto;
-el diálogo indica que desactivará Auto-Deploy al ejecutarla.
+validar una segunda cuenta real autorizada y la matriz pendiente, y revisar marca.
+Publicación autorizada por el usuario tras esperar su partida; revisión, estado y
+QA remotos en [producción](../production.md). Auto-Deploy desactivado por la
+publicación manual del commit exacto; verificado en el dashboard.
 Marca guardada tras
 aceptar la política de Google con autorización explícita del usuario. Correo personal
 de soporte aprobado; público externo en modo Testing. Cliente `Trencitos web — producción`
@@ -56,7 +60,20 @@ Tras confirmar que no existían perfiles, el usuario autorizó ambos cambios rem
 guardados. El usuario completó las dos claves y guardó las cinco variables en Render
 con **Save only**; verificado el listado guardado sin revelar valores. Las credenciales
 quedan fuera del chat/Git. Aviso de privacidad y procedimiento manual de eliminación
-preparados en `/privacy.html` y la guía canónica; pendientes de publicación/enlace en Google.
+publicados en `/privacy.html` y la guía canónica; enlaces de inicio/privacidad
+guardados en la marca de Google. El selector de Google muestra el enlace correcto.
 
 Fuente técnica: [Google en Supabase Auth](https://supabase.com/docs/guides/auth/social-sign-in/auth-google).
 Accesorios, emblemas y tonos de piel continúan en [personalización](commerce.md).
+
+2026-10-31, producción HTTPS/Chrome: el usuario autorizó expresamente su cuenta y
+los datos básicos de Google. Consentimiento correcto, retorno `auth=ok`, perfil
+elegido conservado tras recarga. Sala temporal propia recuperada desde otra
+pestaña por el botón de cuenta: mismo puesto, conexión anterior sin control.
+Salida voluntaria de la sala, eliminación comprobada al recargar, cierre de sesión
+real con retorno a invitado; segundo acceso correcto a la misma cuenta, conservando
+el perfil. Sesión dejada iniciada al usuario. Capturas de esta comprobación solo en
+`.qa/release-2a46f58/`, fuera de Git, sin subir datos de la cuenta real.
+No se usó una segunda cuenta ni otro dispositivo.
+La revisión automática inicial bloqueó la selección entre varias cuentas; se
+continuó únicamente después de recibir autorización específica del usuario.
