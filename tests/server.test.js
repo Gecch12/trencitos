@@ -40,7 +40,7 @@ test("the browser receives the shared cartography before the application script"
   assert.ok(html.indexOf('src="game-ui.js"') < html.indexOf('src="app.js"'));
   assert.ok(html.includes('href="responsive.css"'));
   assert.ok(html.indexOf('href="game.css"') < html.indexOf('href="responsive.css"'));
-  for (const [file, mime] of [["game-ui.js", /javascript/], ["game.css", /css/], ["responsive.css", /css/]]) {
+  for (const [file, mime] of [["game-ui.js", /javascript/], ["game.css", /css/], ["responsive.css", /css/], ["lobby-ui.js", /javascript/], ["lobby.css", /css/]]) {
     const response = await fetch(base + "/" + file);
     assert.equal(response.status, 200);
     assert.match(response.headers.get("content-type"), mime);
@@ -100,6 +100,39 @@ test("WebSocket practice flow: create, choose tickets, bots, finish, leave and c
   assert.equal(rooms.has(lobby.code), false);
   peer.send({ type: "create_test", name: "Otra prueba" });
   assert.equal((await peer.next("lobby", (message) => message.code !== lobby.code)).practice, true);
+  peer.send({ type: "leave_test" });
+  await peer.next("room_closed");
+});
+
+test("WebSocket practice bots save for their own destinations while keeping that intent private", async () => {
+  const peer = await client();
+  peer.send({ type: "create_test", name: "Estrategia" });
+  const lobby = await peer.next("lobby");
+  const g = rooms.get(lobby.code).game;
+  // Isolated, deterministic server fixture. The scheduled practice controller
+  // must make both real actions; the test never calls the policy directly.
+  const cards = [...g.deck, ...g.face, ...g.players.flatMap(p => p.hand)];
+  g.players.forEach(p => { p.hand = []; p.pending = []; p.tickets = []; });
+  g.deck = cards; g.face = []; g.discard = []; g.phase = "play"; g.current = 1;
+  const take = color => { const index = g.deck.indexOf(color); assert.ok(index >= 0); return g.deck.splice(index, 1)[0]; };
+  g.players[1].hand = [take("red"), take("red")];
+  g.players[1].tickets = [{ id: 999, a: "PAR", b: "BRU", p: 10 }];
+  g.routes = [
+    { id: 0, a: "PAR", b: "BRU", n: 6, color: "red", owner: null, ferry: 0, tunnel: false },
+    { id: 1, a: "MAD", b: "BAR", n: 2, color: "red", owner: null, ferry: 0, tunnel: false },
+  ];
+  g.face = ["red", "red", "blue", "green", "black"].map(take);
+  g.deck.push(take("white"), take("purple"));
+  const first = (await peer.next("state", m => m.game.phase === "play" && m.game.current === 1 && m.game.drawCount === 0 && m.game.players[1].handCount === 3, 5000)).game;
+  assert.equal(first.players[1].hand, undefined);
+  assert.equal(first.players[1].tickets, undefined);
+  assert.equal(first.players[1].plan, undefined);
+  const second = (await peer.next("state", m => m.game.phase === "play" && m.game.current === 2, 5000)).game;
+  assert.equal(second.players[1].handCount, 4);
+  assert.equal(second.players[1].trains, 45);
+  assert.ok(second.routes.every(r => r.owner === null));
+  assert.equal(second.events.filter(e => e.type === "draw" && e.seat === 1).length, 2);
+  assert.equal(g.players[1].hand.filter(c => c === "red").length, 4);
   peer.send({ type: "leave_test" });
   await peer.next("room_closed");
 });
@@ -354,7 +387,7 @@ test("multiplayer enforces turn order, private views, token reconnection and sta
   const host = await client();
   host.send({ type: "create", name: "Ana" });
   const lobby = await host.next("lobby");
-  assert.match(lobby.code, /^[A-Z0-9]{6}$/);
+  assert.match(lobby.code, /^\d{8}$/);
   const guest = await client();
   guest.send({ type: "join", code: lobby.code, name: "Beto" });
   const joined = await guest.next("lobby");

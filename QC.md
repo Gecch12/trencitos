@@ -1,5 +1,11 @@
 # Quality check — Ferrovía Europa v0.6.1
 
+> Informe histórico de la ejecución indicada abajo; no describe la validación
+> del checkout actual. Para evidencia posterior y pendientes, usa el
+> [índice de QA](docs/qa-index.md). La advertencia original sobre pérdida de salas
+> precede a la persistencia Supabase; el comportamiento actual está en
+> [arquitectura](docs/architecture.md) y [operación](docs/operations.md).
+
 ## Automated QA (executed)
 
 **65/65 passing** with `npm test` on Node.js 25.6.1, October 30, 2026, after integrating the local map/practice work with the remote Ferrovía update. HTTP and WebSocket tests ran with local listening permissions enabled.

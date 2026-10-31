@@ -221,7 +221,7 @@ body.is-playing {
 .map-menu h3 { font: 700 17px Georgia, serif; margin: 0 18px 8px 0; }
 .map-menu p { font-size: 12px; color: #60777a; line-height: 1.5; margin: 0; }
 .map-menu .route-ownership { display: flex; align-items: center; gap: 10px; color: #29434a; font-size: 14px; font-weight: 700; }
-.map-menu .owner-seal { flex: 0 0 27px; display: grid; place-items: center; width: 27px; height: 27px; background: var(--owner-color); border: 2px solid #fff9df; border-radius: 50%; box-shadow: 0 0 0 1px #71847b; }
+.map-menu .owner-seal { flex: 0 0 27px; display: grid; place-items: center; width: 27px; height: 27px; background: var(--owner-surface, var(--owner-color)); border: 2px solid #fff9df; border-radius: 50%; box-shadow: 0 0 0 1px #71847b; }
 .map-menu .owner-seal .player-insignia { width: 20px; height: 20px; }
 .menu-close, .dialog-close { position: absolute; right: 10px; top: 10px; padding: 4px 9px; font-size: 20px; background: transparent; }
 .map-menu .full { font-size: 13px; }
@@ -345,38 +345,106 @@ button:focus-visible, summary:focus-visible, [tabindex="0"]:focus-visible { outl
 .result-context { max-width: 360px; }
 .result-context span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .game .result-context button { flex: 0 0 24px; padding: 0; min-height: 24px; background: transparent; font-size: 20px; }
-.dialog.results-dialog { width: min(760px, calc(100vw - 36px)); max-width: 760px; max-height: calc(100dvh - 36px); overflow-y: auto; padding: 26px; scrollbar-color: #a99873 #f0e7d6; }
-.results-dialog h2 { margin-bottom: 10px; }
-.results-dialog > p { font-size: 14px; }
-.results-list { display: grid; gap: 10px; }
-.result-card { border: 1px solid #dad1ba; border-radius: 10px; background: #f7f4e9; overflow: hidden; }
-.result-heading { display: flex; gap: 12px; align-items: center; padding: 14px; }
-.result-heading > div { flex: 1; min-width: 0; }
-.result-heading b { font-size: 17px; }
-.result-heading small { display: block; font-size: 12px; color: #60736f; margin-top: 5px; font-weight: 500; }
-.result-heading > strong { font: 800 27px system-ui, sans-serif; text-align: right; }
+/* The rounded frame never scrolls: the scrollbar stays between header/footer. */
+.dialog.results-dialog { width: min(940px, calc(100vw - 36px)); max-width: 940px; max-height: calc(100dvh - 36px); display: flex; flex-direction: column; overflow: hidden; padding: 0; isolation: isolate; }
+.results-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 22px; flex-shrink: 0; }
+.results-dialog .results-header h2 { margin: 0; padding: 0; font-size: 27px; }
+.results-dialog .results-header .dialog-close { position: static; flex: 0 0 36px; width: 36px; height: 36px; min-height: 36px; padding: 0; }
+.results-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #a99873 #f0e7d6; padding: 0 18px 12px 22px; }
+.results-scroll > .err:empty { display: none; }
+.results-list { display: grid; gap: 8px; }
+.result-card { border: 1px solid #d8d7c9; border-radius: 10px; background: #fffcf3; overflow: hidden; min-width: 0; }
+.result-card > .result-heading { display: flex; gap: 12px; align-items: center; padding: 12px 14px; cursor: pointer; list-style: none; }
+.result-heading::-webkit-details-marker { display: none; }
+.result-card > .result-heading:focus-visible, .score-categories button:focus-visible { outline-offset: -3px; }
+.result-card[open] > .result-heading { background: #f1eee3; }
+.result-heading .result-player-name { flex: 1; min-width: 0; }
+.result-heading b { font-size: 17px; overflow-wrap: anywhere; }
+.result-heading small { display: block; font-size: 11px; color: #60736f; margin-top: 3px; font-weight: 500; }
+.result-heading > strong { font: 800 27px system-ui, sans-serif; text-align: right; color: #244a58; }
 .result-heading > strong small { margin-top: 0; }
-.result-heading .player-avatar { width: 36px; height: 36px; flex: 0 0 36px; background: var(--player-color); border: 2px solid #fff9df; outline: 1px solid #97a69c; border-radius: 50%; }
-.result-heading .player-avatar > svg { width: 100%; height: 100%; fill: #fff9e8; stroke: #253e49; stroke-width: 1; }
-.result-heading .avatar-insignia { display: none; }
-.result-card summary { padding: 9px 14px; border-top: 1px solid #e3dac7; color: #426069; font-size: 13px; font-weight: 700; cursor: pointer; }
-.result-card details[open] summary { background: #eee6d3; }
-.score-breakdown { padding: 0 15px 14px; }
-.score-breakdown h4 { display: flex; justify-content: space-between; gap: 12px; margin: 18px 0 7px; font: 800 14px system-ui, sans-serif; color: #264957; }
-.score-lines { list-style: none; padding: 0; margin: 0; font-size: 13px; }
-.score-lines li { display: flex; justify-content: space-between; gap: 14px; padding: 7px 0; border-bottom: 1px solid #dfd8c5; }
-.score-lines small { display: block; margin-top: 2px; color: #718079; font-size: 12px; }
-.score-lines strong { flex-shrink: 0; font-variant-numeric: tabular-nums; }
-.result-inspect { padding: 0; background: transparent; color: #254e60; text-align: left; font: inherit; font-weight: 650; border-radius: 3px; }
-.result-inspect:hover { text-decoration: underline; }
-.result-inspect span { color: #887746; }
-.score-positive > strong { color: #237747; }
-.score-negative > strong, .score-warning { color: #a14332; }
-.score-breakdown .score-explanation, .score-warning { font-size: 12px; line-height: 1.6; margin: 8px 0; }
-.score-equation { margin-top: 14px; padding: 12px; border-radius: 7px; background: #244a58; color: #fff4d7; font-size: 16px; font-variant-numeric: tabular-nums; }
-.results-dialog .result-rules { font-size: 11px; line-height: 1.6; color: #758078; }
-.result-actions { display: flex; gap: 10px; position: sticky; bottom: -26px; background: #fffaf0; padding: 12px 0; }
-.result-actions button { flex: 1; }
+.result-chevron { display: inline-block; margin-left: 4px; }
+.result-card[open] > .result-heading .result-chevron { transform: rotate(180deg); }
+.result-heading .player-avatar, .score-trail-ranking .player-avatar { width: 34px; height: 34px; flex: 0 0 34px; background: var(--player-color); border: 2px solid #fff9df; outline: 1px solid #97a69c; border-radius: 50%; }
+.result-heading .player-avatar > svg, .score-trail-ranking .player-avatar > svg { width: 100%; height: 100%; fill: #fff9e8; stroke: #253e49; stroke-width: 1; }
+.result-heading .avatar-insignia, .score-trail-ranking .avatar-insignia { display: none; }
+.score-breakdown { padding: 0 14px 14px; }
+.score-categories { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid #d8d7c9; }
+.score-categories button { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; min-height: 68px; padding: 10px 5px 7px; border-radius: 0; background: transparent; border-bottom: 3px solid transparent; color: #657874; font-size: 12px; }
+.score-categories button strong { font-size: 19px; font-variant-numeric: tabular-nums; }
+.score-categories button[aria-selected="true"] { background: #e7efeb; color: #234c59; border-bottom-color: #2b6572; }
+.score-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 0 10px; color: #264957; }
+.score-section-heading h3 { margin: 0; font: 750 15px system-ui, sans-serif; }
+.score-section-heading > strong { font-size: 18px; font-variant-numeric: tabular-nums; }
+.score-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .48fr); align-items: start; gap: 12px; }
+.score-detail-routes { display: block; }
+.score-map-panel { margin: 0; min-width: 0; border-radius: 8px; overflow: hidden; border: 1px solid #b9cecc; background: #ecf2ec; }
+.score-map-stage { position: relative; height: clamp(240px, 38dvh, 360px); background: #c4dddd; }
+.score-map-stage > svg { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; user-select: none; }
+.score-map-stage > svg:active { cursor: grabbing; }
+.score-map-stage .map-geography { opacity: .7; }
+.score-map-stage .ownership-mark { fill: #153e47; stroke: #fff8dc; stroke-width: .4; }
+.score-map-panel figcaption { min-height: 36px; padding: 9px 12px; font-size: 12px; color: #36535b; line-height: 1.5; }
+.score-map-stage .score-map-expand { position: absolute; top: 8px; right: 8px; width: 36px; height: 36px; min-height: 36px; padding: 0; border-radius: 5px; background: #fffcf3ed; color: #244a58; font-size: 23px; border: 1px solid #afc4bf; }
+.score-map-empty { position: absolute; top: 50%; left: 12px; right: 12px; text-align: center; color: #38565a; font-size: 13px; pointer-events: none; }
+.score-city-name { font: 650 12px system-ui, sans-serif; fill: #36565d; stroke: #fffbed; stroke-width: 3px; stroke-linejoin: round; paint-order: stroke fill; }
+.score-point-badge { cursor: pointer; outline: none; }
+.score-point-pill { fill: #fffcf3; stroke: #315560; stroke-width: 1; }
+.score-point-badge text { font: 800 12px system-ui, sans-serif; fill: #244a58; pointer-events: none; }
+.score-point-badge[aria-pressed="true"] .score-point-pill, .score-point-badge:focus-visible .score-point-pill { fill: #ffe3a1; stroke: #84611d; stroke-width: 2; }
+.score-point-leader { fill: none; stroke: #557e80; stroke-width: 1; opacity: .7; pointer-events: none; }
+.score-side-detail { min-width: 0; }
+.score-choice-list { display: grid; gap: 6px; }
+.score-choice { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 10px; border: 1px solid #dedbcf; border-radius: 6px; text-align: left; color: #36545e; background: #f6f3e9; font-size: 12px; }
+.score-choice > span:first-child { flex: 1; min-width: 0; }
+.score-choice small { display: block; margin-top: 4px; font-size: 11px; font-weight: 500; color: #637873; }
+.score-choice > strong { flex-shrink: 0; font-size: 15px; font-variant-numeric: tabular-nums; }
+.score-choice[aria-pressed="true"] { background: #e9f0e7; border-color: #64887c; box-shadow: inset 0 0 0 1px #64887c; }
+.score-positive > strong, .score-positive .score-status { color: #237747; }
+.score-negative > strong, .score-negative .score-status, .score-warning { color: #a14332; }
+.score-warning { font-size: 12px; line-height: 1.6; margin: 8px 0; }
+.score-route-list { margin-top: 8px; }
+.score-route-list > summary { padding: 10px 0; font-size: 12px; font-weight: 650; color: #426069; cursor: pointer; }
+.score-route-list .score-choice-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.results-dialog .score-station-count { font-size: 14px; color: #35545b; margin: 0 0 12px; padding: 12px 0; }
+.score-trail-ranking .score-choice { gap: 8px; }
+.score-trail-ranking .score-choice > .score-trail-place { flex: 0 0 14px; color: #72827b; }
+.score-trail-ranking .player-avatar { width: 28px; height: 28px; flex-basis: 28px; }
+.score-trail-name { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
+.score-bonus { background: #f8e5ad; color: #705119; border-radius: 4px; padding: 4px 6px; }
+.score-no-bonus { color: #71817a; }
+.score-panel.is-map-expanded .score-detail-layout { display: block; }
+.score-panel.is-map-expanded .score-map-stage { height: min(65dvh, 550px); }
+.score-panel.is-map-expanded .score-side-detail { margin-top: 12px; }
+.results-dialog .result-rules { font-size: 11px; line-height: 1.6; color: #68786e; margin: 12px 0 0; }
+.result-rules > summary { cursor: pointer; padding: 8px 0; }
+.results-dialog .result-rules p { font-size: 12px; margin: 4px 0; }
+.results-dialog .score-preview-note { font-size: 12px; margin: 0 0 10px; }
+.results-dialog .result-actions { display: flex; position: static; flex-shrink: 0; gap: 10px; background: #fffcf3; padding: 14px 22px; border-top: 1px solid #e1ddcd; }
+.result-actions button { flex: 1; min-width: 0; }
+@media (max-width: 650px) {
+  .dialog.results-dialog { width: 100%; max-height: 100%; padding: 0; }
+  .results-header { padding: 12px 14px; }
+  .results-dialog .results-header h2 { font-size: 23px; }
+  .results-scroll { padding: 0 10px 10px; }
+  .result-card > .result-heading { padding: 10px; gap: 10px; }
+  .score-breakdown { padding: 0 8px 10px; }
+  .score-categories button { font-size: 10px; min-height: 66px; gap: 4px; }
+  .score-categories button strong { font-size: 17px; }
+  .score-detail-layout { display: flex; flex-direction: column; gap: 10px; }
+  .score-map-panel, .score-side-detail { width: 100%; }
+  .score-map-stage { height: 250px; }
+  .score-route-list .score-choice-list { grid-template-columns: 1fr; }
+  .results-dialog .result-actions { padding: 10px; gap: 6px; }
+  .results-dialog .result-actions button { font-size: 12px; padding: 10px 5px; }
+}
+@media (max-height: 500px) {
+  .dialog.results-dialog { max-height: calc(100dvh - 16px); }
+  .results-header { padding-block: 6px; }
+  .results-dialog .results-header h2 { font-size: 22px; }
+  .results-dialog .result-actions { padding-block: 8px; }
+  .score-map-stage { height: 180px; }
+}
 /* One shared turn signal, reparented into the mobile HUD. */
 .game .turn-banner { position: absolute; z-index: 4; left: 16px; right: calc(var(--sidebar-width) + 28px); bottom: calc(var(--hand-height) + 24px); min-height: 62px; display: flex; align-items: center; gap: 14px; padding: 9px 18px 12px; border: 1px solid #bdc9c2; border-radius: 12px; background: #fffcf5f5; color: #385763; box-shadow: 0 3px 14px #183e491c; overflow: hidden; }
 .turn-banner::after { content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #97aaa5; transform: scaleX(var(--time-left, 1)); transform-origin: left; transition: transform .25s linear; }

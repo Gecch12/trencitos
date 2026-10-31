@@ -1,4 +1,9 @@
-# Ferrovía Europa — beta privada v0.6.1
+# Trencitos — beta privada v0.6.1
+
+Para trabajar en el código, empieza por el [centro de operaciones](docs/README.md):
+arquitectura, dominio, decisiones y pendientes con hitos. Esta página conserva
+la guía detallada del juego; la evidencia de cada iteración está en el
+[índice de QA](docs/qa-index.md).
 
 Juego ferroviario multijugador web **no oficial**, para 2 a 5 jugadores. Incluye rutas, billetes y mecánicas de la versión base europea; el arte es propio y simplificado. No está afiliado a Days of Wonder ni Asmodee. No se distribuyen ilustraciones oficiales.
 
@@ -13,9 +18,19 @@ npm start
 
 Abre `http://localhost:3000` en tu navegador. Para probar con otro jugador abre una ventana privada y únete mediante el código mostrado; para otros dispositivos, utiliza un servidor accesible desde la red.
 
+## Inicio y salas privadas
+
+El inicio separa **Crear sala**, **Unirme** y **Practicar**. Para crear se propone un código aleatorio de ocho números, editable antes de confirmar (entre seis y diez dígitos, incluidos ceros iniciales). Si está ocupado se muestra un error, sin cambiarlo ni entrar en otra sala. Una vez creada la sala, el código queda fijo. Las invitaciones antiguas de seis letras/números y los enlaces privados de recuperación siguen funcionando.
+
+En la sala de espera cada participante elige uno de once colores libres: rojo, azul, verde, amarillo, morado, marrón, dorado, negro, gris, magenta y turquesa. El dorado tiene reflejos metálicos y bisel en el selector, los avatares, los vagones y las estaciones; también conserva el acabado en la vista de destinos. El servidor reserva el color incluso durante la ventana de reconexión, rechaza elecciones simultáneas duplicadas y lo guarda tanto en disco como en Supabase. Cambiar de puesto por la salida de otro participante no cambia tu color. Tras empezar, la elección queda bloqueada y se usa en trenes, estaciones, avatar e historial. El navegador recuerda nombre y color preferido (si está libre); al recargar una sala conocida recupera el puesto con su credencial local.
+
+La cabecera muestra **Trencitos** y un botón de sonido sin texto, con estado accesible. La conexión solo se muestra cuando requiere atención; los avisos de desconexión y fallos de guardado no se ocultan.
+
 ## Sala de pruebas con bots
 
-Pulsa **Ir a sala de pruebas**, debajo de **+ Crear sala**, para jugar frente a tres bots. El primer jugador se sortea entre los cuatro; todos eligen los billetes iniciales a la vez. Los tres bots confirman dos billetes tras 800–1000 ms sin esperar al humano. Durante la partida construyen una ruta aleatoria cuando pueden pagarla y, en caso contrario, roban cartas de fuentes aleatorias legales. No toman nuevos destinos ni colocan estaciones. Cada acción de un turno automático se separa entre 800 y 1000 ms, incluida la segunda carta y la decisión de pagar o desistir de un túnel.
+En el inicio, abre **Practicar**, elige tu color y pulsa **Jugar** para enfrentarte a tres bots. El primer jugador se sortea entre los cuatro; todos eligen los billetes iniciales a la vez. Los tres bots confirman dos billetes compatibles tras 800–1000 ms sin esperar al humano. Planean conexiones hacia sus destinos, ahorran para tramos útiles y prefieren las cartas de la mesa que necesitan. No construyen automáticamente un tramo corto solo porque puedan pagarlo: priorizan completar destinos y eligen con aleatoriedad ponderada entre opciones de valor parecido.
+
+Cada bot conserva su objetivo durante varios turnos, lo replantea si se bloquea o tarda demasiado, y evita acumular cartas indefinidamente. Cerca del final favorece construcciones que aún puede aprovechar. Solo consulta su propia mano y destinos, las vías y demás información pública; no conoce el orden de los mazos ni información privada de rivales. No toma nuevos destinos ni coloca estaciones. Cada acción de un turno automático se separa entre 800 y 1000 ms, incluida la segunda carta y la decisión de pagar o desistir de un túnel. Los bots que sustituyen a jugadores ausentes mantienen su política independiente de robo/construcción aleatoria; esta estrategia solo se usa en la sala de pruebas.
 
 El panel **Controles de prueba** aparece abajo a la izquierda, separado de la interfaz del juego y sobre sus diálogos. Arrástralo desde su encabezado con el ratón, o enfoca el encabezado y usa las flechas del teclado. **Terminar partida de pruebas** detiene los bots inmediatamente y muestra la puntuación actual como cierre anticipado. **Volver al inicio** elimina la sala y permite crear otra prueba.
 
@@ -47,7 +62,7 @@ La cartografía está compuesta a mano en `map-layout.js`, separada del reglamen
 
 Los billetes se comparan en un único mapa con la red ferroviaria atenuada y las fichas ya colocadas: las tuyas siempre visibles y las ajenas atenuadas. Cada opción tiene un número y un color estables (amarillo, rojo, azul y verde). Los objetivos pendientes muestran una línea discontinua entre ciudades, no un recorrido obligatorio. En una oferta nueva, las casillas seleccionan qué conservar; debajo, **Tus destinos actuales** usa controles de visualización independientes, sin mezclarlos con la selección. Los objetivos actuales sin resaltar quedan al 25% de opacidad. Pasar el cursor o enfocar una opción permite previsualizarla sin seleccionarla. Las ciudades compartidas muestran varios anillos de color.
 
-Se requieren al menos dos billetes iniciales y uno al robar destinos durante la partida. Las actualizaciones de estado no reinician las casillas elegidas. `npm test` incluye la regresión de confirmar nuevos destinos y continuar con los turnos siguientes. El desarrollo y la verificación actuales son exclusivamente de escritorio; móvil queda fuera de alcance.
+Se requieren al menos dos billetes iniciales y uno al robar destinos durante la partida. Las actualizaciones de estado no reinician las casillas elegidas. `npm test` incluye la regresión de confirmar nuevos destinos y continuar con los turnos siguientes. Hay verificaciones de escritorio y emulación móvil; las pruebas en dispositivos físicos siguen pendientes. Consulta el [índice de QA](docs/qa-index.md) para distinguir el alcance de cada ejecución.
 
 ### Relojes y elecciones simultáneas
 
@@ -111,7 +126,7 @@ Las cartas de tren gastadas o descartadas, incluidas locomotoras, vuelven al maz
 - `server.js`: servidor HTTP + WebSocket sin dependencias; salas privadas, validación de turnos, tokens de reconexión, difusión de vistas específicas por jugador.
 - `index.html`, `style.css`, `game.css`, `app.js`: interfaz de escritorio con mapa SVG original; `game.css` concentra la composición de la mesa y sus paneles flotantes.
 - `game-ui.js`: cálculo de cámara y opciones de pago de la interfaz, probado contra el motor. El servidor sigue siendo la autoridad para validar y ejecutar acciones.
-- `assets/cards/*.svg`, `assets/ticket.svg`, `assets/favicon.svg`: ilustraciones vectoriales originales de las cartas, billetes y marca Ferrovía. `python3 make_assets.py` permite regenerarlas; `python3 make_assets.py --check` comprueba que las cartas coincidan con el generador sin sobrescribirlas.
+- `assets/cards/*.svg`, `assets/ticket.svg`, `assets/favicon.svg`: ilustraciones vectoriales originales de las cartas, billetes y marca Trencitos. `python3 make_assets.py` permite regenerarlas; `python3 make_assets.py --check` comprueba que las cartas coincidan con el generador sin sobrescribirlas.
 - `tests/`: pruebas del reglamento y de red, además de simulaciones de partidas completas.
 
 Las cartas del mazo y los billetes de los contrincantes **no** se envían a los navegadores. En local, las salas multijugador se guardan en un JSON configurable; por defecto `room-state.json`, fuera del paquete de distribución. En Render, `STATE_BACKEND=supabase` guarda un checkpoint remoto privado antes de publicar cada cambio. Una sala multijugador inactiva caduca en 24 horas. Las salas de pruebas se mantienen solo en memoria.
@@ -165,9 +180,9 @@ Si falla el guardado remoto, no hay fallback al disco efímero: se pausa y no se
 
 **Límites:** Render Free puede dormir tras 15 minutos sin tráfico y tardar aproximadamente un minuto en despertar, además de reiniciarse en cualquier momento; Supabase Free puede pausar el proyecto tras una semana de inactividad. El almacenamiento externo conserva datos confirmados, no garantiza disponibilidad continua. Evita deploys durante partidas, desactiva auto-deploy y no conectes servidores locales o previews al proyecto de producción: cada arranque reclama su control. No se ha contratado un plan de pago. [Render Free](https://render.com/docs/free) · [Supabase Free](https://supabase.com/pricing).
 
-**Google opcional, más adelante:** requiere un proyecto propio en Google Cloud, configuración de marca/audiencia, un cliente OAuth web para la URL definitiva y validación del ID token en el servidor. Solo identificación (sin acceso al correo), vinculada al identificador estable `sub` y a una sesión del juego. El enlace privado puede seguir como alternativa. La configuración externa y el almacenamiento de esa asociación no están incluidos todavía. Referencias: [configuración](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid) y [validación en servidor](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token).
+**Identidad persistente, pendiente:** se acordó comenzar con Google, con Supabase Auth como camino propuesto. Todavía no está implementado ni configurado. El alcance, los hitos y el próximo paso se mantienen en la [ficha de identidad](docs/work/identity.md).
 
-## Interfaz Ferrovía v0.6.1
+## Interfaz Trencitos v0.6.1
 
 - Mapa continuo de fondo, zoom 25%–300%, arrastre a cualquier escala y pantalla completa conservando los controles.
 - Etiquetas de ciudades reforzadas, rutas coloreadas con mayor contraste y selección visible.

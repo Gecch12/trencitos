@@ -90,7 +90,7 @@ def train_card(kind, palette):
   <use href="#corner"/><use href="#corner" transform="translate(200 0) scale(-1 1)"/>
   <use href="#corner" transform="translate(0 278) scale(1 -1)"/><use href="#corner" transform="translate(200 278) scale(-1 -1)"/>
 </g>
-<text x="100" y="37" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="13" letter-spacing="2.4" fill="{trim}">FERROVÍA</text>
+<text x="100" y="37" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="13" letter-spacing="1.3" fill="{trim}">TRENCITOS</text>
 <g fill="none" stroke="{trim}">
   <path d="M36 49H83m34 0h47M44 53H77m46 0h33" stroke-width=".8"/>
   <path d="M100 44l5 5-5 5-5-5Z" stroke-width="1.2"/>
@@ -152,7 +152,7 @@ cards.update(wild=train_card('wild', ('#243039', '#fff6e4', '#202b32')), back=CU
 if '--check' in sys.argv:
     stale = [kind for kind, svg in cards.items()
              if not (root/'cards'/f'{kind}.svg').exists()
-             or (root/'cards'/f'{kind}.svg').read_text() != svg]
+             or (root/'cards'/f'{kind}.svg').read_text().rstrip('\n') != svg.rstrip('\n')]
     if stale:
         raise SystemExit('Stale card assets: ' + ', '.join(stale))
     print('All 10 card assets match their generator.')

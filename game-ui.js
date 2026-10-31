@@ -39,6 +39,8 @@ const GameUI = (() => {
   function playerMark(seat) { return playerMarks[seat]; }
   // Presentation-only migration: existing rooms keep their stored player colors.
   function playerColor(color) { return color?.toLowerCase() === "#ddaf40" ? YELLOW : color; }
+  const palette = typeof module !== "undefined" && module.exports ? require("./data").PLAYER_PALETTE : PLAYER_PALETTE;
+  function playerFinish(color) { return palette.find(p => p.color === color?.toLowerCase())?.finish || "paint"; }
   function routeOwner(game, route, seat) {
     if (!route || route.owner === null || !Number.isInteger(route.owner)) return null;
     const player = game.players[route.owner];
@@ -190,13 +192,17 @@ const GameUI = (() => {
   function pinchZoom(startZoom, startDistance, distance) {
     return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, startZoom * Math.max(1, distance) / Math.max(1, startDistance)));
   }
-  function pinchTransform(start, distance, midpoint) {
-    const zoom = pinchZoom(start.zoom, start.distance, distance);
+  // Direct zoom targets are not finger distances: a zoom-out ratio may be < 1.
+  function zoomTransform(start, nextZoom, midpoint) {
+    const zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, nextZoom));
     const scale = start.scale * start.zoom / zoom;
     return { zoom, center: {
       x: start.center.x + start.midpoint.x * start.scale - midpoint.x * scale,
       y: start.center.y + start.midpoint.y * start.scale - midpoint.y * scale,
     } };
+  }
+  function pinchTransform(start, distance, midpoint) {
+    return zoomTransform(start, pinchZoom(start.zoom, start.distance, distance), midpoint);
   }
   function camera(bounds, viewport, safe, zoom, center) {
     const scale = Math.max(bounds.width / Math.max(1, safe.width), bounds.height / Math.max(1, safe.height)) / zoom;
@@ -214,6 +220,38 @@ const GameUI = (() => {
     return { width, height, scale, focus,
       x: focus.x - sx * scale, y: focus.y - sy * scale, sx, sy };
   }
-  return { payments, paymentGroups, tunnelPayments, construction, canPass, camera, safeArea, pinchZoom, pinchTransform, cityLabelScale, turnPresentation, needsSecondDraw, ROUTE_POINTS, overviewLabels, endpointPosition, playerMark, playerColor, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, destinationEntries, destinationNumber, destinationSpotlightSelection, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, OWNER_MARK_SCALE, MIN_ZOOM, MAX_ZOOM };
+  // Final-result views consume the authoritative audit, never recompute scores
+  // or substitute all of a player's tracks for the actual longest trail.
+  function resultStandings(game) {
+    return [...(game?.result || [])].sort((a, b) => b.longest - a.longest || a.seat - b.seat);
+  }
+  function resultSelection(game, seat, category = "routes", index = null, expressSeat = seat) {
+    const result = game?.result?.find(r => r.seat === seat), d = result?.details;
+    if (!d) return null;
+    const base = { seat, routes: [], stationRoutes: [], stations: [], endpoints: [], badges: [], highlighted: [] };
+    if (category === "routes") return { ...base,
+      routes: d.routes.map(r => r.id), endpoints: [...new Set(d.routes.flatMap(r => [r.a, r.b]))],
+      highlighted: d.routes[index] ? [d.routes[index].id] : [],
+      badges: d.routes.map((r, index) => ({ routeId: r.id, points: r.points, index })) };
+    if (category === "destinations") {
+      const t = d.destinations[index ?? 0];
+      return t ? { ...base, routes: [...t.routes], highlighted: [...t.routes], stationRoutes: [...t.stationRoutes],
+        stations: [...t.stations], endpoints: [t.a, t.b], incomplete: !t.completed } : base;
+    }
+    if (category === "stations") {
+      const stations = index === null ? d.stations.placed : d.stations.placed.slice(index, index + 1);
+      const routes = [...new Set(stations.map(s => s.routeId).filter(id => id !== null))];
+      return { ...base, routes, stationRoutes: routes, highlighted: routes, stations,
+        endpoints: [...new Set(stations.map(s => s.city))] };
+    }
+    if (category === "express") {
+      const compared = game.result.find(r => r.seat === expressSeat) || result;
+      const trail = compared.details?.express;
+      return { ...base, seat: compared.seat, routes: [...(trail?.routes || [])],
+        highlighted: [...(trail?.routes || [])], endpoints: [...new Set(trail?.cities || [])] };
+    }
+    return base;
+  }
+  return { resultStandings, resultSelection, payments, paymentGroups, tunnelPayments, construction, canPass, camera, safeArea, pinchZoom, pinchTransform, zoomTransform, cityLabelScale, turnPresentation, needsSecondDraw, ROUTE_POINTS, overviewLabels, endpointPosition, playerMark, playerColor, playerFinish, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, destinationEntries, destinationNumber, destinationSpotlightSelection, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, OWNER_MARK_SCALE, MIN_ZOOM, MAX_ZOOM };
 })();
 if (typeof module !== "undefined") module.exports = GameUI;

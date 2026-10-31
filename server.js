@@ -4,6 +4,7 @@ const http = require("node:http"),
   path = require("node:path"),
   crypto = require("node:crypto");
 const Engine = require("./engine");
+const LobbyUI = require("./lobby-ui");
 const { createPracticeController } = require("./practice");
 const { createGameClock } = require("./game-clock");
 const { createMultiplayerController, shiftDeadlines, GRACE_MS } = require("./multiplayer");
@@ -28,7 +29,8 @@ function restoreLoaded(data) {
       if (r.emptySince != null && Date.now() - r.emptySince >= GRACE_MS) continue;
       shiftDeadlines(r.game, Math.max(0, Date.now() - (r.savedAt || Date.now())));
       r.emptySince = Date.now();
-      r.members.forEach((m) => { m.ws = null; m.disconnectedAt = Date.now(); });
+      const colors = LobbyUI.restoreColors(r.members, r.game?.players);
+      r.members.forEach((m, i) => { m.color = colors[i]; m.ws = null; m.disconnectedAt = Date.now(); });
       rooms.set(r.code, r);
     }
   }
@@ -82,7 +84,7 @@ const multiplayer = createMultiplayerController({ rooms, sendRoom, removeRoom, d
 function snapshot(r) {
   return { game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
     members: r.members.map(m => ({ member: m, data: { token: m.token || m.ws?.token, tokenHash: m.tokenHash,
-      actionIds: [...(m.actionIds || [])], autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
+      color: m.color, actionIds: [...(m.actionIds || [])], autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
 }
 function persist() {
   if (remoteStore) {
@@ -130,6 +132,8 @@ const TYPES = {
   "/game-ui.js": "text/javascript; charset=utf-8",
   "/game.css": "text/css; charset=utf-8",
   "/responsive.css": "text/css; charset=utf-8",
+  "/lobby.css": "text/css; charset=utf-8",
+  "/lobby-ui.js": "text/javascript; charset=utf-8",
 };
 const server = http.createServer((req, res) => {
   let url = new URL(req.url, "http://localhost");
@@ -290,6 +294,7 @@ function sendRoom(r, automatic = false) {
       sessionVersion: 1,
       members: r.members.map((x, j) => ({
         name: x.name,
+        color: x.color,
         connected: !!x.bot || !!(x.ws && !x.ws.closed),
         bot: !!x.bot,
         host: j === (r.hostSeat ?? 0),
@@ -346,18 +351,17 @@ function onMessage(peer, msg) {
   if (storageFailureAt !== null && !peer.room?.practice && !["join", "leave", "create_test"].includes(msg.type))
     return deny(peer, "Partida pausada: no se pudo guardar. Reintenta el guardado.", "STORAGE_FAILED");
   if (["create", "create_test"].includes(msg.type) && !peer.room) {
-    let code;
-    do {
-      code = crypto
-        .randomInt(36 ** 6)
-        .toString(36)
-        .toUpperCase()
-        .padStart(6, "0");
-    } while (rooms.has(code));
+    if (msg.color !== undefined && !LobbyUI.isColor(msg.color)) return deny(peer, "Color inválido.", "INVALID_COLOR");
+    let code = msg.type === "create" ? msg.code : undefined;
+    if (code !== undefined) {
+      if (!LobbyUI.isNewCode(code)) return deny(peer, "El código debe tener entre 6 y 10 números.", "INVALID_CODE");
+      if (rooms.has(code)) return deny(peer, "Ese código ya está en uso. Elige otro o genera uno nuevo.", "CODE_TAKEN");
+    } else do { code = LobbyUI.randomCode(crypto.randomInt); } while (rooms.has(code));
     const r = { code, hostSeat: 0, updated: Date.now(), game: null, members: [], revision: 0 };
     rooms.set(code, r);
     const human = {
       name: cleanName(msg.name),
+      color: LobbyUI.freeColor([], msg.color),
       token: crypto.randomBytes(24).toString("hex"),
     };
     if (msg.type === "create_test") {
@@ -367,7 +371,9 @@ function onMessage(peer, msg) {
       human.ws = peer;
       peer.token = human.token;
       r.members = [human, ...[1, 2, 3].map((i) => ({ name: `Bot ${i}`, bot: true }))];
-      r.game = Engine.newRandomGame(r.members.map((m) => m.name));
+      const colors = LobbyUI.restoreColors(r.members);
+      r.members.forEach((m, i) => { m.color = colors[i]; });
+      r.game = startRoomGame(r);
       return sendRoom(r);
     }
     return attach(peer, r, human);
@@ -377,6 +383,7 @@ function onMessage(peer, msg) {
         .toUpperCase()
         .trim(),
       r = rooms.get(code);
+    if (!LobbyUI.isJoinCode(code)) return deny(peer, "Introduce un código de sala válido.", "INVALID_CODE");
     if (!r || (r.practice && practice.expired(r)))
       return deny(peer, "La sala ya no existe. Puedes crear una partida nueva.", "ROOM_NOT_FOUND");
     if (!r.practice && storageFailureAt === null) multiplayer.reconcile(r);
@@ -407,8 +414,10 @@ function onMessage(peer, msg) {
         "La partida ya comenzó. Solo pueden reconectarse quienes estaban dentro.",
       );
     if (r.members.length >= 5) return deny(peer, "La sala está completa.");
+    if (msg.color !== undefined && !LobbyUI.isColor(msg.color)) return deny(peer, "Color inválido.", "INVALID_COLOR");
     return attach(peer, r, {
       name: cleanName(msg.name),
+      color: LobbyUI.freeColor(r.members, msg.color),
       token: crypto.randomBytes(24).toString("hex"),
     });
   }
@@ -417,6 +426,15 @@ function onMessage(peer, msg) {
   if (rooms.get(r.code) !== r) { peer.room = null; return deny(peer, "La sala ya no existe.", "ROOM_NOT_FOUND"); }
   if (r.members[peer.seat]?.ws !== peer)
     return deny(peer, "Esta sesión fue reemplazada por otra conexión.");
+  if (msg.type === "select_color") {
+    if (r.game) return deny(peer, "Solo puedes cambiar de color antes de empezar.", "COLOR_LOCKED");
+    if (!LobbyUI.isColor(msg.color)) return deny(peer, "Color inválido.", "INVALID_COLOR");
+    if (r.members.some((m, i) => i !== peer.seat && m.color === msg.color))
+      return deny(peer, "Ese color ya está ocupado. Elige otro.", "COLOR_TAKEN");
+    r.members[peer.seat].color = msg.color;
+    if (!sendRoom(r)) deny(peer, "No se pudo guardar el color. Reintenta cuando vuelva la conexión.", "STORAGE_FAILED");
+    return;
+  }
   if (msg.type === "leave" && !r.practice) {
     if (!r.game) multiplayer.removeSeat(r, peer.seat);
     else {
@@ -449,7 +467,7 @@ function onMessage(peer, msg) {
   if (msg.type === "rematch" && !r.practice) {
     if (r.game?.phase !== "finished") return deny(peer, "La revancha está disponible al terminar.");
     if (!rooms.has(r.rematchCode)) {
-      let code; do { code = crypto.randomInt(36 ** 6).toString(36).toUpperCase().padStart(6, "0"); } while (rooms.has(code));
+      let code; do { code = LobbyUI.randomCode(crypto.randomInt); } while (rooms.has(code));
       r.rematchCode = code;
       rooms.set(code, { code, updated: Date.now(), hostSeat: 0, members: [], game: null, revision: 0 });
     }
@@ -458,7 +476,7 @@ function onMessage(peer, msg) {
     member.ws = null; member.disconnectedAt = Date.now();
     peer.send({ type: "room_closed", preserveIdentity: true }); peer.room = null; peer.seat = -1;
     sendRoom(r);
-    return attach(peer, next, { name: member.name, token: crypto.randomBytes(24).toString("hex") });
+    return attach(peer, next, { name: member.name, color: LobbyUI.freeColor(next.members, member.color), token: crypto.randomBytes(24).toString("hex") });
   }
   if (msg.type === "finish_test" || msg.type === "leave_test") {
     if (!r.practice || peer.seat !== 0)
@@ -474,7 +492,7 @@ function onMessage(peer, msg) {
       return deny(peer, "Se necesitan al menos dos jugadores.");
     if (r.members.some((m) => !m.ws || m.ws.closed))
       return deny(peer, "Todos deben estar conectados para iniciar.");
-    r.game = Engine.newRandomGame(r.members.map((m) => m.name));
+    r.game = startRoomGame(r);
     return sendRoom(r);
   }
   if (msg.type === "action") {
@@ -515,6 +533,11 @@ function attach(peer, r, m) {
   m.tokenHash = hashToken(m.token);
   r.members.push(m);
   sendRoom(r);
+}
+function startRoomGame(r) {
+  const game = Engine.newRandomGame(r.members.map(m => m.name));
+  game.players.forEach((player, i) => { player.color = r.members[i].color; });
+  return game;
 }
 function cleanName(s) {
   return (
@@ -629,7 +652,7 @@ async function shutdown() {
 }
 if (require.main === module) {
   ready.then(() => server.listen(PORT, "0.0.0.0", () =>
-    console.log(`Ferrovía Europa: http://localhost:${PORT} · storage=${backend}`),
+    console.log(`Trencitos: http://localhost:${PORT} · storage=${backend}`),
   )).catch(() => { console.error("No se pudo cargar el almacenamiento. Comprueba la configuración y la migración SQL; no se sobrescribieron partidas."); process.exitCode = 1; });
   process.on("SIGTERM", shutdown); process.on("SIGINT", shutdown);
 }

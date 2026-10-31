@@ -4,10 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta name="theme-color" content="#102638" />
-    <title>Ferrovía Europa · Salas privadas</title>
+    <title>Trencitos</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="game.css" />
     <link rel="stylesheet" href="responsive.css" />
+    <link rel="stylesheet" href="lobby.css" />
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
   </head>
   <body>
@@ -15,7 +16,7 @@
       <div class="brand">
         <span class="mark"><img src="assets/favicon.svg" width="39" height="39" alt="" /></span>
         <div>
-          <strong>FERROVÍA</strong><small>EUROPA · rutas &amp; aventuras</small>
+          <strong>Trencitos</strong>
         </div>
       </div>
       <div class="topright">
@@ -26,67 +27,60 @@
           <button id="reclaimControl" class="hidden" type="button">Recuperar control</button>
           <button id="leaveRoom" type="button">Salir de la sala</button>
         </div></details>
-        <button id="soundToggle" class="sound-toggle" type="button" aria-label="Sonido" title="Silenciar sonidos" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3Z"/><path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg><span class="sound-label" aria-hidden="true">Sonido activado</span></button>
+        <button id="soundToggle" class="sound-toggle" type="button" aria-label="Sonido" title="Silenciar sonidos" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3Z"/><path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg></button>
         <span id="serverWarning" class="server-warning hidden" tabindex="0" role="status">⚠ Servidor anterior<span>Falta el nuevo manejo de sesiones y ausencias. Reinicia el backend al terminar: las partidas de pruebas se perderán.</span></span>
-        <span class="pill" id="connection">Conectando…</span
-        ><span class="version">BETA 0.6.1</span>
+        <span class="pill hidden" id="connection" role="status">Conectando…</span>
       </div>
     </header>
     <div id="sessionNotice" class="session-notice hidden" role="status"><span></span><button id="takeOver" class="hidden" type="button">Recuperar esta pestaña</button><button id="retrySave" class="hidden" type="button">Reintentar guardado</button></div>
-    <div id="lobby" class="lobby">
-      <div class="intro">
-        <div class="hero-emblem">✦ <span>1901</span> ✦</div>
-        <span class="eyebrow">EL GRAN VIAJE FERROVIARIO</span>
-        <h1>Europa te espera.</h1>
-        <p>
-          Conecta ciudades, colecciona vagones y diseña tu gran viaje.
-          Una mesa privada para 2 a 5 jugadores, desde cualquier navegador.
-        </p>
-      </div>
+    <main id="lobby" class="lobby" aria-label="Inicio de Trencitos">
       <div class="lobbycard">
-        <h2>Salas privadas</h2>
-        <label for="nickname">Tu nombre</label
-        ><input
-          id="nickname"
-          maxlength="24"
-          placeholder="Tu nombre"
-          value="Jugador"
-        />
-        <div class="lobbyactions">
-          <button class="primary" id="create">+ Crear sala</button>
-          <button class="tertiary" id="createTest">Ir a sala de pruebas</button>
+        <div id="homeSetup">
+          <div class="home-heading"><h1>Jugar</h1><span>2–5 jugadores</span></div>
+          <div class="home-identity"><span id="homeAvatar" class="home-avatar" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M7 27v-4a9 9 0 0 1 18 0v4Z"/></svg></span><div><label for="nickname">Tu nombre</label><input id="nickname" maxlength="24" placeholder="Tu nombre" value="Jugador" autocomplete="nickname" /></div></div>
+          <div class="home-tabs" role="tablist" aria-label="Cómo quieres jugar">
+            <button id="homeTabCreate" type="button" role="tab" aria-selected="true" aria-controls="homeCreate" data-home-tab="create"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Crear sala</button>
+            <button id="homeTabJoin" type="button" role="tab" aria-selected="false" aria-controls="homeJoin" tabindex="-1" data-home-tab="join"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v16h-6M3 12h12m-5-5 5 5-5 5"/></svg>Unirme</button>
+            <button id="homeTabPractice" type="button" role="tab" aria-selected="false" aria-controls="homePractice" tabindex="-1" data-home-tab="practice"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="7" width="14" height="13" rx="2"/><path d="M12 3v4M9 16h6M2 11v5m20-5v5M8 11h2m4 0h2"/></svg>Practicar</button>
+          </div>
+          <form id="homeCreate" class="home-pane" role="tabpanel" aria-labelledby="homeTabCreate" novalidate>
+            <label for="createCode">Código de tu sala</label>
+            <div class="code-editor"><input id="createCode" type="text" inputmode="numeric" minlength="6" maxlength="10" pattern="[0-9]{6,10}" autocomplete="off" spellcheck="false" aria-describedby="createCodeHint createCodeError" required /><button id="regenerateCode" type="button" aria-label="Generar otro código" title="Generar otro código"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8a8 8 0 1 0 1 8M19 3v6h-6"/></svg></button></div>
+            <p id="createCodeHint" class="home-hint">Puedes cambiarlo. De 6 a 10 números.</p>
+            <p id="createCodeError" class="field-error" role="alert"></p>
+            <button class="primary home-submit" id="create" type="submit">Crear sala <span aria-hidden="true">→</span></button>
+          </form>
+          <form id="homeJoin" class="home-pane" role="tabpanel" aria-labelledby="homeTabJoin" novalidate hidden>
+            <label for="code">Código de invitación</label>
+            <input id="code" type="text" maxlength="10" placeholder="Introduce el código" autocomplete="off" spellcheck="false" autocapitalize="characters" aria-describedby="joinCodeHint joinCodeError" required />
+            <p id="joinCodeHint" class="home-hint">Pídeselo a quien creó la sala.</p>
+            <p id="joinCodeError" class="field-error" role="alert"></p>
+            <button class="primary home-submit" id="join" type="submit">Unirme a la sala <span aria-hidden="true">→</span></button>
+          </form>
+          <section id="homePractice" class="home-pane" role="tabpanel" aria-labelledby="homeTabPractice" hidden>
+            <div class="practice-description"><strong>Tú contra 3 bots</strong><p>Una partida privada para practicar.</p></div>
+            <fieldset class="color-choice"><legend>Tu color <span id="practiceColorName"></span></legend><div id="practiceColors" class="color-options"></div><p class="color-finish-note" hidden>Acabado metálico · Oro pulido</p></fieldset>
+            <button class="primary home-submit" id="createTest" type="button">Jugar <span aria-hidden="true">→</span></button>
+          </section>
         </div>
-        <label for="code">Código de invitación</label>
-        <div class="joinrow">
-          <input
-            id="code"
-            maxlength="6"
-            placeholder="ABC123"
-            autocomplete="off"
-          /><button id="join">Unirme</button>
-        </div>
-        <p class="err" id="lobbyError"></p>
         <div class="roompanel hidden" id="roompanel">
+          <div class="home-heading"><h1>Sala de espera</h1><span id="roomCount"></span></div>
           <div class="roomheading">
             <div>
-              <span class="eyebrow">CÓDIGO DE SALA</span>
+              <span class="room-code-label">Código de sala</span>
               <h2 id="roomcode">------</h2>
             </div>
-            <button id="copyLink">Copiar invitación</button>
+            <button id="copyLink" type="button">Copiar invitación</button>
           </div>
-          <div class="memberlist" id="members"></div>
-          <div class="smallmuted" id="roomNote"></div>
-          <p class="smallmuted">El primer jugador se elige al azar al iniciar.</p>
-          <button class="primary full hidden" id="start">
-            Iniciar partida
-          </button>
+          <div class="memberlist" id="members" aria-label="Jugadores en la sala"></div>
+          <fieldset class="color-choice"><legend>Tu color <span id="chosenColorName"></span></legend><div id="roomColors" class="color-options"></div><p class="color-finish-note" hidden>Acabado metálico · Oro pulido</p><p class="home-hint">Los colores ocupados están reservados.</p></fieldset>
+          <p class="home-hint" id="roomNote" role="status"></p>
+          <button class="primary home-submit hidden" id="start" type="button">Iniciar partida <span aria-hidden="true">→</span></button>
+          <button class="home-leave" id="leaveLobby" type="button">Salir de la sala</button>
         </div>
+        <p class="err" id="lobbyError" role="alert"></p>
       </div>
-      <p class="legal">
-        Proyecto personal no oficial. Sin arte ni logotipos del juego comercial.
-        Las reglas se implementan como referencia a Ticket to Ride: Europe.
-      </p>
-    </div>
+    </main>
     <div id="game" class="game hidden">
       <main class="game-stage" aria-label="Mesa de juego">
           <div class="mapscroll" id="mapscroll">
@@ -194,6 +188,7 @@
     <script src="data.js"></script>
     <script src="map-layout.js"></script>
     <script src="game-ui.js"></script>
+    <script src="lobby-ui.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

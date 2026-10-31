@@ -1,0 +1,7 @@
+{
+  "architecture.md": ["server.js", "engine.js", "game-clock.js", "multiplayer.js", "practice.js", "practice-bot.js", "bots.js", "room-store.js", "supabase-store.js", "durable-queue.js", "supabase/", "package.json"],
+  "domain.md": ["engine.js", "data.js", "multiplayer.js", "practice.js", "game-clock.js", "lobby-ui.js"],
+  "operations.md": ["package.json", "Dockerfile", "render.yaml", ".env.example", "scripts/"],
+  "work/board-3d.md": ["map-layout.js", "game-ui.js", "app.js"],
+  "work/sounds.md": ["app.js"]
+}

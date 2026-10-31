@@ -21,7 +21,7 @@ test('map uses gestures without a zoom or fit toolbar on any viewport',()=>{
 });
 test('Docker includes every local server module, without saved rooms',()=>{
  const docker=fs.readFileSync(path.join(ROOT,'Dockerfile'),'utf8');
- for(const file of ['game-clock.js','multiplayer.js','room-store.js','supabase-store.js','durable-queue.js','bots.js','practice.js']) assert.ok(docker.includes(file),file);
+ for(const file of ['game-clock.js','multiplayer.js','room-store.js','supabase-store.js','durable-queue.js','bots.js','practice-bot.js','practice.js','lobby-ui.js','lobby.css']) assert.ok(docker.includes(file),file);
  const ignore=fs.readFileSync(path.join(ROOT,'.dockerignore'),'utf8');
  for(const file of ['room-state.json','room-state.json.tmp','room-state.json.bak']) assert.ok(ignore.split('\n').includes(file));
 });
@@ -49,7 +49,7 @@ test('eight distinct wagons match route hues and keep color names accessible, no
   assert.match(svg,new RegExp(`<rect id="suit-field"[^>]*fill="${palette[color]}"`),color);
   assert.match(svg,new RegExp(`aria-label="Carta ferroviaria ${name}"`));
   assert.match(svg,/<title>Vagón de [^<]+<\/title>/);
-  assert.deepEqual([...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map(match=>match[1]),['FERROVÍA']);
+  assert.deepEqual([...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map(match=>match[1]),['TRENCITOS']);
   for(const detail of [`wagon-${color}`,'rail-ornament']) assert.ok(svg.includes(`id="${detail}"`));
   assert.doesNotMatch(svg,/linearGradient|gold-foil|engraved-locomotive|steam-engraving/,'Regular suits must be wagons, not engines');
  }
@@ -67,8 +67,9 @@ test('disabled draw controls preserve suit saturation at eighty percent opacity'
 });
 test('static SVG is served safely with right MIME and traversal returns 404',async()=>{
  if(!server.listening)await new Promise(ok=>server.listen(0,'127.0.0.1',ok));const base='http://127.0.0.1:'+server.address().port;
- let response=await fetch(base+'/assets/cards/red.svg');assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/image\/svg\+xml/);assert.match(await response.text(),/FERROVÍA/);
+ let response=await fetch(base+'/assets/cards/red.svg');assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/image\/svg\+xml/);assert.match(await response.text(),/TRENCITOS/);
  response=await fetch(base+'/assets/cards/unknown.svg');assert.equal(response.status,404);
  response=await fetch(base+'/does-not-exist.html');assert.equal(response.status,404);
+ response=await fetch(base+'/practice-bot.js');assert.equal(response.status,404);
 });
 test.after(()=>{if(server.listening)server.close()});

@@ -79,3 +79,25 @@ test('remote failure restores room membership and tokens, emits no success, and 
   assert.equal((await fetch(`http://127.0.0.1:${port}/healthz`)).status, 503);
   api.fail = false;
 });
+
+test('custom codes and chosen colors commit atomically to Supabase and survive a restart', async () => {
+  await stop(); await boot();
+  const colors = require('../data').PLAYER_COLORS;
+  const a = await client(); a.send({ type: 'create', code: '0022334455', name: 'Colores', color: colors[4] });
+  const lobby = await a.next('lobby');
+  const release = api.hold();
+  a.send({ type: 'select_color', color: colors[2] });
+  await assert.rejects(a.next('lobby', m => m.members[0].color === colors[2], 60));
+  assert.equal(api.state.rooms.find(r => r.code === lobby.code).members[0].color, colors[4]);
+  release(); await a.next('lobby', m => m.members[0].color === colors[2]);
+  assert.equal(api.state.rooms.find(r => r.code === lobby.code).members[0].color, colors[2]);
+  await stop(); await boot();
+  const recovered = await client(); recovered.send({ type: 'join', code: lobby.code, token: lobby.token });
+  assert.equal((await recovered.next('lobby')).members[0].color, colors[2]);
+  api.fail = true;
+  recovered.send({ type: 'select_color', color: colors[1] });
+  await recovered.next('error', m => m.code === 'STORAGE_FAILED');
+  assert.equal(app.rooms.get(lobby.code).members[0].color, colors[2]);
+  await assert.rejects(recovered.next('lobby', m => m.members[0].color === colors[1], 60));
+  api.fail = false;
+});

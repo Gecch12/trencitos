@@ -1,6 +1,7 @@
 "use strict";
 const { randomInt } = require("node:crypto");
 const Engine = require("./engine");
+const { choosePracticeAction } = require("./practice-bot");
 
 function pick(items, random = randomInt) {
   return items.length ? items[random(items.length)] : null;
@@ -8,7 +9,7 @@ function pick(items, random = randomInt) {
 
 // Decide from the bot's own hand and public board, without inspecting the deck
 // order, opponents' hands or their destinations. The engine validates the move.
-function chooseBotAction(game, seat, random = randomInt, { randomBuild = false } = {}) {
+function chooseSimpleAction(game, seat, random = randomInt, { randomBuild = false } = {}) {
   const player = game.players[seat];
   if (!player || game.phase === "finished") return null;
   if (game.phase === "initial") {
@@ -60,7 +61,7 @@ function chooseBotAction(game, seat, random = randomInt, { randomBuild = false }
   return sources.length ? { type: "draw_train", index: pick(sources, random) } : null;
 }
 
-// Replacement players flip a coin between drawing and building when both are
-// possible; practice bots retain their existing build-first behavior.
-const chooseReplacementAction = (game, seat, random = randomInt) => chooseBotAction(game, seat, random, { randomBuild: true });
+// Keep the previously agreed replacement policy independent of practice AI.
+const chooseReplacementAction = (game, seat, random = randomInt) => chooseSimpleAction(game, seat, random, { randomBuild: true });
+const chooseBotAction = (game, seat, random = randomInt) => choosePracticeAction(game, seat, random, chooseSimpleAction);
 module.exports = { chooseBotAction, chooseReplacementAction };

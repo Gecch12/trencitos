@@ -11,7 +11,21 @@ const COLORS = [
   "orange",
   "purple",
 ];
-const PLAYER_COLORS = ["#d45748", "#458ad4", "#4b9d76", "#ddaf40", "#9a75ba"];
+// Keep the original five first: existing seats and saved games retain their colors.
+const PLAYER_PALETTE = [
+  { color: "#d45748", name: "Rojo" },
+  { color: "#458ad4", name: "Azul" },
+  { color: "#4b9d76", name: "Verde" },
+  { color: "#ddaf40", name: "Amarillo" },
+  { color: "#9a75ba", name: "Morado" },
+  { color: "#88583d", name: "Marrón" },
+  { color: "#b88929", name: "Dorado", finish: "gold" },
+  { color: "#242831", name: "Negro" },
+  { color: "#7c8796", name: "Gris" },
+  { color: "#c43d92", name: "Magenta" },
+  { color: "#1baaa6", name: "Turquesa" },
+];
+const PLAYER_COLORS = PLAYER_PALETTE.map(({ color }) => color);
 const CITIES = {
   EDI: [240, 94, "Edinburgh"],
   LON: [245, 188, "London"],
@@ -103,4 +117,4 @@ const TICKETS = TICKET_RAW.trim()
     return { id, a, b, p: +p, long: l === "L" };
   });
 if (typeof module !== "undefined")
-  module.exports = { COLORS, PLAYER_COLORS, CITIES, ROUTES, TICKETS };
+  module.exports = { COLORS, PLAYER_COLORS, PLAYER_PALETTE, CITIES, ROUTES, TICKETS };

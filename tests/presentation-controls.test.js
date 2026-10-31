@@ -40,7 +40,8 @@ test("sound toggle exposes its on/off state, stops active audio and restores the
   const sound = soundControls(storage);
   assert.equal(sound.attributes.get("aria-label"), "Sonido");
   assert.equal(sound.attributes.get("aria-pressed"), "true");
-  assert.match(sound.button.innerHTML, /Sonido activado/);
+  assert.match(sound.button.innerHTML, /<svg/);
+  assert.doesNotMatch(sound.button.innerHTML, /sound-label|Sonido activado/);
   assert.equal(sound.button.title, "Silenciar sonidos");
   let stopped = 0;
   sound.context.activeNode = { stop() { stopped++; } };
@@ -48,7 +49,8 @@ test("sound toggle exposes its on/off state, stops active audio and restores the
   sound.button.onclick();
   assert.equal(sound.attributes.get("aria-pressed"), "false");
   assert.equal(sound.attributes.get("aria-label"), "Sonido");
-  assert.match(sound.button.innerHTML, /Sonido desactivado/);
+  assert.match(sound.button.innerHTML, /m16 9 5 6/);
+  assert.doesNotMatch(sound.button.innerHTML, /sound-label|Sonido desactivado/);
   assert.equal(sound.button.title, "Activar sonidos");
   assert.equal(stopped, 1);
   assert.equal(sound.read("soundNodes.size"), 0);

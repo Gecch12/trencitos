@@ -24,6 +24,9 @@ let sock = null,
   stationCity = null,
   attempted = false;
 let sessionReplaced = false, storagePaused = false, pendingAction = null, resendPending = false, sessionSupported = false;
+let homeMode = "create", homeBusy = false, lobbyStarted = false;
+let preferredColor = localStorage.getItem("rr-color");
+if (!LobbyUI.isColor(preferredColor)) preferredColor = LobbyUI.PALETTE[0].color;
 const MAP_BOUNDS = RailMap.bounds;
 const MAP_GEOMETRY = RailMap.createNetwork(ROUTES);
 const MAP_CENTER = { x: MAP_BOUNDS.x + MAP_BOUNDS.width / 2, y: MAP_BOUNDS.y + MAP_BOUNDS.height / 2 };
@@ -47,16 +50,20 @@ let uiDialog = null, dialogReturnFocus = null, buildTarget = null, buildSubmitti
 let tunnelReveal = null;
 let resultsSeen = false, resultMapSelection = null;
 const expandedResults = new Set();
+const resultViews = new Map();
+let resultMapCleanup = null, resultCamera = null, resultCameraKey = "";
 let toastTimer = null;
 const ticketColor = i => TICKET_COLORS[i % TICKET_COLORS.length];
 let pendingChoiceKey = null,
   ticketChoices = new Set(),
   hoveredTicket = null,
   desiredRoom = new URLSearchParams(location.search).get("room") || "";
-$("code").value = desiredRoom.toUpperCase();
+desiredRoom = desiredRoom.trim().toUpperCase();
+$("code").value = desiredRoom;
+if (LobbyUI.isJoinCode(desiredRoom) && localStorage.getItem(identityKey(desiredRoom))) attempted = true;
 const recoveryToken = new URLSearchParams(location.hash.slice(1)).get("recover");
 let incomingRecovery = null;
-if (recoveryToken && /^[a-f0-9]{48}$/.test(recoveryToken) && /^[a-z0-9]{6}$/i.test(desiredRoom)) {
+if (recoveryToken && /^[a-f0-9]{48}$/.test(recoveryToken) && LobbyUI.isJoinCode(desiredRoom)) {
   desiredRoom = desiredRoom.toUpperCase();
   incomingRecovery = recoveryToken;
   attempted = true;
@@ -75,10 +82,15 @@ function escapeHTML(x) {
 }
 function status(text) {
   $("connection").textContent = text;
-  $("connection").dataset.online = text.includes("Conectado") ? "true" : "false";
+  const online = sock?.readyState === WebSocket.OPEN && !sessionReplaced;
+  $("connection").dataset.online = String(online);
+  $("connection").classList.toggle("hidden", online);
+  if (!online) homeBusy = false;
+  syncHomeAvailability();
 }
 function send(obj) {
   if (!sock || sock.readyState !== WebSocket.OPEN) {
+    homeBusy = false; syncHomeAvailability();
     error("Sin conexión.");
     return;
   }
@@ -111,6 +123,7 @@ function resetToLobby(message = "", preserveIdentity = false) {
   seat = -1;
   members = [];
   host = practiceMode = attempted = false;
+  lobbyStarted = homeBusy = false;
   pendingAction = null; storagePaused = false;
   $("sessionControls").classList.add("hidden");
   $("sessionNotice").classList.add("hidden");
@@ -123,6 +136,7 @@ function resetToLobby(message = "", preserveIdentity = false) {
   setCompactPanel("map");
   uiDialog = buildTarget = null;
   resultsSeen = false; resultMapSelection = null; expandedResults.clear();
+  resultViews.clear(); resultMapCleanup?.(); resultMapCleanup = null; resultCamera = null; resultCameraKey = "";
   $("resultContext").classList.add("hidden");
   buildSubmitting = false;
   closeMapMenu();
@@ -148,10 +162,14 @@ function resetToLobby(message = "", preserveIdentity = false) {
     $(id).classList.add("hidden");
   $("practiceControls").removeAttribute("style");
   $("code").value = "";
+  $("homeSetup").classList.remove("hidden");
+  $("createCode").value = LobbyUI.randomCode();
+  setHomeMode("create");
+  renderHomeColors();
   $("lobbyError").textContent = message;
   history.replaceState(null, "", "/");
   status(sock?.readyState === WebSocket.OPEN ? "● Conectado" : "○ Desconectado");
-  $("createTest").focus();
+  $("nickname").focus();
 }
 function connect() {
   if (sessionReplaced) return;
@@ -170,6 +188,7 @@ function connect() {
         code: desiredRoom,
         token: t || undefined,
         name: $("nickname").value,
+        color: preferredColor,
       });
     }
   };
@@ -181,7 +200,14 @@ function connect() {
       return;
     }
     if (m.type === "error") {
+      homeBusy = false; syncHomeAvailability();
       pendingAction = null;
+      if (!room && ["CODE_TAKEN", "INVALID_CODE", "ROOM_NOT_FOUND"].includes(m.code)) {
+        attempted = false;
+        if (m.code === "ROOM_NOT_FOUND") setHomeMode("join");
+        homeCodeError(homeMode === "create" ? "create" : "join", m.message);
+        return;
+      }
       if (["ROOM_NOT_FOUND", "INVALID_TOKEN"].includes(m.code)) {
         incomingRecovery = null;
         resetToLobby(m.message, m.code === "INVALID_TOKEN");
@@ -202,6 +228,7 @@ function connect() {
     }
     if (m.type === "storage") {
       storagePaused = m.paused;
+      syncHomeAvailability();
       if (storagePaused) notice(m.requiresRestart
         ? "Partida pausada por el guardado remoto. El administrador debe restablecer el servicio; conserva esta pestaña para reconectar."
         : "Partida pausada: el servidor no pudo guardar. No se aceptarán jugadas hasta recuperarlo.", m.requiresRestart ? null : "retrySave");
@@ -214,6 +241,9 @@ function connect() {
       return;
     }
     if (m.type === "lobby") {
+      homeBusy = false;
+      lobbyStarted = !!m.started;
+      $("lobbyError").textContent = "";
       if (!m.started) waitingForGameStart = true;
       room = m.code;
       desiredRoom = room;
@@ -221,6 +251,10 @@ function connect() {
       token = m.token;
       incomingRecovery = null;
       members = m.members;
+      if (LobbyUI.isColor(members[seat]?.color)) {
+        preferredColor = members[seat].color;
+        localStorage.setItem("rr-color", preferredColor);
+      }
       host = m.host;
       practiceMode = !!m.practice;
       sessionSupported = m.sessionVersion >= 1;
@@ -284,47 +318,143 @@ function connect() {
   sock.onerror = () => {};
 }
 function renderLobby() {
+  $("homeSetup").classList.add("hidden");
   $("roompanel").classList.remove("hidden");
   $("roomcode").textContent = room;
+  $("roomCount").textContent = `${members.length}/5 jugadores`;
   $("members").innerHTML = members
     .map(
       (m, i) =>
-        `<div class="member"><b>${i + 1}. ${escapeHTML(m.name)} ${m.bot ? "🤖" : m.host ? "👑" : ""}</b><span class="${m.connected ? "connected" : "disconnected"}">${m.bot ? "Automático" : m.connected ? "● En línea" : "○ Sin conexión · reserva 60 s"}</span>${host && !game && i !== seat && !practiceMode ? `<button type="button" data-kick="${i}" aria-label="Retirar a ${escapeHTML(m.name)}">Retirar</button>` : ""}</div>`,
+        `<div class="member" data-member="${i}">${homeAvatarMarkup()}<div class="member-identity"><b>${escapeHTML(m.name)}</b><small>${[i === seat ? "Tú" : "", m.host ? "Anfitrión" : "", m.bot ? "Bot" : !m.connected ? "Sin conexión · reserva 60 s" : "", LobbyUI.PALETTE.find(p => p.color === m.color)?.name || ""].filter(Boolean).join(" · ")}</small></div>${host && !lobbyStarted && i !== seat && !practiceMode ? `<button class="member-remove" type="button" data-kick="${i}" aria-label="Retirar a ${escapeHTML(m.name)}" title="Retirar jugador">×</button>` : ""}</div>`,
     )
     .join("");
+  $("members").querySelectorAll("[data-member]").forEach(row => applyPlayerAppearance(row, members[+row.dataset.member].color));
   $("members").querySelectorAll("[data-kick]").forEach(button => button.onclick = () => {
     if (confirm("¿Retirar a este participante de la sala?")) send({ type: "kick", seat: +button.dataset.kick });
   });
-  $("start").classList.toggle("hidden", practiceMode || !host || !!game);
-  $("start").disabled = members.length < 2 || members.some((m) => !m.connected);
+  $("start").classList.toggle("hidden", practiceMode || !host || lobbyStarted);
+  renderHomeColors();
+  syncHomeAvailability();
   $("roomNote").textContent =
     practiceMode ? "Sala de pruebas temporal · Tú y 3 bots." :
-      `${members.length}/5 jugadores · ${members.length < 2 ? "Invita al menos a una persona." : "Solo el anfitrión puede comenzar."}`;
+      members.length < 2 ? "Invita a alguien para empezar." : members.some(m => !m.connected) ? "Esperando a que todos estén conectados." : host ? "Todo listo. El primer turno se sortea al empezar." : "Esperando a que el anfitrión inicie la partida.";
 }
-$("create").onclick = () => {
+function homeAvatarMarkup() {
+  return '<span class="home-avatar" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M7 27v-4a9 9 0 0 1 18 0v4Z"/></svg></span>';
+}
+function syncHomeAvailability() {
+  const unavailable = homeBusy || sock?.readyState !== WebSocket.OPEN || sessionReplaced || storagePaused;
+  for (const id of ["create", "join", "createTest"]) $(id).disabled = unavailable;
+  for (const tab of document.querySelectorAll("[data-home-tab]")) tab.disabled = homeBusy;
+  $("regenerateCode").disabled = homeBusy;
+  $("createCode").readOnly = homeBusy;
+  $("start").disabled = unavailable || members.length < 2 || members.some(m => !m.connected);
+  $("roomColors").querySelectorAll("button").forEach(button => {
+    button.disabled = unavailable || lobbyStarted || members.some((m, i) => i !== seat && m.color === button.dataset.color);
+  });
+}
+function homeCodeError(mode, message = "") {
+  $(mode === "create" ? "createCodeError" : "joinCodeError").textContent = message;
+  $(mode === "create" ? "createCode" : "code").setAttribute("aria-invalid", String(!!message));
+}
+function setHomeMode(mode, focus = false) {
+  homeMode = mode;
+  for (const tab of document.querySelectorAll("[data-home-tab]")) {
+    const active = tab.dataset.homeTab === mode;
+    tab.setAttribute("aria-selected", String(active)); tab.tabIndex = active ? 0 : -1;
+    $(tab.getAttribute("aria-controls")).hidden = !active;
+    if (active && focus) tab.focus();
+  }
+  $("lobbyError").textContent = "";
+  homeCodeError("create"); homeCodeError("join");
+}
+function applyPlayerAppearance(element, color) {
+  element.style.setProperty("--player-color", GameUI.playerColor(color));
+  element.dataset.finish = GameUI.playerFinish(color);
+}
+function renderHomeColors() {
+  applyPlayerAppearance($("homeAvatar"), preferredColor);
+  $("chosenColorName").textContent = LobbyUI.PALETTE.find(p => p.color === preferredColor)?.name || "";
+  $("practiceColorName").textContent = $("chosenColorName").textContent;
+  for (const note of document.querySelectorAll(".color-finish-note")) note.hidden = GameUI.playerFinish(preferredColor) !== "gold";
+  for (const id of ["practiceColors", "roomColors"]) {
+    const root = $(id), focused = root.contains(document.activeElement) ? document.activeElement.dataset.color : null;
+    root.replaceChildren();
+    for (const { color, name } of LobbyUI.PALETTE) {
+      const owner = id === "roomColors" && members.find((m, i) => i !== seat && m.color === color);
+      const button = document.createElement("button"); button.type = "button"; button.dataset.color = color;
+      button.dataset.finish = GameUI.playerFinish(color);
+      button.style.setProperty("--choice-color", GameUI.playerColor(color));
+      button.setAttribute("aria-label", owner ? `${name}, ocupado por ${owner.name}` : name);
+      button.title = owner ? `${name} · ${owner.name}` : name + (button.dataset.finish === "gold" ? " · Acabado metálico" : "");
+      button.setAttribute("aria-pressed", String(color === preferredColor));
+      button.disabled = !!owner || (id === "roomColors" && lobbyStarted);
+      if (color === preferredColor) button.innerHTML = '<span aria-hidden="true">✓</span>';
+      button.onclick = () => {
+        if (id === "roomColors") send({ type: "select_color", color });
+        else { preferredColor = color; localStorage.setItem("rr-color", color); renderHomeColors(); }
+      };
+      root.appendChild(button);
+    }
+    if (focused) root.querySelector(`[data-color="${focused}"]`)?.focus({ preventScroll: true });
+  }
+  syncHomeAvailability();
+}
+function initializeHome() {
+  $("createCode").value = LobbyUI.randomCode();
+  setHomeMode(desiredRoom ? "join" : "create");
+  renderHomeColors();
+  const tabs = [...document.querySelectorAll("[data-home-tab]")];
+  tabs.forEach((tab, i) => {
+    tab.onclick = () => setHomeMode(tab.dataset.homeTab);
+    tab.onkeydown = event => {
+      const next = event.key === "ArrowRight" ? (i + 1) % tabs.length : event.key === "ArrowLeft" ? (i + tabs.length - 1) % tabs.length : event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : null;
+      if (next === null) return;
+      event.preventDefault(); setHomeMode(tabs[next].dataset.homeTab, true);
+    };
+  });
+  $("regenerateCode").onclick = () => { $("createCode").value = LobbyUI.randomCode(); homeCodeError("create"); };
+  $("createCode").oninput = () => homeCodeError("create");
+  $("code").oninput = () => homeCodeError("join");
+  $("nickname").oninput = () => localStorage.setItem("rr-name", $("nickname").value);
+  $("nickname").onkeydown = event => { if (event.key === "Enter") { event.preventDefault(); $(homeMode === "practice" ? "createTest" : homeMode === "join" ? "join" : "create").click(); } };
+  $("leaveLobby").onclick = () => $("leaveRoom").click();
+}
+$("homeCreate").onsubmit = event => {
+  event.preventDefault();
+  if (homeBusy) return;
   if (room) return error("Ya perteneces a una sala.");
+  const code = $("createCode").value.trim();
+  if (!LobbyUI.isNewCode(code)) { homeCodeError("create", "Usa entre 6 y 10 números, sin espacios."); $("createCode").focus(); return; }
   attempted = false;
-  send({ type: "create", name: $("nickname").value });
+  homeBusy = true; syncHomeAvailability();
+  send({ type: "create", name: $("nickname").value, code, color: preferredColor });
 };
 $("createTest").onclick = () => {
+  if (homeBusy) return;
   if (room) return error("Ya perteneces a una sala.");
   attempted = false;
   $("lobbyError").textContent = "";
   waitingForGameStart = true;
-  send({ type: "create_test", name: $("nickname").value });
+  homeBusy = true; syncHomeAvailability();
+  send({ type: "create_test", name: $("nickname").value, color: preferredColor });
 };
 $("finishTest").onclick = () => send({ type: "finish_test" });
 $("leaveTest").onclick = () => send({ type: "leave_test" });
-$("join").onclick = () => {
+$("homeJoin").onsubmit = event => {
+  event.preventDefault();
+  if (homeBusy) return;
   if (room) return error("Ya perteneces a una sala.");
   desiredRoom = $("code").value.trim().toUpperCase();
-  if (!desiredRoom) return error("Introduce un código.");
+  if (!LobbyUI.isJoinCode(desiredRoom)) { homeCodeError("join", "Introduce un código válido de 6 a 10 caracteres."); $("code").focus(); return; }
   attempted = true;
+  homeBusy = true; syncHomeAvailability();
   send({
     type: "join",
     code: desiredRoom,
     token: localStorage.getItem(identityKey(desiredRoom)) || undefined,
     name: $("nickname").value,
+    color: preferredColor,
   });
 };
 $("start").onclick = () =>
@@ -336,6 +466,7 @@ async function copyInvitation() {
     $("copyLink").textContent = "✓ Copiado";
     $("copyRoomInGame").textContent = "✓ Copiado";
     setTimeout(() => {
+      $("copyLink").textContent = "Copiar invitación";
       $("copyRoomInGame").innerHTML = "↗ <span>Invitar</span>";
     }, 2400);
   } catch {
@@ -438,7 +569,7 @@ function render() {
   hoveredPlayer = previousHover === undefined ? null : +previousHover;
   focusedPlayer = previousFocus === undefined ? null : +previousFocus;
   [...$("scores").children].forEach((badge, i) => {
-    badge.style.setProperty("--player-color", GameUI.playerColor(game.players[i].color));
+    applyPlayerAppearance(badge, game.players[i].color);
     badge.addEventListener("pointerenter", () => { hoveredPlayer = i; highlightPlayerRoutes(); });
     badge.addEventListener("pointerleave", () => { hoveredPlayer = null; highlightPlayerRoutes(); });
     badge.addEventListener("focus", () => { focusedPlayer = i; highlightPlayerRoutes(); });
@@ -540,7 +671,7 @@ function renderHistory() {
     const player = Number.isInteger(entry.seat) && game.players[entry.seat];
     if (player) {
       row.innerHTML = playerAvatar(entry.seat, true);
-      row.style.setProperty("--player-color", GameUI.playerColor(player.color));
+      applyPlayerAppearance(row, player.color);
       row.dataset.actor = entry.seat;
     }
     const text = document.createElement("span"); text.textContent = entry.text; row.appendChild(text);
@@ -639,7 +770,7 @@ function playEffects(events) {
 let soundContext = null, muted = localStorage.getItem("rr-muted") === "true";
 const soundNodes = new Set();
 function soundLabel() {
-  $("soundToggle").innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3Z"/>${muted ? '<path d="m16 9 5 6m0-6-5 6"/>' : '<path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>'}</svg><span class="sound-label" aria-hidden="true">Sonido ${muted ? "desactivado" : "activado"}</span>`;
+  $("soundToggle").innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3Z"/>${muted ? '<path d="m16 9 5 6m0-6-5 6"/>' : '<path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>'}</svg>`;
   $("soundToggle").setAttribute("aria-pressed", String(!muted));
   $("soundToggle").title = muted ? "Activar sonidos" : "Silenciar sonidos";
   $("soundToggle").setAttribute("aria-label", "Sonido");
@@ -840,6 +971,9 @@ function svgElements(svg) {
 }
 function drawMapBase(el, prefix) {
   const defs = el("defs");
+  const gold = el("linearGradient", { id: `${prefix}-gold-metal`, x1: "0%", y1: "0%", x2: "28%", y2: "100%" }, defs);
+  for (const [offset, color] of [[0, "#815019"], [18, "#d5a43c"], [38, "#fff0ad"], [48, "#efcc6c"], [53, "#b48125"], [76, "#e8bd57"], [100, "#91601e"]])
+    el("stop", { offset: `${offset}%`, "stop-color": color }, gold);
   const texture = el("pattern", { id: `${prefix}-piece-grain`, width: 3, height: 3, patternUnits: "userSpaceOnUse" }, defs);
   el("path", { d: "M0 3L3 0", stroke: "#132d36", "stroke-width": .25, opacity: .22 }, texture);
   el("circle", { cx: .6, cy: .8, r: .23, fill: "#fff9df", opacity: .45 }, texture);
@@ -884,12 +1018,13 @@ function highlightPlayerRoutes() {
 }
 function drawOwnedPiece(el, slot, cell, owner, prefix) {
   const color = owner.color, x = (cell.width - 1.2) / 2, h = cell.height - 1;
+  const gold = GameUI.playerFinish(color) === "gold";
   const top = -h / 2 - .5, bottom = h / 2 - .5;
   const piece = el("g", { class: "owned-piece", "pointer-events": "none", "aria-hidden": "true" }, slot);
   el("rect", { x: -x, y: top + 1.15, width: x * 2, height: h, rx: 1.2, fill: "#243b42", stroke: "#17313a", "stroke-width": .6 }, piece);
   const shape = `M${-x + 1} ${top}H${x - 1}L${x} ${top + 1}V${bottom - 1}L${x - 1} ${bottom}H${-x + 1}L${-x} ${bottom - 1}V${top + 1}Z`;
-  el("path", { d: shape, fill: color, stroke: "#344d50", "stroke-width": .4 }, piece);
-  el("path", { d: shape, fill: `url(#${prefix}-piece-grain)` }, piece);
+  el("path", { d: shape, fill: gold ? `url(#${prefix}-gold-metal)` : color, stroke: gold ? "#79501e" : "#344d50", "stroke-width": .4 }, piece);
+  el("path", { d: shape, fill: `url(#${prefix}-piece-grain)`, opacity: gold ? .25 : 1 }, piece);
   el("path", { d: `M${-x + .8} ${bottom - 1}V${top + 1}H${x - .8}`, fill: "none", stroke: "#fff8d8", "stroke-opacity": .68, "stroke-width": .85 }, piece);
   el("path", { d: `M${-x + .8} ${bottom - .7}H${x - .8}V${top + 1}`, fill: "none", stroke: "#173640", "stroke-opacity": .6, "stroke-width": .8 }, piece);
   for (const gx of [-x + 3, x - 3]) {
@@ -899,13 +1034,14 @@ function drawOwnedPiece(el, slot, cell, owner, prefix) {
   el("path", { class: "ownership-mark", d: owner.mark.path, "data-symbol": owner.mark.name,
     transform: `translate(0 -.5) rotate(${-cell.angle}) scale(${GameUI.OWNER_MARK_SCALE})` }, piece);
 }
-function drawStation(el, parent, color, scale = 1) {
+function drawStation(el, parent, color, scale = 1, prefix = "board") {
   const piece = el("g", { class: "station-piece", "pointer-events": "none" }, parent);
   const art = el("g", { class: "station-art", transform: `scale(${scale})` }, piece);
   const outline = "M-7 6V-2L-9-2 0-9 9-2H7V6Z";
+  const finish = GameUI.playerFinish(color) === "gold" ? `url(#${prefix}-gold-metal)` : color;
   el("path", { d: outline, transform: "translate(0 1)", fill: "#17323b", opacity: .3 }, art);
   el("path", { d: outline, fill: color, stroke: "#fff9e6", "stroke-width": 3, "stroke-linejoin": "round" }, art);
-  el("path", { d: outline, fill: color, stroke: "#243e45", "stroke-width": 1, "stroke-linejoin": "round" }, art);
+  el("path", { d: outline, fill: finish, stroke: "#243e45", "stroke-width": 1, "stroke-linejoin": "round" }, art);
   el("path", { d: "M-8-2 0-8 8-2M-6-1H6", fill: "none", stroke: "#17333c", "stroke-width": 1.4, "stroke-linejoin": "round" }, art);
   el("path", { d: "M-5-3 0-7 5-3", fill: "none", stroke: "#fff8dc", "stroke-width": .7, opacity: .7 }, art);
   el("path", { d: "M-1.8 6V1H1.8V6M-5 0H-3V2H-5ZM3 0H5V2H3Z", fill: "#fff7d8", stroke: "#243e45", "stroke-width": .6 }, art);
@@ -1097,8 +1233,13 @@ function showMapMenu(event, target) {
   menu.innerHTML = `<button class="menu-close" aria-label="Cerrar menú">×</button><h3>${escapeHTML(title)}</h3>${owner
     ? `<p class="route-ownership"><span class="owner-seal">${playerInsignia(owner.seat)}</span><span>${escapeHTML(owner.label)}</span></p>`
     : `<p>${escapeHTML(detail)}</p>${canBuild ? `<button id="startBuild" class="primary full">${r ? "Construir" : "Construir estación"}</button>` : ""}`}`;
-  if (owner) menu.style.setProperty("--owner-color", owner.color);
-  else menu.style.removeProperty("--owner-color");
+  if (owner) {
+    menu.style.setProperty("--owner-color", owner.color);
+    menu.style.setProperty("--owner-surface", GameUI.playerFinish(owner.color) === "gold" ? "var(--gold-metal)" : owner.color);
+  } else {
+    menu.style.removeProperty("--owner-color");
+    menu.style.removeProperty("--owner-surface");
+  }
   menu.classList.remove("hidden");
   const stage = $("game").getBoundingClientRect(), source = event.currentTarget.getBoundingClientRect();
   const x = event.clientX || source.x + source.width / 2, y = event.clientY || source.y + source.height / 2;
@@ -1190,6 +1331,7 @@ $("drawblind").onclick = () => act("draw_train", { index: -1 });
 $("drawtickets").onclick = () => act("draw_tickets");
 $("pass").onclick = () => act("pass");
 function showDialog(title, body, ticketDialog = false, dismissible = false) {
+  resultMapCleanup?.(); resultMapCleanup = null;
   closeMapMenu();
   hoveredDestination = null;
   $("overlay").classList.remove("hidden");
@@ -1214,6 +1356,7 @@ function closeOptionalDialog() {
   if (game?.turnWaiting && game.current === seat && game.ticketOffer) return;
   const choosing = uiDialog === "tickets";
   const closingResults = uiDialog === "results";
+  if (closingResults) { resultMapCleanup?.(); resultMapCleanup = null; }
   const returningToMap = uiDialog === "routes" && compactMedia.matches;
   uiDialog = buildTarget = null;
   buildSubmitting = false;
@@ -1385,7 +1528,7 @@ function renderTicketMap(tickets) {
   }
   for (const [i, player] of game.players.entries()) for (const city of player.placed) {
     const [x, y] = RailMap.cities[city], group = el("g", { transform: `translate(${x} ${y})`, opacity: i === seat ? 1 : .55, "data-preview-station": city }, occupied);
-    drawStation(el, group, GameUI.playerColor(player.color), .9);
+    drawStation(el, group, GameUI.playerColor(player.color), .9, "tickets");
     el("title", {}, group).textContent = `Estación de ${player.name} · ${CITIES[city][2]}`;
   }
   const endpoints = new Map();
@@ -1635,53 +1778,311 @@ const signedPoints = points => points >= 0 ? `+${points}` : `−${Math.abs(point
 function resultDetailHTML(result) {
   const d = result.details;
   if (!d) return '<p>Reinicia el servidor actualizado para consultar el desglose de esta partida.</p>';
-  const inspect = (kind, index, label) => `<button type="button" class="result-inspect" data-result-seat="${result.seat}" data-result-kind="${kind}" data-result-index="${index}" title="Resaltar en el mapa">${escapeHTML(label)} <span aria-hidden="true">↗</span></button>`;
-  const sum = (label, points) => `<h4><span>${label}</span><strong>${signedPoints(points)}</strong></h4>`;
-  const maximumNames = d.express.tiedSeats.map(i => game.players[i].name).join(", ");
-  return `${sum("Rutas construidas", result.route)}<ul class="score-lines">${d.routes.map((r,i) => `<li><div>${inspect("route", i, routeName(r))}<small>${r.length} vagones → ${r.points} puntos</small></div><strong>+${r.points}</strong></li>`).join("") || '<li>Ninguna ruta construida.</li>'}</ul>
-    ${d.routeAdjustment ? `<p class="score-warning">Ajuste del registro guardado: ${signedPoints(d.routeAdjustment)} puntos. El contador de esta partida antigua no coincide con sus rutas en el tablero.</p>` : ""}
-    ${sum("Billetes de destino", result.destination)}<ul class="score-lines">${d.destinations.map((t,i) => `<li class="${t.completed ? "score-positive" : "score-negative"}"><div>${inspect("destination", i, routeName(t))}<small>${t.completed ? `✓ Completado${t.stationRoutes.length ? " · mediante estación" : ""}` : "No completado · penalización"}</small></div><strong>${signedPoints(t.points)}</strong></li>`).join("") || '<li>No se conservaron billetes.</li>'}</ul>
-    ${sum("Estaciones", result.stations)}<p class="score-explanation">${d.stations.unused} sin construir × 4 puntos = <b>${result.stations}</b>. Las estaciones construidas no suman puntos; pueden completar destinos tomando prestado un tramo rival.</p>
-    <ul class="score-lines">${d.stations.placed.map((station,i) => { const route = game.routes.find(r => r.id === station.routeId); return `<li><div>${inspect("station", i, `Estación en ${cityName(station.city)}`)}<small>${route ? `Préstamo: ${escapeHTML(routeName(route))} · ${escapeHTML(game.players[route.owner].name)}` : "Sin tramo prestado en la asignación final"}</small></div><strong>0</strong></li>`; }).join("")}</ul>
-    ${sum("European Express", result.express)}<p class="score-explanation">${d.express.routes.length ? inspect("express", 0, `Camino más largo: ${result.longest} vagones`) : "Sin vías construidas: 0 vagones"}<br>${d.express.cities.length ? escapeHTML(d.express.cities.map(cityName).join(" → ")) + ". " : ""}Se suman los vagones de un recorrido continuo, sin repetir tramos. No cuenta vías prestadas por estaciones.</p>
-    <p class="score-explanation">${result.express ? (d.express.tiedSeats.length > 1 ? `Empate en el máximo (${d.express.maximum}): ${escapeHTML(maximumNames)}. Cada uno recibe +10.` : `Máximo de la partida (${d.express.maximum}): +10 puntos.`) : `Sin bonificación: el máximo es ${d.express.maximum}, de ${escapeHTML(maximumNames)}.`}</p>
-    <div class="score-equation" aria-label="Suma final">${result.route} ${signedPoints(result.destination)} ${signedPoints(result.stations)} ${signedPoints(result.express)} = <strong>${result.score} puntos</strong></div>`;
+  const view = resultView(result.seat);
+  const categories = [["routes", "Rutas", result.route], ["destinations", "Destinos", result.destination],
+    ["stations", "Estaciones", result.stations], ["express", "Camino más largo", result.express]];
+  return `<div class="score-categories" role="tablist" aria-label="Puntos de ${escapeHTML(result.name)}">${categories.map(([key, label, points]) =>
+    `<button type="button" role="tab" id="score-tab-${result.seat}-${key}" data-score-category="${key}" aria-selected="${view.category === key}" aria-controls="score-panel-${result.seat}" tabindex="${view.category === key ? 0 : -1}"><span>${label}</span><strong>${signedPoints(points)}</strong></button>`).join("")}</div>
+    <div id="score-panel-${result.seat}" class="score-panel" role="tabpanel" aria-labelledby="score-tab-${result.seat}-${view.category}"></div>`;
+}
+function resultView(playerSeat) {
+  if (!resultViews.has(playerSeat)) resultViews.set(playerSeat, { category: "routes", index: null, expressSeat: playerSeat, list: false, expanded: false });
+  return resultViews.get(playerSeat);
+}
+function resultChoice(index, label, points, selected, extra = "", className = "") {
+  return `<button type="button" class="score-choice ${className}" data-score-choice="${index}" aria-pressed="${selected}"><span>${label}${extra ? `<small>${extra}</small>` : ""}</span>${points === null ? "" : `<strong>${signedPoints(points)}</strong>`}</button>`;
+}
+function renderResultPanel(result) {
+  resultMapCleanup?.(); resultMapCleanup = null;
+  const panel = $(`score-panel-${result.seat}`); if (!panel || !result.details) return;
+  const d = result.details, view = resultView(result.seat), category = view.category;
+  panel.classList.toggle("is-map-expanded", view.expanded);
+  panel.setAttribute("aria-labelledby", `score-tab-${result.seat}-${category}`);
+  let title, total, content = "", caption = "", empty = "";
+  if (category === "routes") {
+    title = "Rutas construidas"; total = signedPoints(result.route);
+    const chosen = d.routes[view.index];
+    caption = chosen ? `${routeName(chosen)} · ${chosen.length} vagones · +${chosen.points} puntos` : "Toca los puntos de un tramo";
+    empty = d.routes.length ? "" : "Sin rutas construidas";
+    if (empty) caption = "";
+    content = `<details class="score-route-list" ${view.list ? "open" : ""}><summary>Ver lista · ${d.routes.length} tramos</summary><div class="score-choice-list">${d.routes.map((r, i) => resultChoice(i, escapeHTML(routeName(r)), r.points, view.index === i, `${r.length} vagones`)).join("")}</div></details>`;
+    if (empty) content = "";
+    if (d.routeAdjustment) content += `<p class="score-warning">Ajuste de partida antigua: ${signedPoints(d.routeAdjustment)}. El registro guardado difiere del mapa.</p>`;
+  } else if (category === "destinations") {
+    title = "Billetes de destino"; total = signedPoints(result.destination);
+    const index = view.index ?? 0, t = d.destinations[index];
+    caption = t ? `${routeName(t)} · ${t.completed ? "Completado" : "No completado"}${t.stationRoutes.length ? " · vía estación" : ""}` : "Sin billetes de destino";
+    empty = t ? "" : "Sin billetes de destino";
+    content = `<div class="score-choice-list">${d.destinations.map((t, i) => resultChoice(i,
+      `<span class="score-status" aria-label="${t.completed ? "Completado" : "No completado"}">${t.completed ? "✓" : "✕"}</span> ${escapeHTML(routeName(t))}`,
+      t.points, index === i, t.stationRoutes.length ? "Vía estación" : "", t.completed ? "score-positive" : "score-negative")).join("")}</div>`;
+  } else if (category === "stations") {
+    title = "Estaciones"; total = signedPoints(result.stations);
+    const station = d.stations.placed[view.index], route = station && game.routes.find(r => r.id === station.routeId);
+    caption = station ? route ? `Préstamo: ${routeName(route)} · ${game.players[route.owner].name}` : `Estación en ${cityName(station.city)}` : "Estaciones construidas";
+    empty = d.stations.placed.length ? "" : "Sin estaciones construidas";
+    content = `<p class="score-station-count">${d.stations.unused} sin construir × 4</p><div class="score-choice-list">${d.stations.placed.map((s, i) => resultChoice(i, `Estación en ${escapeHTML(cityName(s.city))}`, null, view.index === i)).join("")}</div>`;
+  } else {
+    title = "Camino más largo"; total = signedPoints(result.express);
+    const compared = game.result.find(r => r.seat === view.expressSeat) || result;
+    caption = `${compared.name} · ${compared.longest} vagones`;
+    empty = compared.details?.express.routes.length ? "" : "Sin vías construidas";
+    const standings = GameUI.resultStandings(game);
+    content = `<div class="score-choice-list score-trail-ranking" aria-label="Comparación de caminos más largos">${standings.map(r =>
+      `<button type="button" class="score-choice" data-express-seat="${r.seat}" aria-pressed="${r.seat === compared.seat}"><span class="score-trail-place">${standings.findIndex(p => p.longest === r.longest) + 1}</span>${playerAvatar(r.seat)}<span class="score-trail-name">${escapeHTML(r.name)}<small>${r.longest} vagones</small></span>${r.express ? `<strong class="score-bonus" aria-label="Bonificación: ${r.express} puntos">+${r.express}</strong>` : '<span class="score-no-bonus">—<span class="sr-only"> Sin bonificación</span></span>'}</button>`).join("")}</div>`;
+  }
+  panel.innerHTML = `<div class="score-section-heading"><h3>${title}</h3><strong>${total}</strong></div>
+    <div class="score-detail-layout ${category === "routes" ? "score-detail-routes" : ""}">
+    <figure class="score-map-panel"><div class="score-map-stage"><svg id="scoreMap" role="group" aria-label="Mapa: ${escapeHTML(title)} de ${escapeHTML(result.name)}" tabindex="0"></svg>${empty ? `<span class="score-map-empty">${empty}</span>` : ""}<button type="button" class="score-map-expand" aria-label="${view.expanded ? "Reducir" : "Ampliar"} mapa" aria-pressed="${view.expanded}" title="${view.expanded ? "Reducir" : "Ampliar"} mapa">⛶</button></div><figcaption aria-live="polite">${escapeHTML(caption)}</figcaption></figure>
+    <div class="score-side-detail">${content}</div></div>`;
+  for (const button of panel.querySelectorAll("[data-score-choice]")) button.onclick = () => {
+    view.index = +button.dataset.scoreChoice; renderResultPanel(result);
+    panel.querySelector(`[data-score-choice="${view.index}"]`)?.focus({ preventScroll: true });
+  };
+  for (const button of panel.querySelectorAll("[data-express-seat]")) {
+    applyPlayerAppearance(button, game.players[+button.dataset.expressSeat].color);
+    button.onclick = () => { view.expressSeat = +button.dataset.expressSeat; renderResultPanel(result); panel.querySelector(`[data-express-seat="${view.expressSeat}"]`).focus({ preventScroll: true }); };
+  }
+  const list = panel.querySelector(".score-route-list");
+  if (list) list.ontoggle = () => { view.list = list.open; };
+  panel.querySelector(".score-map-expand").onclick = event => {
+    const expanded = panel.classList.toggle("is-map-expanded");
+    view.expanded = expanded;
+    event.currentTarget.setAttribute("aria-pressed", String(expanded));
+    event.currentTarget.setAttribute("aria-label", expanded ? "Reducir mapa" : "Ampliar mapa");
+    event.currentTarget.title = expanded ? "Reducir mapa" : "Ampliar mapa";
+  };
+  renderResultMap(result, GameUI.resultSelection(game, result.seat, category, view.index, view.expressSeat));
 }
 function showResults() {
   if (game?.phase !== "finished") return;
+  const signature = JSON.stringify([game.result, game.players.map(p => p.color)]);
+  if (uiDialog === "results" && $("dialog")._resultSignature === signature && $("dialog").querySelector(".results-scroll") && !$("overlay").classList.contains("hidden")) return;
+  if (!resultsSeen) expandedResults.add(game.result.find(r => r.seat === seat)?.seat ?? game.result[0].seat);
   uiDialog = "results"; resultsSeen = true;
   hoveredDestination = null;
   showDialog(game.earlyFinish ? "Prueba terminada anticipadamente" : "Fin de partida",
-    `<p>${game.earlyFinish ? "Puntuación del estado actual: solo cuentan los billetes ya conservados." : "La partida ha terminado. Explora el tablero y comprueba cómo se obtuvo cada punto."}</p>
-    <div class="results-list">${game.result.map((r,i) => `<section class="result-card" data-result-player="${r.seat}"><div class="result-heading">${playerAvatar(r.seat)}<div><b>${i+1}. ${escapeHTML(r.name)} ${r.winner ? "🏆" : ""}</b><small>Rutas ${r.route} · Destinos ${r.destination} · Estaciones ${r.stations} · Express ${r.express}</small></div><strong>${r.score}<small>puntos</small></strong></div><details data-score-seat="${r.seat}" ${expandedResults.has(r.seat) ? "open" : ""}><summary>Desglose de puntos</summary><div class="score-breakdown">${resultDetailHTML(r)}</div></details></section>`).join("")}</div>
-    <p class="result-rules">Empates en la clasificación: más destinos completados, después más estaciones sin construir y finalmente la bonificación Express. Si persiste, se comparte la victoria.</p>
+    `<div class="results-scroll">${game.earlyFinish ? '<p class="score-preview-note">Estado actual · Solo billetes conservados</p>' : ""}
+    <div class="results-list">${game.result.map((r,i) => `<details class="result-card" data-result-player="${r.seat}" data-score-seat="${r.seat}" ${expandedResults.has(r.seat) ? "open" : ""}><summary class="result-heading">${playerAvatar(r.seat)}<span class="result-player-name"><b>${i+1}. ${escapeHTML(r.name)} ${r.winner ? '<span aria-label="Ganador">🏆</span>' : ""}</b><small>Ver desglose <span class="result-chevron" aria-hidden="true">⌄</span></small></span><strong>${r.score}<small>puntos</small></strong></summary><div class="score-breakdown">${resultDetailHTML(r)}</div></details>`).join("")}</div>
+    <details class="result-rules"><summary>¿Cómo se resuelven los empates?</summary><p>Más destinos completados, después más estaciones sin construir y finalmente la bonificación de camino más largo. Si persiste, se comparte la victoria.</p></details></div>
     <div class="result-actions"><button id="exploreMap" class="primary">Explorar mapa</button>${practiceMode ? '<button id="practiceHome" class="tertiary">Volver al inicio</button>' : '<button id="rematch" class="tertiary">Revancha</button><button id="multiplayerHome" class="tertiary">Volver al inicio</button>'}</div>`, false, true);
   $("dialog").classList.add("results-dialog");
-  for (const card of $("dialog").querySelectorAll("[data-result-player]")) card.style.setProperty("--player-color", GameUI.playerColor(game.players[+card.dataset.resultPlayer].color));
-  for (const details of $("dialog").querySelectorAll("[data-score-seat]")) details.ontoggle = () => {
-    const i = +details.dataset.scoreSeat;
-    details.open ? expandedResults.add(i) : expandedResults.delete(i);
-  };
-  for (const button of $("dialog").querySelectorAll("[data-result-kind]")) button.onclick = () => {
-    const result = game.result.find(r => r.seat === +button.dataset.resultSeat), d = result.details;
-    const i = +button.dataset.resultIndex, kind = button.dataset.resultKind;
-    let selection;
-    if (kind === "route") { const r = d.routes[i]; selection = { routes: [r.id], endpoints: [r.a,r.b], title: routeName(r) }; }
-    if (kind === "destination") { const t = d.destinations[i]; selection = { ...t, endpoints: [t.a,t.b], title: `${routeName(t)} · ${t.completed ? "Completado" : "No completado"}` }; }
-    if (kind === "station") { const s = d.stations.placed[i]; selection = { routes: s.routeId === null ? [] : [s.routeId], stationRoutes: [s.routeId], stations: [s], endpoints: [s.city], title: `Estación en ${cityName(s.city)}` }; }
-    if (kind === "express") selection = { routes: d.express.routes, endpoints: d.express.cities.length ? [d.express.cities[0], d.express.cities.at(-1)] : [], title: `Camino más largo · ${d.express.length} vagones` };
-    resultMapSelection = selection;
-    allDestinationsVisible = false;
-    $("resultContext").classList.remove("hidden");
-    $("resultContext").querySelector("span").textContent = `${result.name} · ${selection.title}`;
-    closeOptionalDialog();
-  };
+  $("dialog")._resultSignature = signature;
+  const heading = document.createElement("div"); heading.className = "results-header";
+  $("dialog").prepend(heading); heading.append($("dialogTitle"), $("dialog").querySelector(".dialog-close"));
+  $("dialog").querySelector(".results-scroll").append($("errorMsg"));
+  for (const card of $("dialog").querySelectorAll("[data-result-player]")) applyPlayerAppearance(card, game.players[+card.dataset.resultPlayer].color);
+  for (const details of $("dialog").querySelectorAll("[data-score-seat]")) {
+    const playerSeat = +details.dataset.scoreSeat, result = game.result.find(r => r.seat === playerSeat);
+    details.querySelector(".result-heading").onclick = event => {
+      event.preventDefault(); const open = !details.open;
+      resultMapCleanup?.(); resultMapCleanup = null; expandedResults.clear();
+      for (const other of $("dialog").querySelectorAll("[data-score-seat]")) {
+        other.open = other === details && open; other.querySelector(".score-panel")?.replaceChildren();
+      }
+      if (open) { expandedResults.add(playerSeat); renderResultPanel(result); }
+    };
+    const tabs = [...details.querySelectorAll("[data-score-category]")];
+    for (const tab of tabs) {
+      tab.onclick = () => {
+        const view = resultView(playerSeat); view.category = tab.dataset.scoreCategory; view.index = null;
+        for (const other of tabs) { other.setAttribute("aria-selected", String(other === tab)); other.tabIndex = other === tab ? 0 : -1; }
+        renderResultPanel(result);
+      };
+      tab.onkeydown = event => {
+        const index = tabs.indexOf(tab), target = event.key === "ArrowRight" ? (index + 1) % tabs.length : event.key === "ArrowLeft" ? (index + tabs.length - 1) % tabs.length : event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : null;
+        if (target !== null) { event.preventDefault(); tabs[target].focus(); tabs[target].click(); }
+      };
+    }
+    if (details.open) renderResultPanel(result);
+  }
   $("exploreMap").onclick = closeOptionalDialog;
   if (practiceMode) $("practiceHome").onclick = () => send({ type: "leave_test" });
   else {
     $("multiplayerHome").onclick = () => send({ type: "leave" });
     $("rematch").onclick = () => send({ type: "rematch" });
   }
+}
+function renderResultMap(result, selection) {
+  const svg = $("scoreMap"); if (!svg || !selection) return;
+  const view = resultView(result.seat), prefix = `score-${result.seat}`;
+  if (view.category === "express") svg.setAttribute("aria-label", `Mapa: Camino más largo de ${game.players[selection.seat].name}`);
+  const key = `${result.seat}:${view.category}:${view.category === "routes" ? "all" : view.category === "express" ? view.expressSeat : view.index}`;
+  const points = [...selection.routes.flatMap(id => MAP_GEOMETRY[id]?.points || []), ...selection.endpoints.map(id => RailMap.cities[id])];
+  const bounds = points.length ? { x: Math.min(...points.map(p => p[0])) - 65, y: Math.min(...points.map(p => p[1])) - 55,
+    width: Math.max(220, Math.max(...points.map(p => p[0])) - Math.min(...points.map(p => p[0])) + 130),
+    height: Math.max(160, Math.max(...points.map(p => p[1])) - Math.min(...points.map(p => p[1])) + 110) } : MAP_BOUNDS;
+  if (key !== resultCameraKey || !resultCamera) {
+    resultCameraKey = key; resultCamera = { zoom: 1, center: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 } };
+  }
+  const el = svgElements(svg), world = el("g"), worldEl = svgElements(world);
+  drawMapBase(worldEl, prefix);
+  const routeGroups = new Map();
+  for (const id of selection.routes) {
+    const route = game.routes.find(r => r.id === id), geometry = MAP_GEOMETRY[id];
+    if (!route || !geometry) continue;
+    const owner = GameUI.routeOwner(game, route, result.seat), borrowed = selection.stationRoutes.includes(id);
+    if (!owner) continue;
+    const group = el("g", { class: "score-map-route", "data-score-route": id, "data-borrowed": borrowed }, world);
+    const halo = el("path", { d: geometry.d, fill: "none", stroke: "#edc25b", "stroke-width": 17, opacity: selection.highlighted.includes(id) ? .8 : 0,
+      "stroke-linecap": "round", ...(borrowed ? { "stroke-dasharray": "5 5" } : {}) }, group);
+    el("path", { d: geometry.d, fill: "none", stroke: owner.color, "stroke-width": 9, opacity: .22 }, group);
+    for (const cell of geometry.cells) drawOwnedPiece(el, el("g", { transform: `translate(${cell.x} ${cell.y}) rotate(${cell.angle})` }, group), cell, owner, prefix);
+    el("title", {}, group).textContent = `${routeName(route)} · ${owner.name}`;
+    routeGroups.set(id, halo);
+  }
+  if (selection.incomplete && selection.endpoints.length === 2) {
+    const [a, b] = selection.endpoints.map(id => RailMap.cities[id]);
+    el("path", { d: `M${a[0]} ${a[1]}L${b[0]} ${b[1]}`, fill: "none", stroke: "#ae6455", "stroke-width": 2, "stroke-dasharray": "5 6", "data-incomplete-destination": true }, world);
+  }
+  const cityKeys = new Set([...selection.endpoints, ...selection.routes.flatMap(id => {
+    const r = game.routes.find(r => r.id === id); return r ? [r.a, r.b] : [];
+  })]);
+  const junctions = new Set([...cityKeys].filter(city => selection.routes.filter(id => {
+    const route = game.routes.find(r => r.id === id); return route && [route.a, route.b].includes(city);
+  }).length !== 2));
+  for (const city of cityKeys) {
+    const [x, y] = RailMap.cities[city];
+    el("circle", { cx: x, cy: y, r: 4, fill: "#fffaf0", stroke: "#657d7c", "stroke-width": 1.3 }, world);
+  }
+  for (const station of selection.stations) {
+    const [x, y] = RailMap.cities[station.city];
+    const marker = el("g", { transform: `translate(${x} ${y})`, "data-score-station": station.city }, world);
+    drawStation(el, marker, GameUI.playerColor(game.players[station.seat].color), 1.25, prefix);
+  }
+  const labels = el("g", { class: "score-map-labels" });
+  let camera, frame = null, gesture = null, dragged = false, down = null;
+  const pointers = new Map();
+  function chooseRoute(index) {
+    const route = result.details.routes[index]; if (!route) return;
+    view.index = index;
+    for (const [id, halo] of routeGroups) halo.setAttribute("opacity", id === route.id ? ".85" : "0");
+    svg.closest("figure").querySelector("figcaption").textContent = `${routeName(route)} · ${route.length} vagones · +${route.points} puntos`;
+    for (const node of svg.closest(".score-panel").querySelectorAll("[data-score-choice], [data-score-badge]"))
+      node.setAttribute("aria-pressed", String(+(node.dataset.scoreChoice ?? node.dataset.scoreBadge) === index));
+    schedule();
+  }
+  function refreshCamera() {
+    const width = svg.clientWidth, height = svg.clientHeight; if (!width || !height) return false;
+    camera = GameUI.camera(bounds, { width, height }, { x: 18, y: 18, width: Math.max(1, width - 36), height: Math.max(1, height - 36) }, resultCamera.zoom, resultCamera.center);
+    resultCamera.center = camera.focus;
+    return true;
+  }
+  function paint() {
+    frame = null;
+    if (!refreshCamera()) return;
+    const width = svg.clientWidth, height = svg.clientHeight;
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    world.setAttribute("transform", `scale(${1 / camera.scale}) translate(${-camera.x} ${-camera.y})`);
+    const focused = document.activeElement?.dataset?.scoreBadge;
+    labels.replaceChildren();
+    const entries = [], nodes = new Map();
+    const screen = (x, y) => ({ x: (x - camera.x) / camera.scale, y: (y - camera.y) / camera.scale });
+    const onScreen = p => p.x > 12 && p.y > 12 && p.x < width - 12 && p.y < height - 12;
+    for (const city of cityKeys) {
+      // Point badges are the primary information here. At overview scale, keep
+      // only terminals/junctions and the selected route's cities; zoom restores all.
+      const chosen = result.details.routes[view.index];
+      if (view.category === "routes" && resultCamera.zoom < 1.7 && !junctions.has(city) && ![chosen?.a, chosen?.b].includes(city)) continue;
+      const p = screen(...RailMap.cities[city]); if (!onScreen(p)) continue;
+      const text = el("text", { class: "score-city-name", "pointer-events": "none" }, labels); text.textContent = cityName(city);
+      entries.push({ key: `city-${city}`, ...p, width: text.getComputedTextLength() + 4 });
+      nodes.set(`city-${city}`, { node: text, p });
+    }
+    for (const badge of selection.badges) {
+      const geometry = MAP_GEOMETRY[badge.routeId], point = RailMap.pointAt(geometry, geometry.length / 2), p = screen(...point);
+      if (!onScreen(p)) continue;
+      const route = result.details.routes[badge.index];
+      const group = el("g", { class: "score-point-badge", "data-score-badge": badge.index, role: "button", tabindex: "0",
+        "aria-pressed": view.index === badge.index, "aria-label": `${routeName(route)}: ${badge.points} puntos, ${route.length} vagones` }, labels);
+      el("rect", { x: -3, y: -5, width: 42, height: 32, fill: "transparent" }, group);
+      el("rect", { width: 36, height: 22, rx: 8, class: "score-point-pill" }, group);
+      el("text", { x: 18, y: 15, "text-anchor": "middle" }, group).textContent = `+${badge.points}`;
+      group.onclick = () => { if (!dragged) chooseRoute(badge.index); };
+      group.onkeydown = event => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); event.stopPropagation(); chooseRoute(badge.index); } };
+      entries.push({ key: `route-${badge.routeId}`, ...p, width: 36 }); nodes.set(`route-${badge.routeId}`, { node: group, p });
+    }
+    for (const place of RailMap.placeLabels(entries, width, height, [], { height: 22, baseline: 16 })) {
+      const { node, p } = nodes.get(place.key);
+      if (place.key.startsWith("city-")) {
+        node.setAttribute("x", place.x + 2); node.setAttribute("y", place.y + 15);
+        if (Math.hypot(place.x + place.width / 2 - p.x, place.y + 11 - p.y) > 26) {
+          const leader = el("path", { d: `M${p.x} ${p.y}L${place.x + place.width / 2} ${place.y + 11}`, class: "score-point-leader" }, labels);
+          labels.insertBefore(leader, labels.firstChild);
+        }
+      }
+      else {
+        const leader = el("path", { d: `M${p.x} ${p.y}L${place.x + 18} ${place.y + 11}`, class: "score-point-leader" }, labels);
+        labels.insertBefore(leader, labels.firstChild);
+        node.setAttribute("transform", `translate(${place.x} ${place.y})`);
+      }
+    }
+    if (focused !== undefined) labels.querySelector(`[data-score-badge="${focused}"]`)?.focus({ preventScroll: true });
+  }
+  function schedule() { if (frame === null) frame = requestAnimationFrame(paint); }
+  function pointerPoint(event) { const r = svg.getBoundingClientRect(); return { x: event.clientX - r.left, y: event.clientY - r.top }; }
+  function startGesture() {
+    const ps = [...pointers.values()];
+    if (!ps.length || !refreshCamera()) { gesture = null; return; }
+    const midpoint = ps.length > 1 ? { x: (ps[0].x + ps[1].x) / 2, y: (ps[0].y + ps[1].y) / 2 } : ps[0];
+    gesture = { zoom: resultCamera.zoom, center: { ...resultCamera.center }, scale: camera.scale,
+      midpoint: { x: midpoint.x - camera.sx, y: midpoint.y - camera.sy },
+      distance: ps.length > 1 ? Math.hypot(ps[0].x - ps[1].x, ps[0].y - ps[1].y) : null };
+  }
+  svg.onpointerdown = event => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    pointers.set(event.pointerId, pointerPoint(event));
+    if (pointers.size === 1) { dragged = false; down = pointerPoint(event); }
+    else dragged = true;
+    // Capture only after movement, so a tap still reaches its SVG point badge.
+    startGesture();
+  };
+  svg.onpointermove = event => {
+    if (!pointers.has(event.pointerId) || !gesture) return;
+    const p = pointerPoint(event); pointers.set(event.pointerId, p);
+    if (down && Math.hypot(p.x - down.x, p.y - down.y) > 5) dragged = true;
+    if (dragged && !svg.hasPointerCapture(event.pointerId)) svg.setPointerCapture(event.pointerId);
+    const ps = [...pointers.values()];
+    const midpoint = ps.length > 1 ? { x: (ps[0].x + ps[1].x) / 2, y: (ps[0].y + ps[1].y) / 2 } : ps[0];
+    const offset = { x: midpoint.x - camera.sx, y: midpoint.y - camera.sy };
+    if (ps.length > 1 && gesture.distance !== null) {
+      const distance = Math.hypot(ps[0].x - ps[1].x, ps[0].y - ps[1].y);
+      const z = Math.max(1, Math.min(6, gesture.zoom * distance / Math.max(1, gesture.distance)));
+      resultCamera = GameUI.pinchTransform(gesture, gesture.distance * z / gesture.zoom, offset);
+    } else resultCamera.center = { x: gesture.center.x + (gesture.midpoint.x - offset.x) * gesture.scale, y: gesture.center.y + (gesture.midpoint.y - offset.y) * gesture.scale };
+    schedule();
+  };
+  const endPointer = event => { pointers.delete(event.pointerId); if (svg.hasPointerCapture(event.pointerId)) svg.releasePointerCapture(event.pointerId); startGesture(); };
+  svg.onpointerup = endPointer; svg.onpointercancel = endPointer;
+  svg.onlostpointercapture = event => { if (event.target === svg && pointers.has(event.pointerId)) { pointers.delete(event.pointerId); startGesture(); } };
+  function zoomAt(nextZoom, p) {
+    // Wheel events can arrive before the scheduled paint. Always anchor against
+    // the latest camera, not the scale from the previous rendered frame.
+    if (!refreshCamera()) return;
+    const next = Math.max(1, Math.min(6, nextZoom)), offset = { x: p.x - camera.sx, y: p.y - camera.sy };
+    resultCamera = GameUI.zoomTransform({ zoom: resultCamera.zoom, center: resultCamera.center, scale: camera.scale, midpoint: offset }, next, offset);
+    schedule();
+  }
+  function resetCamera() {
+    resultCamera = { zoom: 1, center: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 } };
+    schedule();
+  }
+  const wheel = event => {
+    event.preventDefault();
+    const pixels = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? svg.clientHeight : 1);
+    zoomAt(resultCamera.zoom * Math.exp(-pixels * .002), pointerPoint(event));
+  };
+  svg.addEventListener("wheel", wheel, { passive: false });
+  svg.ondblclick = event => { event.preventDefault(); if (resultCamera.zoom > 1) resetCamera(); else zoomAt(2, pointerPoint(event)); };
+  svg.onkeydown = event => {
+    if (event.target !== svg || !camera) return;
+    const steps = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    if (steps[event.key]) { event.preventDefault(); const [x, y] = steps[event.key]; resultCamera.center.x += x * 50 * camera.scale; resultCamera.center.y += y * 50 * camera.scale; schedule(); }
+    if (["+", "=", "-"].includes(event.key)) { event.preventDefault(); zoomAt(resultCamera.zoom * (event.key === "-" ? .8 : 1.25), { x: camera.sx, y: camera.sy }); }
+    if (event.key === "Home") { event.preventDefault(); resetCamera(); }
+  };
+  const observer = new ResizeObserver(schedule); observer.observe(svg); paint();
+  resultMapCleanup = () => { observer.disconnect(); if (frame !== null) cancelAnimationFrame(frame); svg.removeEventListener("wheel", wheel); pointers.clear(); };
 }
 $("viewResults").onclick = showResults;
 $("resultContext").querySelector("button").onclick = () => {
@@ -2177,4 +2578,5 @@ setInterval(() => {
 if (desiredRoom && localStorage.getItem(identityKey(desiredRoom))) {
   attempted = true;
 }
+initializeHome();
 connect();

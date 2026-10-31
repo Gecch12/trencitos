@@ -85,6 +85,28 @@ test("each of the two train draws is a separate delayed action", () => {
   assert.deepEqual(updates, [800, 1600]);
 });
 
+test("practice controller actually saves for a destination instead of building a cheap unrelated route", () => {
+  const { clock, room, controller } = setup();
+  const g = room.game;
+  g.phase = "play"; g.current = 1;
+  g.players[1].hand = ["red", "red"];
+  g.players[1].tickets = [{ a: "PAR", b: "BRU", p: 10 }];
+  g.routes = [
+    { id: 0, a: "PAR", b: "BRU", n: 6, color: "red", owner: null, ferry: 0, tunnel: false },
+    { id: 1, a: "MAD", b: "BAR", n: 2, color: "red", owner: null, ferry: 0, tunnel: false },
+  ];
+  g.face = ["red", "red", "blue", "green", "black"];
+  g.deck = ["yellow", "purple", "white"];
+  controller.sync(room);
+  clock.tick(1600);
+  assert.equal(g.current, 2);
+  assert.equal(g.players[1].hand.filter(c => c === "red").length, 4);
+  assert.equal(g.players[1].trains, 45);
+  assert.ok(g.routes.every(r => r.owner === null));
+  assert.deepEqual(g.events.filter(e => e.type === "draw").map(e => e.seat), [1, 1]);
+  controller.close();
+});
+
 test("finish stops an already scheduled bot and computes results immediately", () => {
   const { clock, room, controller } = setup();
   room.game.current = 1;

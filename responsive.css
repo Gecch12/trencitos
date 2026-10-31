@@ -104,7 +104,7 @@
   .toast { top: calc(var(--top-height, 54px) + 8px); max-width: calc(100vw - 24px); font-size: 13px; }
   /* All dialogs have a bounded viewport; actions remain reachable above safe areas. */
   .overlay { padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); }
-  .dialog, .dialog.tunnel-dialog, .dialog.results-dialog { width: 100%; max-height: 100%; padding: 18px; border-width: 2px; outline-width: 1px; overscroll-behavior: contain; }
+  .dialog, .dialog.tunnel-dialog { width: 100%; max-height: 100%; padding: 18px; border-width: 2px; outline-width: 1px; overscroll-behavior: contain; }
   .dialog h2 { padding-right: 30px; font-size: 25px; }
   .dialog .dialog-heading h2 { font-size: 23px; }
   .dialog button, .dialog summary { min-height: 44px; }
@@ -123,13 +123,11 @@
   .ticket-confirm { background: #fffcf3; }
   .ticket-confirm button { margin-top: 5px; }
   .ticket-options .ticket-options-hint { font-size: 11px; margin-bottom: 5px; }
-  .result-actions { bottom: -18px; gap: 8px; }
   .result-actions button { padding: 10px; font-size: 13px; }
   .result-heading { gap: 8px; padding: 12px; }
   .result-heading b { font-size: 15px; overflow-wrap: anywhere; }
   .result-heading > strong { font-size: 23px; }
   .score-breakdown { padding-inline: 10px; }
-  .score-equation { font-size: 14px; overflow-wrap: anywhere; }
   .dialog-actions { position: sticky; bottom: -18px; background: #fffcf3; padding: 8px 0; display: grid; gap: 6px; border-top: 1px solid #e4d8c0; }
   .dialog-actions .full { margin: 0; }
 }
