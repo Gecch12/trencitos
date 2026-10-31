@@ -150,6 +150,8 @@ function applyAction(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='stri
   const revealed=[];for(let i=0;i<3;i++){const c=draw(g);if(c)revealed.push(c)}
   const surcharge=revealed.filter(c=>c==='wild'||(color!=='wild'&&c===color)).length;
   g.phase='tunnel';g.pending={routeId:r.id,color,base,surcharge,revealed};
+  event(g,'tunnel_reveal',seat,{routeId:r.id,paymentColor:color,base:{...base},surcharge,revealed:[...revealed]});
+  g.pending.revealId=g.eventSerial;
   // Keep revealed until decision. A 0-surcharge tunnel succeeds automatically.
   if(surcharge===0){spend(g,p,base);g.discard.push(...revealed);r.owner=seat;p.trains-=r.n;p.score+=SCORE[r.n];g.phase='play';event(g,'build',seat,{routeId:r.id});note(g,`${p.name} tomó túnel ${CITIES[r.a][2]} — ${CITIES[r.b][2]} (+${SCORE[r.n]}).`,seat);next(g,now)}
   return;
@@ -256,7 +258,7 @@ function view(g,seat){const p=g.players[seat],own=seat===g.current,details=desti
  initialDeadline:g.initialDeadline,initialReadyCount:g.players.filter(p=>!p.pending.length).length,
  waitingDeadline:g.turnWaiting?g.players[g.current].offer?.deadline:null,
  closingDeadline:g.phase==='closing'?Math.max(...g.players.map(p=>p.offer?.deadline||0)):null,
- events:(g.events||[]).map(e=>{const {color,...safe}=e;return {...safe,...(e.type==='draw'&&(e.index>=0||e.seat===seat)?{color}:{})}}),
+ events:(g.events||[]).filter(e=>e.type!=='tunnel_reveal'||e.seat===seat).map(e=>{const {color,...safe}=e;return {...safe,...(e.type==='draw'&&(e.index>=0||e.seat===seat)?{color}:{})}}),
  drawEvent:drawEvent(g,seat),phase:g.phase,current:g.current,seat,
  players:g.players.map(x=>({name:x.name,color:x.color,trains:x.trains,stations:x.stations,score:x.score,placed:x.placed,handCount:x.hand.length,ticketsCount:x.tickets.length,initialReady:!x.pending.length})),
  routes:g.routes,face:g.face,deckCount:g.deck.length,discardCount:g.discard.length,ticketDeckCount:g.shortDeck.length,

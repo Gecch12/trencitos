@@ -26,7 +26,7 @@
           <button id="reclaimControl" class="hidden" type="button">Recuperar control</button>
           <button id="leaveRoom" type="button">Salir de la sala</button>
         </div></details>
-        <button id="soundToggle" class="sound-toggle" type="button" aria-label="Silenciar sonidos" title="Silenciar sonidos" aria-pressed="false">♫</button>
+        <button id="soundToggle" class="sound-toggle" type="button" aria-label="Sonido" title="Silenciar sonidos" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3Z"/><path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg><span class="sound-label" aria-hidden="true">Sonido activado</span></button>
         <span id="serverWarning" class="server-warning hidden" tabindex="0" role="status">⚠ Servidor anterior<span>Falta el nuevo manejo de sesiones y ausencias. Reinicia el backend al terminar: las partidas de pruebas se perderán.</span></span>
         <span class="pill" id="connection">Conectando…</span
         ><span class="version">BETA 0.6.1</span>
@@ -105,6 +105,9 @@
               >
                 ⛶
               </button>
+              <button id="toggleDestinations" class="destination-toggle" type="button" aria-label="Resaltar mis destinos" aria-pressed="false" title="Resaltar mis destinos" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8c3 0 2 8 6 8h6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-dasharray="2 2"/><circle cx="5" cy="7" r="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="19" cy="16" r="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="5" cy="7" r="1" fill="currentColor"/><circle cx="19" cy="16" r="1" fill="currentColor"/></svg>
+              </button>
               <button id="pendingTickets" class="pending-tickets hidden" type="button" aria-haspopup="dialog">Elegir billetes <span data-clock="offer"></span></button>
               <span id="initialStatus" class="initial-status hidden" role="status"><span id="initialStatusText"></span> · <strong data-clock="initial"></strong></span>
               <button id="viewResults" class="pending-tickets hidden" type="button" aria-haspopup="dialog">Ver resultados</button>
@@ -135,7 +138,7 @@
         </section>
         <section class="sidepanel">
           <div class="sectiontitle market-toolbar">
-            <span class="market-heading">ROBOS <span class="market-info"><button type="button" aria-label="Información de los mazos" aria-describedby="deckinfo">i</button><span id="deckinfo" role="tooltip"></span></span></span><span id="drawstats"></span>
+            <span class="market-heading">ROBOS <span class="market-info"><button type="button" aria-label="Información de los mazos" aria-describedby="deckinfo"><span aria-hidden="true">i</span></button><span id="deckinfo" role="tooltip"></span></span></span><span id="drawstats"></span>
             <button id="drawtickets" class="destination-deck" aria-label="Robar nuevos destinos" title="Nuevos destinos · Roba hasta 3 billetes y conserva al menos 1">
               <svg viewBox="0 0 84 48" aria-hidden="true"><rect x="9" y="11" width="66" height="33" rx="4" fill="#c4a879" stroke="#987749"/><rect x="5" y="7" width="66" height="33" rx="4" fill="#ddc79e" stroke="#987749"/><rect x="1" y="3" width="66" height="33" rx="4" fill="#f2e3c6" stroke="#987749"/><path d="m14 13 11-4 16 5 14-4v16l-14 4-16-5-11 4Z" fill="none" stroke="#b39361"/><path d="m21 23 10-9 17 8" fill="none" stroke="#537b6c" stroke-width="2" stroke-dasharray="3 2"/><circle cx="21" cy="23" r="3" fill="#537b6c"/><circle cx="48" cy="22" r="3" fill="#537b6c"/></svg>
             </button>
@@ -153,19 +156,24 @@
         </section>
         <span id="turntitle" class="sr-only" role="status"></span>
       </aside>
-      <section id="compactPlayers" class="compact-players" aria-label="Resumen de jugadores"></section>
+      <section id="compactPlayers" class="compact-players" aria-label="Resumen de jugadores" hidden></section>
       <div id="compactPlayerDetail" class="compact-player-detail hidden" role="region" aria-label="Detalle del jugador"><span></span><button type="button" aria-label="Cerrar detalle del jugador">×</button></div>
       <section id="compactPanel" class="compact-panel hidden" aria-label="Panel de juego"></section>
-      <div id="compactHud" class="compact-hud">
-        <div class="compact-status"><span id="compactTurn" role="status"></span><strong id="compactClock" data-clock="turn"></strong><button id="compactPractice" class="hidden" type="button" aria-controls="practiceControls" aria-expanded="false">Prueba</button></div>
+      <div id="compactHud" class="compact-hud" hidden>
+        <div id="compactTurnHome"></div>
         <section id="compactHand" aria-label="Tu mano, siempre visible"></section>
         <nav class="compact-nav" aria-label="Paneles de la partida">
           <button type="button" data-panel="map" aria-pressed="true" aria-controls="mapscroll"><span aria-hidden="true">⌖</span>Mapa</button>
-          <button type="button" data-panel="cards" aria-pressed="false" aria-controls="compactPanel"><span aria-hidden="true">▤</span>Robar</button>
+          <button type="button" data-panel="cards" aria-pressed="false" aria-controls="compactPanel"><span aria-hidden="true">▤</span>Robar<small class="draw-reminder">1 pendiente</small></button>
           <button type="button" data-panel="destinations" aria-pressed="false" aria-controls="compactPanel"><span aria-hidden="true">⚑</span>Destinos</button>
           <button type="button" data-panel="history" aria-pressed="false" aria-controls="compactPanel"><span aria-hidden="true">≡</span>Historial</button>
         </nav>
       </div>
+      <section id="turnBanner" class="turn-banner" aria-label="Turno actual">
+        <div class="turn-copy" role="status"><strong id="compactTurn"></strong><span id="turnHint"></span></div>
+        <strong id="compactClock" class="turn-clock" data-clock="turn" data-clock-format="timer"></strong>
+        <button id="compactPractice" class="hidden" type="button" aria-controls="practiceControls" aria-expanded="false">Prueba</button>
+      </section>
     </div>
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
     <div id="overlay" class="overlay hidden">

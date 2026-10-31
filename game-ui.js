@@ -2,7 +2,24 @@
 
 // Pure view helpers. The server remains authoritative for every game action.
 const GameUI = (() => {
-  const MIN_ZOOM = .25, MAX_ZOOM = 3;
+  const MIN_ZOOM = .25, MAX_ZOOM = 6;
+  const ROUTE_POINTS = Object.freeze({ 1: 1, 2: 2, 3: 4, 4: 7, 6: 15, 8: 21 });
+  function cityLabelScale(zoom) { return Math.min(1.6, Math.max(1, 1 + (zoom - 2.5) * .24)); }
+  function turnPresentation(game, seat, controlled = true) {
+    if (!game) return { title: "", hint: "", clock: null, mine: false };
+    const own = game.current === seat, player = game.players[game.current];
+    if (game.phase === "finished") return { title: "PARTIDA TERMINADA", hint: "Consulta el desglose de puntos", clock: null, mine: false };
+    if (game.phase === "initial") return { title: game.initial?.length ? "ELIGE TUS DESTINOS" : "ESPERANDO AL RESTO", hint: `${game.initialReadyCount}/${game.players.length} jugadores listos`, clock: "initial", mine: false };
+    if (game.phase === "closing") return { title: "ÚLTIMOS BILLETES", hint: "Esperando las elecciones pendientes", clock: "closing", mine: false };
+    if (game.turnWaiting) return { title: own ? "ELIGE TUS BILLETES" : `Turno de ${player.name}`, hint: own ? "Después tendrás un minuto completo para jugar" : "Está eligiendo sus destinos pendientes", clock: "waiting", mine: false };
+    const mine = own && controlled;
+    return { title: mine ? "TU TURNO" : own ? "TU PUESTO · SIN CONTROL" : `Turno de ${player.name}`,
+      hint: !controlled && own ? "Reconecta o recupera el control para jugar" : mine ? game.phase === "tunnel" ? "Resuelve el túnel" : game.drawCount === 1 ? "Roba una carta más" : "Elige una acción" : "Puedes explorar el mapa y tus destinos",
+      clock: "turn", mine };
+  }
+  function needsSecondDraw(game, seat, panel, controlled = true) {
+    return !!(controlled && game?.phase === "play" && !game.turnWaiting && game.current === seat && game.drawCount === 1 && panel !== "cards");
+  }
   const YELLOW = "#f4d83d";
   const WHITE = "#fff9e9", NEUTRAL = "#929da5";
   // Shared map/card presentation palette. Asset tests guard against hue drift.
@@ -58,6 +75,22 @@ const GameUI = (() => {
     return tickets.map((ticket, index) => ({ ticket, index })).sort((a, b) =>
       Number(!!destinationStatus(game, a.ticket.id)?.completed) -
       Number(!!destinationStatus(game, b.ticket.id)?.completed) || a.index - b.index);
+  }
+  // Only kept private tickets belong in the overview, never an unconfirmed
+  // offer. Hover can inspect a completed connection; overview shows cities only.
+  function destinationSpotlightSelection(game, ticketId, all = false, result = null) {
+    if (!game) return null;
+    const ticket = game.tickets?.find(t => t.id === ticketId);
+    if (ticket) {
+      const path = game.ticketPaths?.find(p => p.id === ticket.id);
+      return { endpoints: [ticket.a, ticket.b], routes: path?.routes || [],
+        stationRoutes: path?.stationRoutes || [], stations: path?.stations || [] };
+    }
+    if (all && game.tickets?.length) return {
+      endpoints: [...new Set(game.tickets.flatMap(t => [t.a, t.b]))],
+      routes: [], stationRoutes: [], stations: [], overview: true,
+    };
+    return result;
   }
   const colors = ["red", "blue", "green", "yellow", "black", "white", "orange", "purple"];
   function payments(hand, cost, color = "gray", ferry = 0) {
@@ -141,6 +174,14 @@ const GameUI = (() => {
   function pinchZoom(startZoom, startDistance, distance) {
     return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, startZoom * Math.max(1, distance) / Math.max(1, startDistance)));
   }
+  function pinchTransform(start, distance, midpoint) {
+    const zoom = pinchZoom(start.zoom, start.distance, distance);
+    const scale = start.scale * start.zoom / zoom;
+    return { zoom, center: {
+      x: start.center.x + start.midpoint.x * start.scale - midpoint.x * scale,
+      y: start.center.y + start.midpoint.y * start.scale - midpoint.y * scale,
+    } };
+  }
   function camera(bounds, viewport, safe, zoom, center) {
     const scale = Math.max(bounds.width / Math.max(1, safe.width), bounds.height / Math.max(1, safe.height)) / zoom;
     const width = viewport.width * scale, height = viewport.height * scale;
@@ -157,6 +198,6 @@ const GameUI = (() => {
     return { width, height, scale, focus,
       x: focus.x - sx * scale, y: focus.y - sy * scale, sx, sy };
   }
-  return { payments, tunnelPayments, construction, canPass, camera, safeArea, pinchZoom, overviewLabels, endpointPosition, playerMark, playerColor, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, destinationEntries, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, OWNER_MARK_SCALE, MIN_ZOOM, MAX_ZOOM };
+  return { payments, tunnelPayments, construction, canPass, camera, safeArea, pinchZoom, pinchTransform, cityLabelScale, turnPresentation, needsSecondDraw, ROUTE_POINTS, overviewLabels, endpointPosition, playerMark, playerColor, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, destinationEntries, destinationSpotlightSelection, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, OWNER_MARK_SCALE, MIN_ZOOM, MAX_ZOOM };
 })();
 if (typeof module !== "undefined") module.exports = GameUI;

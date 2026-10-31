@@ -34,7 +34,7 @@ let labelPriority = [];
 let hoveredPlayer = null, focusedPlayer = null;
 let displayedLogs = null;
 let displayedHistoryKey = null;
-let hoveredDestination = null, focusedDestination = null;
+let hoveredDestination = null, allDestinationsVisible = false;
 let historyFollowing = true, lastDrawId = null;
 let lastEffectId = null, serverOffset = 0, seenOfferId = null;
 let waitingForGameStart = false;
@@ -44,6 +44,7 @@ const cardFlights = new Set();
 const constructionFlights = new Map();
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 let uiDialog = null, dialogReturnFocus = null, buildTarget = null, buildSubmitting = false;
+let tunnelReveal = null;
 let resultsSeen = false, resultMapSelection = null;
 const expandedResults = new Set();
 let toastTimer = null;
@@ -103,6 +104,7 @@ function identityKey(code) {
   return "rr-room-" + code;
 }
 function resetToLobby(message = "", preserveIdentity = false) {
+  cancelTunnelReveal();
   if (!preserveIdentity && (room || desiredRoom)) localStorage.removeItem(identityKey(room || desiredRoom));
   room = desiredRoom = token = "";
   game = null;
@@ -126,7 +128,7 @@ function resetToLobby(message = "", preserveIdentity = false) {
   closeMapMenu();
   displayedLogs = null;
   displayedHistoryKey = null;
-  hoveredDestination = focusedDestination = null;
+  hoveredDestination = null; allDestinationsVisible = false;
   cancelConstruction();
   updateDestinationSpotlight();
   historyFollowing = true;
@@ -195,6 +197,7 @@ function connect() {
     if (m.type === "session_replaced") {
       sessionReplaced = true; pendingAction = null;
       notice("Esta partida está abierta en otra pestaña. Aquí no tienes el control.", "takeOver");
+      updateCompactStatus();
       return;
     }
     if (m.type === "storage") {
@@ -203,6 +206,7 @@ function connect() {
         ? "Partida pausada por el guardado remoto. El administrador debe restablecer el servicio; conserva esta pestaña para reconectar."
         : "Partida pausada: el servidor no pudo guardar. No se aceptarán jugadas hasta recuperarlo.", m.requiresRestart ? null : "retrySave");
       else if (!sessionReplaced) $("sessionNotice").classList.add("hidden");
+      updateCompactStatus();
       return;
     }
     if (m.type === "ack") {
@@ -248,6 +252,7 @@ function connect() {
         uiDialog = null; pendingChoiceKey = null; $("overlay").classList.add("hidden");
       }
       if (game.turnWaiting && game.current === seat && game.ticketOffer) uiDialog = "tickets";
+      prepareTunnelReveal(effects);
       selected = null;
       stationCity = null;
       render();
@@ -257,10 +262,13 @@ function connect() {
     }
   };
   sock.onclose = () => {
+    cancelTunnelReveal();
     cancelCardFlights();
     cancelConstruction();
     stopSounds();
     status(sessionReplaced ? "Otra pestaña" : "○ Desconectado");
+    updateCompactStatus();
+    if (game) renderDialog();
     if (sessionReplaced) return;
     if (practiceMode) renderPracticeControls();
     setTimeout(() => {
@@ -502,10 +510,17 @@ function updateClocks() {
   const deadlines = { initial: game.initialDeadline, turn: game.turnDeadline, offer: game.ticketOffer?.deadline, waiting: game.waitingDeadline, closing: game.closingDeadline };
   for (const node of document.querySelectorAll("[data-clock]")) {
     const deadline = deadlines[node.dataset.clock], seconds = Number.isFinite(deadline) ? Math.max(0, Math.ceil((deadline - Date.now() - serverOffset) / 1000)) : null;
-    node.textContent = seconds === null ? "" : `${seconds}s`;
+    node.textContent = seconds === null ? "" : node.dataset.clockFormat === "timer" ? `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}` : `${seconds}s`;
+    node.classList.toggle("clock-warning", seconds !== null && seconds <= 10);
     node.classList.toggle("clock-urgent", seconds !== null && seconds <= 5);
     node.setAttribute("aria-label", seconds === null ? "" : `${seconds} segundos restantes`);
+    if (node.id === "compactClock") {
+      $("turnBanner").style.setProperty("--time-left", String(Math.min(1, (seconds || 0) / 60)));
+      $("turnBanner").classList.toggle("is-warning", seconds !== null && seconds <= 10);
+      $("turnBanner").classList.toggle("is-urgent", seconds !== null && seconds <= 5);
+    }
   }
+  if (tunnelReveal?.event.surcharge && game.turnDeadline - Date.now() - serverOffset <= 5000) finishTunnelReveal(true);
 }
 setInterval(updateClocks, 250);
 $("pendingTickets").onclick = () => { if (game?.ticketOffer) { uiDialog = "tickets"; showTicketDialog(game.ticketOffer.tickets, 1); } };
@@ -616,7 +631,7 @@ function playEffects(events) {
       }, drawDelay);
       effectTimers.add(timer); drawDelay += 180;
     } else if (event.type === "tickets") playSound("card");
-    else if (event.type === "build") animateConstruction(event);
+    else if (event.type === "build" && !event.deferredForTunnel) animateConstruction(event);
     else if (event.type === "turn" && event.seat === seat) playSound("bell");
   }
 }
@@ -624,10 +639,10 @@ function playEffects(events) {
 let soundContext = null, muted = localStorage.getItem("rr-muted") === "true";
 const soundNodes = new Set();
 function soundLabel() {
-  $("soundToggle").innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3Z"/>${muted ? '<path d="m16 9 5 6m0-6-5 6"/>' : '<path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>'}</svg>`;
-  $("soundToggle").setAttribute("aria-pressed", String(muted));
+  $("soundToggle").innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3Z"/>${muted ? '<path d="m16 9 5 6m0-6-5 6"/>' : '<path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>'}</svg><span class="sound-label" aria-hidden="true">Sonido ${muted ? "desactivado" : "activado"}</span>`;
+  $("soundToggle").setAttribute("aria-pressed", String(!muted));
   $("soundToggle").title = muted ? "Activar sonidos" : "Silenciar sonidos";
-  $("soundToggle").setAttribute("aria-label", $("soundToggle").title);
+  $("soundToggle").setAttribute("aria-label", "Sonido");
 }
 function unlockSound() {
   if (muted) return;
@@ -757,9 +772,9 @@ function cancelConstruction() {
   }
   constructionFlights.clear();
 }
-document.addEventListener("visibilitychange", () => { if (document.hidden) { cancelCardFlights(); cancelConstruction(); stopSounds(); } });
+document.addEventListener("visibilitychange", () => { if (document.hidden) { finishTunnelReveal(true); cancelCardFlights(); cancelConstruction(); stopSounds(); } });
 window.addEventListener("resize", () => { cancelCardFlights(); cancelConstruction(); });
-reducedMotion.addEventListener("change", () => { cancelCardFlights(); cancelConstruction(); });
+reducedMotion.addEventListener("change", () => { if (reducedMotion.matches) finishTunnelReveal(true); cancelCardFlights(); cancelConstruction(); });
 function layoutHand() {
   const cards = [...$("hand").querySelectorAll(".traincard")];
   if (!cards.length) return;
@@ -1003,6 +1018,7 @@ function prioritizeCityLabels(element, cities) {
 function updateCityLabels() {
   const view = mapViewSize();
   if (!view) return;
+  const labelScale = GameUI.cityLabelScale(zoom), baseline = 13 * labelScale;
   const viewport = $("mapscroll");
   const labelArea = compactMedia.matches ? mapSafeArea(viewport.getBoundingClientRect(), true)
     : { x: 0, y: 0, width: viewport.clientWidth, height: viewport.clientHeight };
@@ -1016,6 +1032,7 @@ function updateCityLabels() {
     g.style.display = visible ? "" : "none";
     if (!visible) continue;
     groups.set(key, g);
+    g.querySelector("text").style.fontSize = `${15 * labelScale}px`;
     entries.push({ key, x, y, width: g.querySelector("text").getComputedTextLength() });
   }
   const obstacles = MAP_GEOMETRY.flatMap(r => r.cells.map(cell => {
@@ -1038,15 +1055,15 @@ function updateCityLabels() {
     for (const entry of entries) if (!keys.has(entry.key)) groups.get(entry.key).style.display = "none";
   }
   const relative = item => ({ ...item, x: item.x - labelArea.x, y: item.y - labelArea.y });
-  const placements = RailMap.placeLabels(displayed.map(relative), labelArea.width, labelArea.height, obstacles.map(relative), { height: 18, baseline: 13 });
+  const placements = RailMap.placeLabels(displayed.map(relative), labelArea.width, labelArea.height, obstacles.map(relative), { height: 18 * labelScale, baseline });
   for (const box of placements) {
     const g = groups.get(box.key), city = RailMap.cities[box.key], [sx, sy] = screen(city);
     const dx = box.x + labelArea.x - sx, dy = box.y + labelArea.y - sy;
-    // Inverse camera scale: font, halo, label offsets and leaders stay in CSS px.
+    // Stable screen sizing at overview; type grows gently once zoom exceeds 2.5×.
     g.setAttribute("transform", `translate(${city[0]} ${city[1]}) scale(${view.scale})`);
     const text = g.querySelector("text");
     text.setAttribute("x", dx);
-    text.setAttribute("y", dy + 13);
+    text.setAttribute("y", dy + baseline);
     const leader = g.querySelector("line");
     const ex = Math.max(dx, Math.min(0, dx + box.width)), ey = Math.max(dy, Math.min(0, dy + box.height));
     const distance = Math.hypot(ex, ey);
@@ -1103,53 +1120,56 @@ function showBuildDialog() {
   const result = GameUI.construction(game, seat, buildTarget);
   if (result.reason) { closeOptionalDialog(); toast(result.reason); return; }
   const { route: r, options } = result;
+  let chosen = options[0]; // Server-valid combinations, minimum wildcards first.
   showDialog(r ? "Construir ruta" : "Construir estación",
-    `<p>${escapeHTML(r ? routeSummaryText(r) : `Estación en ${CITIES[buildTarget.city][2]} · ${plural(result.cost, "carta")} del mismo color`)}</p>
-    <label for="paycolor">Color de pago</label><select id="paycolor"></select>
-    <label for="wildcount">Locomotoras a utilizar</label><select id="wildcount"></select>
-    <div id="paymentPreview" class="payment-preview" aria-live="polite"></div>
-    <p>${r?.tunnel ? "Puedes pagar el coste inicial. Se revelarán 3 cartas: si hay un suplemento, podrás pagarlo o desistir (esto termina tu turno)." : r?.ferry ? `El pago incluye al menos ${r.ferry} locomotora(s) obligatoria(s).` : "Las locomotoras pueden sustituir cartas de color."}</p>
-    <div class="dialog-actions"><button id="confirmBuild" class="primary full">${r?.tunnel ? "Intentar construir túnel" : "Confirmar construcción"}</button>
+    `${dialogClockHTML()}<div class="build-summary"><strong>${escapeHTML(r ? routeName(r) : `Estación en ${cityName(buildTarget.city)}`)}</strong>
+    ${r ? `<div class="build-track" aria-hidden="true">${'<i></i>'.repeat(r.n)}</div><span>${r.n} vagones · <b>+${GameUI.ROUTE_POINTS[r.n]} puntos</b>${r.tunnel ? " · Túnel" : r.ferry ? " · Ferry" : ""}</span>` : `<span>Estación ${result.cost} de 3 · ${plural(result.cost, "carta")}</span>`}</div>
+    <h3 class="payment-heading">${r?.tunnel ? "Pagarás inicialmente" : "Pagarás"}</h3>
+    <div id="paymentPreview" class="payment-preview build-payment" aria-live="polite"></div>
+    ${options.length > 1 ? `<details class="change-payment"><summary>Cambiar cartas <small>Otras combinaciones válidas</small></summary><div class="build-options">${options.map((option, i) => `<label class="tunnel-option"><input type="radio" name="buildPayment" value="${i}" ${i === 0 ? "checked" : ""}><span><span class="payment-icons">${paymentIcons(option)}</span><span class="payment-label">${paymentDescription(option)}</span></span></label>`).join("")}</div></details>` : ""}
+    <p class="build-note">${r?.tunnel ? "Revelaremos hasta 3 cartas del mazo. Cada coincidencia de color o locomotora añade 1 carta. Después podrás pagar el suplemento o desistir." : r?.ferry ? `Incluye al menos ${r.ferry} locomotora(s) obligatoria(s) para este ferry.` : "Pago sugerido: utiliza la menor cantidad posible de locomotoras."}</p>
+    <div class="dialog-actions"><button id="confirmBuild" class="primary full">${r?.tunnel ? "Revelar cartas del túnel" : "Pagar y construir"}</button>
     <button id="cancelBuild" class="tertiary full">Cancelar</button></div>`, false, true);
-  $("paycolor").innerHTML = [...new Set(options.map(o => o.color))].map(c => `<option value="${c}">${N[c]}</option>`).join("");
+  if (r) $("dialog").querySelector(".build-track").style.setProperty("--track-color", C[r.color]);
   const updatePreview = () => {
-    const chosen = options.find(o => o.color === $("paycolor").value && o.wild === +$("wildcount").value);
     const preview = $("paymentPreview");
     preview.replaceChildren();
     if (chosen.regular) preview.appendChild(colorCard(chosen.color, chosen.regular));
     if (chosen.wild) preview.appendChild(colorCard("wild", chosen.wild));
     const caption = document.createElement("span");
-    caption.textContent = `${result.cost} carta(s) en total${r ? ` · ${r.n} vagones` : ""}`;
+    caption.textContent = `${paymentDescription(chosen)} · ${result.cost} en total`;
     preview.appendChild(caption);
   };
-  const updatePayment = () => {
-    $("wildcount").innerHTML = options.filter(o => o.color === $("paycolor").value)
-      .map(o => `<option value="${o.wild}">${o.wild} locomotora(s)</option>`).join("");
-    updatePreview();
-  };
-  $("paycolor").onchange = updatePayment;
-  $("wildcount").onchange = updatePreview;
+  for (const input of document.querySelectorAll('[name="buildPayment"]')) input.onchange = () => { chosen = options[+input.value]; updatePreview(); };
   $("cancelBuild").onclick = closeOptionalDialog;
   $("confirmBuild").onclick = () => {
     if (buildSubmitting) return;
     const validation = GameUI.construction(game, seat, buildTarget);
     if (validation.reason) { toast(validation.reason); return; }
+    if (!validation.options.some(o => o.color === chosen.color && o.wild === chosen.wild && o.regular === chosen.regular)) return error("Ese pago ya no está disponible.");
     if (!sock || sock.readyState !== WebSocket.OPEN) return error("Sin conexión.");
     buildSubmitting = true;
     $("confirmBuild").disabled = true;
-    act(r ? "claim" : "station", { ...buildTarget, color: $("paycolor").value, wildCount: +$("wildcount").value });
+    act(r ? "claim" : "station", { ...buildTarget, color: chosen.color, wildCount: chosen.wild });
   };
-  updatePayment();
-  $("paycolor").focus({ preventScroll: true });
+  updatePreview();
+  updateClocks();
+}
+function dialogClockHTML() {
+  return game?.current === seat && ["play", "tunnel"].includes(game.phase) && !game.turnWaiting
+    ? '<div class="dialog-turn-clock">Tu turno <strong data-clock="turn" data-clock-format="timer"></strong></div>' : "";
 }
 $("drawblind").onclick = () => act("draw_train", { index: -1 });
 $("drawtickets").onclick = () => act("draw_tickets");
 $("pass").onclick = () => act("pass");
 function showDialog(title, body, ticketDialog = false, dismissible = false) {
   closeMapMenu();
+  hoveredDestination = null;
   $("overlay").classList.remove("hidden");
   $("dialog").classList.toggle("ticket-dialog", ticketDialog);
   $("dialog").classList.remove("tunnel-dialog", "results-dialog");
+  delete $("dialog").dataset.tunnelReveal;
+  delete $("dialog").dataset.tunnelDecision;
   $("dialog").setAttribute("aria-labelledby", "dialogTitle");
   $("dialog").innerHTML =
     `${dismissible ? '<button class="dialog-close" aria-label="Cerrar ventana">×</button>' : ""}<h2 id="dialogTitle" tabindex="-1">${title}</h2>${body}<p class="err" id="errorMsg"></p>`;
@@ -1162,11 +1182,16 @@ function closeOptionalDialog() {
   if (game?.turnWaiting && game.current === seat && game.ticketOffer) return;
   const choosing = uiDialog === "tickets";
   const closingResults = uiDialog === "results";
+  const returningToMap = uiDialog === "routes" && compactMedia.matches;
   uiDialog = buildTarget = null;
   buildSubmitting = false;
   if (!choosing) pendingChoiceKey = null;
   $("overlay").classList.add("hidden");
-  (dialogReturnFocus?.isConnected ? dialogReturnFocus : $(closingResults ? "viewResults" : "viewRoutes")).focus({ preventScroll: true });
+  hoveredDestination = null;
+  if (returningToMap) setCompactPanel("map");
+  const returnTarget = returningToMap ? document.querySelector('[data-panel="map"]')
+    : dialogReturnFocus?.isConnected ? dialogReturnFocus : $(closingResults ? "viewResults" : "viewRoutes");
+  returnTarget.focus({ preventScroll: true });
   dialogReturnFocus = null;
   updateDestinationSpotlight();
 }
@@ -1187,17 +1212,33 @@ $("ticketList").onclick = event => {
   const row = event.target.closest("[data-destination]");
   if (row) openRoutes(+row.dataset.destination, row);
 };
-for (const type of ["pointerover", "pointerout", "focusin", "focusout"]) $("ticketList").addEventListener(type, event => {
+for (const type of ["pointerover", "pointerout"]) $("ticketList").addEventListener(type, event => {
+  // Touch browsers synthesize hover/focus around taps. Restored keyboard focus
+  // should keep its outline without switching on a map preview.
+  if (event.pointerType !== "mouse" || !matchMedia("(any-hover: hover)").matches || uiDialog) return;
   const row = event.target.closest("[data-destination]");
   if (!row || row.contains(event.relatedTarget)) return;
   const id = +row.dataset.destination;
   if (type === "pointerover") hoveredDestination = id;
-  if (type === "pointerout") hoveredDestination = null;
-  if (type === "focusin") focusedDestination = id;
-  if (type === "focusout") focusedDestination = null;
+  if (type === "pointerout" && hoveredDestination === id) hoveredDestination = null;
   updateDestinationSpotlight();
 });
+$("toggleDestinations").onclick = () => {
+  if (!game?.tickets.length) return;
+  allDestinationsVisible = !allDestinationsVisible;
+  hoveredDestination = null;
+  if (allDestinationsVisible) {
+    resultMapSelection = null;
+    $("resultContext").classList.add("hidden");
+  }
+  if (compactMedia.matches) setCompactPanel("map");
+  updateDestinationSpotlight();
+};
 function updateDestinationSpotlight() {
+  const toggle = $("toggleDestinations");
+  toggle.disabled = !game?.tickets.length;
+  toggle.setAttribute("aria-pressed", String(allDestinationsVisible && !toggle.disabled));
+  toggle.title = toggle.disabled ? "Conserva billetes para resaltar tus destinos" : allDestinationsVisible ? "Ocultar mis destinos" : "Resaltar mis destinos";
   for (const label of $("board").querySelectorAll("[data-city-label]")) label.style.removeProperty("opacity");
   let overlay = $("destinationSpotlight");
   if (!overlay) {
@@ -1205,10 +1246,10 @@ function updateDestinationSpotlight() {
     overlay.id = "destinationSpotlight"; overlay.setAttribute("aria-hidden", "true");
     $("mapscroll").appendChild(overlay);
   }
-  const ticket = game?.tickets.find(t => t.id === (hoveredDestination ?? focusedDestination));
-  const path = ticket ? game.ticketPaths?.find(p => p.id === ticket.id) : null;
-  const selection = !uiDialog && $("overlay").classList.contains("hidden") && (ticket ? { endpoints: [ticket.a, ticket.b], routes: path?.routes || [], stationRoutes: path?.stationRoutes || [], stations: path?.stations || [] } : resultMapSelection);
+  const selection = !uiDialog && $("overlay").classList.contains("hidden") &&
+    GameUI.destinationSpotlightSelection(game, hoveredDestination, allDestinationsVisible, resultMapSelection);
   overlay.classList.toggle("is-visible", !!selection);
+  overlay.classList.toggle("is-overview", !!selection?.overview);
   if (!selection) return;
   const view = mapViewSize(); if (!view) return;
   const rect = $("mapscroll").getBoundingClientRect(), safe = mapSafeArea(rect);
@@ -1236,7 +1277,7 @@ function updateDestinationSpotlight() {
     el("circle", { r: 12 * Math.max(.8, view.scale), fill: "#ffdd7c", opacity: .65 }, marker);
     drawStation(el, marker, GameUI.playerColor(game.players[station.seat].color), Math.max(.8, view.scale));
   }
-  const placements = [];
+  const labels = new Map(), endpoints = [];
   for (const key of new Set(selection.endpoints || [])) {
     $("board").querySelector(`[data-city-label="${key}"]`)?.style.setProperty("opacity", "0");
     const [wx, wy] = RailMap.cities[key];
@@ -1247,12 +1288,17 @@ function updateDestinationSpotlight() {
     if (p.outside) el("path", { d: "M-2-3L2 0-2 3", fill: "none", stroke: "#24444e", "stroke-width": 1.7, transform: `translate(${p.x} ${p.y}) rotate(${p.angle})` }, marker);
     else el("circle", { cx: p.x, cy: p.y, r: 3.5, fill: "#24444e" }, marker);
     const label = el("text", { class: "destination-beacon-label" }, marker); label.textContent = CITIES[key][2];
-    const width = label.getComputedTextLength();
-    const x = Math.max(safe.x + 4, Math.min(p.x - width / 2, safe.x + safe.width - width - 4));
-    let y = p.y + 28;
-    if (y > safe.y + safe.height - 6) y = p.y - 18;
-    if (placements.some(b => Math.abs(b.y - y) < 22 && x < b.x + b.width + 8 && x + width + 8 > b.x)) y = p.y - 18;
-    label.setAttribute("x", x); label.setAttribute("y", y); placements.push({ x, y, width });
+    label.style.fontSize = `${15 * GameUI.cityLabelScale(zoom)}px`;
+    endpoints.push({ key, x: p.x - safe.x, y: p.y - safe.y, width: label.getComputedTextLength() });
+    labels.set(key, label);
+  }
+  // Use the same collision-aware placement as the base map, now in screen
+  // coordinates so many destinations stay readable at any zoom level.
+  const labelScale = GameUI.cityLabelScale(zoom);
+  for (const box of RailMap.placeLabels(endpoints, safe.width, safe.height, [], { height: 18 * labelScale, baseline: 14 * labelScale })) {
+    const label = labels.get(box.key);
+    label.setAttribute("x", safe.x + box.x);
+    label.setAttribute("y", safe.y + box.y + 14 * labelScale);
   }
 }
 function renderTicketMap(tickets) {
@@ -1495,6 +1541,7 @@ function showTicketDialog(tickets, min, viewing = false) {
 }
 function renderDialog() {
   if (!game) return;
+  if (tunnelReveal) { showTunnelReveal(); return; }
   const myTurn = game.current === seat;
   if (myTurn && game.turnWaiting && game.ticketOffer) { uiDialog = "tickets"; showTicketDialog(game.ticketOffer.tickets, 1); return; }
   if (game.phase === "finished" && (!resultsSeen || uiDialog === "results")) { showResults(); return; }
@@ -1544,7 +1591,7 @@ function resultDetailHTML(result) {
 function showResults() {
   if (game?.phase !== "finished") return;
   uiDialog = "results"; resultsSeen = true;
-  hoveredDestination = focusedDestination = null;
+  hoveredDestination = null;
   showDialog(game.earlyFinish ? "Prueba terminada anticipadamente" : "Fin de partida",
     `<p>${game.earlyFinish ? "Puntuación del estado actual: solo cuentan los billetes ya conservados." : "La partida ha terminado. Explora el tablero y comprueba cómo se obtuvo cada punto."}</p>
     <div class="results-list">${game.result.map((r,i) => `<section class="result-card" data-result-player="${r.seat}"><div class="result-heading">${playerAvatar(r.seat)}<div><b>${i+1}. ${escapeHTML(r.name)} ${r.winner ? "🏆" : ""}</b><small>Rutas ${r.route} · Destinos ${r.destination} · Estaciones ${r.stations} · Express ${r.express}</small></div><strong>${r.score}<small>puntos</small></strong></div><details data-score-seat="${r.seat}" ${expandedResults.has(r.seat) ? "open" : ""}><summary>Desglose de puntos</summary><div class="score-breakdown">${resultDetailHTML(r)}</div></details></section>`).join("")}</div>
@@ -1565,6 +1612,7 @@ function showResults() {
     if (kind === "station") { const s = d.stations.placed[i]; selection = { routes: s.routeId === null ? [] : [s.routeId], stationRoutes: [s.routeId], stations: [s], endpoints: [s.city], title: `Estación en ${cityName(s.city)}` }; }
     if (kind === "express") selection = { routes: d.express.routes, endpoints: d.express.cities.length ? [d.express.cities[0], d.express.cities.at(-1)] : [], title: `Camino más largo · ${d.express.length} vagones` };
     resultMapSelection = selection;
+    allDestinationsVisible = false;
     $("resultContext").classList.remove("hidden");
     $("resultContext").querySelector("span").textContent = `${result.name} · ${selection.title}`;
     closeOptionalDialog();
@@ -1589,12 +1637,95 @@ function paymentIcons(payment) {
   return [[payment.color, payment.regular], ["wild", payment.wild]].filter(([, n]) => n).map(([color, n]) =>
     `<span class="payment-chip"><img src="assets/cards/${color}.svg" alt="${N[color]}" draggable="false"><strong>×${n}</strong></span>`).join('<span class="payment-plus" aria-hidden="true">+</span>');
 }
+// Presentation only: the server has already drawn these exact cards. A zero
+// surcharge still advances its turn immediately; only our build effect waits.
+function prepareTunnelReveal(events) {
+  if (tunnelReveal?.event.surcharge && game.tunnel?.revealId !== tunnelReveal.event.id) cancelTunnelReveal();
+  // A fast round must never leave the next real turn behind our success screen.
+  if (tunnelReveal?.build && game.current === seat && game.phase === "play") finishTunnelReveal(true);
+  const event = events.find(e => e.type === "tunnel_reveal" && e.seat === seat);
+  if (!event) return;
+  cancelTunnelReveal();
+  const build = events.find(e => e.type === "build" && e.seat === seat && e.routeId === event.routeId && e.id > event.id);
+  if (build) build.deferredForTunnel = true;
+  tunnelReveal = { event, build, shown: 0, timer: null, started: false, finished: false };
+  uiDialog = buildTarget = null;
+}
+function syncTunnelMask() {
+  $("board").querySelectorAll(".awaiting-tunnel-reveal").forEach(node => node.classList.remove("awaiting-tunnel-reveal"));
+  if (tunnelReveal?.build) constructionTarget(tunnelReveal.build)?.classList.add("awaiting-tunnel-reveal");
+}
+function cancelTunnelReveal() {
+  if (!tunnelReveal) return;
+  clearTimeout(tunnelReveal.timer);
+  tunnelReveal = null;
+  syncTunnelMask();
+}
+function tunnelCardMatch(color, paymentColor) { return color === "wild" || (paymentColor !== "wild" && color === paymentColor); }
+function showTunnelReveal() {
+  const sequence = tunnelReveal, t = sequence.event;
+  if ($("dialog").dataset.tunnelReveal === String(t.id)) return;
+  const route = game.routes.find(r => r.id === t.routeId);
+  showDialog("Comprobando el túnel…", `${dialogClockHTML()}<p class="tunnel-route">${escapeHTML(routeName(route))}</p>
+    <p>Revelamos hasta 3 cartas. Cada ${t.paymentColor === "wild" ? "locomotora" : `carta de color ${N[t.paymentColor].toLowerCase()} o locomotora`} añade una carta al pago.</p>
+    <div id="tunnelSequence" class="tunnel-sequence">${t.revealed.map((_, i) => `<div class="tunnel-reveal" data-reveal-slot="${i}"><img class="tunnel-card-back" src="assets/cards/back.svg" alt="Carta ${i + 1} sin revelar"><span class="reveal-effect">${i + 1}</span></div>`).join("")}</div>
+    <p id="tunnelRevealStatus" class="tunnel-total" role="status">0 de ${t.revealed.length} reveladas · Suplemento: 0</p>
+    <button id="skipTunnelReveal" class="tertiary full">Omitir animación</button>`);
+  $("dialog").classList.add("tunnel-dialog");
+  $("dialog").dataset.tunnelReveal = String(t.id);
+  $("skipTunnelReveal").onclick = () => finishTunnelReveal(true);
+  if (sequence.started) return;
+  sequence.started = true;
+  const skip = reducedMotion.matches || document.hidden || !t.revealed.length || (t.surcharge && game.turnDeadline - Date.now() - serverOffset <= 5000);
+  sequence.timer = setTimeout(skip ? () => finishTunnelReveal(true) : revealNextTunnelCard, skip ? 0 : 700);
+}
+function revealNextTunnelCard() {
+  const sequence = tunnelReveal;
+  if (!sequence || sequence.finished) return;
+  const { event: t } = sequence, i = sequence.shown++;
+  const slot = $("tunnelSequence")?.querySelector(`[data-reveal-slot="${i}"]`);
+  if (slot) {
+    const match = tunnelCardMatch(t.revealed[i], t.paymentColor);
+    slot.replaceChildren(colorCard(t.revealed[i], null));
+    slot.classList.toggle("is-match", match);
+    const effect = document.createElement("span"); effect.className = "reveal-effect"; effect.textContent = match ? "+1" : "—";
+    slot.append(effect);
+    if (!reducedMotion.matches && !document.hidden) {
+      slot.animate([{ transform: "translateY(-16px) rotateY(-85deg)", opacity: .4 }, { transform: "translateY(0) rotateY(0)", opacity: 1 }], { duration: 500, easing: "ease-in-out" });
+      playSound("card");
+    }
+    const surcharge = t.revealed.slice(0, sequence.shown).filter(c => tunnelCardMatch(c, t.paymentColor)).length;
+    $("tunnelRevealStatus").textContent = `${sequence.shown} de ${t.revealed.length} reveladas · Suplemento: ${surcharge}`;
+  }
+  // Leave the third card time to land and be read before showing the decision.
+  sequence.timer = setTimeout(sequence.shown < t.revealed.length ? revealNextTunnelCard : () => finishTunnelReveal(), 700);
+}
+function finishTunnelReveal(skip = false) {
+  const sequence = tunnelReveal;
+  if (!sequence) return;
+  clearTimeout(sequence.timer);
+  const { event: t, build } = sequence;
+  // Keep all evidence on screen for the payment decision, including when skipped.
+  if (t.surcharge || skip) {
+    cancelTunnelReveal();
+    renderDialog();
+    if (build) animateConstruction(build);
+    return;
+  }
+  sequence.finished = true;
+  $("dialogTitle").textContent = "Túnel construido";
+  $("tunnelRevealStatus").textContent = "Sin coste adicional. Solo se paga el coste inicial.";
+  $("skipTunnelReveal").textContent = "Volver al mapa";
+  sequence.timer = setTimeout(() => finishTunnelReveal(true), 700);
+}
 function showTunnelDialog() {
   const t = game.tunnel, route = game.routes.find(r => r.id === t.routeId);
+  const key = JSON.stringify([t.revealId, t.routeId, t.revealed, game.hand]);
+  if ($("dialog").dataset.tunnelDecision === key && !$("overlay").classList.contains("hidden")) return;
   const options = GameUI.tunnelPayments(game.hand, t);
   const count = t.surcharge;
   showDialog(`Túnel: ${count} carta${count === 1 ? "" : "s"} adicional${count === 1 ? "" : "es"}`,
-    `<p class="tunnel-route">${escapeHTML(CITIES[route.a][2])} — ${escapeHTML(CITIES[route.b][2])}</p>
+    `${dialogClockHTML()}<p class="tunnel-route">${escapeHTML(CITIES[route.a][2])} — ${escapeHTML(CITIES[route.b][2])}</p>
     <div class="tunnel-evidence"><section><h3>Cartas reveladas</h3><div id="revealed" class="tunnel-revealed"></div></section>
       <section class="tunnel-base"><h3>Pago base reservado</h3><div class="payment-icons" aria-label="${paymentDescription(t.base)}">${paymentIcons(t.base)}</div><p>Aún no se ha gastado.</p></section></div>
     <fieldset class="tunnel-payments"><legend>${options.length > 1 ? "¿Cómo pagas el suplemento?" : "Pago del suplemento"}</legend>
@@ -1608,6 +1739,7 @@ function showTunnelDialog() {
     <button class="tertiary full" id="declineTunnel">Desistir del túnel</button></div>
     <p class="tunnel-exit-note">Al desistir conservas tus cartas, pero termina tu turno.</p>`);
   $("dialog").classList.add("tunnel-dialog");
+  $("dialog").dataset.tunnelDecision = key;
   for (const c of t.revealed) {
     const match = c === "wild" || (t.color !== "wild" && c === t.color);
     const item = document.createElement("div");
@@ -1661,23 +1793,33 @@ const compactSections = {
   destinations: [document.querySelector(".dockdestinations")],
   history: [document.querySelector(".history-panel")],
 };
-const compactHand = document.querySelector(".dockmain"), compactPlayers = document.querySelector(".players-panel");
-const compactHomes = [...Object.values(compactSections).flat(), compactHand, compactPlayers].map(node => {
+const compactHand = document.querySelector(".dockmain"), compactPlayers = document.querySelector(".players-panel"), turnBanner = $("turnBanner");
+let announcedTurn = null;
+const compactHomes = [...Object.values(compactSections).flat(), compactHand, compactPlayers, turnBanner].map(node => {
   const anchor = document.createComment("responsive panel home");
   node.before(anchor);
   return { node, anchor };
 });
+function syncCompactControls() {
+  // Native hidden also protects desktop if the responsive stylesheet is delayed
+  // or unavailable. Use the same breakpoint that reparents the actual panels.
+  $("compactHud").hidden = $("compactPlayers").hidden = !compactMedia.matches;
+  $("compactPractice").classList.toggle("hidden", !compactMedia.matches || !practiceMode);
+}
 function setCompactPanel(next = compactPanel) {
+  syncCompactControls();
+  hoveredDestination = null;
   const followHistory = historyFollowing;
   if ($("history").clientHeight) compactHistoryTop = $("history").scrollTop;
   compactPanel = next;
   for (const { node, anchor } of compactHomes) {
-    if (compactMedia.matches && (node === compactHand || node === compactPlayers)) continue;
+    if (compactMedia.matches && (node === compactHand || node === compactPlayers || node === turnBanner)) continue;
     if (node.previousSibling !== anchor) anchor.after(node);
   }
   if (compactMedia.matches) {
     if (compactHand.parentElement !== $("compactHand")) $("compactHand").append(compactHand);
     if (compactPlayers.parentElement !== $("compactPlayers")) $("compactPlayers").append(compactPlayers);
+    if (turnBanner.parentElement !== $("compactTurnHome")) $("compactTurnHome").append(turnBanner);
   }
   const open = compactMedia.matches && next !== "map";
   if (open) $("compactPanel").append(...compactSections[next]);
@@ -1691,19 +1833,29 @@ function setCompactPanel(next = compactPanel) {
   updateCompactPlayer();
   closeMapMenu();
   if (game) {
+    updateCompactStatus();
     layoutHand(); applyZoom();
     if ($("history").clientHeight) $("history").scrollTop = followHistory ? $("history").scrollHeight : compactHistoryTop;
     updateHistoryScroll();
   }
 }
 function updateCompactStatus() {
+  syncCompactControls();
   if (!game) return;
-  const mine = game.current === seat && ["play", "tunnel"].includes(game.phase);
-  $("compactTurn").textContent = game.phase === "finished" ? "Partida terminada" : game.phase === "initial" ? `Eligiendo billetes · ${game.initialReadyCount}/${game.players.length} listos` : game.turnWaiting && mine ? "Elige tus billetes pendientes" : mine ? `Tu turno${game.drawCount ? " · falta 1 carta" : ""}` : `Turno de ${game.players[game.current].name}`;
-  $("compactTurn").parentElement.classList.toggle("is-mine", mine);
-  $("compactClock").dataset.clock = game.phase === "initial" ? "initial" : game.turnWaiting ? "waiting" : game.phase === "closing" ? "closing" : "turn";
-  $("compactClock").classList.toggle("hidden", game.phase === "finished");
-  $("compactPractice").classList.toggle("hidden", !practiceMode);
+  const controlled = sock?.readyState === WebSocket.OPEN && !sessionReplaced && !storagePaused && !members[seat]?.autopilot;
+  const state = GameUI.turnPresentation(game, seat, controlled);
+  if ($("compactTurn").textContent !== state.title) $("compactTurn").textContent = state.title;
+  if ($("turnHint").textContent !== state.hint) $("turnHint").textContent = state.hint;
+  turnBanner.classList.toggle("is-mine", state.mine);
+  $("compactClock").dataset.clock = state.clock || "";
+  $("compactClock").classList.toggle("hidden", !state.clock);
+  const key = `${room}-${seat}-${game.turnSerial}`;
+  if (state.mine && announcedTurn !== key) {
+    announcedTurn = key;
+    if (!reducedMotion.matches) turnBanner.animate([{ outline: "0px solid #d4a74a00" }, { outline: "6px solid #d4a74a99", offset: .3 }, { outline: "0px solid #d4a74a00" }], { duration: 1100 });
+  }
+  const reminder = compactMedia.matches && GameUI.needsSecondDraw(game, seat, compactPanel, controlled);
+  document.querySelector('[data-panel="cards"]').classList.toggle("needs-draw", reminder);
   $("compactPlayers").style.setProperty("--player-count", game.players.length);
 }
 function updateCompactPlayer() {
@@ -1770,7 +1922,7 @@ function mapSafeArea(rect, forCamera = false) {
     });
   }
   const side = $("gameSidebar").getBoundingClientRect();
-  const bottom = $("handdock").getBoundingClientRect();
+  const bottom = $("turnBanner").getBoundingClientRect();
   const top = $("boardtools").getBoundingClientRect().bottom - rect.top + 12;
   return {
     x: 16, y: top, width: side.left - rect.left - 32,
@@ -1793,6 +1945,7 @@ function applyZoom() {
   updateCityLabels();
   updateDestinationSpotlight();
   for (const flight of constructionFlights.values()) bindConstruction(flight);
+  syncTunnelMask();
 }
 function setZoom(next, clientX, clientY) {
   const before = mapViewSize();
@@ -1823,7 +1976,9 @@ $("mapscroll").addEventListener("pointerdown", (event) => {
   mapPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
   if (mapPointers.size >= 2) {
     const [a, b] = [...mapPointers.values()];
-    mapPinch = { distance: Math.hypot(a.x - b.x, a.y - b.y), zoom };
+    const rect = event.currentTarget.getBoundingClientRect(), view = mapViewSize();
+    mapPinch = { distance: Math.hypot(a.x - b.x, a.y - b.y), zoom, scale: view.scale, center: { ...mapCenter },
+      midpoint: { x: (a.x + b.x) / 2 - rect.left - view.sx, y: (a.y + b.y) / 2 - rect.top - view.sy } };
     mapDrag = null; suppressMapClick = true;
     event.currentTarget.classList.remove("is-panning");
     for (const id of mapPointers.keys()) event.currentTarget.setPointerCapture(id);
@@ -1840,7 +1995,12 @@ $("mapscroll").addEventListener("pointermove", (event) => {
   if (mapPointers.has(event.pointerId)) mapPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
   if (mapPinch && mapPointers.size >= 2) {
     const [a, b] = [...mapPointers.values()];
-    setZoom(GameUI.pinchZoom(mapPinch.zoom, mapPinch.distance, Math.hypot(a.x - b.x, a.y - b.y)), (a.x + b.x) / 2, (a.y + b.y) / 2);
+    const rect = event.currentTarget.getBoundingClientRect(), view = mapViewSize();
+    const next = GameUI.pinchTransform(mapPinch, Math.hypot(a.x - b.x, a.y - b.y), {
+      x: (a.x + b.x) / 2 - rect.left - view.sx, y: (a.y + b.y) / 2 - rect.top - view.sy,
+    });
+    zoom = next.zoom; mapCenter = next.center;
+    applyZoom();
     return;
   }
   if (mapDrag?.id !== event.pointerId) return;
@@ -1862,10 +2022,16 @@ for (const type of ["pointerup", "pointercancel", "lostpointercapture", "pointer
     // gesture. Only the viewport's own capture loss may terminate its drag.
     if (type === "lostpointercapture" && event.target !== event.currentTarget) return;
     if (type === "pointerleave" && event.currentTarget.hasPointerCapture(event.pointerId)) return;
+    if (!mapPointers.has(event.pointerId)) return;
     mapPointers.delete(event.pointerId);
     if (mapPinch) {
       suppressMapClick = true;
-      if (!mapPointers.size) mapPinch = null;
+      if (mapPointers.size < 2) {
+        mapPinch = null;
+        const remaining = [...mapPointers.entries()][0];
+        mapDrag = remaining ? { id: remaining[0], ...remaining[1], center: { ...mapCenter }, scale: mapViewSize().scale, moved: true, dismissedPanel: true } : null;
+        event.currentTarget.classList.toggle("is-panning", !!mapDrag);
+      }
       if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
       return;
     }
@@ -1884,7 +2050,7 @@ $("mapscroll").addEventListener("click", (event) => {
   event.stopPropagation();
 }, true);
 const cameraResize = new ResizeObserver(() => { closeMapMenu(); applyZoom(); layoutHand(); if (game && $("ticketMap")) renderTicketMap(uiDialog === "routes" ? game.tickets : game.ticketOffer?.tickets || game.initial || []); });
-for (const id of ["mapscroll", "gameSidebar", "handdock", "compactPanel", "compactHud", "compactPlayers", "boardtools"]) cameraResize.observe($(id));
+for (const id of ["mapscroll", "gameSidebar", "handdock", "turnBanner", "compactPanel", "compactHud", "compactPlayers", "boardtools"]) cameraResize.observe($(id));
 function updateFullscreenControl() {
   const available = !!document.fullscreenElement ||
     (document.fullscreenEnabled === true && typeof document.documentElement.requestFullscreen === "function");

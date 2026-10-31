@@ -28,13 +28,15 @@ function gestures(panel = "map") {
     hasPointerCapture(id) { return captured.has(id); },
     setPointerCapture(id) { captured.add(id); captureCalls++; },
     releasePointerCapture(id) { captured.delete(id); },
-    classList: { add: c => classes.add(c), remove: c => classes.delete(c) },
+    classList: { add: c => classes.add(c), remove: c => classes.delete(c), toggle: (c, yes) => yes ? classes.add(c) : classes.delete(c) },
+    getBoundingClientRect: () => ({ left: 0, top: 0 }),
   };
   const context = vm.createContext({
     $: () => viewport, compactMedia: { matches: true }, compactPanel: panel,
     mapCenter: { x: 100, y: 100 }, zoom: 1, GameUI: UI,
-    mapViewSize: () => ({ scale: 2 }), closeMapMenu() {}, applyZoom() {},
+    closeMapMenu() {}, applyZoom() {},
   });
+  context.mapViewSize = () => ({ scale: 2 / context.zoom, sx: 0, sy: 0 });
   context.setCompactPanel = next => { context.compactPanel = next; };
   context.setZoom = next => { context.zoom = next; };
   vm.runInContext(source.slice(source.indexOf("let mapDrag = null"), source.indexOf("const cameraResize =")), context);
@@ -106,13 +108,17 @@ test("pinch survives SVG capture transfer, suppresses clicks and allows the next
   g.fire("pointermove", { pointerId: 2, clientX: 210 });
   assert.equal(g.context.zoom, 2);
   g.fire("pointerup", { pointerId: 2 });
+  const afterPinch = g.context.mapCenter.x;
+  g.fire("pointermove", { clientX: 20 });
+  assert.equal(g.context.mapCenter.x, afterPinch - 10);
   g.fire("pointerup");
   assert.equal(g.read("mapPinch"), null);
   assert.equal(g.read("mapPointers.size"), 0);
   assert.equal(g.fire("click").stopped, true);
   g.fire("pointerdown");
+  const beforeDrag = g.context.mapCenter.x;
   g.fire("pointermove", { clientX: 30 });
-  assert.equal(g.context.mapCenter.x, 60);
+  assert.equal(g.context.mapCenter.x, beforeDrag - 20);
 });
 
 test("ticket preview is mouse-only; touch and keyboard focus cannot stick a deselected route", () => {
@@ -148,4 +154,98 @@ test("fullscreen control is hidden unless the document and method both support i
     context.updateFullscreenControl();
     assert.equal(hidden, false);
   }
+});
+
+test("destination overview includes only kept tickets, deduplicates cities and never reveals paths", () => {
+  const game = { tickets: [{ id: 1, a: "A", b: "B" }, { id: 2, a: "B", b: "C" }],
+    ticketOffer: [{ id: 3, a: "D", b: "E" }], initialTickets: [{ id: 4, a: "F", b: "G" }],
+    ticketProgress: [{ id: 1, completed: true }, { id: 2, completed: false }],
+    ticketPaths: [{ id: 1, routes: [12], stationRoutes: [12], stations: [{ city: "A", seat: 0 }] }] };
+  const before = JSON.stringify(game);
+  assert.deepEqual(UI.destinationSpotlightSelection(game, null, true), {
+    endpoints: ["A", "B", "C"], routes: [], stationRoutes: [], stations: [], overview: true,
+  });
+  assert.deepEqual(UI.destinationSpotlightSelection(game, 1, true), {
+    endpoints: ["A", "B"], routes: [12], stationRoutes: [12], stations: [{ city: "A", seat: 0 }],
+  });
+  assert.equal(UI.destinationSpotlightSelection(game, null, false), null);
+  assert.equal(UI.destinationSpotlightSelection(game, 3, false), null);
+  assert.equal(UI.destinationSpotlightSelection({ tickets: [] }, null, true), null);
+  assert.equal(UI.destinationSpotlightSelection(null, null, true), null);
+  const result = { endpoints: ["X"], routes: [7] };
+  assert.equal(UI.destinationSpotlightSelection(game, null, false, result), result);
+  assert.equal(JSON.stringify(game), before);
+  game.tickets.push({ id: 5, a: "C", b: "H" });
+  assert.deepEqual(UI.destinationSpotlightSelection(game, null, true).endpoints, ["A", "B", "C", "H"]);
+});
+
+test("closing routes clears transient preview, selects Map on mobile and preserves explicit overview", () => {
+  for (const mobile of [true, false]) {
+    let focused = null, updated = 0;
+    const hidden = new Set();
+    const context = vm.createContext({
+      uiDialog: "routes", game: {}, seat: 0, compactMedia: { matches: mobile }, compactPanel: "destinations",
+      buildTarget: {}, buildSubmitting: false, pendingChoiceKey: "routes", hoveredDestination: 2,
+      allDestinationsVisible: true, dialogReturnFocus: { isConnected: true, focus() { focused = "row"; } },
+      $: () => ({ classList: { add: value => hidden.add(value) } }),
+      document: { querySelector: () => ({ focus() { focused = "map"; } }) },
+      updateDestinationSpotlight() { updated++; },
+    });
+    context.setCompactPanel = panel => { context.compactPanel = panel; };
+    vm.runInContext(source.slice(source.indexOf("function closeOptionalDialog("), source.indexOf("function openRoutes(")), context);
+    context.closeOptionalDialog();
+    assert.equal(context.uiDialog, null);
+    assert.equal(context.hoveredDestination, null);
+    assert.equal(context.allDestinationsVisible, true);
+    assert.equal(context.compactPanel, mobile ? "map" : "destinations");
+    assert.equal(focused, mobile ? "map" : "row");
+    assert.equal(context.dialogReturnFocus, null);
+    assert.equal(hidden.has("hidden"), true);
+    assert.equal(updated, 1);
+    // A compulsory ticket choice still cannot be dismissed.
+    context.uiDialog = "tickets";
+    context.game = { current: 0, turnWaiting: true, ticketOffer: [{}] };
+    context.closeOptionalDialog();
+    assert.equal(context.uiDialog, "tickets");
+    assert.equal(updated, 1);
+  }
+});
+
+test("main-map preview ignores touch and restored focus; overview is local UI state only", () => {
+  const handlers = new Map(), toggle = {}, contextClasses = new Set();
+  let updated = 0;
+  const context = vm.createContext({
+    uiDialog: null, hoveredDestination: null, allDestinationsVisible: false, resultMapSelection: {},
+    game: { tickets: [{ id: 2 }] }, compactMedia: { matches: true }, compactPanel: "destinations",
+    matchMedia: () => ({ matches: true }), updateDestinationSpotlight() { updated++; },
+    $: id => id === "ticketList" ? { addEventListener: (type, fn) => handlers.set(type, fn) }
+      : id === "toggleDestinations" ? toggle : { classList: { add: c => contextClasses.add(c) } },
+  });
+  context.setCompactPanel = panel => { context.compactPanel = panel; };
+  vm.runInContext(source.slice(source.indexOf('for (const type of ["pointerover", "pointerout"])'), source.indexOf("function updateDestinationSpotlight(")), context);
+  const row = { dataset: { destination: "2" }, contains: () => false };
+  const event = pointerType => ({ pointerType, target: { closest: () => row } });
+  handlers.get("pointerover")(event("touch"));
+  assert.equal(context.hoveredDestination, null);
+  assert.equal(handlers.has("focusin"), false);
+  handlers.get("pointerover")(event("mouse"));
+  assert.equal(context.hoveredDestination, 2);
+  handlers.get("pointerout")(event("mouse"));
+  assert.equal(context.hoveredDestination, null);
+  context.uiDialog = "routes";
+  handlers.get("pointerover")(event("mouse"));
+  assert.equal(context.hoveredDestination, null);
+  context.uiDialog = null;
+  toggle.onclick();
+  assert.equal(context.allDestinationsVisible, true);
+  assert.equal(context.resultMapSelection, null);
+  assert.equal(context.compactPanel, "map");
+  assert.equal(contextClasses.has("hidden"), true);
+  toggle.onclick();
+  assert.equal(context.allDestinationsVisible, false);
+  assert.equal(updated, 4);
+  context.game.tickets = [];
+  toggle.onclick();
+  assert.equal(context.allDestinationsVisible, false);
+  assert.equal(updated, 4);
 });

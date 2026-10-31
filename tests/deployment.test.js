@@ -17,7 +17,7 @@ test('map uses gestures without a zoom or fit toolbar on any viewport',()=>{
  }
  assert.match(html,/Pellizca con dos dedos o usa la rueda/);
  assert.match(app,/addEventListener\("wheel"/);
- assert.match(app,/GameUI\.pinchZoom\(/);
+ assert.match(app,/GameUI\.pinchTransform\(/);
 });
 test('Docker includes every local server module, without saved rooms',()=>{
  const docker=fs.readFileSync(path.join(ROOT,'Dockerfile'),'utf8');

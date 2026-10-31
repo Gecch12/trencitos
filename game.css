@@ -4,6 +4,8 @@
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
 }
+/* Keep compact-only controls hidden even if responsive.css cannot load. */
+.compact-hud[hidden], .compact-players[hidden] { display: none !important; }
 body.is-playing {
   --top-height: 52px;
   --sidebar-width: 300px;
@@ -53,6 +55,10 @@ body.is-playing {
   display: flex; flex-wrap: nowrap; gap: 8px;
 }
 .game .boardtools button { min-height: 33px; }
+.game .destination-toggle { display: grid; place-items: center; width: 44px; padding: 6px; background: #215569; color: #fff4d6; border: 1px solid transparent; }
+.game .destination-toggle svg { width: 24px; height: 24px; }
+.game .destination-toggle[aria-pressed="true"] { background: #f3d88d; color: #173b49; border-color: #a47c32; box-shadow: inset 0 -3px #b7893d; }
+.game .destination-toggle:disabled { opacity: .55; }
 .game .sidebar {
   position: absolute; z-index: 3; top: 12px; right: 12px; bottom: 12px;
   width: var(--sidebar-width); display: flex; flex-direction: column; gap: 12px;
@@ -229,9 +235,9 @@ body.is-playing {
 .dialog .ticket-layout { min-height: 0; }
 .dialog .ticket-confirm { flex-shrink: 0; }
 .dialog .ticket-options-title, .dialog .ticket-options-hint { flex-shrink: 0; }
-.sound-toggle { background: transparent; border: 1px solid #d8ba7566; color: #f4dba0; border-radius: 50%; width: 32px; height: 32px; padding: 0; font-size: 20px; }
-.sound-toggle svg { display: block; width: 20px; height: 20px; margin: auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.sound-toggle[aria-pressed="true"] { color: #a4b6bb; }
+.sound-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 7px; flex-shrink: 0; background: #ffffff08; border: 1px solid #d8ba7580; color: #f4dba0; border-radius: 18px; min-height: 36px; padding: 6px 11px; font-size: 12px; white-space: nowrap; }
+.sound-toggle svg { display: block; width: 20px; height: 20px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.sound-toggle[aria-pressed="false"] { color: #b7c8cd; border-color: #8da7b480; background: #102c3866; }
 .turn-clock, [data-clock="offer"], [data-clock="closing"] { font-variant-numeric: tabular-nums; font-weight: 800; }
 .turn-clock { margin-left: 3px; }
 .clock-urgent { color: #b13e2e !important; }
@@ -364,3 +370,45 @@ button:focus-visible, summary:focus-visible, [tabindex="0"]:focus-visible { outl
 .results-dialog .result-rules { font-size: 11px; line-height: 1.6; color: #758078; }
 .result-actions { display: flex; gap: 10px; position: sticky; bottom: -26px; background: #fffaf0; padding: 12px 0; }
 .result-actions button { flex: 1; }
+/* One shared turn signal, reparented into the mobile HUD. */
+.game .turn-banner { position: absolute; z-index: 4; left: 16px; right: calc(var(--sidebar-width) + 28px); bottom: calc(var(--hand-height) + 24px); min-height: 62px; display: flex; align-items: center; gap: 14px; padding: 9px 18px 12px; border: 1px solid #bdc9c2; border-radius: 12px; background: #fffcf5f5; color: #385763; box-shadow: 0 3px 14px #183e491c; overflow: hidden; }
+.turn-banner::after { content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #97aaa5; transform: scaleX(var(--time-left, 1)); transform-origin: left; transition: transform .25s linear; }
+.turn-copy { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.turn-copy strong { font-size: 16px; letter-spacing: .07em; }
+.turn-copy span { font-size: 12px; }
+.turn-banner .turn-clock { margin-left: auto; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.game .turn-banner.is-mine { color: #fff9e8; background: #215564; border-color: #e3b854; box-shadow: 0 0 0 2px #e3b85466, 0 4px 18px #173d4533; }
+.turn-banner.is-mine::after { background: #edc664; }
+.turn-banner.is-mine.is-warning { background: #755017; }
+.turn-banner.is-mine.is-urgent { background: #8c342e; }
+.clock-warning { color: #976011; }
+.turn-banner.is-mine .clock-warning { color: #ffe18b; }
+.turn-banner.is-mine .clock-urgent { color: #fff !important; }
+.dialog-turn-clock { display: flex; justify-content: space-between; align-items: center; background: #e8eeea; border-radius: 8px; padding: 8px 12px; margin: 0 0 14px; font-size: 13px; color: #294c59; }
+.dialog-turn-clock strong { font-size: 24px; font-variant-numeric: tabular-nums; }
+.build-summary { display: grid; gap: 8px; border-bottom: 1px solid #dfd5bc; padding-bottom: 16px; margin-bottom: 16px; }
+.build-summary > strong { font-size: 19px; }
+.build-summary > span { font-size: 13px; color: #526b73; }
+.build-track { display: flex; gap: 5px; }
+.build-track i { width: 28px; height: 12px; border: 1px solid #435c60; background: var(--track-color); border-radius: 3px; }
+.payment-heading { font-size: 16px; margin: 0 0 10px; }
+.dialog .build-payment { min-height: 140px; padding: 12px; background: #f3ead6; border-radius: 10px; flex-wrap: wrap; gap: 14px; }
+.dialog .build-payment .traincard { width: 74px; flex: 0 0 74px; }
+.build-payment > span { flex: 1; min-width: 100px; font-size: 14px; line-height: 1.5; color: #294c59; }
+.change-payment { margin: 12px 0; border: 1px solid #d4cab3; border-radius: 8px; }
+.change-payment summary { cursor: pointer; padding: 12px; font-weight: 700; color: #285767; }
+.change-payment summary small { font-weight: 400; margin-left: 6px; color: #617980; }
+.build-options { max-height: 220px; overflow-y: auto; padding: 0 10px 10px; display: grid; gap: 6px; }
+.build-options .tunnel-option { margin: 0; }
+.build-note { font-size: 13px; line-height: 1.5; }
+.tunnel-sequence { display: flex; justify-content: center; align-items: flex-start; gap: clamp(12px, 4vw, 30px); min-height: 180px; padding: 16px 0; perspective: 800px; }
+.tunnel-sequence .tunnel-reveal { width: min(23vw, 100px); }
+.tunnel-sequence .traincard, .tunnel-card-back { width: 100%; height: auto; display: block; }
+.awaiting-tunnel-reveal .owned-piece, .awaiting-tunnel-reveal .ownership-band { visibility: hidden; }
+.draw-reminder { display: none; }
+@media (min-width: 1101px) and (min-height: 601px) {
+  .is-playing .practice-controls { bottom: calc(var(--hand-height) + 110px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .turn-banner::after { transition: none; }
+}

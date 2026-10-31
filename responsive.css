@@ -2,7 +2,7 @@
 .compact-hud, .compact-panel, .compact-players, .compact-player-detail { display: none; }
 
 @media (max-width: 1100px), (max-height: 600px) {
-  body.is-playing { --top-height: calc(50px + env(safe-area-inset-top)); --compact-bottom: calc(174px + env(safe-area-inset-bottom)); --compact-players-height: 76px; }
+  body.is-playing { --top-height: calc(50px + env(safe-area-inset-top)); --compact-bottom: calc(202px + env(safe-area-inset-bottom)); --compact-players-height: 76px; }
   .top, .is-playing .top { padding: env(safe-area-inset-top) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left)); height: var(--top-height, 54px); gap: 8px; }
   .top .brand { gap: 7px; min-width: 0; }
   .top .brand strong { font-size: 15px; }
@@ -11,6 +11,8 @@
   .topright { gap: 6px; }
   .top .pill { font-size: 10px; padding: 5px 7px; white-space: nowrap; }
   .top .sound-toggle, .top .session-controls summary { min-height: 44px; min-width: 44px; display: grid; place-items: center; }
+  .top .sound-toggle { width: 44px; height: 44px; padding: 0; border-radius: 50%; }
+  .top .sound-label { display: none; }
   .top .session-controls summary { padding: 5px; font-size: 12px; }
   .session-controls > div { position: fixed; top: var(--top-height, 54px); right: max(8px, env(safe-area-inset-right)); width: min(310px, calc(100vw - 16px)); max-height: calc(100dvh - 75px); overflow-y: auto; }
   .session-controls button { min-height: 44px; }
@@ -29,27 +31,33 @@
   .game .map-menu button, .game .map-menu .menu-close { min-height: 44px; min-width: 44px; }
   .game .map-menu h3 { padding-right: 22px; }
   .compact-hud { display: block; position: absolute; z-index: 5; bottom: 0; left: 0; right: 0; padding: 0 max(4px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(4px, env(safe-area-inset-left)); background: #fffcf5; border-top: 1px solid #9fb6b4; box-shadow: 0 -4px 18px #193e4c18; }
-  .compact-status { height: 28px; display: flex; gap: 8px; align-items: center; padding: 0 10px; color: #335760; font-size: 12px; }
+  .game .turn-banner { position: relative; inset: auto; height: 56px; min-height: 56px; border-radius: 0; padding: 6px 10px 9px; gap: 8px; box-shadow: none; }
+  .turn-copy strong { font-size: 13px; }
+  .turn-copy span { font-size: 11px; line-height: 1.2; }
+  .turn-banner .turn-clock { font-size: 28px; }
   #compactTurn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #compactClock { margin-left: auto; font-variant-numeric: tabular-nums; }
   .compact-status.is-mine { color: #236447; background: #e7f0e5; }
-  #compactPractice { background: transparent; color: #60466e; padding: 3px 6px; font-size: 11px; min-height: 30px; }
+  #compactPractice { background: transparent; color: inherit; padding: 3px 6px; font-size: 11px; min-height: 44px; }
   .compact-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; height: 46px; border-top: 1px solid #e1dfd2; }
   .compact-nav button { border-radius: 8px; background: transparent; color: #647b7c; padding: 3px 1px; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; }
   .compact-nav button > span { font-size: 20px; line-height: 24px; }
   .compact-nav button[aria-pressed="true"] { color: #214b5c; background: #e4eeeb; box-shadow: inset 0 -3px #bb8a48; }
+  .compact-nav button.needs-draw { position: relative; padding-bottom: 15px; color: #725015; background: #fff0c7; animation: second-draw-tick 3s ease-in-out infinite; }
+  .needs-draw .draw-reminder { display: block; position: absolute; bottom: 2px; left: 0; right: 0; font-size: 9px; font-weight: 700; }
   .compact-panel { display: block; position: absolute; z-index: 4; left: max(6px, env(safe-area-inset-left)); right: max(6px, env(safe-area-inset-right)); bottom: calc(var(--compact-bottom) + 6px); height: min(40dvh, 340px); max-height: calc(100% - var(--compact-bottom) - var(--compact-players-height) - 80px); padding: 10px; overflow-y: auto; overscroll-behavior: contain; border: 1px solid #b6c7bd; border-radius: 16px; background: #fffcf5; box-shadow: 0 -4px 25px #173d4524; scrollbar-color: #9c8c68 #eee7d8; scrollbar-width: thin; }
   .compact-panel .sidepanel { padding: 0; margin: 0; border: 0; box-shadow: none; }
   .compact-panel .market-toolbar { min-height: 44px; }
-  .game .compact-panel .market-info button { position: relative; width: 44px; height: 44px; min-width: 44px; min-height: 44px; border: 0; }
-  .compact-panel .market-info button::before { content: ""; position: absolute; inset: 11px; border: 1px solid #81928a; border-radius: 50%; pointer-events: none; }
+  .game .compact-panel .market-heading { gap: 4px; }
+  .game .compact-panel .market-info button { display: flex; align-items: center; width: 44px; height: 44px; min-width: 44px; min-height: 44px; border: 0; }
+  .compact-panel .market-info button > span { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid #81928a; border-radius: 50%; pointer-events: none; }
   .compact-panel .market-info #deckinfo { left: -70px; top: 38px; width: 220px; }
   .compact-panel .destination-deck { width: 66px; height: 44px; }
   .game .compact-panel #market { --market-card-width: clamp(62px, 18vw, 80px); margin: 4px 0 6px; gap: 10px 14px; }
   #compactHand { height: 100px; padding: 4px 8px 0; }
   #compactHand .dockmain { min-width: 0; }
   #compactHand .dockheading { height: 18px; margin: 0; }
-  #compactHand .eyebrow { font-size: 10px; letter-spacing: .08em; }
+  #compactHand .eyebrow, .game .compact-panel .market-heading { font-size: 10px; letter-spacing: .08em; }
   #compactHand #handCount { font-size: 10px; margin-left: 5px; }
   #compactHand .docktip { display: inline; font-size: 10px; }
   .game #compactHand .hand { display: flex; height: 78px; min-height: 0; padding: 8px 4px 3px; overflow-x: auto; overflow-y: hidden; gap: 9px; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: #a99a78 #eee8d9; }
@@ -170,10 +178,10 @@
   .top:has(#sessionControls:not(.hidden)) .brand strong { font-size: 14px; }
 }
 @media (max-width: 699px) and (max-height: 700px) {
-  body.is-playing { --compact-bottom: calc(148px + env(safe-area-inset-bottom)); --compact-players-height: 64px; }
+  body.is-playing { --compact-bottom: calc(176px + env(safe-area-inset-bottom)); --compact-players-height: 64px; }
   .game .compact-players .scorebadge { gap: 1px; padding-block: 3px; }
   .game .compact-players .player-avatar { width: 16px; height: 16px; flex-basis: 16px; }
-  .compact-status { height: 24px; }
+  .game .turn-banner { height: 52px; min-height: 52px; }
   .compact-nav { height: 44px; }
   #compactHand { height: 80px; }
   #compactHand .dockheading { height: 16px; }
@@ -192,12 +200,12 @@
   .ticket-options .ticket-options-hint { display: none; }
 }
 @media (min-width: 700px) and (max-height: 500px) {
-  body.is-playing { --top-height: calc(42px + env(safe-area-inset-top)); --compact-bottom: calc(134px + env(safe-area-inset-bottom)); --compact-players-height: 64px; }
+  body.is-playing { --top-height: calc(42px + env(safe-area-inset-top)); --compact-bottom: calc(162px + env(safe-area-inset-bottom)); --compact-players-height: 64px; }
   .compact-players { left: auto; width: 44%; }
   .game .boardtools, .game[data-compact-panel]:not([data-compact-panel="map"]) .boardtools { top: 6px; right: calc(44% + 12px); }
   .game .compact-players .scorebadge { gap: 1px; padding: 3px; }
   .game .compact-players .player-avatar { width: 16px; height: 16px; flex-basis: 16px; }
-  .compact-status { height: 24px; }
+  .game .turn-banner { height: 52px; min-height: 52px; }
   #compactHand { height: 64px; padding-top: 2px; }
   #compactHand .dockheading { float: left; width: 92px; height: 56px; display: flex; align-items: center; }
   #compactHand .docktip { display: none; }
@@ -207,4 +215,9 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .compact-panel, .compact-nav button { transition: none; }
+  .compact-nav button.needs-draw { animation: none; }
+}
+@keyframes second-draw-tick {
+  0%, 20%, 40%, 100% { transform: translateY(0); }
+  10%, 30% { transform: translateY(-3px); }
 }

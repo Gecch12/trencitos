@@ -213,7 +213,7 @@ test("overview reaches 25%, panning works at fit and below, and bounds keep map 
   const bounds = { x: 0, y: 0, width: 980, height: 660 }, viewport = { width: 1366, height: 716 };
   const safe = { x: 16, y: 64, width: 900, height: 400 }, center = { x: 490, y: 330 };
   assert.equal(UI.MIN_ZOOM, .25);
-  assert.equal(UI.MAX_ZOOM, 3);
+  assert.equal(UI.MAX_ZOOM, 6);
   const fit = UI.camera(bounds, viewport, safe, 1, center);
   const overview = UI.camera(bounds, viewport, safe, UI.MIN_ZOOM, center);
   assert.equal(overview.scale, fit.scale * 4);

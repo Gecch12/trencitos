@@ -12,6 +12,7 @@ const qaToken = "a".repeat(48); // Disposable fixture identity, not a real crede
 function add(room) {
   room.members[0].token = qaToken;
   const g = room.game;
+  E.ensureTiming(g);
   if (g.phase === "initial") g.initialDeadline = g.turnDeadline = Date.now() + 600000;
   else if (g.phase !== "finished") g.turnDeadline = Date.now() + 600000;
   rooms.set(room.code, room);
@@ -41,6 +42,7 @@ ready.then(() => {
   }
   add(tunnelRoom("QATUNL"));
   add(tunnelRoom("QADECL", "decline"));
+  for (const [code, kind] of [["QAZERO", "zero"], ["QAREVL", "color"], ["QASHRT", "short"], ["QAWILD", "wild"], ["QANONE", "decline"]]) add(tunnelRoom(code, kind, true));
   const port = Number(process.env.PORT || 3011);
   server.listen(port, "127.0.0.1", () => {
     console.log(`Responsive QA: http://localhost:${port}`);
