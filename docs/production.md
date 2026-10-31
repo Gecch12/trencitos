@@ -1,6 +1,49 @@
 # Producción
 
-## Versión actual · 2026-10-31, 16:44 (Lima)
+## Versión actual · 2026-10-31, 18:26 (Lima)
+
+- Código: `bf1c5c19ba99e2ee00e7706d52594860a5e19034`, publicado en `main`.
+  Incluye navegación adaptable, perfil editable, directorio público/privado,
+  bots durables, espectadores y ajuste móvil M12. No requirió migraciones SQL
+  ni cambios de variables o credenciales.
+- [Despliegue Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbj7hpss728c7391mldg):
+  manual del commit exacto, **Live** a las 18:26:06; Node 26.13.0,
+  `npm install --omit=dev` y `npm start`. Auto-Deploy continúa desactivado.
+  El usuario pidió publicar en main y verificar producción. No había salas
+  antes del despliegue y no se cerró ninguna sala ajena.
+- Base local validada: 324 pruebas correctas, 55 combinaciones responsive,
+  regresión de partida completa y vagones; detalle en
+  [navegación y salas](work/navigation-rooms.md).
+- [Informe remoto HTTP/WebSocket](qa/production-shell-2026-10-31.json):
+  once recursos públicos coinciden byte a byte con el commit, las cuatro rutas
+  cargan directamente y ocho rutas privadas devuelven 404. Salud HTTP 200,
+  `ok: true`, `storage: supabase`; API de cuenta habilitada, sin perfil anónimo.
+- Sobre el servidor real se creó una sala temporal: publicación por defecto,
+  cambios pública/privada reflejados en otra sesión, entrada por código,
+  capacidad y permisos del anfitrión, bot, inicio y elección de billetes,
+  acciones confirmadas después del guardado y turno automático del bot.
+  Reconexión por credencial privada conserva puesto, mano y billetes.
+  El espectador no recibe credencial ni cartas privadas y no puede actuar.
+- Navegador Chrome sobre HTTPS: edición de nombre de una cuenta autenticada,
+  guardado y recarga confirmados; nombre original restaurado. No se repitió el
+  consentimiento de Google. Creación desde UI, dos plazas, bot, aviso de sala
+  llena, selección de billetes, construcción Dieppe–Paris (+1, 44 vagones) y
+  reflejo en otra pestaña espectadora con controles deshabilitados.
+- Revisión visual remota en 390×844, 768×1024 y 1440×900: sala y configuración,
+  tablero, More y selector con Español como única opción. More sin desbordamiento
+  horizontal en escritorio/móvil; sin errores ni advertencias de consola en
+  jugador y espectador. Capturas locales en `.qa/release-bf1c5c1/`, fuera de Git
+  por contener el nombre de una cuenta real. Emulación restablecida al terminar.
+- Se abandonaron solo las salas creadas para QA. Tras su caducidad, `/healthz`
+  volvió a `rooms: 0` con almacenamiento saludable; el espectador no la impidió.
+
+La prueba remota cubre una partida parcial y reconexión de cliente; no repite
+una partida completa, recuperación tras otro reinicio del servidor ni certifica
+Safari/iOS/Android físicos. Notificaciones, amigos, chat y contenidos futuros
+conservan el alcance de esqueleto aprobado. El commit documental posterior solo
+registra evidencia y no provoca otro despliegue.
+
+## Entrega anterior · 2026-10-31, 16:44 (Lima)
 
 - Código: `23086914b893758b29f3879259e8fa8851f81e9a`, rama `main`.
   El resaltado muestra solo nombres de los extremos seleccionados y restaura

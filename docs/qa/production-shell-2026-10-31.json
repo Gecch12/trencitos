@@ -1,0 +1,120 @@
+{
+  "date": "2026-10-31T23:27:00.276Z",
+  "commit": "bf1c5c19ba99e2ee00e7706d52594860a5e19034",
+  "base": "https://trencitos-swamp.onrender.com",
+  "checks": [
+    "Healthy production using Supabase",
+    "11 public assets exactly match the released checkout",
+    "All four direct application routes return the shell",
+    "Eight private server/configuration routes remain inaccessible",
+    "Account API is enabled and does not expose a profile anonymously",
+    "New public room appears live without credentials",
+    "Private/public changes persist and update the directory; private spectating denied",
+    "Joining, host-only bots and room capacity are enforced",
+    "Spectator receives no seat, token or private cards and cannot play",
+    "Both humans and persistent bot confirm initial tickets; game starts",
+    "Human actions are acknowledged after saving; bot advances its live turn",
+    "Private recovery reconnects to the same seat, hand and tickets",
+    "Test room disappears from directory when all humans leave"
+  ],
+  "assets": [
+    {
+      "file": "index.html",
+      "sha256": "eecf8e4ea2d2cec9d5e4c42277e0580f82a6cd0b155dba620400abaaa94f7520"
+    },
+    {
+      "file": "app.js",
+      "sha256": "665b6ac4933785bad136d5b15d7bbf5706ba280d4994c0c346ed832d9a41162c"
+    },
+    {
+      "file": "account-ui.js",
+      "sha256": "090fd43eef8d6b77ba3f7c25934b1c1de8ba807cc22eb8427048bd58ff5b8332"
+    },
+    {
+      "file": "shell.js",
+      "sha256": "0c398251b007e104a655c800ecc3413f36d41a9fc3e4e76b067c9f19a9f10e51"
+    },
+    {
+      "file": "shell.css",
+      "sha256": "44386a0f0dcef01d0bb2e66e5b80985bd03bfffa8dc44784c5d5a7b0ace33d51"
+    },
+    {
+      "file": "shell-icons.js",
+      "sha256": "975f951bfb39cbfb2df14792a30767449aafff9541cad4796efcb657807ba569"
+    },
+    {
+      "file": "game-ui.js",
+      "sha256": "3aa58f7365ecc125156fc3133bc105b29bccab491c50a8ef0ec0ca1d31b4b245"
+    },
+    {
+      "file": "data.js",
+      "sha256": "d8b5ea6097f3642a480a3a712fdee00fbf5067bd16a61564027de56c38567cea"
+    },
+    {
+      "file": "style.css",
+      "sha256": "8627d34921f9e1eeac0305dfc42e29d8c2a02821266ad95ee7c8c0d1ef889dee"
+    },
+    {
+      "file": "responsive.css",
+      "sha256": "d582618ec4c7e80808f3cf8e62a2303918043d34e0ffc2d5489f09e4e849c222"
+    },
+    {
+      "file": "board-3d.css",
+      "sha256": "3eb8561981dbe1d2b93b2dff7f2f809518e53e9bf509b1903f831b9d1412ac36"
+    }
+  ],
+  "healthBefore": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 0
+  },
+  "passed": true,
+  "finished": "2026-10-31T23:27:22.739Z",
+  "deployment": {
+    "id": "dep-dbj7hpss728c7391mldg",
+    "liveAt": "2026-10-31T23:26:06Z",
+    "node": "26.13.0",
+    "autoDeploy": false
+  },
+  "browser": {
+    "engine": "Chrome",
+    "viewports": [
+      [
+        390,
+        844
+      ],
+      [
+        768,
+        1024
+      ],
+      [
+        1440,
+        900
+      ]
+    ],
+    "checks": [
+      "Authenticated profile rename saved, reloaded, original name restored",
+      "Room creation, two seats, bot, full room message and initial tickets",
+      "Dieppe\u2013Paris construction accepted: +1 point, 44 trains remaining",
+      "Spectator shows construction with disabled game controls",
+      "More groups, six unlinked social icons, Spanish-only language selector",
+      "Desktop/mobile More without horizontal overflow"
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "screenshotsDirectory": ".qa/release-bf1c5c1/",
+    "viewportOverridesRestored": true
+  },
+  "healthAfterCleanup": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 0
+  },
+  "limitations": [
+    "Remote game was partial; complete game regression passed locally",
+    "No second server restart/checkpoint recovery test",
+    "No physical Safari/iOS/Android certification",
+    "Existing authenticated session; Google consent not repeated"
+  ],
+  "verificationCompleted": "2026-10-31T23:33:34.927320+00:00"
+}

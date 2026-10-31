@@ -1,12 +1,13 @@
 ---
-{"id":"navigation-rooms","status":"validated","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-10-31"}
+{"id":"navigation-rooms","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"released","updated":"2026-10-31"}
 ---
 # Navegación, perfil y salas públicas
 
 Alcance aprobado: estructura de Colonist adaptada a Trencitos, directorio real de
 salas, bots en sala de espera y espectadores. Integrado sobre `main`, con
-ediciones del tablero preexistentes conservadas. Publicación solicitada por el
-usuario; la comprobación remota se registrará en [producción](../production.md).
+ediciones del tablero preexistentes conservadas. Publicado por solicitud del
+usuario en `bf1c5c1`, Live el 2026-10-31 a las 18:26:06 de Lima; comprobación
+remota y límites registrados en [producción](../production.md).
 
 ## Aceptación
 
@@ -90,7 +91,8 @@ Capturas:
 
 ## Siguiente paso
 
-Publicar el commit exacto en Render y verificar los flujos sobre HTTPS/Supabase.
+Entrega publicada y verificada sobre HTTPS/Supabase, incluido perfil de cuenta,
+salas/bots/espectadores y reconexión; [informe](../qa/production-shell-2026-10-31.json).
 El desarrollo posterior puede rellenar Play, amigos, chat y secciones informativas
 sin cambiar los contratos del directorio. La práctica anterior sigue en código,
 con su ciclo efímero, sin entrada visible en Play en esta etapa.

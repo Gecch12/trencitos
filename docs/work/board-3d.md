@@ -1,5 +1,5 @@
 ---
-{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"integrated","updated":"2026-10-31"}
+{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"released","updated":"2026-10-31"}
 ---
 # Tablero 3D y familia de vagones
 
@@ -9,7 +9,8 @@ de simulador, cámara libre ni cambios de reglas. Publicado desde `main` en
 `16bf6c3` hasta M9; [entrega y verificación remota](../production.md).
 M10 está publicada en `2a46f58`; evidencia y límites en [producción](../production.md).
 M11 está publicada en `2308691`; evidencia remota en [producción](../production.md).
-M12 está validada e integrada junto con la navegación; pendiente de publicación.
+M12 está publicada en `bf1c5c1` junto con la navegación; evidencia remota en
+[producción](../production.md).
 
 ## Hitos
 
@@ -61,7 +62,9 @@ Validación local, sin certificar Safari/iPhone físico:
   Captura local ignorada: `.qa/compact-interface/mobile.png`.
 - `node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
 
-Siguiente paso de M12: comprobar la publicación junto con navegación y salas.
+M12 publicada y comprobada en producción el 2026-10-31: tablero móvil/tablet,
+billetes y construcción aceptada, sin errores de consola. La entrega no certifica
+equipos físicos adicionales; el seguimiento continúa en [calidad](quality.md).
 
 ## Regresión con la nueva navegación
 
