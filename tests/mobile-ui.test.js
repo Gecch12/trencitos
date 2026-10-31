@@ -156,17 +156,19 @@ test("fullscreen control is hidden unless the document and method both support i
   }
 });
 
-test("destination overview includes only kept tickets, deduplicates cities and never reveals paths", () => {
+test("destination overview includes only kept tickets and their completed private paths", () => {
   const game = { tickets: [{ id: 1, a: "A", b: "B" }, { id: 2, a: "B", b: "C" }],
     ticketOffer: [{ id: 3, a: "D", b: "E" }], initialTickets: [{ id: 4, a: "F", b: "G" }],
     ticketProgress: [{ id: 1, completed: true }, { id: 2, completed: false }],
     ticketPaths: [{ id: 1, routes: [12], stationRoutes: [12], stations: [{ city: "A", seat: 0 }] }] };
   const before = JSON.stringify(game);
   assert.deepEqual(UI.destinationSpotlightSelection(game, null, true), {
-    endpoints: ["A", "B", "C"], routes: [], stationRoutes: [], stations: [], overview: true,
+    endpoints: ["A", "B", "C"], routes: [12], stationRoutes: [12], stations: [{ city: "A", seat: 0 }], overview: true,
+    destinations: [{ id: 1, a: "A", b: "B", number: 1, completed: true }, { id: 2, a: "B", b: "C", number: 2, completed: false }],
   });
   assert.deepEqual(UI.destinationSpotlightSelection(game, 1, true), {
     endpoints: ["A", "B"], routes: [12], stationRoutes: [12], stations: [{ city: "A", seat: 0 }],
+    destinations: [{ id: 1, a: "A", b: "B", number: 1, completed: true }],
   });
   assert.equal(UI.destinationSpotlightSelection(game, null, false), null);
   assert.equal(UI.destinationSpotlightSelection(game, 3, false), null);

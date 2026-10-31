@@ -430,7 +430,7 @@ function render() {
     .map(
       (x, i) =>
         `<div class="scorebadge ${i === game.current && ["play", "tunnel"].includes(game.phase) ? "active" : ""}" data-player="${i}" tabindex="0" aria-label="${escapeHTML(x.name)}. Símbolo: ${GameUI.playerMark(i).name}. ${game.result?.find(r => r.seat === i)?.score ?? x.score} puntos, ${x.trains} vagones, ${x.stations} estaciones. Enfoca para resaltar sus rutas.">
-          <div class="player-heading">${playerAvatar(i)}<div class="player-details"><b title="${escapeHTML(x.name)}">${escapeHTML(x.name)}</b><span class="player-state">${[i === seat ? "Tú" : "", members[i]?.autopilot ? "Bot de reemplazo" : !members[i]?.connected ? "Sin conexión" : "", game.phase === "initial" ? (x.initialReady ? "✓ Listo" : "Eligiendo billetes") : i === game.current && ["play", "tunnel"].includes(game.phase) ? (game.turnWaiting ? 'Eligiendo billetes <span class="turn-clock" data-clock="waiting"></span>' : 'En turno <span class="turn-clock" data-clock="turn"></span>') : ""].filter(Boolean).join(" · ")}</span></div></div>
+          <div class="player-heading">${playerAvatar(i)}<div class="player-details"><b title="${escapeHTML(x.name)}">${escapeHTML(x.name)}</b><div class="player-status"><span class="player-turn-tag">EN TURNO</span><span class="player-state">${[i === seat ? "Tú" : "", members[i]?.autopilot ? "Bot de reemplazo" : !members[i]?.connected ? "Sin conexión" : "", game.phase === "initial" ? (x.initialReady ? "✓ Listo" : "Eligiendo billetes") : ""].filter(Boolean).join(" · ")}</span></div></div></div>
           <div class="player-metrics">${playerMetric("points", "Puntos", game.result?.find(r => r.seat === i)?.score ?? x.score)}${playerMetric("trains", "Vagones", x.trains)}${playerMetric("stations", "Estaciones", x.stations)}</div>
         </div>`,
     )
@@ -774,7 +774,7 @@ function cancelConstruction() {
 }
 document.addEventListener("visibilitychange", () => { if (document.hidden) { finishTunnelReveal(true); cancelCardFlights(); cancelConstruction(); stopSounds(); } });
 window.addEventListener("resize", () => { cancelCardFlights(); cancelConstruction(); });
-reducedMotion.addEventListener("change", () => { if (reducedMotion.matches) finishTunnelReveal(true); cancelCardFlights(); cancelConstruction(); });
+reducedMotion.addEventListener("change", () => { if (reducedMotion.matches) skipTunnelAnimation(); cancelCardFlights(); cancelConstruction(); });
 function layoutHand() {
   const cards = [...$("hand").querySelectorAll(".traincard")];
   if (!cards.length) return;
@@ -788,13 +788,16 @@ function renderDestinations() {
   const content = GameUI.destinationEntries(game, game.tickets).map(({ ticket: t }) => {
     const status = GameUI.destinationStatus(game, t.id);
     const hint = !status ? "Progreso no disponible: el backend no envía este dato. Reinícialo al terminar la partida." : status.completed ? status.viaStation ? "Conectado usando una estación. Puntos al final de la partida." : "Conectado. Puntos al final de la partida." : "Destino pendiente";
-    return `<button type="button" class="destination-row ${status?.completed ? "is-complete" : ""}" data-destination="${t.id}" title="${hint} · Ver en el mapa"><span class="destination-endpoints">${escapeHTML(CITIES[t.a][2])} <span aria-hidden="true">→</span> ${escapeHTML(CITIES[t.b][2])}</span><strong>${t.p}<span class="sr-only"> puntos</span></strong>${!status ? '<span class="destination-unknown" aria-label="Progreso no disponible">?</span>' : status.completed ? '<span class="destination-check" aria-label="Completado">✓</span>' : '<span class="destination-pending" aria-label="Pendiente">·</span>'}</button>`;
+    const number = GameUI.destinationNumber(game, t.id);
+    return `<button type="button" class="destination-row ${status?.completed ? "is-complete" : ""}" data-destination="${t.id}" title="${hint} · Ver en el mapa"><span class="ticket-number"><span class="sr-only">Destino </span>${number}</span><span class="destination-endpoints">${escapeHTML(CITIES[t.a][2])} <span aria-hidden="true">→</span> ${escapeHTML(CITIES[t.b][2])}</span><strong>${t.p}<span class="sr-only"> puntos</span></strong>${!status ? '<span class="destination-unknown" aria-label="Progreso no disponible">?</span>' : status.completed ? '<span class="destination-check" aria-label="Completado">✓</span>' : '<span class="destination-pending" aria-label="Pendiente">·</span>'}</button>`;
   }).join("") || '<p class="smallmuted">Elige tus billetes iniciales.</p>';
   // Keep the user's scroll position while bots act or a new card arrives.
-  if ($("ticketList").innerHTML !== content) {
+  if ($("ticketList")._destinationHTML !== content) {
     const focus = document.activeElement.closest("#ticketList [data-destination]")?.dataset.destination;
     const top = $("ticketList").scrollTop;
     $("ticketList").innerHTML = content;
+    $("ticketList")._destinationHTML = content;
+    for (const row of $("ticketList").querySelectorAll("[data-destination]")) row.querySelector(".ticket-number").style.setProperty("--ticket-color", ticketColor(GameUI.destinationNumber(game, +row.dataset.destination) - 1));
     if (focus !== undefined) $("ticketList").querySelector(`[data-destination="${focus}"]`)?.focus({ preventScroll: true });
     $("ticketList").scrollTop = top;
   }
@@ -1120,16 +1123,25 @@ function showBuildDialog() {
   const result = GameUI.construction(game, seat, buildTarget);
   if (result.reason) { closeOptionalDialog(); toast(result.reason); return; }
   const { route: r, options } = result;
-  let chosen = options[0]; // Server-valid combinations, minimum wildcards first.
+  const groups = GameUI.paymentGroups(options);
+  let group = groups[0], paymentIndex = 0;
+  let chosen = group.options[0]; // Server-valid combinations, minimum wildcards first.
   showDialog(r ? "Construir ruta" : "Construir estación",
-    `${dialogClockHTML()}<div class="build-summary"><strong>${escapeHTML(r ? routeName(r) : `Estación en ${cityName(buildTarget.city)}`)}</strong>
+    `${dialogClockHTML()}<div class="build-content"><div class="build-summary"><strong>${escapeHTML(r ? routeName(r) : `Estación en ${cityName(buildTarget.city)}`)}</strong>
     ${r ? `<div class="build-track" aria-hidden="true">${'<i></i>'.repeat(r.n)}</div><span>${r.n} vagones · <b>+${GameUI.ROUTE_POINTS[r.n]} puntos</b>${r.tunnel ? " · Túnel" : r.ferry ? " · Ferry" : ""}</span>` : `<span>Estación ${result.cost} de 3 · ${plural(result.cost, "carta")}</span>`}</div>
     <h3 class="payment-heading">${r?.tunnel ? "Pagarás inicialmente" : "Pagarás"}</h3>
     <div id="paymentPreview" class="payment-preview build-payment" aria-live="polite"></div>
-    ${options.length > 1 ? `<details class="change-payment"><summary>Cambiar cartas <small>Otras combinaciones válidas</small></summary><div class="build-options">${options.map((option, i) => `<label class="tunnel-option"><input type="radio" name="buildPayment" value="${i}" ${i === 0 ? "checked" : ""}><span><span class="payment-icons">${paymentIcons(option)}</span><span class="payment-label">${paymentDescription(option)}</span></span></label>`).join("")}</div></details>` : ""}
+    ${options.length > 1 ? `<details class="change-payment"><summary>Cambiar cartas <small>Color y locomotoras</small></summary><div class="payment-controls">
+      ${groups.length > 1 ? `<fieldset class="payment-colors"><legend>Color de las cartas normales</legend><div class="payment-color-grid">${groups.map((g, i) => `<label class="payment-color"><input type="radio" name="buildColor" value="${g.color}" ${i === 0 ? "checked" : ""}><img src="assets/cards/${g.color}.svg" alt="" draggable="false"><span>${N[g.color]}<small>${plural(game.hand.filter(c => c === g.color).length, "disponible")}</small></span></label>`).join("")}</div></fieldset>` : ""}
+      <div class="payment-wilds"><div><strong id="wildLabel">Locomotoras</strong><small>${plural(game.hand.filter(c => c === "wild").length, "disponible")}</small></div>
+        <div class="wild-stepper" role="group" aria-labelledby="wildLabel" aria-describedby="wildHint"><button id="wildLess" type="button" aria-label="Usar una locomotora menos">−</button><output id="wildCount" aria-label="Locomotoras a utilizar">${chosen.wild}</output><button id="wildMore" type="button" aria-label="Usar una locomotora más">+</button></div>
+      </div><p id="wildHint" class="wild-hint"></p>
+    </div></details>` : ""}
     <p class="build-note">${r?.tunnel ? "Revelaremos hasta 3 cartas del mazo. Cada coincidencia de color o locomotora añade 1 carta. Después podrás pagar el suplemento o desistir." : r?.ferry ? `Incluye al menos ${r.ferry} locomotora(s) obligatoria(s) para este ferry.` : "Pago sugerido: utiliza la menor cantidad posible de locomotoras."}</p>
+    </div>
     <div class="dialog-actions"><button id="confirmBuild" class="primary full">${r?.tunnel ? "Revelar cartas del túnel" : "Pagar y construir"}</button>
     <button id="cancelBuild" class="tertiary full">Cancelar</button></div>`, false, true);
+  $("dialog").classList.add("build-dialog");
   if (r) $("dialog").querySelector(".build-track").style.setProperty("--track-color", C[r.color]);
   const updatePreview = () => {
     const preview = $("paymentPreview");
@@ -1139,8 +1151,23 @@ function showBuildDialog() {
     const caption = document.createElement("span");
     caption.textContent = `${paymentDescription(chosen)} · ${result.cost} en total`;
     preview.appendChild(caption);
+    if ($("wildCount")) {
+      $("wildCount").textContent = chosen.wild;
+      $("wildLess").disabled = paymentIndex === 0;
+      $("wildMore").disabled = paymentIndex === group.options.length - 1;
+      const min = group.options[0].wild, max = group.options.at(-1).wild;
+      $("wildHint").textContent = chosen.regular === 0 ? "Solo locomotoras: no gastarás cartas de color."
+        : `${min === max ? `Cantidad fija: ${min}` : `Puedes usar de ${min} a ${max}`}.${r?.ferry ? ` Este ferry exige al menos ${r.ferry}.` : min ? ` Necesitas al menos ${min} para completar el pago.` : " Cada locomotora sustituye una carta de color."}`;
+    }
   };
-  for (const input of document.querySelectorAll('[name="buildPayment"]')) input.onchange = () => { chosen = options[+input.value]; updatePreview(); };
+  for (const input of document.querySelectorAll('[name="buildColor"]')) input.onchange = () => {
+    group = groups.find(g => g.color === input.value);
+    paymentIndex = 0; chosen = group.options[0]; updatePreview();
+  };
+  for (const [id, step] of [["wildLess", -1], ["wildMore", 1]]) if ($(id)) $(id).onclick = () => {
+    paymentIndex = Math.max(0, Math.min(group.options.length - 1, paymentIndex + step));
+    chosen = group.options[paymentIndex]; updatePreview();
+  };
   $("cancelBuild").onclick = closeOptionalDialog;
   $("confirmBuild").onclick = () => {
     if (buildSubmitting) return;
@@ -1167,12 +1194,17 @@ function showDialog(title, body, ticketDialog = false, dismissible = false) {
   hoveredDestination = null;
   $("overlay").classList.remove("hidden");
   $("dialog").classList.toggle("ticket-dialog", ticketDialog);
-  $("dialog").classList.remove("tunnel-dialog", "results-dialog");
+  $("dialog").classList.remove("tunnel-dialog", "results-dialog", "build-dialog");
   delete $("dialog").dataset.tunnelReveal;
   delete $("dialog").dataset.tunnelDecision;
   $("dialog").setAttribute("aria-labelledby", "dialogTitle");
   $("dialog").innerHTML =
     `${dismissible ? '<button class="dialog-close" aria-label="Cerrar ventana">×</button>' : ""}<h2 id="dialogTitle" tabindex="-1">${title}</h2>${body}<p class="err" id="errorMsg"></p>`;
+  const clock = $("dialog").querySelector(".dialog-turn-clock");
+  if (clock) {
+    const heading = document.createElement("div"); heading.className = "dialog-heading";
+    $("dialogTitle").before(heading); heading.append($("dialogTitle"), clock);
+  }
   if (dismissible) $("dialog").querySelector(".dialog-close").onclick = closeOptionalDialog;
   $("dialogTitle").focus({ preventScroll: true });
   updateDestinationSpotlight();
@@ -1234,6 +1266,23 @@ $("toggleDestinations").onclick = () => {
   if (compactMedia.matches) setCompactPanel("map");
   updateDestinationSpotlight();
 };
+// Numbers belong to the ticket, not the city: a shared endpoint carries all of
+// its badges. Wrap long collections so the labels remain inside the viewport.
+function destinationBadgeSize(count) {
+  return { width: Math.min(4, count) * 22, height: Math.ceil(count / 4) * 20 };
+}
+function drawDestinationBadges(el, parent, entries, x, y, scale = 1) {
+  const size = destinationBadgeSize(entries.length);
+  const group = el("g", { class: "destination-numbers", transform: `translate(${x} ${y}) scale(${scale})` }, parent);
+  entries.forEach((entry, i) => {
+    const rowCount = Math.min(4, entries.length - Math.floor(i / 4) * 4);
+    const bx = (i % 4 - (rowCount - 1) / 2) * 22, by = Math.floor(i / 4) * 20;
+    const badge = el("g", { "data-destination-number": entry.number, "data-completed": !!entry.completed }, group);
+    el("rect", { x: bx - 10, y: by, width: 20, height: 18, rx: 5, fill: entry.completed ? "#f3d88d" : ticketColor(entry.number - 1), stroke: "#fff9e5", "stroke-width": 1.2 }, badge);
+    el("text", { x: bx, y: by + 12.5, "text-anchor": "middle", fill: entry.completed ? "#3c351c" : "#fff", "font-size": 11, "font-weight": 800 }, badge).textContent = entry.number;
+  });
+  return size;
+}
 function updateDestinationSpotlight() {
   const toggle = $("toggleDestinations");
   toggle.disabled = !game?.tickets.length;
@@ -1289,16 +1338,21 @@ function updateDestinationSpotlight() {
     else el("circle", { cx: p.x, cy: p.y, r: 3.5, fill: "#24444e" }, marker);
     const label = el("text", { class: "destination-beacon-label" }, marker); label.textContent = CITIES[key][2];
     label.style.fontSize = `${15 * GameUI.cityLabelScale(zoom)}px`;
-    endpoints.push({ key, x: p.x - safe.x, y: p.y - safe.y, width: label.getComputedTextLength() });
-    labels.set(key, label);
+    const numbers = (selection.destinations || []).filter(t => t.a === key || t.b === key);
+    const badges = destinationBadgeSize(numbers.length);
+    endpoints.push({ key, x: p.x - safe.x, y: p.y - safe.y, width: Math.max(label.getComputedTextLength(), badges.width) });
+    labels.set(key, { label, marker, numbers, badges });
   }
   // Use the same collision-aware placement as the base map, now in screen
   // coordinates so many destinations stay readable at any zoom level.
   const labelScale = GameUI.cityLabelScale(zoom);
-  for (const box of RailMap.placeLabels(endpoints, safe.width, safe.height, [], { height: 18 * labelScale, baseline: 14 * labelScale })) {
-    const label = labels.get(box.key);
-    label.setAttribute("x", safe.x + box.x);
-    label.setAttribute("y", safe.y + box.y + 14 * labelScale);
+  const badgeHeight = Math.max(0, ...[...labels.values()].map(l => l.badges.height));
+  for (const box of RailMap.placeLabels(endpoints, safe.width, safe.height, [], { height: badgeHeight + 18 * labelScale, baseline: badgeHeight + 14 * labelScale })) {
+    const { label, marker, numbers } = labels.get(box.key);
+    const x = safe.x + box.x + box.width / 2, y = safe.y + box.y;
+    label.setAttribute("text-anchor", "middle"); label.setAttribute("x", x);
+    label.setAttribute("y", y + badgeHeight + 14 * labelScale);
+    drawDestinationBadges(el, marker, numbers, x, y);
   }
 }
 function renderTicketMap(tickets) {
@@ -1336,6 +1390,7 @@ function renderTicketMap(tickets) {
   }
   const endpoints = new Map();
   for (const { ticket, i, key, active } of visible) {
+    const number = GameUI.destinationNumber(game, ticket.id, i), color = ticketColor(number - 1);
     const [x, y] = RailMap.cities[ticket.a], [xx, yy] = RailMap.cities[ticket.b];
     const strong = active || preview === key;
     const opacity = !strong ? .25 : preview !== null && preview !== key ? .5 : 1;
@@ -1356,7 +1411,7 @@ function renderTicketMap(tickets) {
     if (!path?.routes.length) {
       el("line", { ...line, stroke: "#fffefa", "stroke-width": 6 }, g);
       el("line", {
-      ...line, stroke: ticketColor(i), "stroke-width": 2.8,
+      ...line, stroke: color, "stroke-width": 2.8,
       "stroke-dasharray": "6 6", class: "ticket-connector",
       }, g);
     }
@@ -1365,21 +1420,19 @@ function renderTicketMap(tickets) {
     const mid = middle?.[Math.floor(middle.length / 2)];
     const mx = mid?.x ?? (x + xx) / 2, my = mid?.y ?? (y + yy) / 2;
     const marker = el("g", { class: "ticket-map-marker", transform: `translate(${mx} ${my})` }, g);
-    el("circle", { r: 11, fill: ticketColor(i), stroke: "#fffefa", "stroke-width": 2 }, marker);
-    el("text", { y: 4, "text-anchor": "middle", class: "ticket-map-number" }, marker).textContent = i + 1;
+    el("circle", { r: 11, fill: color, stroke: "#fffefa", "stroke-width": 2 }, marker);
+    el("text", { y: 4, "text-anchor": "middle", class: "ticket-map-number" }, marker).textContent = number;
     for (const city of strong ? [ticket.a, ticket.b] : []) {
       if (!endpoints.has(city)) endpoints.set(city, []);
-      endpoints.get(city).push(i);
+      endpoints.get(city).push({ number, completed: !!completed });
     }
   }
   for (const [city, indexes] of endpoints) {
     const [x, y] = RailMap.cities[city], name = CITIES[city][2];
     const g = el("g", { class: "ticket-endpoint", "data-city": city });
     el("circle", { cx: x, cy: y, r: 5, fill: "#fffefa", stroke: "#24495a", "stroke-width": 1.3 }, g);
-    indexes.forEach((i, ring) => el("circle", {
-      cx: x, cy: y, r: 8 + ring * 4, fill: "none",
-      stroke: ticketColor(i), "stroke-width": 2.5, "data-ticket-index": i,
-    }, g));
+    g.dataset.destinations = JSON.stringify(indexes);
+    el("circle", { cx: x, cy: y, r: 8, fill: "none", stroke: "#d5af55", "stroke-width": 2.5 }, g);
     const offset = LABEL_OFFSETS[city] || [0, -19];
     const radius = 8 + (indexes.length - 1) * 4;
     el("text", {
@@ -1391,7 +1444,7 @@ function renderTicketMap(tickets) {
 }
 function layoutTicketMapLabels() {
   const svg = $("ticketMap");
-  if (!svg || !compactMedia.matches || !svg.clientWidth || !svg.clientHeight) return;
+  if (!svg || !svg.clientWidth || !svg.clientHeight) return;
   const scale = Math.max(MAP_BOUNDS.width / svg.clientWidth, MAP_BOUNDS.height / svg.clientHeight);
   for (const marker of svg.querySelectorAll(".ticket-map-marker")) {
     marker.querySelector("circle").setAttribute("r", 8 * scale);
@@ -1402,17 +1455,23 @@ function layoutTicketMapLabels() {
   }
   const ox = (svg.clientWidth - MAP_BOUNDS.width / scale) / 2, oy = (svg.clientHeight - MAP_BOUNDS.height / scale) / 2;
   const groups = [...svg.querySelectorAll(".ticket-endpoint")];
+  let badgeHeight = 0;
   const labels = groups.map(group => {
-    const key = group.dataset.city, [x, y] = RailMap.cities[key], text = group.querySelector("text");
+    group.querySelector(".destination-numbers")?.remove();
+    const key = group.dataset.city, [x, y] = RailMap.cities[key], text = group.querySelector(".ticket-city-label");
+    const badges = destinationBadgeSize(JSON.parse(group.dataset.destinations).length);
+    badgeHeight = Math.max(badgeHeight, badges.height);
     text.style.fontSize = `${11 * scale}px`; text.style.strokeWidth = `${3 * scale}px`;
     text.setAttribute("text-anchor", "start");
-    return { key, x: ox + (x - MAP_BOUNDS.x) / scale, y: oy + (y - MAP_BOUNDS.y) / scale, width: text.getComputedTextLength() / scale };
+    return { key, x: ox + (x - MAP_BOUNDS.x) / scale, y: oy + (y - MAP_BOUNDS.y) / scale, width: Math.max(text.getComputedTextLength() / scale, badges.width) };
   });
-  const placements = RailMap.placeLabels(labels, svg.clientWidth, svg.clientHeight, [], { height: 14, baseline: 11 });
+  const placements = RailMap.placeLabels(labels, svg.clientWidth, svg.clientHeight, [], { height: badgeHeight + 14, baseline: badgeHeight + 11 });
   for (const place of placements) {
-    const text = groups.find(g => g.dataset.city === place.key).querySelector("text");
-    text.setAttribute("x", MAP_BOUNDS.x + (place.x - ox) * scale);
-    text.setAttribute("y", MAP_BOUNDS.y + (place.y + 11 - oy) * scale);
+    const group = groups.find(g => g.dataset.city === place.key), text = group.querySelector(".ticket-city-label");
+    const x = MAP_BOUNDS.x + (place.x + place.width / 2 - ox) * scale, y = MAP_BOUNDS.y + (place.y - oy) * scale;
+    text.setAttribute("text-anchor", "middle"); text.setAttribute("x", x);
+    text.setAttribute("y", y + (badgeHeight + 11) * scale);
+    drawDestinationBadges(svgElements(svg), group, JSON.parse(group.dataset.destinations), x, y, scale);
   }
 }
 function updateTicketSelection(tickets, min) {
@@ -1494,10 +1553,10 @@ function showTicketDialog(tickets, min, viewing = false) {
         <div class="ticket-collections"><div class="ticket-choices">${tickets.map((t, i) => `
           <label class="choice ticket-choice" data-ticket-index="${i}" data-ticket-id="${t.id}">
             <input type="checkbox" class="keep" value="${i}" ${ticketChoices.has(i) ? "checked" : ""}>
-            <span class="ticket-number" aria-hidden="true">${i + 1}</span>
+            <span class="ticket-number"><span class="sr-only">Destino </span>${GameUI.destinationNumber(game, t.id, i)}</span>
             <span class="ticket-choice-text"><b>${escapeHTML(CITIES[t.a][2])} → ${escapeHTML(CITIES[t.b][2])}</b><small>${t.p} puntos ${t.long ? '<span class="longtag">LARGA</span>' : ""}</small><small class="ticket-complete"></small></span>
           </label>`).join("") || '<p>Todavía no has conservado billetes.</p>'}</div>
-        ${choosing && game.tickets.length ? `<div class="retained-heading">Tus destinos actuales <small>Solo comparar</small></div><div class="retained-choices">${game.tickets.map((t,i) => `<div class="retained-choice" data-ticket-id="${t.id}" data-owned-ticket="${t.id}"><button class="ticket-eye" type="button" aria-pressed="${retainedVisible.has(t.id)}" aria-label="Resaltar ${escapeHTML(CITIES[t.a][2])} a ${escapeHTML(CITIES[t.b][2])}">◉</button><span class="ticket-number">${tickets.length+i+1}</span><span class="ticket-choice-text"><b>${escapeHTML(CITIES[t.a][2])} → ${escapeHTML(CITIES[t.b][2])}</b><small>${t.p} puntos</small><small class="ticket-complete"></small></span></div>`).join("")}</div>` : ""}</div>
+        ${choosing && game.tickets.length ? `<div class="retained-heading">Tus destinos actuales <small>Solo comparar</small></div><div class="retained-choices">${game.tickets.map(t => `<div class="retained-choice" data-ticket-id="${t.id}" data-owned-ticket="${t.id}"><button class="ticket-eye" type="button" aria-pressed="${retainedVisible.has(t.id)}" aria-label="Resaltar ${escapeHTML(CITIES[t.a][2])} a ${escapeHTML(CITIES[t.b][2])}">◉</button><span class="ticket-number"><span class="sr-only">Destino </span>${GameUI.destinationNumber(game, t.id)}</span><span class="ticket-choice-text"><b>${escapeHTML(CITIES[t.a][2])} → ${escapeHTML(CITIES[t.b][2])}</b><small>${t.p} puntos</small><small class="ticket-complete"></small></span></div>`).join("")}</div>` : ""}</div>
         <div class="ticket-confirm">
           <p id="ticketCount" role="status" aria-live="polite"></p>
           ${viewing ? '<button class="secondary full" id="closeRoutes">Volver al mapa</button>' : '<button class="primary full" id="keep" aria-describedby="ticketCount">Conservar seleccionados</button>'}
@@ -1510,7 +1569,7 @@ function showTicketDialog(tickets, min, viewing = false) {
   $("dialog").dataset.waiting = String(waiting);
   for (const row of $("dialog").querySelectorAll(".ticket-choice")) {
     const i = +row.dataset.ticketIndex;
-    row.style.setProperty("--ticket-color", ticketColor(i));
+    row.style.setProperty("--ticket-color", ticketColor(GameUI.destinationNumber(game, tickets[i].id, i) - 1));
     row.querySelector("input").addEventListener("change", (e) => {
       if (e.target.checked) ticketChoices.add(i);
       else ticketChoices.delete(i);
@@ -1520,9 +1579,9 @@ function showTicketDialog(tickets, min, viewing = false) {
     });
     bindTicketPreview(row, i, tickets, min);
   }
-  for (const [index, row] of [...$("dialog").querySelectorAll("[data-owned-ticket]")].entries()) {
+  for (const row of $("dialog").querySelectorAll("[data-owned-ticket]")) {
     const id = +row.dataset.ownedTicket, key = `owned-${id}`, button = row.querySelector("button");
-    row.style.setProperty("--ticket-color", ticketColor(tickets.length + index));
+    row.style.setProperty("--ticket-color", ticketColor(GameUI.destinationNumber(game, id) - 1));
     button.onclick = () => { retainedVisible.has(id) ? retainedVisible.delete(id) : retainedVisible.add(id); hoveredTicket = null; button.setAttribute("aria-pressed", String(retainedVisible.has(id))); row.classList.toggle("is-highlighted", retainedVisible.has(id)); updateTicketSelection(tickets, min); };
     bindTicketPreview(row, key, tickets, min);
   }
@@ -1641,8 +1700,8 @@ function paymentIcons(payment) {
 // surcharge still advances its turn immediately; only our build effect waits.
 function prepareTunnelReveal(events) {
   if (tunnelReveal?.event.surcharge && game.tunnel?.revealId !== tunnelReveal.event.id) cancelTunnelReveal();
-  // A fast round must never leave the next real turn behind our success screen.
-  if (tunnelReveal?.build && game.current === seat && game.phase === "play") finishTunnelReveal(true);
+  // A completed tunnel's evidence outlives turn changes, including a fast round
+  // returning to us. This is local presentation; the server keeps playing.
   const event = events.find(e => e.type === "tunnel_reveal" && e.seat === seat);
   if (!event) return;
   cancelTunnelReveal();
@@ -1673,16 +1732,17 @@ function showTunnelReveal() {
     <button id="skipTunnelReveal" class="tertiary full">Omitir animación</button>`);
   $("dialog").classList.add("tunnel-dialog");
   $("dialog").dataset.tunnelReveal = String(t.id);
-  $("skipTunnelReveal").onclick = () => finishTunnelReveal(true);
+  $("skipTunnelReveal").onclick = () => sequence.finished ? finishTunnelReveal(true) : skipTunnelAnimation();
   if (sequence.started) return;
   sequence.started = true;
-  const skip = reducedMotion.matches || document.hidden || !t.revealed.length || (t.surcharge && game.turnDeadline - Date.now() - serverOffset <= 5000);
-  sequence.timer = setTimeout(skip ? () => finishTunnelReveal(true) : revealNextTunnelCard, skip ? 0 : 700);
+  if (document.hidden) { finishTunnelReveal(true); return; }
+  const instant = reducedMotion.matches || !t.revealed.length || (t.surcharge && game.turnDeadline - Date.now() - serverOffset <= 5000);
+  sequence.timer = setTimeout(instant ? skipTunnelAnimation : revealNextTunnelCard, instant ? 0 : 700);
 }
-function revealNextTunnelCard() {
-  const sequence = tunnelReveal;
-  if (!sequence || sequence.finished) return;
-  const { event: t } = sequence, i = sequence.shown++;
+function showNextTunnelCard(sequence, animate) {
+  const { event: t } = sequence;
+  if (sequence.shown >= t.revealed.length) return;
+  const i = sequence.shown++;
   const slot = $("tunnelSequence")?.querySelector(`[data-reveal-slot="${i}"]`);
   if (slot) {
     const match = tunnelCardMatch(t.revealed[i], t.paymentColor);
@@ -1690,15 +1750,30 @@ function revealNextTunnelCard() {
     slot.classList.toggle("is-match", match);
     const effect = document.createElement("span"); effect.className = "reveal-effect"; effect.textContent = match ? "+1" : "—";
     slot.append(effect);
-    if (!reducedMotion.matches && !document.hidden) {
+    if (animate && !reducedMotion.matches && !document.hidden) {
       slot.animate([{ transform: "translateY(-16px) rotateY(-85deg)", opacity: .4 }, { transform: "translateY(0) rotateY(0)", opacity: 1 }], { duration: 500, easing: "ease-in-out" });
       playSound("card");
     }
     const surcharge = t.revealed.slice(0, sequence.shown).filter(c => tunnelCardMatch(c, t.paymentColor)).length;
     $("tunnelRevealStatus").textContent = `${sequence.shown} de ${t.revealed.length} reveladas · Suplemento: ${surcharge}`;
   }
+}
+function revealNextTunnelCard() {
+  const sequence = tunnelReveal;
+  if (!sequence || sequence.finished) return;
+  showNextTunnelCard(sequence, true);
   // Leave the third card time to land and be read before showing the decision.
-  sequence.timer = setTimeout(sequence.shown < t.revealed.length ? revealNextTunnelCard : () => finishTunnelReveal(), 700);
+  sequence.timer = setTimeout(sequence.shown < sequence.event.revealed.length ? revealNextTunnelCard : () => finishTunnelReveal(), 700);
+}
+function skipTunnelAnimation() {
+  const sequence = tunnelReveal;
+  if (!sequence || sequence.finished) return;
+  clearTimeout(sequence.timer);
+  sequence.instant = true;
+  // Skipping motion must not skip the evidence, especially with no surcharge:
+  // there is no subsequent payment dialog to display those cards again.
+  while (sequence.shown < sequence.event.revealed.length) showNextTunnelCard(sequence, false);
+  finishTunnelReveal();
 }
 function finishTunnelReveal(skip = false) {
   const sequence = tunnelReveal;
@@ -1716,7 +1791,8 @@ function finishTunnelReveal(skip = false) {
   $("dialogTitle").textContent = "Túnel construido";
   $("tunnelRevealStatus").textContent = "Sin coste adicional. Solo se paga el coste inicial.";
   $("skipTunnelReveal").textContent = "Volver al mapa";
-  sequence.timer = setTimeout(() => finishTunnelReveal(true), 700);
+  // Instant reveals still need time to read all three cards and the outcome.
+  sequence.timer = setTimeout(() => finishTunnelReveal(true), sequence.instant ? 2100 : 700);
 }
 function showTunnelDialog() {
   const t = game.tunnel, route = game.routes.find(r => r.id === t.routeId);
@@ -1852,7 +1928,7 @@ function updateCompactStatus() {
   const key = `${room}-${seat}-${game.turnSerial}`;
   if (state.mine && announcedTurn !== key) {
     announcedTurn = key;
-    if (!reducedMotion.matches) turnBanner.animate([{ outline: "0px solid #d4a74a00" }, { outline: "6px solid #d4a74a99", offset: .3 }, { outline: "0px solid #d4a74a00" }], { duration: 1100 });
+    if (!reducedMotion.matches) turnBanner.animate([{ filter: "brightness(1)" }, { filter: "brightness(1.25)", offset: .3 }, { filter: "brightness(1)" }], { duration: 1100 });
   }
   const reminder = compactMedia.matches && GameUI.needsSecondDraw(game, seat, compactPanel, controlled);
   document.querySelector('[data-panel="cards"]').classList.toggle("needs-draw", reminder);

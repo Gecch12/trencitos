@@ -76,21 +76,28 @@ const GameUI = (() => {
       Number(!!destinationStatus(game, a.ticket.id)?.completed) -
       Number(!!destinationStatus(game, b.ticket.id)?.completed) || a.index - b.index);
   }
-  // Only kept private tickets belong in the overview, never an unconfirmed
-  // offer. Hover can inspect a completed connection; overview shows cities only.
+  // Kept tickets are append-only. Use their original position, not their sorted
+  // presentation order. Offers follow them without renumbering existing tickets.
+  function destinationNumber(game, id, offerIndex = 0) {
+    const owned = game?.tickets || [];
+    const index = owned.findIndex(ticket => ticket.id === id);
+    return (index < 0 ? owned.length + offerIndex : index) + 1;
+  }
+  // Only kept private tickets belong in the overview, never an unconfirmed offer.
   function destinationSpotlightSelection(game, ticketId, all = false, result = null) {
     if (!game) return null;
     const ticket = game.tickets?.find(t => t.id === ticketId);
-    if (ticket) {
-      const path = game.ticketPaths?.find(p => p.id === ticket.id);
-      return { endpoints: [ticket.a, ticket.b], routes: path?.routes || [],
-        stationRoutes: path?.stationRoutes || [], stations: path?.stations || [] };
-    }
-    if (all && game.tickets?.length) return {
-      endpoints: [...new Set(game.tickets.flatMap(t => [t.a, t.b]))],
-      routes: [], stationRoutes: [], stations: [], overview: true,
-    };
-    return result;
+    const tickets = ticket ? [ticket] : all ? game.tickets || [] : [];
+    if (!tickets.length) return result;
+    const destinations = tickets.map(t => ({ id: t.id, a: t.a, b: t.b,
+      number: destinationNumber(game, t.id), completed: !!destinationStatus(game, t.id)?.completed }));
+    const paths = destinations.filter(t => t.completed).flatMap(t => game.ticketPaths?.filter(p => p.id === t.id) || []);
+    const routes = [...new Set(paths.flatMap(p => p.routes || []))];
+    const own = new Set(paths.flatMap(p => (p.routes || []).filter(id => !p.stationRoutes?.includes(id))));
+    return { endpoints: [...new Set(tickets.flatMap(t => [t.a, t.b]))], destinations, routes,
+      stationRoutes: [...new Set(paths.flatMap(p => p.stationRoutes || []))].filter(id => !own.has(id)),
+      stations: [...new Map(paths.flatMap(p => p.stations || []).map(s => [`${s.seat}:${s.city}`, s])).values()],
+      ...(!ticket ? { overview: true } : {}) };
   }
   const colors = ["red", "blue", "green", "yellow", "black", "white", "orange", "purple"];
   function payments(hand, cost, color = "gray", ferry = 0) {
@@ -103,6 +110,15 @@ const GameUI = (() => {
     }
     if (wild >= cost && cost >= ferry) options.push({ color: "wild", wild: cost, regular: 0 });
     return options.sort((a, b) => a.wild - b.wild);
+  }
+  // Group the same legal payments by ordinary card color. A pure-locomotive
+  // payment is the final step in each group, not another set of duplicate radios.
+  // Only existing options are exposed: ferry minima and hand limits stay intact.
+  function paymentGroups(options) {
+    const allWild = options.find(option => option.regular === 0);
+    const groups = [...new Set(options.filter(option => option.regular > 0).map(option => option.color))]
+      .map(color => ({ color, options: [...options.filter(option => option.color === color), ...(allWild ? [allWild] : [])].sort((a, b) => a.wild - b.wild) }));
+    return groups.length ? groups : allWild ? [{ color: "wild", options: [allWild] }] : [];
   }
   function construction(game, seat, target) {
     const no = reason => ({ reason, options: [] });
@@ -198,6 +214,6 @@ const GameUI = (() => {
     return { width, height, scale, focus,
       x: focus.x - sx * scale, y: focus.y - sy * scale, sx, sy };
   }
-  return { payments, tunnelPayments, construction, canPass, camera, safeArea, pinchZoom, pinchTransform, cityLabelScale, turnPresentation, needsSecondDraw, ROUTE_POINTS, overviewLabels, endpointPosition, playerMark, playerColor, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, destinationEntries, destinationSpotlightSelection, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, OWNER_MARK_SCALE, MIN_ZOOM, MAX_ZOOM };
+  return { payments, paymentGroups, tunnelPayments, construction, canPass, camera, safeArea, pinchZoom, pinchTransform, cityLabelScale, turnPresentation, needsSecondDraw, ROUTE_POINTS, overviewLabels, endpointPosition, playerMark, playerColor, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, destinationEntries, destinationNumber, destinationSpotlightSelection, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, OWNER_MARK_SCALE, MIN_ZOOM, MAX_ZOOM };
 })();
 if (typeof module !== "undefined") module.exports = GameUI;
