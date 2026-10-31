@@ -52,6 +52,13 @@ const GameUI = (() => {
     const status = game.ticketProgress?.find(entry => entry.id === id);
     return typeof status?.completed === "boolean" ? status : null;
   }
+  // Sort only the presentation. Offer actions still use their original indexes,
+  // and map numbers/colors remain stable when a destination is completed.
+  function destinationEntries(game, tickets) {
+    return tickets.map((ticket, index) => ({ ticket, index })).sort((a, b) =>
+      Number(!!destinationStatus(game, a.ticket.id)?.completed) -
+      Number(!!destinationStatus(game, b.ticket.id)?.completed) || a.index - b.index);
+  }
   const colors = ["red", "blue", "green", "yellow", "black", "white", "orange", "purple"];
   function payments(hand, cost, color = "gray", ferry = 0) {
     const wild = hand.filter(c => c === "wild").length;
@@ -150,6 +157,6 @@ const GameUI = (() => {
     return { width, height, scale, focus,
       x: focus.x - sx * scale, y: focus.y - sy * scale, sx, sy };
   }
-  return { payments, tunnelPayments, construction, canPass, camera, safeArea, pinchZoom, overviewLabels, endpointPosition, playerMark, playerColor, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, OWNER_MARK_SCALE, MIN_ZOOM, MAX_ZOOM };
+  return { payments, tunnelPayments, construction, canPass, camera, safeArea, pinchZoom, overviewLabels, endpointPosition, playerMark, playerColor, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, destinationEntries, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, OWNER_MARK_SCALE, MIN_ZOOM, MAX_ZOOM };
 })();
 if (typeof module !== "undefined") module.exports = GameUI;

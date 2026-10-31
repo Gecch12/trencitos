@@ -51,7 +51,6 @@ const ticketColor = i => TICKET_COLORS[i % TICKET_COLORS.length];
 let pendingChoiceKey = null,
   ticketChoices = new Set(),
   hoveredTicket = null,
-  focusedTicket = null,
   desiredRoom = new URLSearchParams(location.search).get("room") || "";
 $("code").value = desiredRoom.toUpperCase();
 const recoveryToken = new URLSearchParams(location.hash.slice(1)).get("recover");
@@ -771,7 +770,7 @@ function layoutHand() {
   cards.forEach((card, i) => { card.style.marginRight = i === cards.length - 1 ? "0" : `${step - width}px`; });
 }
 function renderDestinations() {
-  const content = game.tickets.map(t => {
+  const content = GameUI.destinationEntries(game, game.tickets).map(({ ticket: t }) => {
     const status = GameUI.destinationStatus(game, t.id);
     const hint = !status ? "Progreso no disponible: el backend no envía este dato. Reinícialo al terminar la partida." : status.completed ? status.viaStation ? "Conectado usando una estación. Puntos al final de la partida." : "Conectado. Puntos al final de la partida." : "Destino pendiente";
     return `<button type="button" class="destination-row ${status?.completed ? "is-complete" : ""}" data-destination="${t.id}" title="${hint} · Ver en el mapa"><span class="destination-endpoints">${escapeHTML(CITIES[t.a][2])} <span aria-hidden="true">→</span> ${escapeHTML(CITIES[t.b][2])}</span><strong>${t.p}<span class="sr-only"> puntos</span></strong>${!status ? '<span class="destination-unknown" aria-label="Progreso no disponible">?</span>' : status.completed ? '<span class="destination-check" aria-label="Completado">✓</span>' : '<span class="destination-pending" aria-label="Pendiente">·</span>'}</button>`;
@@ -1267,7 +1266,7 @@ function renderTicketMap(tickets) {
   for (const [x, y] of Object.values(RailMap.cities))
     el("circle", { cx: x, cy: y, r: 2.8 }, network);
 
-  const preview = hoveredTicket ?? focusedTicket;
+  const preview = hoveredTicket;
   const viewing = uiDialog === "routes";
   const retained = !viewing && game.ticketOffer ? game.tickets.map((ticket, index) => ({ ticket, i: tickets.length + index, key: `owned-${ticket.id}`, active: retainedVisible.has(ticket.id), retained: true })) : [];
   const visible = [...tickets.map((ticket, i) => ({ ticket, i, key: i, active: ticketChoices.has(i) })), ...retained]
@@ -1319,8 +1318,9 @@ function renderTicketMap(tickets) {
     const middle = path?.routes.length ? MAP_GEOMETRY[path.routes[Math.floor(path.routes.length / 2)]].cells : null;
     const mid = middle?.[Math.floor(middle.length / 2)];
     const mx = mid?.x ?? (x + xx) / 2, my = mid?.y ?? (y + yy) / 2;
-    el("circle", { cx: mx, cy: my, r: 11, fill: ticketColor(i), stroke: "#fffefa", "stroke-width": 2 }, g);
-    el("text", { x: mx, y: my + 4, "text-anchor": "middle", class: "ticket-map-number" }, g).textContent = i + 1;
+    const marker = el("g", { class: "ticket-map-marker", transform: `translate(${mx} ${my})` }, g);
+    el("circle", { r: 11, fill: ticketColor(i), stroke: "#fffefa", "stroke-width": 2 }, marker);
+    el("text", { y: 4, "text-anchor": "middle", class: "ticket-map-number" }, marker).textContent = i + 1;
     for (const city of strong ? [ticket.a, ticket.b] : []) {
       if (!endpoints.has(city)) endpoints.set(city, []);
       endpoints.get(city).push(i);
@@ -1347,6 +1347,13 @@ function layoutTicketMapLabels() {
   const svg = $("ticketMap");
   if (!svg || !compactMedia.matches || !svg.clientWidth || !svg.clientHeight) return;
   const scale = Math.max(MAP_BOUNDS.width / svg.clientWidth, MAP_BOUNDS.height / svg.clientHeight);
+  for (const marker of svg.querySelectorAll(".ticket-map-marker")) {
+    marker.querySelector("circle").setAttribute("r", 8 * scale);
+    marker.querySelector("circle").setAttribute("stroke-width", 1.5 * scale);
+    const text = marker.querySelector("text");
+    text.style.fontSize = `${10 * scale}px`;
+    text.setAttribute("y", 3.5 * scale);
+  }
   const ox = (svg.clientWidth - MAP_BOUNDS.width / scale) / 2, oy = (svg.clientHeight - MAP_BOUNDS.height / scale) / 2;
   const groups = [...svg.querySelectorAll(".ticket-endpoint")];
   const labels = groups.map(group => {
@@ -1369,15 +1376,47 @@ function updateTicketSelection(tickets, min) {
   for (const row of $("dialog").querySelectorAll(".ticket-choice")) {
     const i = +row.dataset.ticketIndex;
     row.classList.toggle("is-selected", ticketChoices.has(i));
-    row.classList.toggle("is-preview", (hoveredTicket ?? focusedTicket) === i);
+    row.classList.toggle("is-preview", hoveredTicket === i);
   }
   for (const row of $("dialog").querySelectorAll("[data-ticket-id]")) {
     const status = GameUI.destinationStatus(game, +row.dataset.ticketId);
     row.classList.toggle("is-complete", !!status?.completed);
     row.querySelector(".ticket-complete").textContent = status?.completed ? `✓ Completada${status.viaStation ? " · estación" : ""}` : "";
   }
+  // Owned tickets may complete while this dialog is open. Reorder their rows,
+  // never the offered tickets or their submitted indexes, and preserve focus.
+  const reorder = (container, owned) => {
+    if (!container) return;
+    const rows = GameUI.destinationEntries(game, owned).map(({ ticket }) => container.querySelector(`[data-ticket-id="${ticket.id}"]`));
+    if (rows.some((row, i) => row !== container.children[i])) {
+      const focus = container.contains(document.activeElement) ? document.activeElement : null;
+      container.append(...rows);
+      focus?.focus({ preventScroll: true });
+    }
+  };
+  if (uiDialog === "routes") reorder($("dialog").querySelector(".ticket-choices"), tickets);
+  reorder($("dialog").querySelector(".retained-choices"), game.tickets);
   renderTicketMap(tickets);
   updateClocks();
+}
+function bindTicketPreview(row, key, tickets, min) {
+  // Touch can leave synthesized hover and focus behind after a tap. Neither
+  // should override the checkbox. Keyboard focus remains a CSS-only outline.
+  row.addEventListener("pointerenter", event => {
+    if (event.pointerType !== "mouse" || !matchMedia("(any-hover: hover)").matches) return;
+    hoveredTicket = key;
+    updateTicketSelection(tickets, min);
+  });
+  row.addEventListener("pointerleave", () => {
+    if (hoveredTicket !== key) return;
+    hoveredTicket = null;
+    updateTicketSelection(tickets, min);
+  });
+  row.addEventListener("pointerdown", event => {
+    if (event.pointerType === "mouse" || hoveredTicket === null) return;
+    hoveredTicket = null;
+    updateTicketSelection(tickets, min);
+  });
 }
 function showTicketDialog(tickets, min, viewing = false) {
   const choosing = !viewing && !!game.ticketOffer;
@@ -1393,7 +1432,7 @@ function showTicketDialog(tickets, min, viewing = false) {
     }
     pendingChoiceKey = key;
   }
-  hoveredTicket = focusedTicket = null;
+  hoveredTicket = null;
   showDialog(
     viewing ? "Tus rutas de destino" : game.phase === "initial" ? "Elige tus billetes iniciales" : "Nuevos billetes de destino",
     `<p class="ticket-intro">${viewing ? "Tus vías construidas y el recorrido de tus destinos completados. Resaltar no descarta billetes." : `Conserva al menos ${min} billete${min > 1 ? "s" : ""}. Tus destinos permanecerán secretos hasta el final.`}</p>
@@ -1429,29 +1468,17 @@ function showTicketDialog(tickets, min, viewing = false) {
     row.querySelector("input").addEventListener("change", (e) => {
       if (e.target.checked) ticketChoices.add(i);
       else ticketChoices.delete(i);
+      hoveredTicket = null;
       if (!viewing) localStorage.setItem(draftKey, JSON.stringify([...ticketChoices]));
       updateTicketSelection(tickets, min);
     });
-    for (const type of ["mouseenter", "mouseleave", "focusin", "focusout"])
-      row.addEventListener(type, () => {
-        if (type === "mouseenter") hoveredTicket = i;
-        if (type === "mouseleave") hoveredTicket = null;
-        if (type === "focusin") focusedTicket = i;
-        if (type === "focusout") focusedTicket = null;
-        updateTicketSelection(tickets, min);
-      });
+    bindTicketPreview(row, i, tickets, min);
   }
   for (const [index, row] of [...$("dialog").querySelectorAll("[data-owned-ticket]")].entries()) {
     const id = +row.dataset.ownedTicket, key = `owned-${id}`, button = row.querySelector("button");
     row.style.setProperty("--ticket-color", ticketColor(tickets.length + index));
-    button.onclick = () => { retainedVisible.has(id) ? retainedVisible.delete(id) : retainedVisible.add(id); button.setAttribute("aria-pressed", String(retainedVisible.has(id))); row.classList.toggle("is-highlighted", retainedVisible.has(id)); updateTicketSelection(tickets, min); };
-    for (const type of ["mouseenter", "mouseleave", "focusin", "focusout"]) row.addEventListener(type, () => {
-      if (type === "mouseenter") hoveredTicket = key;
-      if (type === "mouseleave") hoveredTicket = null;
-      if (type === "focusin") focusedTicket = key;
-      if (type === "focusout") focusedTicket = null;
-      updateTicketSelection(tickets, min);
-    });
+    button.onclick = () => { retainedVisible.has(id) ? retainedVisible.delete(id) : retainedVisible.add(id); hoveredTicket = null; button.setAttribute("aria-pressed", String(retainedVisible.has(id))); row.classList.toggle("is-highlighted", retainedVisible.has(id)); updateTicketSelection(tickets, min); };
+    bindTicketPreview(row, key, tickets, min);
   }
   if ($("minimizeTickets")) $("minimizeTickets").onclick = closeOptionalDialog;
   if (viewing) $("closeRoutes").onclick = closeOptionalDialog;
@@ -1791,8 +1818,10 @@ let mapDrag = null, mapPinch = null, suppressMapClick = false;
 const mapPointers = new Map();
 $("mapscroll").addEventListener("pointerdown", (event) => {
   if (event.button !== 0) return;
+  const dismissedPanel = compactMedia.matches && compactPanel !== "map";
+  if (dismissedPanel) setCompactPanel("map");
   mapPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-  if (mapPointers.size === 2) {
+  if (mapPointers.size >= 2) {
     const [a, b] = [...mapPointers.values()];
     mapPinch = { distance: Math.hypot(a.x - b.x, a.y - b.y), zoom };
     mapDrag = null; suppressMapClick = true;
@@ -1801,10 +1830,10 @@ $("mapscroll").addEventListener("pointerdown", (event) => {
     closeMapMenu();
     return;
   }
-  suppressMapClick = false;
+  suppressMapClick = dismissedPanel;
   mapDrag = {
     id: event.pointerId, x: event.clientX, y: event.clientY,
-    center: { ...mapCenter }, scale: mapViewSize().scale, moved: false,
+    center: { ...mapCenter }, scale: mapViewSize().scale, moved: false, dismissedPanel,
   };
 });
 $("mapscroll").addEventListener("pointermove", (event) => {
@@ -1818,8 +1847,10 @@ $("mapscroll").addEventListener("pointermove", (event) => {
   const dx = event.clientX - mapDrag.x, dy = event.clientY - mapDrag.y;
   if (!mapDrag.moved && Math.hypot(dx, dy) < 5) return;
   closeMapMenu();
+  // Leave ordinary taps on the route/city. Once dragging starts, capture once
+  // on the viewport; the old SVG target will emit a bubbling capture-loss event.
+  if (!mapDrag.moved) event.currentTarget.setPointerCapture(event.pointerId);
   mapDrag.moved = true;
-  event.currentTarget.setPointerCapture(event.pointerId);
   event.currentTarget.classList.add("is-panning");
   mapCenter.x = mapDrag.center.x - dx * mapDrag.scale;
   mapCenter.y = mapDrag.center.y - dy * mapDrag.scale;
@@ -1827,6 +1858,9 @@ $("mapscroll").addEventListener("pointermove", (event) => {
 });
 for (const type of ["pointerup", "pointercancel", "lostpointercapture", "pointerleave"])
   $("mapscroll").addEventListener(type, (event) => {
+    // Losing implicit capture on an SVG child is a transfer, not a finished
+    // gesture. Only the viewport's own capture loss may terminate its drag.
+    if (type === "lostpointercapture" && event.target !== event.currentTarget) return;
     if (type === "pointerleave" && event.currentTarget.hasPointerCapture(event.pointerId)) return;
     mapPointers.delete(event.pointerId);
     if (mapPinch) {
@@ -1835,14 +1869,15 @@ for (const type of ["pointerup", "pointercancel", "lostpointercapture", "pointer
       if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
       return;
     }
-    if (!mapDrag || (type === "pointerleave" && mapDrag.moved)) return;
-    suppressMapClick = mapDrag.moved && type !== "pointercancel";
+    if (mapDrag?.id !== event.pointerId) return;
+    suppressMapClick = mapDrag.moved || mapDrag.dismissedPanel || type === "pointercancel";
     mapDrag = null;
     event.currentTarget.classList.remove("is-panning");
     if (event.currentTarget.hasPointerCapture(event.pointerId))
       event.currentTarget.releasePointerCapture(event.pointerId);
   });
 $("mapscroll").addEventListener("click", (event) => {
+  if (compactMedia.matches && compactPanel !== "map") setCompactPanel("map");
   if (!suppressMapClick || event.detail === 0) return;
   suppressMapClick = false;
   event.preventDefault();
@@ -1850,16 +1885,27 @@ $("mapscroll").addEventListener("click", (event) => {
 }, true);
 const cameraResize = new ResizeObserver(() => { closeMapMenu(); applyZoom(); layoutHand(); if (game && $("ticketMap")) renderTicketMap(uiDialog === "routes" ? game.tickets : game.ticketOffer?.tickets || game.initial || []); });
 for (const id of ["mapscroll", "gameSidebar", "handdock", "compactPanel", "compactHud", "compactPlayers", "boardtools"]) cameraResize.observe($(id));
+function updateFullscreenControl() {
+  const available = !!document.fullscreenElement ||
+    (document.fullscreenEnabled === true && typeof document.documentElement.requestFullscreen === "function");
+  $("expandboard").classList.toggle("hidden", !available);
+  $("expandboard").setAttribute("aria-label", document.fullscreenElement ? "Salir de pantalla completa" : "Pantalla completa");
+}
+updateFullscreenControl();
 $("expandboard").onclick = async () => {
   try {
     if (document.fullscreenElement) await document.exitFullscreen();
     else await document.documentElement.requestFullscreen();
-  } catch { toast("Tu navegador no permite activar la pantalla completa."); }
+  } catch {
+    updateFullscreenControl();
+    toast("No se pudo activar la pantalla completa en este momento.");
+  }
 };
 document.addEventListener("fullscreenchange", () => {
-  $("expandboard").setAttribute("aria-label", document.fullscreenElement ? "Salir de pantalla completa" : "Pantalla completa");
+  updateFullscreenControl();
   applyZoom();
 });
+window.addEventListener("pageshow", updateFullscreenControl);
 document.addEventListener("pointerdown", event => {
   if (!event.target.closest("#mapMenu, .route-group, .city-node")) closeMapMenu();
 });
