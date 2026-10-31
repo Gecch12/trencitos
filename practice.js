@@ -8,6 +8,8 @@ const ABSENCE_MS = 30000;
 function createPracticeController({
   rooms,
   sendRoom,
+  dispatch = job => job(),
+  onRemove = () => {},
   now = Date.now,
   setTimer = setTimeout,
   clearTimer = clearTimeout,
@@ -33,6 +35,7 @@ function createPracticeController({
       active.delete(room);
     }
     if (!live(room)) return;
+    onRemove(room);
     rooms.delete(room.code);
     room.members.forEach((member) => {
       if (member.ws) {
@@ -49,7 +52,7 @@ function createPracticeController({
     cancelBot(state);
     if (state.deadline !== null) return;
     state.deadline = at + ABSENCE_MS;
-    state.expiry = setTimer(() => remove(room), Math.max(0, state.deadline - now()));
+    state.expiry = setTimer(() => dispatch(() => remove(room)), Math.max(0, state.deadline - now()));
     state.expiry.unref?.();
   }
   function sync(room) {
@@ -60,27 +63,39 @@ function createPracticeController({
       clearTimer(state.expiry);
       state.expiry = state.deadline = null;
     }
-    if (room.game.phase === "finished" || !room.members[room.game.current]?.bot) {
+    const pendingBots = () => room.members.flatMap((member, i) => member.bot && room.game.players[i].pending.length ? [i] : []);
+    const canAct = () => room.game.phase === "initial" ? pendingBots().length > 0
+      : !["finished", "closing"].includes(room.game.phase) && room.members[room.game.current]?.bot;
+    if (!canAct()) {
       cancelBot(state);
       return;
     }
     if (state.bot !== null) return;
-    state.bot = setTimer(() => {
+    state.bot = setTimer(() => dispatch(() => {
       state.bot = null;
-      if (!live(room) || !connected(room) || room.game.phase === "finished" ||
-          !room.members[room.game.current]?.bot) return;
+      if (!live(room) || !connected(room) || !canAct()) return;
+      // Resolve an elapsed deadline before choosing a bot move. The same time
+      // is used by action(), so a delayed callback cannot act for the old seat.
+      const actionTime = Date.now();
+      if (Engine.expire(room.game, actionTime)) { sendRoom(room); return; }
+      if (room.game.phase === "initial") {
+        for (const seat of pendingBots()) {
+          const action = chooseBotAction(room.game, seat, random);
+          if (action) Engine.action(room.game, seat, action, { now: actionTime });
+        }
+        sendRoom(room); return;
+      }
       const action = chooseBotAction(room.game, room.game.current, random);
       if (action) {
-        Engine.action(room.game, room.game.current, action);
+        Engine.action(room.game, room.game.current, action, { now: actionTime });
       } else {
         // Practice bots deliberately do not take destinations or build stations.
         // If no supported move remains, yield without changing those rules for humans.
-        room.game.logs.unshift(`${room.game.players[room.game.current].name} no puede robar ni construir y cede el turno.`);
-        room.game.logs = room.game.logs.slice(0, 25);
+        Engine.note(room.game, `${room.game.players[room.game.current].name} no puede robar ni construir y cede el turno.`, room.game.current);
         Engine.next(room.game);
       }
       sendRoom(room);
-    }, 800 + random(201));
+    }), 800 + random(201));
     state.bot.unref?.();
   }
   function finish(room) {
@@ -88,10 +103,11 @@ function createPracticeController({
     cancelBot(runtime(room));
     // A pending tunnel has not been paid for yet; abandon it before scoring.
     if (room.game.phase === "tunnel") room.game.discard.push(...room.game.pending.revealed);
+    Engine.recycleDiscards(room.game);
     room.game.pending = null;
     room.game.drawCount = 0;
     room.earlyFinish = true;
-    Engine.finish(room.game);
+    Engine.finish(room.game, true);
     sendRoom(room);
   }
   function expired(room) {

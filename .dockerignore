@@ -1,5 +1,9 @@
 preview-*.png
 room-state.json
+room-state.json.tmp
+room-state.json.bak
 *.zip
 tests
 .git
+.env
+.env.*

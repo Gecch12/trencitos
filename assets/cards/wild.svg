@@ -1,11 +1,66 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 278" role="img" aria-label="Carta ferroviaria LOCOMOTORA">
-<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3f5471"/><stop offset="1" stop-color="#253048"/></linearGradient><pattern id="grain" width="17" height="17" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r=".8" fill="#ffd986" opacity=".12"/></pattern></defs>
-<rect width="200" height="278" rx="13" fill="url(#bg)"/><rect width="200" height="278" rx="13" fill="url(#grain)"/>
-<rect x="8" y="8" width="184" height="262" rx="10" fill="none" stroke="#ffd986" stroke-width="3" opacity=".85"/>
-<rect x="15" y="15" width="170" height="248" rx="7" fill="none" stroke="#ffd986" stroke-opacity=".45"/>
-<path d="M20 52H180M20 224H180" stroke="#ffd986" stroke-width="2" opacity=".65"/><path d="M32 60 l13 -13" stroke="#ffd986" stroke-opacity=".22" stroke-width="8"/><path d="M56 60 l13 -13" stroke="#ffd986" stroke-opacity=".22" stroke-width="8"/><path d="M80 60 l13 -13" stroke="#ffd986" stroke-opacity=".22" stroke-width="8"/><path d="M104 60 l13 -13" stroke="#ffd986" stroke-opacity=".22" stroke-width="8"/><path d="M128 60 l13 -13" stroke="#ffd986" stroke-opacity=".22" stroke-width="8"/><path d="M152 60 l13 -13" stroke="#ffd986" stroke-opacity=".22" stroke-width="8"/><path d="M176 60 l13 -13" stroke="#ffd986" stroke-opacity=".22" stroke-width="8"/><circle cx="147" cy="84" r="42" fill="#ffd986" opacity=".22"/>
-<g transform="translate(100 166)"><circle r="70" fill="#253048" stroke="#ffd986" stroke-width="6"/><circle r="52" stroke="#ffd986" stroke-opacity=".6" fill="none" stroke-width="2"/><path d="M0 -56 L12 -16 48 0 12 14 0 54 -12 14 -48 0 -12 -16Z" fill="#ffd986"/><circle r="9" fill="#253048"/></g>
-<rect x="31" y="233" width="138" height="22" rx="5" fill="#ffd986" opacity=".95"/>
-<text x="100" y="248" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="12" letter-spacing="2" fill="#253048">LOCOMOTORA</text>
-<text x="100" y="38" text-anchor="middle" font-family="Georgia,serif" font-size="15" font-weight="bold" letter-spacing="3" fill="#ffd986">FERROVÍA</text>
+<title>Locomotora arcoíris · comodín</title>
+<defs>
+  <pattern id="engraved-paper" width="12" height="12" patternUnits="userSpaceOnUse">
+    <path d="M2 3h2M3 2v2" fill="none" stroke="#fff6e4" stroke-width=".6" opacity=".14"/>
+  </pattern>
+  <path id="corner" d="M21 45V25q0-4 4-4h20M26 40V26h14M18 53l3-3 3 3-3 3Z"/>
+</defs>
+<rect width="200" height="278" rx="13" fill="#202b32"/>
+<defs><clipPath id="rainbow-clip"><rect x="3" y="3" width="194" height="272" rx="11"/></clipPath></defs><g id="rainbow-field" clip-path="url(#rainbow-clip)"><rect x="3" y="3" width="194" height="46" fill="#e3474b"/><rect x="3" y="49" width="194" height="46" fill="#ed913b"/><rect x="3" y="95" width="194" height="46" fill="#f4d83d"/><rect x="3" y="141" width="194" height="46" fill="#46966d"/><rect x="3" y="187" width="194" height="46" fill="#4d85c3"/><rect x="3" y="233" width="194" height="46" fill="#956dae"/></g>
+<rect x="7" y="7" width="186" height="264" rx="9" fill="url(#engraved-paper)" stroke="#fff6e4" stroke-width="1.6"/>
+<rect x="12" y="12" width="176" height="254" rx="6" fill="none" stroke="#fff6e4" stroke-opacity=".45" stroke-width=".7"/>
+<g fill="none" stroke="#fff6e4" stroke-width="1.2">
+  <use href="#corner"/><use href="#corner" transform="translate(200 0) scale(-1 1)"/>
+  <use href="#corner" transform="translate(0 278) scale(1 -1)"/><use href="#corner" transform="translate(200 278) scale(-1 -1)"/>
+</g>
+<text x="100" y="37" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="13" letter-spacing="2.4" fill="#fff6e4">FERROVÍA</text>
+<g fill="none" stroke="#fff6e4">
+  <path d="M36 49H83m34 0h47M44 53H77m46 0h33" stroke-width=".8"/>
+  <path d="M100 44l5 5-5 5-5-5Z" stroke-width="1.2"/>
+  <path d="M29 163V139a71 71 0 0 1 142 0v24M34 160V139a66 66 0 0 1 132 0v21" opacity=".3" stroke-width=".8"/>
+  <path d="M44 109l8 4m-1-17 7 6m4-16 6 7m6-14 4 8m10-13 2 9m12-10v9m13-8-2 9m15-6-4 8m16-3-6 7m16 1-7 6m15 5-8 4" opacity=".4" stroke-width="1"/>
+</g>
+<g id="steam-engraving" fill="none" stroke="#fff6e4" stroke-linecap="round">
+  <path d="M140 118c12-7 10-18-1-20-13-2-17-11-10-18M130 113c6-6 1-12-8-14-13-3-16-13-8-20M118 96c-9-3-15-9-11-16" stroke-width="2" opacity=".7"/>
+</g>
+<g id="engraved-locomotive" stroke-linejoin="round" stroke-linecap="round">
+  <path d="M28 176H159l16 17H27Z" fill="#202b32" stroke="#fff6e4" stroke-width="2.5"/>
+  <path d="M35 165v-44h46v44" fill="#202b32" stroke="#fff6e4" stroke-width="3"/>
+  <path d="M30 122v-7h53l5 7Z" fill="#fff6e4" stroke="#202b32" stroke-width="1.5"/>
+  <path d="M43 128H57v21H43Zm20 0H75v21H63Z" fill="#243039" stroke="#fff6e4" stroke-width="2"/>
+  <path d="M80 141h67q13 0 13 13v12H80Z" fill="#202b32" stroke="#fff6e4" stroke-width="3"/>
+  <path d="M85 147h61m-56 9h63" fill="none" stroke="#fff6e4" stroke-width="1" opacity=".65"/>
+  <path d="M101 140v-7a6 6 0 0 1 12 0v7M133 141v-17h13v17" fill="#202b32" stroke="#fff6e4" stroke-width="2.5"/>
+  <path d="M130 121h19v5h-19Z" fill="#fff6e4"/>
+  <path d="M121 143v22M151 144v22" fill="none" stroke="#fff6e4" stroke-width="2.5"/>
+  <path d="M160 148h7v9h-7M29 168H166v9H29Z" fill="#fff6e4" stroke="#202b32" stroke-width="1.5"/>
+  <path d="M163 177l14 22h-23m9-16 6 12m-12-12 5 12" fill="#202b32" stroke="#fff6e4" stroke-width="2"/>
+  <g transform="translate(52 185)">
+      <circle r="17" fill="#202b32" stroke="#fff6e4" stroke-width="3"/>
+      <circle r="12.5" fill="none" stroke="#fff6e4" stroke-width="1"/>
+      <path d="M0-12V12M-12 0H12M-8.5-8.5l17 17m-17 0 17-17" stroke="#fff6e4" stroke-width="1.6"/>
+      <circle r="4" fill="#fff6e4"/>
+    </g><g transform="translate(91 185)">
+      <circle r="17" fill="#202b32" stroke="#fff6e4" stroke-width="3"/>
+      <circle r="12.5" fill="none" stroke="#fff6e4" stroke-width="1"/>
+      <path d="M0-12V12M-12 0H12M-8.5-8.5l17 17m-17 0 17-17" stroke="#fff6e4" stroke-width="1.6"/>
+      <circle r="4" fill="#fff6e4"/>
+    </g><g transform="translate(130 185)">
+      <circle r="17" fill="#202b32" stroke="#fff6e4" stroke-width="3"/>
+      <circle r="12.5" fill="none" stroke="#fff6e4" stroke-width="1"/>
+      <path d="M0-12V12M-12 0H12M-8.5-8.5l17 17m-17 0 17-17" stroke="#fff6e4" stroke-width="1.6"/>
+      <circle r="4" fill="#fff6e4"/>
+    </g>
+  <path d="M52 187H130" fill="none" stroke="#202b32" stroke-width="7"/>
+  <path d="M52 186H130" fill="none" stroke="#fff6e4" stroke-width="3"/>
+  <g fill="#fff6e4"><circle cx="52" cy="186" r="3"/><circle cx="91" cy="186" r="3"/><circle cx="130" cy="186" r="3"/></g>
+  <path d="M41 156h32m-32 5h32" stroke="#fff6e4" stroke-width=".8" opacity=".65"/>
+</g>
+<g id="rail-ornament" fill="none" stroke="#fff6e4" stroke-linecap="round">
+  <path d="M29 207H174m-137 4h129" stroke-width="1.5"/>
+  <path d="M46 215l-8 6m24-6-8 6m24-6-8 6m24-6-8 6m24-6-8 6m24-6-8 6m24-6-8 6" stroke-width="1" opacity=".6"/>
+  <path d="M44 242H83m34 0h39M62 246H81m38 0h19" stroke-width="1"/>
+  <path d="M100 232l3.5 7 7 3-7 3-3.5 7-3.5-7-7-3 7-3Z" fill="#fff6e4" stroke="none"/>
+</g>
 </svg>

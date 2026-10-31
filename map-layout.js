@@ -175,7 +175,7 @@ const RailMap = (() => {
   }
   const overlap = (a, b) => Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) *
     Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
-  function placeLabels(entries, width, height, tracks = []) {
+  function placeLabels(entries, width, height, tracks = [], metrics = { height: 15, baseline: 11 }) {
     const placed = [];
     // Give the crowded central cities first choice, with a stable tie break.
     const ordered = [...entries].sort((a, b) => {
@@ -192,7 +192,7 @@ const RailMap = (() => {
       );
       let best = null;
       candidates.forEach(([dx, dy, anchor], i) => {
-        const box = { x: city.x + dx - city.width * (anchor === "end" ? 1 : anchor === "middle" ? 0.5 : 0), y: city.y + dy - 11, width: city.width, height: 15 };
+        const box = { x: city.x + dx - city.width * (anchor === "end" ? 1 : anchor === "middle" ? 0.5 : 0), y: city.y + dy - metrics.baseline, width: city.width, height: metrics.height };
         const padded = { x: box.x - 3, y: box.y - 3, width: box.width + 6, height: box.height + 6 };
         const outside = box.width * box.height - overlap(box, { x: 4, y: 4, width: width - 8, height: height - 8 });
         let score = i * 1.2 + Math.hypot(dx, dy) * 1.2 + outside * 300;

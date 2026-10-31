@@ -34,8 +34,9 @@ test("bots choose exactly two distinct initial tickets without mutating the game
   assert.equal(new Set(action.indexes).size, 2);
   Engine.action(game, 1, action);
   assert.equal(game.players[1].tickets.length, 2);
-  assert.equal(game.current, 2);
+  assert.equal(game.current, 1);
   assert.equal(chooseBotAction(game, 1), null);
+  assert.equal(chooseBotAction(game, 2).type, "choose_initial");
 });
 
 test("bots build affordable routes before drawing, choosing randomly and conserving locomotives", () => {
@@ -155,7 +156,7 @@ test("complete simulated games preserve cards and reach final-round scoring", ()
     const rng = random(simulation + 1);
     let steps = 0;
     while (game.phase !== "finished" && steps++ < 5000) {
-      const seat = game.current;
+      const seat = game.phase === "initial" ? game.players.findIndex(p => p.pending.length) : game.current;
       const action = chooseBotAction(game, seat, rng);
       if (action) {
         assert.ok(["choose_initial", "claim", "draw_train", "pay_tunnel", "decline_tunnel"].includes(action.type));

@@ -65,9 +65,9 @@ async function connect(port) {
   return {
     send: (message) => socket.write(frame(1, JSON.stringify(message))),
     close: () => socket.destroy(),
-    async next(type, predicate = () => true) {
+    async next(type, predicate = () => true, timeoutMs = 5000) {
       const abort = new AbortController();
-      const timeout = setTimeout(() => abort.abort(), 5000);
+      const timeout = setTimeout(() => abort.abort(), timeoutMs);
       try {
         while (true) {
           const index = messages.findIndex((message) => message.type === type && predicate(message));

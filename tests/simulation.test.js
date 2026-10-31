@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),E=require('
 function play(n){let g=E.newGame(Array.from({length:n},(_,i)=>'J'+i));for(let i=0;i<n;i++)E.action(g,i,{type:'choose_initial',indexes:[0,1]});let turns=0;
  while(g.phase!=='finished'&&turns++<1500){let seat=g.current,p=g.players[seat];
  if(g.phase==='tunnel'){try{E.action(g,seat,{type:'pay_tunnel',extraWild:g.pending.surcharge})}catch{E.action(g,seat,{type:'decline_tunnel'})}continue}
- if(g.phase==='tickets'){E.action(g,seat,{type:'keep_tickets',indexes:[0]});continue}
+ const choosing=g.players.findIndex(p=>p.offer);if(choosing>=0){E.action(g,choosing,{type:'keep_tickets',offerId:g.players[choosing].offer.id,indexes:[0]});continue}
  const options=g.routes.filter(r=>r.owner===null&&!E.block(g,r,seat)&&p.trains>=r.n);
  let choice=null;
  for(let r of options){for(let color of r.color==='gray'?[...E.COLORS,'wild']:[r.color,'wild']){let payment=E.pay(p.hand,color,r.n,r.ferry);if(payment){choice={r,color,payment};break}}if(choice)break}

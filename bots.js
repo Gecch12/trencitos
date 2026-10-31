@@ -8,14 +8,16 @@ function pick(items, random = randomInt) {
 
 // Decide from the bot's own hand and public board, without inspecting the deck
 // order, opponents' hands or their destinations. The engine validates the move.
-function chooseBotAction(game, seat, random = randomInt) {
-  if (seat !== game.current || game.phase === "finished") return null;
+function chooseBotAction(game, seat, random = randomInt, { randomBuild = false } = {}) {
   const player = game.players[seat];
+  if (!player || game.phase === "finished") return null;
   if (game.phase === "initial") {
+    if (!player.pending.length) return null;
     const indexes = player.pending.map((_, i) => i);
     const first = indexes.splice(random(indexes.length), 1)[0];
     return { type: "choose_initial", indexes: [first, pick(indexes, random)] };
   }
+  if (seat !== game.current) return null;
   if (game.phase === "tunnel") {
     const { base, color, surcharge } = game.pending;
     const remaining = [...player.hand];
@@ -30,7 +32,8 @@ function chooseBotAction(game, seat, random = randomInt) {
   }
   if (game.phase !== "play") return null;
 
-  if (!game.drawCount) {
+  const canDraw = game.deck.length || game.discard.length || game.face.some(c => !game.drawCount || c !== "wild");
+  if (!game.drawCount && (!randomBuild || !canDraw || random(2) === 0)) {
     const claims = [];
     for (const route of game.routes) {
       if (route.owner !== null || route.n > player.trains || Engine.block(game, route, seat))
@@ -57,4 +60,7 @@ function chooseBotAction(game, seat, random = randomInt) {
   return sources.length ? { type: "draw_train", index: pick(sources, random) } : null;
 }
 
-module.exports = { chooseBotAction };
+// Replacement players flip a coin between drawing and building when both are
+// possible; practice bots retain their existing build-first behavior.
+const chooseReplacementAction = (game, seat, random = randomInt) => chooseBotAction(game, seat, random, { randomBuild: true });
+module.exports = { chooseBotAction, chooseReplacementAction };

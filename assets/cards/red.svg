@@ -1,15 +1,46 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 278" role="img" aria-label="Carta ferroviaria ROJO">
-<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a53d3e"/><stop offset="1" stop-color="#692c3c"/></linearGradient><pattern id="grain" width="17" height="17" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r=".8" fill="#e8a88b" opacity=".12"/></pattern></defs>
-<rect width="200" height="278" rx="13" fill="url(#bg)"/><rect width="200" height="278" rx="13" fill="url(#grain)"/>
-<rect x="8" y="8" width="184" height="262" rx="10" fill="none" stroke="#e8a88b" stroke-width="3" opacity=".85"/>
-<rect x="15" y="15" width="170" height="248" rx="7" fill="none" stroke="#e8a88b" stroke-opacity=".45"/>
-<path d="M20 52H180M20 224H180" stroke="#e8a88b" stroke-width="2" opacity=".65"/><path d="M32 60 l13 -13" stroke="#e8a88b" stroke-opacity=".22" stroke-width="8"/><path d="M56 60 l13 -13" stroke="#e8a88b" stroke-opacity=".22" stroke-width="8"/><path d="M80 60 l13 -13" stroke="#e8a88b" stroke-opacity=".22" stroke-width="8"/><path d="M104 60 l13 -13" stroke="#e8a88b" stroke-opacity=".22" stroke-width="8"/><path d="M128 60 l13 -13" stroke="#e8a88b" stroke-opacity=".22" stroke-width="8"/><path d="M152 60 l13 -13" stroke="#e8a88b" stroke-opacity=".22" stroke-width="8"/><path d="M176 60 l13 -13" stroke="#e8a88b" stroke-opacity=".22" stroke-width="8"/><circle cx="147" cy="84" r="42" fill="#e8a88b" opacity=".22"/>
-<g stroke="#e8a88b" stroke-linejoin="round" stroke-width="5" fill="#692c3c">
-    <path d="M40 176 H166 v17 H37 Z"/><path d="M59 139 h80 l16 40 H45 Z"/>
-    <path d="M73 141 v-29 h35 v29"/><path d="M120 141 v-47 h22 v47"/>
-    <path d="M48 158 H152" stroke-width="4"/><path d="M63 153 v18 M98 153 v18 M130 153 v18" stroke-width="3"/>
-    </g><circle cx="62" cy="202" r="13" fill="#692c3c" stroke="#e8a88b" stroke-width="5"/><circle cx="62" cy="202" r="4" fill="#e8a88b"/><circle cx="100" cy="202" r="13" fill="#692c3c" stroke="#e8a88b" stroke-width="5"/><circle cx="100" cy="202" r="4" fill="#e8a88b"/><circle cx="138" cy="202" r="13" fill="#692c3c" stroke="#e8a88b" stroke-width="5"/><circle cx="138" cy="202" r="4" fill="#e8a88b"/><circle cx="97" cy="107" r="12" fill="#e8a88b" opacity="0.42"/><circle cx="113" cy="90" r="15" fill="#e8a88b" opacity="0.33999999999999997"/><circle cx="129" cy="73" r="18" fill="#e8a88b" opacity="0.26"/>
-<rect x="31" y="233" width="138" height="22" rx="5" fill="#e8a88b" opacity=".95"/>
-<text x="100" y="248" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="12" letter-spacing="2" fill="#692c3c">ROJO</text>
-<text x="100" y="38" text-anchor="middle" font-family="Georgia,serif" font-size="15" font-weight="bold" letter-spacing="3" fill="#e8a88b">FERROVÍA</text>
+<title>Vagón de pasajeros · rojo</title>
+<defs>
+  <pattern id="engraved-paper" width="12" height="12" patternUnits="userSpaceOnUse">
+    <path d="M2 3h2M3 2v2" fill="none" stroke="#fff0d5" stroke-width=".6" opacity=".14"/>
+  </pattern>
+  <path id="corner" d="M21 45V25q0-4 4-4h20M26 40V26h14M18 53l3-3 3 3-3 3Z"/>
+</defs>
+<rect width="200" height="278" rx="13" fill="#652f32"/>
+<rect id="suit-field" x="3" y="3" width="194" height="272" rx="11" fill="#ce554c"/>
+<rect x="7" y="7" width="186" height="264" rx="9" fill="url(#engraved-paper)" stroke="#fff0d5" stroke-width="1.6"/>
+<rect x="12" y="12" width="176" height="254" rx="6" fill="none" stroke="#fff0d5" stroke-opacity=".45" stroke-width=".7"/>
+<g fill="none" stroke="#fff0d5" stroke-width="1.2">
+  <use href="#corner"/><use href="#corner" transform="translate(200 0) scale(-1 1)"/>
+  <use href="#corner" transform="translate(0 278) scale(1 -1)"/><use href="#corner" transform="translate(200 278) scale(-1 -1)"/>
+</g>
+<text x="100" y="37" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="13" letter-spacing="2.4" fill="#fff0d5">FERROVÍA</text>
+<g fill="none" stroke="#fff0d5">
+  <path d="M36 49H83m34 0h47M44 53H77m46 0h33" stroke-width=".8"/>
+  <path d="M100 44l5 5-5 5-5-5Z" stroke-width="1.2"/>
+  <path d="M29 163V139a71 71 0 0 1 142 0v24M34 160V139a66 66 0 0 1 132 0v21" opacity=".3" stroke-width=".8"/>
+  <path d="M44 109l8 4m-1-17 7 6m4-16 6 7m6-14 4 8m10-13 2 9m12-10v9m13-8-2 9m15-6-4 8m16-3-6 7m16 1-7 6m15 5-8 4" opacity=".4" stroke-width="1"/>
+</g>
+<g id="wagon-red" data-cargo="pasajeros" stroke-linejoin="round" stroke-linecap="round">
+      <g fill="#652f32" stroke="#fff0d5" stroke-width="2.8"><path d="M31 128v43h138v-43"/><path d="M25 129q4-22 20-22h110q16 0 20 22Z"/>
+          <path d="M35 119H165M38 161H162" stroke-width="1"/>
+          <path d="M40 139q0-5 5-5h12q5 0 5 5v15H40Zm32 0q0-5 5-5h12q5 0 5 5v15H72Zm34 0q0-5 5-5h12q5 0 5 5v15H106Zm32 0q0-5 5-5h12q5 0 5 5v15H138Z" fill="#fff0d5" stroke-width="1"/>
+          <path d="M66 131v38m34-38v38m34-38v38" stroke-width="1"/>
+        <path d="M27 173H173v6H27Z"/><path d="M21 174H27m146 0h6M42 180H77m46 0h35" stroke-width="3"/>
+        <circle cx="19" cy="174" r="3"/><circle cx="181" cy="174" r="3"/>
+      </g><g transform="translate(47 186)"><circle r="11" fill="#652f32" stroke="#fff0d5" stroke-width="2.5"/>
+      <circle r="7.5" fill="none" stroke="#fff0d5" stroke-width=".8"/>
+      <path d="M0-8V8M-8 0H8m-5.6-5.6L5.6 5.6m-11.2 0L5.6-5.6" stroke="#fff0d5" stroke-width="1"/><circle r="2.5" fill="#fff0d5"/></g><g transform="translate(71 186)"><circle r="11" fill="#652f32" stroke="#fff0d5" stroke-width="2.5"/>
+      <circle r="7.5" fill="none" stroke="#fff0d5" stroke-width=".8"/>
+      <path d="M0-8V8M-8 0H8m-5.6-5.6L5.6 5.6m-11.2 0L5.6-5.6" stroke="#fff0d5" stroke-width="1"/><circle r="2.5" fill="#fff0d5"/></g><g transform="translate(129 186)"><circle r="11" fill="#652f32" stroke="#fff0d5" stroke-width="2.5"/>
+      <circle r="7.5" fill="none" stroke="#fff0d5" stroke-width=".8"/>
+      <path d="M0-8V8M-8 0H8m-5.6-5.6L5.6 5.6m-11.2 0L5.6-5.6" stroke="#fff0d5" stroke-width="1"/><circle r="2.5" fill="#fff0d5"/></g><g transform="translate(153 186)"><circle r="11" fill="#652f32" stroke="#fff0d5" stroke-width="2.5"/>
+      <circle r="7.5" fill="none" stroke="#fff0d5" stroke-width=".8"/>
+      <path d="M0-8V8M-8 0H8m-5.6-5.6L5.6 5.6m-11.2 0L5.6-5.6" stroke="#fff0d5" stroke-width="1"/><circle r="2.5" fill="#fff0d5"/></g></g>
+<g id="rail-ornament" fill="none" stroke="#fff0d5" stroke-linecap="round">
+  <path d="M29 207H174m-137 4h129" stroke-width="1.5"/>
+  <path d="M46 215l-8 6m24-6-8 6m24-6-8 6m24-6-8 6m24-6-8 6m24-6-8 6m24-6-8 6" stroke-width="1" opacity=".6"/>
+  <path d="M44 242H83m34 0h39M62 246H81m38 0h19" stroke-width="1"/>
+  <path d="M100 232l3.5 7 7 3-7 3-3.5 7-3.5-7-7-3 7-3Z" fill="#fff0d5" stroke="none"/>
+</g>
 </svg>

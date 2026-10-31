@@ -1,5 +1,9 @@
 room-state.json
 room-state.json.tmp
+room-state.json.bak
 node_modules/
+.env
+.env.*
+!.env.example
 *.log
 .DS_Store

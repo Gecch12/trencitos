@@ -1469,7 +1469,7 @@ body{background:linear-gradient(135deg,#dce6e3,#ebe7dc 60%,#d7e4e5);color:var(--
 .miniStats{background:#ecf2ef;font-weight:650}.marketsub{font-family:Georgia,serif;font-size:14px;font-weight:800;color:#395164;margin:12px 0 2px}
 .market{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin:10px 0}.market .traincard{width:100%;min-height:0;aspect-ratio:200/278;padding:0;border:0;background:transparent;transition:transform .16s,filter .16s;filter:drop-shadow(0 2px 4px #192d2d34)}
 .market .traincard:hover:not(:disabled){transform:translateY(-8px) scale(1.04);z-index:2;filter:drop-shadow(0 8px 10px #192d2d55)}
-.market .traincard:disabled{opacity:.38;filter:grayscale(.35)}
+.market .traincard:disabled{opacity:.8;cursor:not-allowed;filter:drop-shadow(0 2px 4px #192d2d20)}
 .traincard{display:block;position:relative;min-height:0;aspect-ratio:200/278;padding:0;border:0;border-radius:8px;overflow:visible;text-align:center;background:transparent;box-shadow:none;text-shadow:none}
 .traincard img{width:100%;height:100%;display:block;object-fit:contain;border-radius:8px;user-select:none;pointer-events:none}
 .traincard .cardcount{position:absolute;right:-5px;top:-7px;background:#142e41;color:#fff8db;border:2px solid #fff9ee;border-radius:100px;font-family:Georgia,serif;font-weight:900;font-size:14px;min-width:28px;height:28px;display:grid;place-items:center;box-shadow:0 3px 5px #102a3b3d;padding:0 4px;z-index:2}
