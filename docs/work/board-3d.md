@@ -32,8 +32,11 @@ Evitar saltos al mover cámara y capturar gestos destinados al mapa.
 
 ## Evidencia y siguiente paso
 
-Diseño aprobado; Three.js aún no implementado. Preparar snapshot revisado con
-cambios locales necesarios, puerto/estado propios y encargo al chat experimental.
+Diseño aprobado; Three.js aún no implementado en esta base. Worktree preparado
+en `trains/worktrees/threejs-board`, rama `experiment/threejs-board`, desde
+snapshot revisado `9aa687c` con cambios locales preexistentes y documentación.
+El siguiente paso en su chat es implementar M1 y comprobar etiquetas antes de
+avanzar a piezas/interacciones. Usar puerto y estado propios.
 No copiar `.env` ni conectar Supabase de producción. Conservar ruta de vuelta a
 2D para comparación; no convertir resultados positivos en autorización de deploy.
 

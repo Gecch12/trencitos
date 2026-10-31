@@ -1,5 +1,5 @@
 ---
-{"id":"docs-system","status":"active","parent":null,"depends_on":[],"branch":"main","delivery":"worktree","updated":"2026-10-31"}
+{"id":"docs-system","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"worktree","updated":"2026-10-31"}
 ---
 # Centro documental
 
@@ -12,7 +12,7 @@ método reutilizable fuera de Trencitos. Decisión: [documentación](../decision
 - [x] Decisiones y pendientes de esta conversación con alcance y siguiente paso.
 - [x] Validador: enlaces, estructura, relaciones y revisión de fuentes.
 - [x] Skill genérico validado e instalado para otros proyectos.
-- [ ] Base revisada, worktree y encargo experimental preparados.
+- [x] Base revisada, worktree y encargo experimental preparados.
 
 ## Evidencia
 
@@ -28,8 +28,15 @@ No se han integrado ni desplegado esos cambios como parte de la documentación.
   `project-docs-maintainer`. PyYAML se instaló en un entorno temporal aislado.
 - Entrada `AGENTS.md` + índice documental + índice de trabajo: 577 palabras;
   no es un conteo exacto de tokens ni requiere leer todas las fichas.
+- Worktree creado en `trains/worktrees/threejs-board`, rama
+  `experiment/threejs-board`, desde snapshot local `9aa687c`. Incluye los cambios
+  de juego preexistentes y docs, sin archivos de estado ni configuración privada.
+  Se comprobó que HEAD, índice y cambios del checkout original se conservaron.
+- El snapshot es una base para experimentar, no una integración ni publicación.
+  En el checkout original los documentos siguen como cambios locales.
 
 ## Siguiente paso
 
-Preparar el worktree sin alterar el índice ni los cambios previos de `main` y
-entregar el encargo aislado al chat del experimento.
+Usar el método al abordar [identidad](identity.md) o [el experimento](board-3d.md).
+El encargo 3D y su seguimiento pertenecen a la rama experimental; esta ficha
+conserva la evidencia de la preparación documental.
