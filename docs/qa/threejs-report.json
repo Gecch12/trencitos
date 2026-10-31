@@ -1,0 +1,330 @@
+{
+  "date": "2026-10-31T18:10:42.909Z",
+  "platform": "darwin 25.5.0 arm64",
+  "cpu": "Apple M1 Pro",
+  "tests": [
+    {
+      "name": "same route/payment/result in 2D and 3D via pointer UI",
+      "results": [
+        {
+          "id": 0,
+          "owner": 0,
+          "hand": [
+            "blue",
+            "green",
+            "red",
+            "yellow"
+          ],
+          "trains": 40,
+          "score": 8,
+          "private": true
+        },
+        {
+          "id": 0,
+          "owner": 0,
+          "hand": [
+            "blue",
+            "green",
+            "red",
+            "yellow"
+          ],
+          "trains": 40,
+          "score": 8,
+          "private": true,
+          "wagons": 19
+        }
+      ]
+    },
+    {
+      "name": "station construction from keyboard through authoritative server",
+      "passed": true
+    },
+    {
+      "name": "zero surcharge tunnel resolves and appears after reveal",
+      "passed": true
+    },
+    {
+      "name": "pointer selects elevated station roof",
+      "passed": true
+    },
+    {
+      "name": "no continuous WebGL loop while idle",
+      "passed": true
+    },
+    {
+      "name": "two-finger pinch zoom without accidental selection",
+      "zoom": 1.8,
+      "menu": false
+    },
+    {
+      "name": "keyboard focuses offscreen city, reveals its label and opens menu",
+      "passed": true
+    },
+    {
+      "name": "context loss falls back to 2D; 3D can be re-enabled",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "browser": "156.0.8078.74",
+  "performance": [
+    {
+      "mode": "2d",
+      "viewport": "1460x940",
+      "cpuCameraMs": {
+        "n": 79,
+        "median": 3.200000047683716,
+        "p95": 3.5,
+        "max": 3.5
+      },
+      "frameIntervalMs": {
+        "n": 79,
+        "median": 41,
+        "p95": 42.60000002384186,
+        "max": 44.200000047683716
+      }
+    },
+    {
+      "mode": "3d",
+      "viewport": "1460x940",
+      "cpuCameraMs": {
+        "n": 79,
+        "median": 1.8000000715255737,
+        "p95": 2.3000000715255737,
+        "max": 4.100000023841858
+      },
+      "frameIntervalMs": {
+        "n": 79,
+        "median": 16.699999928474426,
+        "p95": 16.899999976158142,
+        "max": 17.799999952316284
+      },
+      "stats": {
+        "revision": "187",
+        "draws": 91,
+        "wagons": 225,
+        "models": {
+          "passenger": 45,
+          "tanker": 45,
+          "alfalfa": 45,
+          "grain": 45,
+          "goods": 45
+        },
+        "stations": 15,
+        "samples": [
+          36.5,
+          0.5,
+          0.30000007152557373,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.30000007152557373,
+          0.30000007152557373,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.5,
+          0.20000004768371582,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.2999999523162842,
+          0.3999999761581421,
+          0.2999999523162842,
+          0.2999999523162842,
+          0.30000007152557373,
+          0.3999999761581421,
+          0.2999999523162842,
+          0.30000007152557373,
+          0.2999999523162842,
+          0.2999999523162842,
+          0.30000007152557373,
+          0.19999992847442627,
+          0.19999992847442627,
+          0.30000007152557373,
+          0.20000004768371582,
+          0.19999992847442627,
+          0.20000004768371582,
+          0.20000004768371582,
+          0.2999999523162842,
+          0.20000004768371582,
+          0.20000004768371582,
+          0.2999999523162842,
+          0.30000007152557373,
+          0.2999999523162842,
+          0.2999999523162842,
+          0.20000004768371582,
+          0.10000002384185791,
+          0.19999992847442627,
+          0.19999992847442627,
+          0.2999999523162842,
+          0.19999992847442627,
+          0.10000002384185791,
+          0.2999999523162842,
+          0.2999999523162842,
+          0.20000004768371582,
+          0.20000004768371582,
+          0.19999992847442627,
+          0.20000004768371582,
+          0.30000007152557373,
+          0.20000004768371582,
+          0.20000004768371582,
+          0.20000004768371582,
+          0.19999992847442627,
+          0.30000007152557373,
+          0.10000002384185791,
+          0.2999999523162842,
+          0.20000004768371582,
+          0.2999999523162842,
+          0.19999992847442627,
+          0.20000004768371582,
+          0.30000007152557373,
+          0.2999999523162842,
+          0.20000004768371582,
+          0.20000004768371582,
+          0.09999990463256836,
+          0.20000004768371582,
+          0.2999999523162842,
+          0.19999992847442627,
+          0.20000004768371582,
+          0.20000004768371582,
+          0.19999992847442627,
+          0.30000007152557373,
+          0.2999999523162842,
+          0.19999992847442627,
+          0.20000004768371582,
+          0.20000004768371582,
+          0.2999999523162842,
+          0.20000004768371582,
+          0.2999999523162842,
+          0.2999999523162842,
+          0.20000004768371582,
+          0.20000004768371582,
+          0.19999992847442627,
+          0.20000004768371582,
+          0.20000004768371582,
+          0.19999992847442627
+        ],
+        "calls": 21,
+        "triangles": 170492,
+        "geometries": 15,
+        "textures": 8,
+        "pixelRatio": 1
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)"
+    }
+  ],
+  "legibility": [
+    {
+      "width": 1460,
+      "height": 940,
+      "zoom": 0.25,
+      "visible": 6,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 1.2710574864626038e-13
+    },
+    {
+      "width": 1460,
+      "height": 940,
+      "zoom": 1,
+      "visible": 47,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 2.3437142008433856e-13
+    },
+    {
+      "width": 1460,
+      "height": 940,
+      "zoom": 6,
+      "visible": 3,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 5.084229945850415e-13
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "zoom": 0.25,
+      "visible": 6,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 1.2710574864626038e-13
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "zoom": 1,
+      "visible": 47,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 1.6077746776921858e-13
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "zoom": 6,
+      "visible": 2,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 6.431098710768743e-13
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "zoom": 0.25,
+      "visible": 5,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 8.038873388460929e-14
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "zoom": 1,
+      "visible": 10,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 1.1368683772161603e-13
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "zoom": 6,
+      "visible": 5,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 3.410605131648481e-13
+    }
+  ],
+  "fullGame": {
+    "actions": 235,
+    "counts": {
+      "choose_initial": 4,
+      "draw_train": 152,
+      "claim": 64,
+      "decline_tunnel": 15
+    },
+    "reconnect": true,
+    "phase": "finished",
+    "results": [
+      {
+        "seat": 3,
+        "score": 110
+      },
+      {
+        "seat": 2,
+        "score": 99
+      },
+      {
+        "seat": 0,
+        "score": 89
+      },
+      {
+        "seat": 1,
+        "score": 67
+      }
+    ],
+    "renderedWagons": 144
+  },
+  "passed": true
+}

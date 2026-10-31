@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-31T18:11:28.043Z",
+  "browser": "156.0.8078.74",
+  "tests": [
+    "3D default",
+    "2D preference survives reload",
+    "3D disposal/recreation resource counts stable",
+    "all 11 models render",
+    "highlight/reset preserves model counts"
+  ],
+  "catalog": {
+    "revision": "187",
+    "draws": 1,
+    "wagons": 11,
+    "models": {
+      "passenger": 1,
+      "tanker": 1,
+      "alfalfa": 1,
+      "grain": 1,
+      "goods": 1,
+      "timber": 1,
+      "luxury": 1,
+      "coal": 1,
+      "stone": 1,
+      "mail": 1,
+      "steel": 1
+    },
+    "stations": 0,
+    "samples": [
+      32.700000047683716
+    ],
+    "calls": 30,
+    "triangles": 8552,
+    "geometries": 21,
+    "textures": 14,
+    "pixelRatio": 1
+  },
+  "dense": {
+    "revision": "187",
+    "draws": 2,
+    "wagons": 225,
+    "models": {
+      "passenger": 45,
+      "tanker": 45,
+      "alfalfa": 45,
+      "grain": 45,
+      "goods": 45
+    },
+    "stations": 15,
+    "samples": [
+      29.09999990463257,
+      0.2999999523162842
+    ],
+    "calls": 21,
+    "triangles": 170492,
+    "geometries": 15,
+    "textures": 8,
+    "pixelRatio": 1
+  },
+  "errors": []
+}

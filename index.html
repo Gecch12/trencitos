@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="responsive.css" />
     <link rel="stylesheet" href="lobby.css" />
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+    <link rel="stylesheet" href="board-3d.css" />
   </head>
   <body>
     <header class="top">
@@ -90,6 +91,8 @@
           </div>
           <p id="maphint" class="sr-only">Pellizca con dos dedos o usa la rueda para acercar y alejar. Arrastra para mover el mapa. Toca una ruta o ciudad para construir.</p>
           <div class="boardtools" id="boardtools">
+              <button id="boardMode" class="board-mode" type="button" aria-pressed="false" title="Cambiar vista del tablero">3D</button>
+              <div class="board-camera-controls" aria-label="Cámara del mapa"><button id="boardZoomOut" type="button" aria-label="Alejar mapa">−</button><button id="boardFit" type="button" aria-label="Centrar mapa">⌂</button><button id="boardZoomIn" type="button" aria-label="Acercar mapa">+</button></div>
               <button id="copyRoomInGame" class="copy-game" title="Copiar enlace privado">↗ <span>Invitar</span></button>
               <button
                 class="boardexpand hidden"
@@ -189,6 +192,7 @@
     <script src="map-layout.js"></script>
     <script src="game-ui.js"></script>
     <script src="lobby-ui.js"></script>
+    <script src="board-camera.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

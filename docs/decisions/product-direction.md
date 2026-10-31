@@ -18,10 +18,17 @@ Implementación y avance viven exclusivamente en [las fichas](../work/README.md)
 - Ambientes como set coherente: tablero/mapa visual + reversos y piezas/sonidos
   compatibles. Un tema visual no cambia red, reglas ni equilibrio. Un mapa con
   reglas/topología nuevas sería otro alcance. Ver [ambientes](../work/ambiences.md).
-- Three.js en rama/worktree y chat propios: mapa plano con textura, vagones y
+- Three.js aceptado como vista oficial y predeterminada tras el experimento en
+  rama/worktree propio: mapa plano con textura, vagones y
   estaciones 3D. Mano, cartas, paneles y controles siguen 2D. Cámara guiada y
   etiquetas 2D ancladas. Sin física de simulador ni controles libres de tabletop.
-  Ver [experimento](../work/board-3d.md).
+  Mantener alternativa 2D y retorno automático si falla WebGL.
+  Ver [tablero](../work/board-3d.md).
+- Vagones 3D inspirados en las cartas para los once colores de jugador: la
+  identidad del propietario determina el modelo, nunca el pago de una ruta.
+  Modelo, pintura y acabado separados internamente; todo disponible gratis.
+  El dorado recibe acabado metálico de coche de lujo. No se reabre la propuesta
+  descartada de locomotoras independientes ni se agregan reglas de mercancías.
 - Materiales madera/mate/cromado/cobre se estudian si 3D aporta valor; deben
   conservar identificación por color. Ver [materiales](../work/materials.md).
 - Pulir sonidos de cartas y construcción queda pendiente; ya existe audio

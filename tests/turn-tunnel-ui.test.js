@@ -118,7 +118,7 @@ function revealHarness(surcharge = 0, reduced = false, revealed) {
     reducedMotion: { matches: reduced }, document: { hidden: false, createElement: node },
     $: id => nodes[id], N: { white: "Blanco", wild: "Locomotora" }, escapeHTML: x => x,
     routeName: () => "Pamplona — Barcelona", dialogClockHTML: () => "", colorCard: color => ({ ...node(), color }),
-    constructionTarget: node, playSound: kind => sounds.push(kind), animateConstruction: e => builds.push(e),
+    syncBoard3D: noop, constructionTarget: node, playSound: kind => sounds.push(kind), animateConstruction: e => builds.push(e),
     renderDialog: () => { renders++; }, showDialog: () => { nodes.dialog.dataset = {}; },
     setTimeout: (fn, ms) => { timers.set(++serial, { fn, ms }); return serial; }, clearTimeout: id => timers.delete(id),
   });

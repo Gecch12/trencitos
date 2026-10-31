@@ -13,6 +13,7 @@ El resultado de una ejecución nueva se registra en su ficha de trabajo.
 | Gestos táctiles | [Mobile touch QA](mobile-touch-qa.md) |
 | Presentación y controles | [Controles QA](presentation-controls-qa.md) |
 | Turnos y túneles | [Turnos QA](turn-tunnel-qa.md) |
+| Tablero Three.js y vagones | [Ficha y evidencia](work/board-3d.md) |
 | Destinos resaltados | [Spotlight QA](destination-spotlight-qa.md) |
 
 Los nombres antiguos Ferrovía y sus conteos de pruebas pertenecen a esas

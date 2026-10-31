@@ -33,7 +33,34 @@ const MAP_CENTER = { x: MAP_BOUNDS.x + MAP_BOUNDS.width / 2, y: MAP_BOUNDS.y + M
 const TICKET_COLORS = ["#b48916", "#c64e48", "#357bb5", "#32815b"];
 let zoom = 1,
   mapCenter = { ...MAP_CENTER };
+let board3D = null, board3DLoading = false;
 let labelPriority = [];
+let labelPlacements3D = new Map();
+async function setBoardMode(enabled) {
+  if (board3DLoading || !!board3D === enabled) return;
+  closeMapMenu(); cancelConstruction();
+  if (enabled) {
+    board3DLoading = true; $("boardMode").disabled = true;
+    try {
+      const { createBoard3D } = await import("./board-3d.js");
+      board3D = createBoard3D({ container: $("mapscroll"), map: RailMap, network: MAP_GEOMETRY,
+        onFailure: () => { setBoardMode(false); toast("3D no disponible. Puedes seguir jugando en 2D."); } });
+    } catch (error) {
+      console.warn("Tablero 3D no disponible:", error.message);
+      toast("3D no disponible. Puedes seguir jugando en 2D.");
+    } finally { board3DLoading = false; $("boardMode").disabled = false; }
+  } else { board3D.dispose(); board3D = null; }
+  localStorage.setItem("rr-board", board3D ? "3d" : "2d");
+  labelPlacements3D.clear();
+  $("mapscroll").classList.toggle("is-3d", !!board3D);
+  $("board").setAttribute("preserveAspectRatio", board3D ? "none" : "xMidYMid meet");
+  $("boardMode").setAttribute("aria-pressed", String(!!board3D));
+  $("boardMode").textContent = board3D ? "2D" : "3D";
+  $("boardMode").setAttribute("aria-label", board3D ? "Cambiar a tablero 2D" : "Cambiar a tablero 3D");
+  if (game) renderBoard();
+  applyZoom();
+}
+
 let hoveredPlayer = null, focusedPlayer = null;
 let displayedLogs = null;
 let displayedHistoryKey = null;
@@ -865,7 +892,7 @@ function constructionTarget(event) {
   return event.routeId !== undefined ? $("board").querySelector(`[data-route-id="${event.routeId}"]`) : $("board").querySelector(`[data-city="${event.city}"]`);
 }
 function animateConstruction(event) {
-  if (reducedMotion.matches || document.hidden || !constructionTarget(event)) { playSound("build"); return; }
+  if (board3D || reducedMotion.matches || document.hidden || !constructionTarget(event)) { playSound("build"); return; }
   const flight = { event, started: performance.now(), animations: [], band: null };
   constructionFlights.set(event.id, flight);
   bindConstruction(flight);
@@ -1008,7 +1035,16 @@ function drawFerryGlyph(el, parent) {
   }, g);
   for (const x of [-4, 4]) el("circle", { cx: x, cy: 3, r: 1.5 }, g);
 }
+function syncBoard3D() {
+  if (!board3D || !game) return;
+  const requested = hoveredPlayer ?? focusedPlayer;
+  const highlight = requested !== null && game.routes.some(r => r.owner === requested) ? requested : null;
+  board3D.update({ routes: game.routes.map(({ id, owner }) => ({ id, owner })),
+    players: game.players.map((p, i) => ({ color: GameUI.playerColor(p.color), placed: [...p.placed], mark: GameUI.playerMark(i).path })),
+    hiddenRoute: tunnelReveal?.build?.routeId ?? null, highlight });
+}
 function highlightPlayerRoutes() {
+  syncBoard3D();
   const requested = hoveredPlayer ?? focusedPlayer;
   const owner = requested !== null && game?.routes.some(r => r.owner === requested) ? requested : null;
   for (const group of $("board").querySelectorAll(".route-group")) {
@@ -1099,6 +1135,7 @@ function renderBoard() {
     el("path", {
       d: geometry.d, class: "route-hit", fill: "none", stroke: "transparent",
       "stroke-width": 11, "pointer-events": "stroke",
+      ...(board3D && owned ? { transform: "translate(0 -3.8)" } : {}),
     }, group);
     const selectRoute = event => {
       selected = r.id;
@@ -1115,6 +1152,7 @@ function renderBoard() {
     const occupant = game.players.findIndex(p => p.placed.includes(key));
     const group = el("g", { transform: `translate(${x} ${y})`, class: "city-node", "data-city": key,
       role: "button", tabindex: 0, "aria-label": `${CITIES[key][2]}${occupant >= 0 ? ` · Estación de ${game.players[occupant].name}` : " · Ver ciudad"}` });
+    if (board3D) el("circle", { r: occupant >= 0 ? 16 : 8, fill: "transparent", "pointer-events": "all", class: "city-hit" }, group);
     el("circle", { r: 6.6, fill: "#fffdf1", opacity: 0.9 }, group);
     el("circle", {
       r: 4.4, fill: "#f9f4e6",
@@ -1132,6 +1170,7 @@ function renderBoard() {
     group.addEventListener("keydown", event => {
       if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectCity(event); }
     });
+    if (occupant >= 0) group.classList.add("has-station");
     if (occupant >= 0) drawStation(el, group, GameUI.playerColor(game.players[occupant].color));
   }
   const names = el("g", { class: "city-names", "pointer-events": "none" });
@@ -1147,6 +1186,14 @@ function renderBoard() {
 function prioritizeCityLabels(element, cities) {
   for (const type of ["pointerenter", "focus"]) element.addEventListener(type, () => {
     labelPriority = cities;
+    if (board3D && type === "focus") {
+      const safe = mapSafeArea($("mapscroll").getBoundingClientRect());
+      const points = cities.map(key => RailMap.cities[key]);
+      if (points.some(([x, y]) => { const p = board3D.project(x, y); return p.x < safe.x + 30 || p.x > safe.x + safe.width - 30 || p.y < safe.y + 30 || p.y > safe.y + safe.height - 30; })) {
+        mapCenter = { x: points.reduce((n, p) => n + p[0], 0) / points.length, y: points.reduce((n, p) => n + p[1], 0) / points.length };
+        applyZoom();
+      }
+    }
     updateCityLabels();
   });
   for (const type of ["pointerleave", "blur"]) element.addEventListener(type, () => {
@@ -1159,10 +1206,10 @@ function updateCityLabels() {
   if (!view) return;
   const labelScale = GameUI.cityLabelScale(zoom), baseline = 13 * labelScale;
   const viewport = $("mapscroll");
-  const labelArea = compactMedia.matches ? mapSafeArea(viewport.getBoundingClientRect(), true)
+  const labelArea = (board3D || compactMedia.matches) ? mapSafeArea(viewport.getBoundingClientRect(), true)
     : { x: 0, y: 0, width: viewport.clientWidth, height: viewport.clientHeight };
   const origin = { x: view.x, y: view.y };
-  const screen = ([x, y]) => [(x - origin.x) / view.scale, (y - origin.y) / view.scale];
+  const screen = ([x, y]) => [(x - origin.x) / view.scale, (y - origin.y) / (view.scaleY || view.scale)];
   const entries = [];
   const groups = new Map();
   for (const g of $("board").querySelectorAll("[data-city-label]")) {
@@ -1177,29 +1224,37 @@ function updateCityLabels() {
   const obstacles = MAP_GEOMETRY.flatMap(r => r.cells.map(cell => {
     const [x, y] = screen([cell.x, cell.y]), angle = cell.angle * Math.PI / 180;
     const width = (Math.abs(Math.cos(angle)) * cell.width + Math.abs(Math.sin(angle)) * cell.height) / view.scale;
-    const height = (Math.abs(Math.sin(angle)) * cell.width + Math.abs(Math.cos(angle)) * cell.height) / view.scale;
+    const height = (Math.abs(Math.sin(angle)) * cell.width + Math.abs(Math.cos(angle)) * cell.height) / (view.scaleY || view.scale);
     return { x: x - width / 2, y: y - height / 2, width, height };
   }));
   for (const player of game.players) for (const city of player.placed) {
     const [x, y] = screen(RailMap.cities[city]), scale = Math.max(.8 / view.scale, 1);
-    obstacles.push({ x: x - 10 * scale, y: y - 11 * scale, width: 20 * scale, height: 20 * scale });
+    obstacles.push({ x: x - 10 * scale, y: y - (board3D ? 20 : 11) * scale, width: 20 * scale, height: (board3D ? 29 : 20) * scale });
   }
   const chosenRoute = game?.routes.find(r => r.id === selected);
   const important = new Set([...labelPriority, ...(chosenRoute ? [chosenRoute.a, chosenRoute.b] : []), stationCity]);
+  const destinations = new Set(board3D ? game.tickets.flatMap(t => [t.a, t.b]) : []);
+  if (board3D) for (const entry of entries) entry.priority = important.has(entry.key) ? 3 : destinations.has(entry.key) ? 1 : 0;
   let displayed = entries;
   if (zoom < .75 || view.scale > 1.5) {
     // At overview scale, a few nearby labels are useful; a cloud of leaders isn't.
-    displayed = GameUI.overviewLabels(entries, important);
+    displayed = GameUI.overviewLabels(entries, board3D ? new Set([...important, ...destinations]) : important);
     const keys = new Set(displayed.map(entry => entry.key));
     for (const entry of entries) if (!keys.has(entry.key)) groups.get(entry.key).style.display = "none";
   }
   const relative = item => ({ ...item, x: item.x - labelArea.x, y: item.y - labelArea.y });
-  const placements = RailMap.placeLabels(displayed.map(relative), labelArea.width, labelArea.height, obstacles.map(relative), { height: 18 * labelScale, baseline });
+  const placements = RailMap.placeLabels(displayed.map(relative), labelArea.width, labelArea.height, obstacles.map(relative), { height: 18 * labelScale, baseline },
+    board3D ? { previous: labelPlacements3D, maxLeader: 36, hideColliding: true } : {});
+  if (board3D) {
+    const shown = new Set(placements.map(p => p.key));
+    for (const entry of entries) if (!shown.has(entry.key)) groups.get(entry.key).style.display = "none";
+  }
   for (const box of placements) {
     const g = groups.get(box.key), city = RailMap.cities[box.key], [sx, sy] = screen(city);
     const dx = box.x + labelArea.x - sx, dy = box.y + labelArea.y - sy;
+    if (board3D) labelPlacements3D.set(box.key, { dx, dy });
     // Stable screen sizing at overview; type grows gently once zoom exceeds 2.5×.
-    g.setAttribute("transform", `translate(${city[0]} ${city[1]}) scale(${view.scale})`);
+    g.setAttribute("transform", `translate(${city[0]} ${city[1]}) scale(${view.scale} ${view.scaleY || view.scale})`);
     const text = g.querySelector("text");
     text.setAttribute("x", dx);
     text.setAttribute("y", dy + baseline);
@@ -1450,7 +1505,7 @@ function updateDestinationSpotlight() {
   // The sidebar includes transparent headings/gaps: leave its entire column
   // untouched, not just its opaque cards.
   el("rect", { width: safe.x + safe.width + 8, height: rect.height, fill: "#102c38", opacity: .66 });
-  const context = el("g", { transform: `scale(${1 / view.scale}) translate(${-view.x} ${-view.y})`, class: "completed-connection" });
+  const context = el("g", { transform: `scale(${1 / view.scale} ${1 / (view.scaleY || view.scale)}) translate(${-view.x} ${-view.y})`, class: "completed-connection" });
   for (const id of selection.routes || []) {
     const geometry = MAP_GEOMETRY[id]; if (!geometry) continue;
     const borrowed = selection.stationRoutes?.includes(id);
@@ -1473,7 +1528,7 @@ function updateDestinationSpotlight() {
   for (const key of new Set(selection.endpoints || [])) {
     $("board").querySelector(`[data-city-label="${key}"]`)?.style.setProperty("opacity", "0");
     const [wx, wy] = RailMap.cities[key];
-    const p = GameUI.endpointPosition({ x: (wx - view.x) / view.scale, y: (wy - view.y) / view.scale }, safe);
+    const p = GameUI.endpointPosition({ x: (wx - view.x) / view.scale, y: (wy - view.y) / (view.scaleY || view.scale) }, safe);
     const marker = el("g", { class: "destination-beacon", "data-endpoint": key, "data-offscreen": p.outside });
     el("circle", { cx: p.x, cy: p.y, r: 13, fill: "#f9df8b", opacity: .2 }, marker);
     el("circle", { cx: p.x, cy: p.y, r: 8, fill: "#fff9df", stroke: "#e4bd59", "stroke-width": 2 }, marker);
@@ -2112,6 +2167,7 @@ function prepareTunnelReveal(events) {
   uiDialog = buildTarget = null;
 }
 function syncTunnelMask() {
+  syncBoard3D();
   $("board").querySelectorAll(".awaiting-tunnel-reveal").forEach(node => node.classList.remove("awaiting-tunnel-reveal"));
   if (tunnelReveal?.build) constructionTarget(tunnelReveal.build)?.classList.add("awaiting-tunnel-reveal");
 }
@@ -2409,12 +2465,14 @@ function mapSafeArea(rect, forCamera = false) {
 function mapViewSize() {
   const rect = $("mapscroll").getBoundingClientRect(), { width, height } = rect;
   if (!width || !height) return null;
+  if (board3D) return BoardCamera.view(MAP_BOUNDS, { width, height }, mapSafeArea(rect, true), zoom, mapCenter, GameUI.camera);
   return GameUI.camera(MAP_BOUNDS, { width, height }, mapSafeArea(rect, true), zoom, mapCenter);
 }
 function applyZoom() {
   const view = mapViewSize();
   if (!view) return;
   mapCenter = view.focus;
+  board3D?.resize(view);
   $("board").setAttribute("viewBox",
     `${view.x} ${view.y} ${view.width} ${view.height}`);
   $("mapscroll").classList.add("can-pan");
@@ -2434,7 +2492,7 @@ function setZoom(next, clientX, clientY) {
   zoom = Math.min(GameUI.MAX_ZOOM, Math.max(GameUI.MIN_ZOOM, next));
   const after = mapViewSize();
   mapCenter.x += fx * (before.scale - after.scale);
-  mapCenter.y += fy * (before.scale - after.scale);
+  mapCenter.y += fy * ((before.scaleY || before.scale) - (after.scaleY || after.scale));
   applyZoom();
 }
 $("mapscroll").addEventListener("wheel", (event) => {
@@ -2454,7 +2512,7 @@ $("mapscroll").addEventListener("pointerdown", (event) => {
   if (mapPointers.size >= 2) {
     const [a, b] = [...mapPointers.values()];
     const rect = event.currentTarget.getBoundingClientRect(), view = mapViewSize();
-    mapPinch = { distance: Math.hypot(a.x - b.x, a.y - b.y), zoom, scale: view.scale, center: { ...mapCenter },
+    mapPinch = { distance: Math.hypot(a.x - b.x, a.y - b.y), zoom, scale: view.scale, scaleY: view.scaleY || view.scale, center: { ...mapCenter },
       midpoint: { x: (a.x + b.x) / 2 - rect.left - view.sx, y: (a.y + b.y) / 2 - rect.top - view.sy } };
     mapDrag = null; suppressMapClick = true;
     event.currentTarget.classList.remove("is-panning");
@@ -2465,7 +2523,7 @@ $("mapscroll").addEventListener("pointerdown", (event) => {
   suppressMapClick = dismissedPanel;
   mapDrag = {
     id: event.pointerId, x: event.clientX, y: event.clientY,
-    center: { ...mapCenter }, scale: mapViewSize().scale, moved: false, dismissedPanel,
+    center: { ...mapCenter }, scale: mapViewSize().scale, scaleY: mapViewSize().scaleY || mapViewSize().scale, moved: false, dismissedPanel,
   };
 });
 $("mapscroll").addEventListener("pointermove", (event) => {
@@ -2476,6 +2534,7 @@ $("mapscroll").addEventListener("pointermove", (event) => {
     const next = GameUI.pinchTransform(mapPinch, Math.hypot(a.x - b.x, a.y - b.y), {
       x: (a.x + b.x) / 2 - rect.left - view.sx, y: (a.y + b.y) / 2 - rect.top - view.sy,
     });
+    next.center.y = mapPinch.center.y + (next.center.y - mapPinch.center.y) * mapPinch.scaleY / mapPinch.scale;
     zoom = next.zoom; mapCenter = next.center;
     applyZoom();
     return;
@@ -2490,7 +2549,7 @@ $("mapscroll").addEventListener("pointermove", (event) => {
   mapDrag.moved = true;
   event.currentTarget.classList.add("is-panning");
   mapCenter.x = mapDrag.center.x - dx * mapDrag.scale;
-  mapCenter.y = mapDrag.center.y - dy * mapDrag.scale;
+  mapCenter.y = mapDrag.center.y - dy * mapDrag.scaleY;
   applyZoom();
 });
 for (const type of ["pointerup", "pointercancel", "lostpointercapture", "pointerleave"])
@@ -2506,7 +2565,7 @@ for (const type of ["pointerup", "pointercancel", "lostpointercapture", "pointer
       if (mapPointers.size < 2) {
         mapPinch = null;
         const remaining = [...mapPointers.entries()][0];
-        mapDrag = remaining ? { id: remaining[0], ...remaining[1], center: { ...mapCenter }, scale: mapViewSize().scale, moved: true, dismissedPanel: true } : null;
+        mapDrag = remaining ? { id: remaining[0], ...remaining[1], center: { ...mapCenter }, scale: mapViewSize().scale, scaleY: mapViewSize().scaleY || mapViewSize().scale, moved: true, dismissedPanel: true } : null;
         event.currentTarget.classList.toggle("is-panning", !!mapDrag);
       }
       if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
@@ -2580,3 +2639,25 @@ if (desiredRoom && localStorage.getItem(identityKey(desiredRoom))) {
 }
 initializeHome();
 connect();
+
+$("boardMode").onclick = () => setBoardMode(!board3D);
+$("boardZoomIn").onclick = () => setZoom(zoom * 1.25);
+$("boardZoomOut").onclick = () => setZoom(zoom / 1.25);
+$("boardFit").onclick = () => { zoom = 1; mapCenter = { ...MAP_CENTER }; applyZoom(); };
+$("mapscroll").tabIndex = 0;
+$("mapscroll").setAttribute("aria-label", "Mapa: flechas para mover, más y menos para zoom, Inicio para centrar");
+$("mapscroll").addEventListener("keydown", event => {
+  if (!game || event.altKey || event.ctrlKey || event.metaKey) return;
+  const v = mapViewSize();
+  if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
+    event.preventDefault(); closeMapMenu();
+    mapCenter.x += (event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0) * 50 * v.scale;
+    mapCenter.y += (event.key === "ArrowDown" ? 1 : event.key === "ArrowUp" ? -1 : 0) * 50 * (v.scaleY || v.scale);
+    applyZoom();
+  } else if (["+", "=", "-", "Home"].includes(event.key)) {
+    event.preventDefault();
+    if (event.key === "Home") $("boardFit").click();
+    else setZoom(zoom * (event.key === "-" ? .8 : 1.25));
+  }
+});
+if ((new URLSearchParams(location.search).get("board") || localStorage.getItem("rr-board") || "3d") === "3d") setBoardMode(true);

@@ -9,7 +9,7 @@ test('browser HTML references server-served local assets and no third-party scri
  const html=fs.readFileSync(path.join(ROOT,'index.html'),'utf8'),app=fs.readFileSync(path.join(ROOT,'app.js'),'utf8');
  assert.ok(html.includes('assets/favicon.svg'));assert.match(app, /["']assets\/cards\/["']/);assert.ok(!/<script[^>]+https?:\/\//.test(html));
 });
-test('map uses gestures without a zoom or fit toolbar on any viewport',()=>{
+test('map preserves gestures and does not restore the retired zoom toolbar',()=>{
  const html=fs.readFileSync(path.join(ROOT,'index.html'),'utf8'),app=fs.readFileSync(path.join(ROOT,'app.js'),'utf8');
  for(const id of ['zoomtools','zoomin','zoomout','zoomfit','zoomlevel']) {
   assert.ok(!html.includes(id),id);
@@ -71,5 +71,12 @@ test('static SVG is served safely with right MIME and traversal returns 404',asy
  response=await fetch(base+'/assets/cards/unknown.svg');assert.equal(response.status,404);
  response=await fetch(base+'/does-not-exist.html');assert.equal(response.status,404);
  response=await fetch(base+'/practice-bot.js');assert.equal(response.status,404);
+ for(const file of ['/board-3d.js','/wagon-renderer.js','/wagon-models.mjs','/board-camera.js','/vendor/three.module.js','/vendor/three.core.js']) {
+  response=await fetch(base+file);assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/javascript/);
+  assert.ok((await response.text()).length>100);
+ }
+ for(const file of ['/node_modules/three/package.json','/vendor/three.cjs','/tests/helpers/threejs-preview.js']) {
+  response=await fetch(base+file);assert.equal(response.status,404);
+ }
 });
 test.after(()=>{if(server.listening)server.close()});

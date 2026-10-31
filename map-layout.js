@@ -175,13 +175,12 @@ const RailMap = (() => {
   }
   const overlap = (a, b) => Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) *
     Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
-  function placeLabels(entries, width, height, tracks = [], metrics = { height: 15, baseline: 11 }) {
+  function placeLabels(entries, width, height, tracks = [], metrics = { height: 15, baseline: 11 }, options = {}) {
     const placed = [];
     // Give the crowded central cities first choice, with a stable tie break.
-    const ordered = [...entries].sort((a, b) => {
-      const density = p => entries.filter(q => Math.hypot(p.x - q.x, p.y - q.y) < 90).length;
-      return density(b) - density(a) || a.key.localeCompare(b.key);
-    });
+    const density = new Map(entries.map(p => [p.key, entries.filter(q => Math.hypot(p.x - q.x, p.y - q.y) < 90).length]));
+    const ordered = [...entries].sort((a, b) =>
+      (b.priority || 0) - (a.priority || 0) || density.get(b.key) - density.get(a.key) || a.key.localeCompare(b.key));
     for (const city of ordered) {
       const candidates = [labels[city.key] || [0, -14, "middle"]];
       for (const gap of [14, 24, 36, 50]) candidates.push(
@@ -190,18 +189,24 @@ const RailMap = (() => {
         [gap, -gap, "start"], [-gap, -gap, "end"],
         [gap, gap + 8, "start"], [-gap, gap + 8, "end"],
       );
+      const previous = options.previous?.get(city.key);
+      if (previous) candidates.unshift([previous.dx, previous.dy + metrics.baseline, "start"]);
       let best = null;
       candidates.forEach(([dx, dy, anchor], i) => {
         const box = { x: city.x + dx - city.width * (anchor === "end" ? 1 : anchor === "middle" ? 0.5 : 0), y: city.y + dy - metrics.baseline, width: city.width, height: metrics.height };
         const padded = { x: box.x - 3, y: box.y - 3, width: box.width + 6, height: box.height + 6 };
         const outside = box.width * box.height - overlap(box, { x: 4, y: 4, width: width - 8, height: height - 8 });
+        const ex = Math.max(box.x, Math.min(city.x, box.x + box.width));
+        const ey = Math.max(box.y, Math.min(city.y, box.y + box.height));
+        if (options.maxLeader && Math.hypot(ex - city.x, ey - city.y) > options.maxLeader) return;
+        if (options.hideColliding && (outside > .01 || placed.some(other => overlap(padded, other) > 0))) return;
         let score = i * 1.2 + Math.hypot(dx, dy) * 1.2 + outside * 300;
         for (const other of placed) score += overlap(padded, other) * 200;
         for (const other of entries) score += overlap(padded, { x: other.x - 6, y: other.y - 6, width: 12, height: 12 }) * 40;
         for (const track of tracks) score += overlap(padded, track) * 0.07;
         if (!best || score < best.score) best = { ...box, key: city.key, score };
       });
-      placed.push(best);
+      if (best) placed.push(best);
     }
     return placed;
   }

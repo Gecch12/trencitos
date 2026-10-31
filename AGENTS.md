@@ -13,7 +13,8 @@ locales antes de asumir que algo está integrado o publicado.
   de Codex pueda estar registrado en la carpeta superior `trains`.
 - El servidor decide las reglas y filtra secretos mediante `engine.view`.
   La presentación 2D/3D no decide jugadas ni recibe información privada rival.
-- El experimento Three.js requiere rama/worktree propio. Usa puerto y
+- Three.js es la presentación oficial, con respaldo 2D. Para nuevos experimentos
+  usa una rama/worktree propio. Para servidores locales usa puerto y
   `STATE_FILE` propios con `STATE_BACKEND=file`; no copies configuración de
   producción. Un segundo servidor Supabase puede invalidar al primero.
 - Verifica el cambio con las pruebas pertinentes y `node scripts/check-docs.js`.

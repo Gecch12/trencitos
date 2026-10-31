@@ -1,7 +1,8 @@
 # Arquitectura existente
 
-Alcance: checkout actual; mapa SVG. Google Auth, catálogo comercial y Three.js
-son trabajos futuros, descritos en [las fichas](work/README.md).
+Tablero Three.js por defecto, con SVG 2D como alternativa conmutable;
+Google Auth y catálogo comercial siguen fuera de esta implementación.
+Evidencia, integración y límites en [la ficha del tablero](work/board-3d.md).
 
 ## Recorrido de una jugada
 
@@ -23,12 +24,47 @@ motor de reglas → persistencia de sala normal → vista filtrada para cada jug
 | Orden y confirmación durable | [durable-queue.js](../durable-queue.js) |
 | Conexión, interfaz y efectos del navegador | [app.js](../app.js), [index.html](../index.html) |
 | Cálculos de presentación y lobby | [game-ui.js](../game-ui.js), [lobby-ui.js](../lobby-ui.js) |
+| Escena 3D, textura cartográfica y piezas instanciadas | [board-3d.js](../board-3d.js): `createBoard3D`, `update`, `resize`, `dispose` |
+| Familias de vagones por color, geometrías y acabados | [wagon-models.mjs](../wagon-models.mjs): `wagonStyle`, `wagonParts`; [wagon-renderer.js](../wagon-renderer.js): `createWagonRenderer` |
+| Proyección ortográfica compartida con objetivos SVG | [board-camera.js](../board-camera.js): `view` |
 | Geometría visual, curvas y etiquetas | [map-layout.js](../map-layout.js): `createNetwork`, `pointAt`, `placeLabels` |
 
 ## Límites que deben conservarse
 
-- Node sirve frontend y backend juntos. El cliente usa HTML/CSS/JS y SVG; no hay
-  framework ni dependencia externa de runtime en la base actual.
+- Node sirve frontend y backend juntos. El cliente usa HTML/CSS/JS y SVG;
+  Three.js `0.187.0` se importa localmente bajo demanda al activar 3D. Se fija
+  con `package-lock.json`; no hay CDN ni framework. El servidor solo expone los
+  dos módulos ES necesarios de Three, mediante rutas explícitas.
+- `syncBoard3D` reduce la vista autorizada a propietarios de rutas, colores,
+  símbolos y estaciones públicas. La escena no recibe manos, destinos,
+  credenciales ni el estado del motor. No abre conexiones.
+- La cámara tiene inclinación fija de 25,7°, sin órbita ni física. Su proyección
+  afín mantiene alineados los objetivos SVG y el plano XY de Three. Gestos,
+  foco, selección y pagos conservan sus manejadores existentes de `app.js`.
+- El plano usa `CanvasTexture` con cartografía y guías de `RailMap`. Los huecos
+  de rutas y sus marcas de túnel/ferri siguen SVG; vagones, ruedas, tejados y
+  estaciones son mallas instanciadas. Las ciudades no se imprimen en la textura.
+- Las etiquetas SVG se compensan en ambos ejes para mantenerse horizontales y
+  de tamaño legible. `placeLabels` admite prioridades, posiciones previas,
+  longitud máxima de guía y ocultación de colisiones; estas opciones son optativas
+  y solo se activan en 3D. Foco/selección preceden a destinos y secundarios.
+- Mano, cartas, menús, pagos, destinos y resultados conservan HTML/SVG 2D.
+  La máscara del túnel también retrasa la pieza 3D hasta terminar la revelación.
+  La caída animada de construcción 2D no se reproduce en 3D.
+- Cada color de jugador tiene un modelo inspirado en las cartas; marrón toma
+  troncos, gris piedra, y dorado/magenta/turquesa amplían la familia. El modelo
+  depende del propietario, nunca de cartas pagadas ni color de la ruta. No hay
+  reglas de carga. Modelo, pintura y acabado son dimensiones separadas, aún sin
+  selector de cosméticos ni catálogo comercial. `wagonStyle` conserva el amarillo
+  legado y permite un modelo seguro por defecto para colores desconocidos.
+- `createWagonRenderer` agrupa piezas por geometría/material en `InstancedMesh`,
+  compartidos entre colores. El oro usa reflexión metálica con un entorno de
+  estudio generado una vez, sin descargas HDR. Cargas, ventanas, ruedas y símbolo
+  superior conservan una huella acotada. El resaltado atenúa todas las piezas.
+- Renderizado WebGL bajo demanda, DPR máximo 2 y liberación de recursos al
+  cambiar a 2D. Fallo de inicialización o pérdida de contexto retorna al tablero
+  2D y conserva la partida. La preferencia local `rr-board` sobrevive a recargas;
+  `?board=2d`/`?board=3d` permite elegir explícitamente. Sin preferencia, inicia 3D.
 - El estado completo de la partida permanece en el servidor. `view` entrega
   mano/destinos propios y datos públicos; los destinos rivales se revelan al final.
 - Credencial de puesto y cuenta persistente son conceptos diferentes. Actualmente

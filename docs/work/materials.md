@@ -3,9 +3,10 @@
 ---
 # Materiales de piezas
 
-Madera, mate, cromado y cobre se evaluarán si el experimento 3D aporta valor.
-En el tablero actual no se ha aprobado desarrollarlos. El dorado visual existente
-es un acabado de color en SVG, no un sistema de materiales.
+Madera, mate, cromado y cobre como opciones intercambiables siguen pendientes.
+El tablero 3D ya tiene materiales de pintura, cargas, metal y vidrio, y un coche
+dorado con reflejos procedurales. Modelo, pintura y acabado están separados en
+[el renderizador](../../wagon-renderer.js); esto aún no es un selector de materiales.
 
 ## Hitos de definición
 
@@ -15,4 +16,5 @@ es un acabado de color en SVG, no un sistema de materiales.
 
 ## Evidencia y siguiente paso
 
-Sin implementación. Retomar después de evaluar [el tablero 3D](board-3d.md).
+La base gráfica existe en [el tablero 3D](board-3d.md). Próximo paso: comparar
+acabados sobre un mismo modelo antes de definir selector y catálogo.

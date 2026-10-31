@@ -1,7 +1,59 @@
 {
-  "architecture.md": ["server.js", "engine.js", "game-clock.js", "multiplayer.js", "practice.js", "practice-bot.js", "bots.js", "room-store.js", "supabase-store.js", "durable-queue.js", "supabase/", "package.json"],
-  "domain.md": ["engine.js", "data.js", "multiplayer.js", "practice.js", "game-clock.js", "lobby-ui.js"],
-  "operations.md": ["package.json", "Dockerfile", "render.yaml", ".env.example", "scripts/"],
-  "work/board-3d.md": ["map-layout.js", "game-ui.js", "app.js"],
-  "work/sounds.md": ["app.js"]
+  "architecture.md": [
+    "server.js",
+    "engine.js",
+    "game-clock.js",
+    "multiplayer.js",
+    "practice.js",
+    "practice-bot.js",
+    "bots.js",
+    "room-store.js",
+    "supabase-store.js",
+    "durable-queue.js",
+    "supabase/",
+    "package.json",
+    "app.js",
+    "board-3d.js",
+    "board-camera.js",
+    "map-layout.js",
+    "wagon-models.mjs",
+    "wagon-renderer.js"
+  ],
+  "domain.md": [
+    "engine.js",
+    "data.js",
+    "multiplayer.js",
+    "practice.js",
+    "game-clock.js",
+    "lobby-ui.js"
+  ],
+  "operations.md": [
+    "package.json",
+    "Dockerfile",
+    "render.yaml",
+    ".env.example",
+    "scripts/"
+  ],
+  "work/board-3d.md": [
+    "map-layout.js",
+    "game-ui.js",
+    "app.js",
+    "board-3d.js",
+    "board-3d.css",
+    "board-camera.js",
+    "tests/board-3d.test.js",
+    "tests/browser-threejs.cjs",
+    "tests/helpers/threejs-preview.js",
+    "wagon-models.mjs",
+    "wagon-renderer.js",
+    "tests/wagon-models.test.js",
+    "tests/browser-wagons.cjs"
+  ],
+  "work/sounds.md": [
+    "app.js"
+  ],
+  "work/materials.md": [
+    "wagon-models.mjs",
+    "wagon-renderer.js"
+  ]
 }

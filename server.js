@@ -125,6 +125,13 @@ function removeRoom(r, message = "La sala ya no existe.") {
 const TYPES = {
   "/": "text/html; charset=utf-8",
   "/index.html": "text/html; charset=utf-8",
+  "/board-3d.js": "text/javascript; charset=utf-8",
+  "/wagon-renderer.js": "text/javascript; charset=utf-8",
+  "/wagon-models.mjs": "text/javascript; charset=utf-8",
+  "/board-camera.js": "text/javascript; charset=utf-8",
+  "/board-3d.css": "text/css; charset=utf-8",
+  "/vendor/three.module.js": "text/javascript; charset=utf-8",
+  "/vendor/three.core.js": "text/javascript; charset=utf-8",
   "/app.js": "text/javascript; charset=utf-8",
   "/style.css": "text/css; charset=utf-8",
   "/data.js": "text/javascript; charset=utf-8",
@@ -159,7 +166,11 @@ const server = http.createServer((req, res) => {
     "Content-Security-Policy":
       "default-src 'self'; connect-src 'self' ws: wss:; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
   });
-  fs.createReadStream(path.join(ROOT, file)).pipe(res);
+  const served = file === "vendor/three.module.js" || file === "vendor/three.core.js"
+    ? path.join(ROOT, "node_modules/three/build", path.basename(file)) : path.join(ROOT, file);
+  const stream = fs.createReadStream(served);
+  stream.on("error", () => res.destroy());
+  stream.pipe(res);
 });
 function wsFrame(op, data) {
   let payload = Buffer.isBuffer(data) ? data : Buffer.from(data || "");

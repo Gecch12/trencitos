@@ -7,14 +7,14 @@ Orden de trabajo acordado:
 
 1. [Centro documental y skill](docs-system.md): base compartida del trabajo.
 2. [Identidad persistente](identity.md): Google y perfil como base de personalización.
-3. [Tablero 3D](board-3d.md): experimento independiente tras preparar la base;
-   puede avanzar en paralelo a identidad, sin depender de ella.
+3. [Tablero 3D y familia de vagones](board-3d.md): presentación oficial aceptada;
+   evidencia, avance de integración y límites en la ficha.
 
 Para después:
 
 - [Preparación comercial y personalización](commerce.md).
 - [Sets de ambientes](ambiences.md).
-- [Materiales](materials.md), condicionado al resultado del 3D.
+- [Materiales personalizables](materials.md), ampliación del acabado 3D existente.
 - [Sonidos](sounds.md).
 - [Verificación pendiente de la beta](quality.md).
 

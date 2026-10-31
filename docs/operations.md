@@ -3,6 +3,8 @@
 ## Entorno
 
 Node >=20; comandos en la raíz Git (la carpeta que contiene `package.json`).
+Ejecutar `npm ci` para instalar Three.js y las herramientas de QA.
+`npm ci --omit=dev` basta para servir el juego; no requiere proceso de build.
 `npm start` sirve HTTP y WebSocket en el mismo proceso, puerto 3000 por defecto.
 Las pruebas usan `node --test` y abren puertos de loopback; un `listen EPERM`
 del sandbox no demuestra un fallo del juego.
@@ -25,11 +27,37 @@ referencias; los cambios no aparecen automáticamente en las otras carpetas.
 Cada frente usa una rama distinta y registra su avance en su ficha. Sincroniza
 desde una base revisada y resuelve documentos junto con código al integrar.
 
-Para ejecutar el experimento, desde **su** worktree, con puerto libre:
+Para ejecutar un servidor aislado, desde **su** checkout, con puerto libre:
 
 ```sh
 STATE_BACKEND=file STATE_FILE="$PWD/room-state.json" PORT=3118 node server.js
 ```
+
+Abrir `http://localhost:3118/?board=3d`. El botón 2D/3D cambia de representación
+sin cambiar de sala; `−`, `+` y centrar complementan rueda, arrastre, pellizco y
+teclado (flechas, `+`/`−`, Inicio al enfocar el mapa).
+
+Verificación reproducible del tablero y los vagones:
+
+```sh
+npm run test:board3d
+# Si 3119 está ocupado:
+QA_PORT=3120 npm run test:board3d
+node tests/browser-wagons.cjs
+```
+
+Requiere Chrome instalado (Playwright usa `channel: chrome`; se puede elegir
+`BROWSER_CHANNEL`). Abre servidor solo en loopback, genera estado propio en
+`.qa/rooms-<pid>.json` dentro del worktree, ejecuta fixtures y una partida normal
+completa por WebSocket, y cierra servidor/navegador al terminar. Las capturas y
+métricas se escriben en `docs/qa/threejs-*`; el informe explica qué es emulación.
+El conductor respeta el límite existente de acciones del servidor.
+El segundo conductor usa 3122, comprueba preferencia 3D/2D y recreación de
+recursos, y genera `docs/qa/wagons-catalog.png` con las once piezas reales y su
+informe `wagons-report.json`. La galería es un fixture interceptado por Playwright;
+no se agrega al servidor ni altera las reglas/límite de cinco jugadores.
+`node tests/helpers/threejs-preview.js` deja disponible una escena densa local
+en 3119 para inspección manual. Los fixtures nunca se sirven al cliente como JS.
 
 No reutilices procesos ni archivos de estado de otra carpeta. Los `.env` no se
 cargan automáticamente y no deben copiarse del entorno de producción. No
