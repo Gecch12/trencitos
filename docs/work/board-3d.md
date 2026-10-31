@@ -1,5 +1,5 @@
 ---
-{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"released","updated":"2026-10-31"}
+{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"integrated","updated":"2026-10-31"}
 ---
 # Tablero 3D y familia de vagones
 
@@ -8,6 +8,7 @@ Mano, cartas, paneles, etiquetas y mapas de detalle conservan HTML/SVG. Sin fís
 de simulador, cámara libre ni cambios de reglas. Publicado desde `main` en
 `16bf6c3` hasta M9; [entrega y verificación remota](../production.md).
 M10 está publicada en `2a46f58`; evidencia y límites en [producción](../production.md).
+M11 está validada e integrada en `main`; publicación solicitada y en preparación.
 
 ## Hitos
 
@@ -25,6 +26,27 @@ M10 está publicada en `2a46f58`; evidencia y límites en [producción](../produ
 - [x] M10: siete colores/familias adicionales, gratis: azul noche/grúa, borgoña/vino,
   oliva/tractores, marfil/cemento, coral/fruta, lavanda/flores, azul hielo/lancha.
   18 selecciones válidas; modelos compartidos por preview/tablero, sin cambiar reglas.
+- [x] M11: al resaltar destinos, ocultar los nombres y guías de las ciudades ajenas
+  a la selección; conservar etiquetas/números de los extremos, incluidos billetes
+  completados, y restaurar los nombres habituales al desactivar.
+
+## Ajuste M11 — etiquetas del resaltado
+
+2026-10-31, `main` sobre `d6456c2` más cambios locales: `updateDestinationSpotlight`
+oculta las etiquetas base en lugar de dejarlas al 32 % de opacidad. El overlay
+conserva los extremos seleccionados; puntos, rutas, vagones y estaciones no cambian.
+
+- `node --test tests/destination-overview.test.js tests/board-3d.test.js tests/mobile-ui.test.js`:
+  18 pruebas correctas.
+- IAB/Chromium, fixture `830106` en `127.0.0.1:3144`, backend de archivo aislado:
+  London–Berlin completado conserva ambos nombres y números; ninguna etiqueta base
+  visible mientras se resalta. Al desactivar vuelven los nombres habituales.
+  Repetido a 390×844 y con zoom: mismo resultado, sin errores ni avisos de consola.
+  Captura local ignorada: `.qa/destination-labels/mobile.png`.
+- `node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
+
+Siguiente paso de M11: incluir código y documentación en la próxima publicación.
+Esta comprobación usa emulación de tamaño móvil, no Safari/iPhone físico.
 
 ## Ampliación M10
 

@@ -1547,7 +1547,8 @@ function updateDestinationSpotlight() {
   overlay.classList.toggle("is-overview", !!selection?.overview);
   overlay.replaceChildren();
   if (!selection) return;
-  for (const label of $("board").querySelectorAll("[data-city-label]")) label.style.opacity = ".32";
+  // The spotlight supplies endpoint labels; hide all base names and leaders.
+  for (const label of $("board").querySelectorAll("[data-city-label]")) label.style.opacity = "0";
   const view = mapViewSize(); if (!view) return;
   const rect = $("mapscroll").getBoundingClientRect(), safe = mapSafeArea(rect);
   overlay.setAttribute("viewBox", `0 0 ${rect.width} ${rect.height}`);
@@ -1555,7 +1556,6 @@ function updateDestinationSpotlight() {
   // Only readable endpoint labels/numbers belong above the Three.js scene.
   const labels = new Map(), endpoints = [];
   for (const key of new Set(selection.endpoints || [])) {
-    $("board").querySelector(`[data-city-label="${key}"]`)?.style.setProperty("opacity", "0");
     const [wx, wy] = RailMap.cities[key];
     const p = GameUI.endpointPosition({ x: (wx - view.x) / view.scale, y: (wy - view.y) / (view.scaleY || view.scale) }, safe);
     const marker = el("g", { class: "destination-beacon", "data-endpoint": key, "data-offscreen": p.outside });
