@@ -1,0 +1,199 @@
+/* Board-first touch layout. Panels reuse the same controls/state as desktop. */
+.compact-hud, .compact-panel, .compact-players, .compact-player-detail { display: none; }
+
+@media (max-width: 1100px), (max-height: 600px) {
+  body.is-playing { --top-height: calc(50px + env(safe-area-inset-top)); --compact-bottom: calc(174px + env(safe-area-inset-bottom)); --compact-players-height: 60px; }
+  .top, .is-playing .top { padding: env(safe-area-inset-top) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left)); height: var(--top-height, 54px); gap: 8px; }
+  .top .brand { gap: 7px; min-width: 0; }
+  .top .brand strong { font-size: 15px; }
+  .top .brand small, .top .version { display: none; }
+  .top .mark img { width: 28px; height: 28px; }
+  .topright { gap: 6px; }
+  .top .pill { font-size: 10px; padding: 5px 7px; white-space: nowrap; }
+  .top .sound-toggle, .top .session-controls summary { min-height: 44px; min-width: 44px; display: grid; place-items: center; }
+  .top .session-controls summary { padding: 5px; font-size: 12px; }
+  .session-controls > div { position: fixed; top: var(--top-height, 54px); right: max(8px, env(safe-area-inset-right)); width: min(310px, calc(100vw - 16px)); max-height: calc(100dvh - 75px); overflow-y: auto; }
+  .session-controls button { min-height: 44px; }
+  .session-notice { top: var(--top-height, 54px); flex-wrap: wrap; max-height: 40dvh; overflow-y: auto; }
+  .session-notice button { min-height: 44px; }
+  .game .mapscroll { height: 100%; min-height: 0 !important; max-height: none !important; touch-action: none; }
+  .game .sidebar, .game .handdock { display: none; }
+  .game .boardtools { top: calc(var(--compact-players-height) + 14px); left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); flex-wrap: wrap; justify-content: flex-start; gap: 6px; }
+  .game .boardtools button { min-height: 44px; }
+  .game .boardexpand { min-width: 44px; }
+  .game .copy-game { min-width: 44px; }
+  .game .copy-game span { display: none; }
+  .game .initial-status, .game .result-context { flex-basis: 100%; max-width: 100%; font-size: 11px; }
+  .game .pending-tickets { font-size: 12px; padding: 8px 10px; }
+  .game .map-menu { max-width: calc(100% - 16px); max-height: calc(100% - var(--compact-bottom) - 16px); overflow-y: auto; }
+  .game .map-menu button, .game .map-menu .menu-close { min-height: 44px; min-width: 44px; }
+  .game .map-menu h3 { padding-right: 22px; }
+  .compact-hud { display: block; position: absolute; z-index: 5; bottom: 0; left: 0; right: 0; padding: 0 max(4px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(4px, env(safe-area-inset-left)); background: #fffcf5; border-top: 1px solid #9fb6b4; box-shadow: 0 -4px 18px #193e4c18; }
+  .compact-status { height: 28px; display: flex; gap: 8px; align-items: center; padding: 0 10px; color: #335760; font-size: 12px; }
+  #compactTurn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #compactClock { margin-left: auto; font-variant-numeric: tabular-nums; }
+  .compact-status.is-mine { color: #236447; background: #e7f0e5; }
+  #compactPractice { background: transparent; color: #60466e; padding: 3px 6px; font-size: 11px; min-height: 30px; }
+  .compact-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; height: 46px; border-top: 1px solid #e1dfd2; }
+  .compact-nav button { border-radius: 8px; background: transparent; color: #647b7c; padding: 3px 1px; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; }
+  .compact-nav button > span { font-size: 20px; line-height: 24px; }
+  .compact-nav button[aria-pressed="true"] { color: #214b5c; background: #e4eeeb; box-shadow: inset 0 -3px #bb8a48; }
+  .compact-panel { display: block; position: absolute; z-index: 4; left: max(6px, env(safe-area-inset-left)); right: max(6px, env(safe-area-inset-right)); bottom: calc(var(--compact-bottom) + 6px); height: min(40dvh, 340px); max-height: calc(100% - var(--compact-bottom) - var(--compact-players-height) - 80px); padding: 10px; overflow-y: auto; overscroll-behavior: contain; border: 1px solid #b6c7bd; border-radius: 16px; background: #fffcf5; box-shadow: 0 -4px 25px #173d4524; scrollbar-color: #9c8c68 #eee7d8; scrollbar-width: thin; }
+  .compact-panel .sidepanel { padding: 0; margin: 0; border: 0; box-shadow: none; }
+  .compact-panel .market-toolbar { min-height: 44px; }
+  .compact-panel .market-info button { min-width: 44px; min-height: 44px; }
+  .compact-panel .market-info #deckinfo { left: -70px; top: 38px; width: 220px; }
+  .compact-panel .destination-deck { width: 66px; height: 44px; }
+  .game .compact-panel #market { --market-card-width: clamp(62px, 18vw, 80px); margin: 4px 0 6px; gap: 10px 14px; }
+  #compactHand { height: 100px; padding: 4px 8px 0; }
+  #compactHand .dockmain { min-width: 0; }
+  #compactHand .dockheading { height: 18px; margin: 0; }
+  #compactHand .eyebrow { font-size: 10px; letter-spacing: .08em; }
+  #compactHand #handCount { font-size: 10px; margin-left: 5px; }
+  #compactHand .docktip { display: inline; font-size: 10px; }
+  .game #compactHand .hand { display: flex; height: 78px; min-height: 0; padding: 8px 4px 3px; overflow-x: auto; overflow-y: hidden; gap: 9px; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: #a99a78 #eee8d9; }
+  .game #compactHand .hand .traincard { width: 46px; min-width: 46px; max-width: 46px; flex: 0 0 46px; scroll-snap-align: start; }
+  .game #compactHand .cardcount { font-size: 13px; width: 22px; height: 22px; top: -6px; left: -4px; border-width: 2px; }
+  .compact-players { display: block; position: absolute; z-index: 3; left: max(6px, env(safe-area-inset-left)); right: max(6px, env(safe-area-inset-right)); top: 6px; height: var(--compact-players-height); }
+  .game .compact-players .players-panel { min-height: 0; padding: 0; }
+  .compact-players .players-panel > .sectiontitle { display: none; }
+  .game .compact-players #scores { display: grid; grid-template-columns: repeat(var(--player-count, 5), minmax(0, 1fr)); gap: 4px; }
+  .game .compact-players .scorebadge { min-width: 0; width: 100%; height: var(--compact-players-height); min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 5px 4px; border-radius: 9px; border-bottom: 3px solid var(--player-color); cursor: pointer; }
+  .compact-players .scorebadge::before { display: none; }
+  .game .compact-players .player-heading { gap: 4px; width: 100%; }
+  .game .compact-players .player-avatar { width: 20px; height: 20px; flex: 0 0 20px; }
+  .game .compact-players .avatar-insignia { width: 11px; height: 11px; right: -2px; bottom: -2px; }
+  .game .compact-players .player-details b { font-size: 11px; }
+  .compact-players .player-state { display: none; }
+  .game .compact-players .player-metrics { display: flex; justify-content: center; }
+  .game .compact-players .player-metric { display: none; }
+  .game .compact-players .player-metric:first-child { display: flex; flex-direction: row; gap: 4px; align-items: center; }
+  .game .compact-players .player-metric svg { width: 14px; height: 14px; }
+  .game .compact-players .player-metric strong { font-size: 16px; line-height: 18px; }
+  .compact-player-detail { display: flex; align-items: center; gap: 8px; position: absolute; z-index: 7; top: calc(var(--compact-players-height) + 12px); left: 8px; right: 8px; background: #fffcf5; border: 1px solid #c7b48b; border-radius: 10px; padding: 5px 8px 5px 12px; font-size: 13px; box-shadow: 0 4px 20px #163b4d33; }
+  .compact-player-detail span { flex: 1; }
+  .compact-player-detail button { min-width: 44px; min-height: 44px; background: transparent; color: #284b5d; font-size: 24px; }
+  .compact-panel .dockdestinations { border: 0; padding: 0; width: 100%; }
+  .compact-panel .destinations-heading { font-size: 19px; }
+  .compact-panel .view-routes { min-height: 44px; padding: 8px 12px; }
+  .compact-panel .destination-list { max-height: none; overflow: visible; }
+  .compact-panel .destination-row { min-height: 48px; font-size: 13px; }
+  .compact-panel .destination-endpoints { white-space: normal; }
+  .compact-panel .history-panel { display: flex; flex-direction: column; height: 100%; padding: 0; border: 0; box-shadow: none; background: transparent; }
+  .compact-panel .history-scroll { flex: 1; min-height: 0; }
+  .game .compact-panel #history { height: 100%; font-size: 13px; }
+  .compact-panel .history-scrollbar { width: 14px; }
+  .is-playing .practice-controls { display: none; left: auto !important; top: auto !important; right: 10px; bottom: calc(var(--compact-bottom) + 12px) !important; max-width: calc(100vw - 20px); }
+  .is-playing .practice-controls.is-open { display: block; }
+  .is-playing .practice-controls button { min-height: 44px; }
+  .is-playing .practice-drag { touch-action: auto; }
+  .toast { top: calc(var(--top-height, 54px) + 8px); max-width: calc(100vw - 24px); font-size: 13px; }
+  /* All dialogs have a bounded viewport; actions remain reachable above safe areas. */
+  .overlay { padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); }
+  .dialog, .dialog.tunnel-dialog, .dialog.results-dialog { width: 100%; max-height: 100%; padding: 18px; border-width: 2px; outline-width: 1px; overscroll-behavior: contain; }
+  .dialog h2 { padding-right: 30px; font-size: 25px; }
+  .dialog button, .dialog summary { min-height: 44px; }
+  .dialog .dialog-close { width: 44px; height: 44px; right: 6px; top: 6px; }
+  .dialog input:not([type="checkbox"]):not([type="radio"]), .dialog select { font-size: 16px; min-height: 44px; }
+  .dialog.ticket-dialog { height: 100%; display: flex; flex-direction: column; overflow: hidden; padding: 18px; }
+  .ticket-dialog .ticket-intro { margin-bottom: 10px; font-size: 12px; }
+  .dialog.ticket-dialog .ticket-layout { flex: 1; min-height: 0; height: auto; grid-template-columns: minmax(0, 1fr) minmax(260px, .85fr); gap: 16px; }
+  .ticket-deadline { flex-wrap: wrap; gap: 6px; font-size: 11px; padding: 7px 9px; margin-bottom: 10px; }
+  .ticket-deadline span { min-width: 170px; }
+  .ticket-map-panel figcaption { font-size: 10px; padding: 7px 9px; }
+  .ticket-options { min-height: 0; }
+  .ticket-collections { padding: 3px; scrollbar-width: thin; }
+  .dialog .ticket-choice { min-height: 64px; }
+  .ticket-eye { min-width: 44px; min-height: 44px; }
+  .ticket-confirm { background: #fffcf3; }
+  .ticket-confirm button { margin-top: 5px; }
+  .ticket-options .ticket-options-hint { font-size: 11px; margin-bottom: 5px; }
+  .result-actions { bottom: -18px; gap: 8px; }
+  .result-actions button { padding: 10px; font-size: 13px; }
+  .result-heading { gap: 8px; padding: 12px; }
+  .result-heading b { font-size: 15px; overflow-wrap: anywhere; }
+  .result-heading > strong { font-size: 23px; }
+  .score-breakdown { padding-inline: 10px; }
+  .score-equation { font-size: 14px; overflow-wrap: anywhere; }
+  .dialog-actions { position: sticky; bottom: -18px; background: #fffcf3; padding: 8px 0; display: grid; gap: 6px; border-top: 1px solid #e4d8c0; }
+  .dialog-actions .full { margin: 0; }
+}
+
+/* Tablet / phone landscape: keep the panel beside the map, not on top of it. */
+@media (min-width: 700px) and (max-width: 1100px), (min-width: 700px) and (max-height: 600px) {
+  .compact-panel { left: auto; width: 320px; top: calc(var(--compact-players-height) + 14px); height: auto; max-height: none; }
+  .game[data-compact-panel]:not([data-compact-panel="map"]) .boardtools { right: 340px; }
+  .game .compact-panel #market { --market-card-width: 76px; }
+}
+
+@media (max-width: 699px) {
+  .game[data-compact-panel="cards"] .compact-panel { height: auto; }
+  .lobby { width: 100%; margin: 20px auto; padding: 0 14px; }
+  .intro { padding: 0; }
+  .intro h1 { font-size: clamp(30px, 9vw, 42px); }
+  .intro p { font-size: 14px; }
+  .lobbycard { width: 100%; padding: 22px 18px; margin-top: 20px; }
+  .lobbycard input { font-size: 16px; min-height: 48px; min-width: 0; }
+  .lobbycard button { min-height: 48px; }
+  .lobbyactions { flex-wrap: wrap; }
+  .joinrow input { width: 0; flex: 1; }
+  .roomheading { flex-wrap: wrap; gap: 8px; }
+  .legal { padding-bottom: env(safe-area-inset-bottom); }
+  .dialog.ticket-dialog { padding: 12px; }
+  .ticket-dialog h2 { font-size: 22px; margin-bottom: 6px; }
+  .dialog.ticket-dialog .ticket-layout { display: flex; flex-direction: column; gap: 10px; }
+  .ticket-map-panel { flex: 0 0 clamp(135px, 29dvh, 270px); }
+  .ticket-map-panel figcaption { font-size: 9px; padding: 4px 7px; }
+  .ticket-options { flex: 1; }
+  .ticket-options .ticket-options-title { font-size: 14px; }
+  .ticket-deadline { margin-bottom: 8px; padding: 6px 8px; }
+  .ticket-deadline button { min-height: 32px; padding: 4px 7px; }
+  .ticket-choice-text { font-size: 13px; }
+  .tunnel-evidence { grid-template-columns: 1fr; gap: 14px; }
+  .tunnel-revealed { justify-content: center; gap: 20px; }
+  .tunnel-base { border-left: 0; border-top: 1px solid #dccfaf; padding: 10px 0 0; }
+  .tunnel-options { grid-template-columns: 1fr; }
+}
+@media (max-width: 400px) {
+  .top:has(#sessionControls:not(.hidden)) .mark { display: none; }
+  .top:has(#sessionControls:not(.hidden)) .brand strong { font-size: 14px; }
+}
+@media (max-width: 699px) and (max-height: 700px) {
+  body.is-playing { --compact-bottom: calc(148px + env(safe-area-inset-bottom)); --compact-players-height: 48px; }
+  .game .compact-players .scorebadge { gap: 1px; padding-block: 3px; }
+  .game .compact-players .player-avatar { width: 16px; height: 16px; flex-basis: 16px; }
+  .compact-status { height: 24px; }
+  .compact-nav { height: 44px; }
+  #compactHand { height: 80px; }
+  #compactHand .dockheading { height: 16px; }
+  .game #compactHand .hand { height: 60px; padding-top: 7px; }
+  .game #compactHand .hand .traincard { width: 34px; min-width: 34px; max-width: 34px; flex-basis: 34px; }
+  .game #compactHand .cardcount { width: 20px; height: 20px; font-size: 11px; }
+  .compact-panel { padding: 8px; max-height: calc(100% - var(--compact-bottom) - var(--compact-players-height) - 104px); }
+  .game .compact-panel #market { --market-card-width: 50px; gap: 6px 14px; }
+}
+@media (max-height: 600px) {
+  .dialog.ticket-dialog { padding: 10px; }
+  .ticket-dialog h2 { font-size: 21px; margin-bottom: 4px; }
+  .ticket-dialog .ticket-intro { font-size: 11px; margin-bottom: 6px; }
+  .ticket-deadline { padding: 4px 8px; margin-bottom: 6px; }
+  .ticket-deadline button { min-height: 30px; padding: 4px 7px; }
+  .ticket-options .ticket-options-hint { display: none; }
+}
+@media (min-width: 700px) and (max-height: 500px) {
+  body.is-playing { --top-height: calc(42px + env(safe-area-inset-top)); --compact-bottom: calc(134px + env(safe-area-inset-bottom)); --compact-players-height: 48px; }
+  .compact-players { left: auto; width: 44%; }
+  .game .boardtools, .game[data-compact-panel]:not([data-compact-panel="map"]) .boardtools { top: 6px; right: calc(44% + 12px); }
+  .game .compact-players .scorebadge { gap: 1px; padding: 3px; }
+  .game .compact-players .player-avatar { width: 16px; height: 16px; flex-basis: 16px; }
+  .compact-status { height: 24px; }
+  #compactHand { height: 64px; padding-top: 2px; }
+  #compactHand .dockheading { float: left; width: 92px; height: 56px; display: flex; align-items: center; }
+  #compactHand .docktip { display: none; }
+  .game #compactHand .hand { height: 60px; }
+  .game #compactHand .hand .traincard { width: 34px; min-width: 34px; max-width: 34px; flex-basis: 34px; }
+  .game #compactHand .cardcount { width: 20px; height: 20px; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .compact-panel, .compact-nav button { transition: none; }
+}

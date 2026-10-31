@@ -902,37 +902,6 @@ body {
   padding: 8px 12px;
   white-space: nowrap;
 }
-.zoomtools {
-  display: flex;
-  align-items: center;
-  background: #f2f6f5;
-  border: 1px solid #d4e1e1;
-  padding: 3px;
-  border-radius: 9px;
-  gap: 2px;
-}
-.zoomtools button {
-  padding: 5px 9px;
-  min-width: 26px;
-  background: transparent;
-  border-radius: 6px;
-  font-weight: 850;
-  font-size: 16px;
-  color: #285067;
-}
-.zoomtools #zoomfit {
-  font-size: 11px;
-  min-width: 46px;
-  white-space: nowrap;
-}
-#zoomlevel {
-  min-width: 43px;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  color: #285067;
-}
 .boardexpand {
   background: #1e5268;
   color: #fff;
@@ -1231,12 +1200,6 @@ body {
   }
   .turntitle {
     display: none;
-  }
-  .zoomtools {
-    gap: 0;
-  }
-  .zoomtools button {
-    padding: 5px 7px;
   }
   .boardexpand {
     padding: 7px 8px;

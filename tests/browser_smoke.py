@@ -22,7 +22,7 @@ with sync_playwright() as p:
  a.locator('#market button:not([disabled])').first.click();a.wait_for_timeout(250)
  a.locator('#drawblind').click(); a.wait_for_timeout(400)
  print('current',a.locator('#turntitle').inner_text(),'other',c.locator('#turntitle').inner_text())
- a.locator('#zoomin').click();a.locator('#zoomout').click();a.locator('#expandboard').click();a.locator('#expandboard').click()
+ a.locator('#board').hover();a.mouse.wheel(0,-200);a.mouse.wheel(0,200);a.locator('#expandboard').click();a.locator('#expandboard').click()
  mobile=b.new_context(viewport={'width':390,'height':844},device_scale_factor=1,is_mobile=True,has_touch=True)
  m=mobile.new_page();m.on('pageerror',lambda e:errors.append('mobile:'+str(e)));m.goto(base);m.wait_for_timeout(350);m.screenshot(path=str(out/'preview-mobile-v06.png'),full_page=True)
  print('PAGE ERRORS',errors)

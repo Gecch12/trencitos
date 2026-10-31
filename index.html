@@ -2,11 +2,12 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta name="theme-color" content="#102638" />
     <title>Ferrovía Europa · Salas privadas</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="game.css" />
+    <link rel="stylesheet" href="responsive.css" />
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
   </head>
   <body>
@@ -93,25 +94,9 @@
               aria-label="Mapa interactivo de las rutas ferroviarias de Europa"
               aria-describedby="maphint"></svg>
           </div>
-          <p id="maphint" class="sr-only">Rueda para acercar o alejar, de 25% a 300%. Arrastra para mover el mapa. Encajar lo centra al 100%. Selecciona una ruta o ciudad para construir.</p>
+          <p id="maphint" class="sr-only">Pellizca con dos dedos o usa la rueda para acercar y alejar. Arrastra para mover el mapa. Toca una ruta o ciudad para construir.</p>
           <div class="boardtools" id="boardtools">
               <button id="copyRoomInGame" class="copy-game" title="Copiar enlace privado">↗ <span>Invitar</span></button>
-              <div class="zoomtools" aria-label="Controles del mapa">
-                <button
-                  id="zoomout"
-                  title="Alejar mapa"
-                  aria-label="Alejar mapa"
-                >
-                  −</button
-                ><span id="zoomlevel" aria-label="Nivel de zoom">100%</span><button
-                  id="zoomin"
-                  title="Acercar mapa"
-                  aria-label="Acercar mapa"
-                >
-                  +
-                </button>
-                <button id="zoomfit" title="Ver el mapa completo" aria-label="Encajar mapa">Encajar</button>
-              </div>
               <button
                 class="boardexpand"
                 id="expandboard"
@@ -168,6 +153,19 @@
         </section>
         <span id="turntitle" class="sr-only" role="status"></span>
       </aside>
+      <section id="compactPlayers" class="compact-players" aria-label="Resumen de jugadores"></section>
+      <div id="compactPlayerDetail" class="compact-player-detail hidden" role="region" aria-label="Detalle del jugador"><span></span><button type="button" aria-label="Cerrar detalle del jugador">×</button></div>
+      <section id="compactPanel" class="compact-panel hidden" aria-label="Panel de juego"></section>
+      <div id="compactHud" class="compact-hud">
+        <div class="compact-status"><span id="compactTurn" role="status"></span><strong id="compactClock" data-clock="turn"></strong><button id="compactPractice" class="hidden" type="button" aria-controls="practiceControls" aria-expanded="false">Prueba</button></div>
+        <section id="compactHand" aria-label="Tu mano, siempre visible"></section>
+        <nav class="compact-nav" aria-label="Paneles de la partida">
+          <button type="button" data-panel="map" aria-pressed="true" aria-controls="mapscroll"><span aria-hidden="true">⌖</span>Mapa</button>
+          <button type="button" data-panel="cards" aria-pressed="false" aria-controls="compactPanel"><span aria-hidden="true">▤</span>Robar</button>
+          <button type="button" data-panel="destinations" aria-pressed="false" aria-controls="compactPanel"><span aria-hidden="true">⚑</span>Destinos</button>
+          <button type="button" data-panel="history" aria-pressed="false" aria-controls="compactPanel"><span aria-hidden="true">≡</span>Historial</button>
+        </nav>
+      </div>
     </div>
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
     <div id="overlay" class="overlay hidden">

@@ -129,6 +129,7 @@ const TYPES = {
   "/map-layout.js": "text/javascript; charset=utf-8",
   "/game-ui.js": "text/javascript; charset=utf-8",
   "/game.css": "text/css; charset=utf-8",
+  "/responsive.css": "text/css; charset=utf-8",
 };
 const server = http.createServer((req, res) => {
   let url = new URL(req.url, "http://localhost");

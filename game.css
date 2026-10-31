@@ -1,5 +1,5 @@
 /* Desktop game table: a continuous camera below an independently sized HUD.
-   Lobby and card artwork stay in style.css; no mobile layout is introduced. */
+   Lobby and card artwork stay in style.css; touch layouts are in responsive.css. */
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
@@ -53,7 +53,6 @@ body.is-playing {
   display: flex; flex-wrap: nowrap; gap: 8px;
 }
 .game .boardtools button { min-height: 33px; }
-.game .zoomtools { background: #fffcf5f5; border-color: #b5c6bc; box-shadow: 0 2px 8px #25494b15; }
 .game .sidebar {
   position: absolute; z-index: 3; top: 12px; right: 12px; bottom: 12px;
   width: var(--sidebar-width); display: flex; flex-direction: column; gap: 12px;

@@ -9,6 +9,16 @@ test('browser HTML references server-served local assets and no third-party scri
  const html=fs.readFileSync(path.join(ROOT,'index.html'),'utf8'),app=fs.readFileSync(path.join(ROOT,'app.js'),'utf8');
  assert.ok(html.includes('assets/favicon.svg'));assert.match(app, /["']assets\/cards\/["']/);assert.ok(!/<script[^>]+https?:\/\//.test(html));
 });
+test('map uses gestures without a zoom or fit toolbar on any viewport',()=>{
+ const html=fs.readFileSync(path.join(ROOT,'index.html'),'utf8'),app=fs.readFileSync(path.join(ROOT,'app.js'),'utf8');
+ for(const id of ['zoomtools','zoomin','zoomout','zoomfit','zoomlevel']) {
+  assert.ok(!html.includes(id),id);
+  assert.ok(!app.includes(`$("${id}")`),id);
+ }
+ assert.match(html,/Pellizca con dos dedos o usa la rueda/);
+ assert.match(app,/addEventListener\("wheel"/);
+ assert.match(app,/GameUI\.pinchZoom\(/);
+});
 test('Docker includes every local server module, without saved rooms',()=>{
  const docker=fs.readFileSync(path.join(ROOT,'Dockerfile'),'utf8');
  for(const file of ['game-clock.js','multiplayer.js','room-store.js','supabase-store.js','durable-queue.js','bots.js','practice.js']) assert.ok(docker.includes(file),file);

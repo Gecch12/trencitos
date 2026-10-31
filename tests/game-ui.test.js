@@ -250,3 +250,28 @@ test("zoom around cursor preserves its world coordinate with an off-center safe 
   assert.ok(Math.abs(a.x + cursor.x * a.scale - c.x - cursor.x * c.scale) < 1e-8);
   assert.ok(Math.abs(a.y + cursor.y * a.scale - c.y - cursor.y * c.scale) < 1e-8);
 });
+
+test("mobile cameras clear the permanent HUD and tablets reserve side panels", () => {
+  const bounds = { x: -60, y: -10, width: 980, height: 660 }, center = { x: 430, y: 320 };
+  for (const [width, height] of [[320, 518], [390, 794], [768, 974], [1024, 718], [844, 340]]) {
+    for (const open of [false, true]) {
+      // Phone sheets overlay a stable camera; tablet sheets reserve its right side.
+      const safe = UI.safeArea({ width, height }, { top: height < 400 ? 60 : 134, right: open && width >= 700 ? 340 : 8, bottom: height < 400 ? 143 : 183 });
+      assert.ok(safe.width > 0 && safe.height > 0);
+      const camera = UI.camera(bounds, { width, height }, safe, 1, center);
+      assert.ok(Number.isFinite(camera.scale));
+      const x = (bounds.x - camera.x) / camera.scale, y = (bounds.y - camera.y) / camera.scale;
+      assert.ok(x >= safe.x - 1e-6 && y >= safe.y - 1e-6);
+      assert.ok(x + bounds.width / camera.scale <= safe.x + safe.width + 1e-6);
+      assert.ok(y + bounds.height / camera.scale <= safe.y + safe.height + 1e-6);
+    }
+  }
+  assert.equal(UI.safeArea({ width: 100, height: 100 }, { top: 200, bottom: 200, right: 200 }).width, 1);
+});
+test("pinch zoom is proportional, bounded, and safe for coincident fingers", () => {
+  assert.equal(UI.pinchZoom(1, 100, 200), 2);
+  assert.equal(UI.pinchZoom(2, 200, 100), 1);
+  assert.equal(UI.pinchZoom(1, 1, 10000), UI.MAX_ZOOM);
+  assert.equal(UI.pinchZoom(1, 10000, 1), UI.MIN_ZOOM);
+  assert.ok(Number.isFinite(UI.pinchZoom(1, 0, 0)));
+});

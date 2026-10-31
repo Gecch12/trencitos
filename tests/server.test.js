@@ -38,7 +38,9 @@ test("the browser receives the shared cartography before the application script"
   assert.ok(html.indexOf('src="data.js"') < html.indexOf('src="map-layout.js"'));
   assert.ok(html.indexOf('src="map-layout.js"') < html.indexOf('src="app.js"'));
   assert.ok(html.indexOf('src="game-ui.js"') < html.indexOf('src="app.js"'));
-  for (const [file, mime] of [["game-ui.js", /javascript/], ["game.css", /css/]]) {
+  assert.ok(html.includes('href="responsive.css"'));
+  assert.ok(html.indexOf('href="game.css"') < html.indexOf('href="responsive.css"'));
+  for (const [file, mime] of [["game-ui.js", /javascript/], ["game.css", /css/], ["responsive.css", /css/]]) {
     const response = await fetch(base + "/" + file);
     assert.equal(response.status, 200);
     assert.match(response.headers.get("content-type"), mime);

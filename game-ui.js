@@ -128,6 +128,12 @@ const GameUI = (() => {
     return { x: Math.max(left, Math.min(right, cx + dx * ratio)), y: Math.max(top, Math.min(bottom, cy + dy * ratio)), outside, angle: Math.atan2(dy, dx) * 180 / Math.PI };
   }
   // Fit in the unobscured rectangle, while the SVG still fills the whole stage.
+  function safeArea(viewport, { top = 8, right = 8, bottom = 8 } = {}) {
+    return { x: 8, y: Math.max(8, top), width: Math.max(1, viewport.width - 8 - right), height: Math.max(1, viewport.height - Math.max(8, top) - bottom) };
+  }
+  function pinchZoom(startZoom, startDistance, distance) {
+    return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, startZoom * Math.max(1, distance) / Math.max(1, startDistance)));
+  }
   function camera(bounds, viewport, safe, zoom, center) {
     const scale = Math.max(bounds.width / Math.max(1, safe.width), bounds.height / Math.max(1, safe.height)) / zoom;
     const width = viewport.width * scale, height = viewport.height * scale;
@@ -144,6 +150,6 @@ const GameUI = (() => {
     return { width, height, scale, focus,
       x: focus.x - sx * scale, y: focus.y - sy * scale, sx, sy };
   }
-  return { payments, tunnelPayments, construction, canPass, camera, overviewLabels, endpointPosition, playerMark, playerColor, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, OWNER_MARK_SCALE, MIN_ZOOM, MAX_ZOOM };
+  return { payments, tunnelPayments, construction, canPass, camera, safeArea, pinchZoom, overviewLabels, endpointPosition, playerMark, playerColor, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, OWNER_MARK_SCALE, MIN_ZOOM, MAX_ZOOM };
 })();
 if (typeof module !== "undefined") module.exports = GameUI;

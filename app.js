@@ -119,6 +119,7 @@ function resetToLobby(message = "", preserveIdentity = false) {
   pendingChoiceKey = null;
   ticketChoices.clear();
   document.body.classList.remove("is-playing");
+  setCompactPanel("map");
   uiDialog = buildTarget = null;
   resultsSeen = false; resultMapSelection = null; expandedResults.clear();
   $("resultContext").classList.add("hidden");
@@ -435,6 +436,14 @@ function render() {
     badge.addEventListener("pointerleave", () => { hoveredPlayer = null; highlightPlayerRoutes(); });
     badge.addEventListener("focus", () => { focusedPlayer = i; highlightPlayerRoutes(); });
     badge.addEventListener("blur", () => { focusedPlayer = null; highlightPlayerRoutes(); });
+    badge.setAttribute("role", "button");
+    badge.onclick = () => {
+      if (compactMedia.matches) { compactPlayer = i; updateCompactPlayer(); }
+      else { focusedPlayer = i; highlightPlayerRoutes(); }
+    };
+    badge.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); badge.click(); }
+    });
   });
   if (previousFocus !== undefined) $("scores").querySelector(`[data-player="${previousFocus}"]`)?.focus({ preventScroll: true });
   $("turntitle").textContent =
@@ -485,6 +494,8 @@ function render() {
   renderBoard();
   renderDialog();
   applyZoom();
+  updateCompactStatus();
+  updateCompactPlayer();
   updateClocks();
 }
 function updateClocks() {
@@ -537,6 +548,7 @@ function renderHistory() {
 }
 function updateHistoryScroll() {
   const list = $("history"), bar = $("historyScrollbar"), thumb = $("historyThumb");
+  if (!list.clientHeight) return; // Hidden panels must not change follow/reading state.
   const max = Math.max(0, list.scrollHeight - list.clientHeight);
   historyFollowing = max - list.scrollTop < 3;
   if (historyFollowing) $("historyLatest").classList.add("hidden");
@@ -660,7 +672,13 @@ function animateCardFlight(event) {
   const own = event.seat === seat;
   const color = N[event.color] ? event.color : null;
   const targetSelector = own && color ? `#hand .suit-${color}` : `#scores [data-player="${event.seat}"] .player-avatar`;
-  const target = document.querySelector(targetSelector);
+  let target = document.querySelector(targetSelector);
+  if (compactMedia.matches) {
+    const rect = target?.getBoundingClientRect();
+    const area = own ? $("hand").getBoundingClientRect() : $("compactPlayers").getBoundingClientRect();
+    if (!rect?.width || rect.left < area.left || rect.right > area.right || rect.top < area.top || rect.bottom > area.bottom)
+      target = own ? $("handCount") : $("compactPlayers");
+  }
   if (!target || (own && !color)) return;
   const end = target.getBoundingClientRect(), start = event.source;
   const node = document.createElement("div");
@@ -746,6 +764,7 @@ reducedMotion.addEventListener("change", () => { cancelCardFlights(); cancelCons
 function layoutHand() {
   const cards = [...$("hand").querySelectorAll(".traincard")];
   if (!cards.length) return;
+  if (compactMedia.matches) { cards.forEach(card => { card.style.marginRight = "0"; }); return; }
   const width = cards[0].getBoundingClientRect().width;
   const available = $("hand").clientWidth - 12;
   const step = cards.length === 1 ? width : Math.min(width + 10, (available - width) / (cards.length - 1));
@@ -986,13 +1005,15 @@ function updateCityLabels() {
   const view = mapViewSize();
   if (!view) return;
   const viewport = $("mapscroll");
+  const labelArea = compactMedia.matches ? mapSafeArea(viewport.getBoundingClientRect(), true)
+    : { x: 0, y: 0, width: viewport.clientWidth, height: viewport.clientHeight };
   const origin = { x: view.x, y: view.y };
   const screen = ([x, y]) => [(x - origin.x) / view.scale, (y - origin.y) / view.scale];
   const entries = [];
   const groups = new Map();
   for (const g of $("board").querySelectorAll("[data-city-label]")) {
     const key = g.dataset.cityLabel, [x, y] = screen(RailMap.cities[key]);
-    const visible = x >= 0 && y >= 0 && x <= viewport.clientWidth && y <= viewport.clientHeight;
+    const visible = x >= labelArea.x && y >= labelArea.y && x <= labelArea.x + labelArea.width && y <= labelArea.y + labelArea.height;
     g.style.display = visible ? "" : "none";
     if (!visible) continue;
     groups.set(key, g);
@@ -1017,10 +1038,11 @@ function updateCityLabels() {
     const keys = new Set(displayed.map(entry => entry.key));
     for (const entry of entries) if (!keys.has(entry.key)) groups.get(entry.key).style.display = "none";
   }
-  const placements = RailMap.placeLabels(displayed, viewport.clientWidth, viewport.clientHeight, obstacles, { height: 18, baseline: 13 });
+  const relative = item => ({ ...item, x: item.x - labelArea.x, y: item.y - labelArea.y });
+  const placements = RailMap.placeLabels(displayed.map(relative), labelArea.width, labelArea.height, obstacles.map(relative), { height: 18, baseline: 13 });
   for (const box of placements) {
     const g = groups.get(box.key), city = RailMap.cities[box.key], [sx, sy] = screen(city);
-    const dx = box.x - sx, dy = box.y - sy;
+    const dx = box.x + labelArea.x - sx, dy = box.y + labelArea.y - sy;
     // Inverse camera scale: font, halo, label offsets and leaders stay in CSS px.
     g.setAttribute("transform", `translate(${city[0]} ${city[1]}) scale(${view.scale})`);
     const text = g.querySelector("text");
@@ -1061,8 +1083,9 @@ function showMapMenu(event, target) {
   menu.classList.remove("hidden");
   const stage = $("game").getBoundingClientRect(), source = event.currentTarget.getBoundingClientRect();
   const x = event.clientX || source.x + source.width / 2, y = event.clientY || source.y + source.height / 2;
-  menu.style.left = Math.max(8, Math.min(x - stage.x + 12, stage.width - menu.offsetWidth - 12)) + "px";
-  menu.style.top = Math.max(8, Math.min(y - stage.y + 8, stage.height - menu.offsetHeight - 12)) + "px";
+  const usable = compactMedia.matches ? mapSafeArea($("mapscroll").getBoundingClientRect()) : { x: 8, y: 8, width: stage.width - 20, height: stage.height - 20 };
+  menu.style.left = Math.max(usable.x, Math.min(x - stage.x + 12, usable.x + usable.width - menu.offsetWidth)) + "px";
+  menu.style.top = Math.max(usable.y, Math.min(y - stage.y + 8, usable.y + usable.height - menu.offsetHeight)) + "px";
   event.currentTarget.classList.add("is-selected");
   menu.querySelector(".menu-close").onclick = () => { closeMapMenu(); sourceElement.focus({ preventScroll: true }); };
   if (!canBuild) { menu.querySelector(".menu-close").focus({ preventScroll: true }); return; }
@@ -1087,8 +1110,8 @@ function showBuildDialog() {
     <label for="wildcount">Locomotoras a utilizar</label><select id="wildcount"></select>
     <div id="paymentPreview" class="payment-preview" aria-live="polite"></div>
     <p>${r?.tunnel ? "Puedes pagar el coste inicial. Se revelarán 3 cartas: si hay un suplemento, podrás pagarlo o desistir (esto termina tu turno)." : r?.ferry ? `El pago incluye al menos ${r.ferry} locomotora(s) obligatoria(s).` : "Las locomotoras pueden sustituir cartas de color."}</p>
-    <button id="confirmBuild" class="primary full">${r?.tunnel ? "Intentar construir túnel" : "Confirmar construcción"}</button>
-    <button id="cancelBuild" class="tertiary full">Cancelar</button>`, false, true);
+    <div class="dialog-actions"><button id="confirmBuild" class="primary full">${r?.tunnel ? "Intentar construir túnel" : "Confirmar construcción"}</button>
+    <button id="cancelBuild" class="tertiary full">Cancelar</button></div>`, false, true);
   $("paycolor").innerHTML = [...new Set(options.map(o => o.color))].map(c => `<option value="${c}">${N[c]}</option>`).join("");
   const updatePreview = () => {
     const chosen = options.find(o => o.color === $("paycolor").value && o.wild === +$("wildcount").value);
@@ -1318,6 +1341,26 @@ function renderTicketMap(tickets) {
       "text-anchor": "middle", class: "ticket-city-label",
     }, g).textContent = name;
   }
+  layoutTicketMapLabels();
+}
+function layoutTicketMapLabels() {
+  const svg = $("ticketMap");
+  if (!svg || !compactMedia.matches || !svg.clientWidth || !svg.clientHeight) return;
+  const scale = Math.max(MAP_BOUNDS.width / svg.clientWidth, MAP_BOUNDS.height / svg.clientHeight);
+  const ox = (svg.clientWidth - MAP_BOUNDS.width / scale) / 2, oy = (svg.clientHeight - MAP_BOUNDS.height / scale) / 2;
+  const groups = [...svg.querySelectorAll(".ticket-endpoint")];
+  const labels = groups.map(group => {
+    const key = group.dataset.city, [x, y] = RailMap.cities[key], text = group.querySelector("text");
+    text.style.fontSize = `${11 * scale}px`; text.style.strokeWidth = `${3 * scale}px`;
+    text.setAttribute("text-anchor", "start");
+    return { key, x: ox + (x - MAP_BOUNDS.x) / scale, y: oy + (y - MAP_BOUNDS.y) / scale, width: text.getComputedTextLength() / scale };
+  });
+  const placements = RailMap.placeLabels(labels, svg.clientWidth, svg.clientHeight, [], { height: 14, baseline: 11 });
+  for (const place of placements) {
+    const text = groups.find(g => g.dataset.city === place.key).querySelector("text");
+    text.setAttribute("x", MAP_BOUNDS.x + (place.x - ox) * scale);
+    text.setAttribute("y", MAP_BOUNDS.y + (place.y + 11 - oy) * scale);
+  }
 }
 function updateTicketSelection(tickets, min) {
   const count = ticketChoices.size;
@@ -1362,7 +1405,7 @@ function showTicketDialog(tickets, min, viewing = false) {
       </figure>
       <div class="ticket-options">
         <p class="ticket-options-title">${viewing ? "Tus destinos" : "Billetes para conservar"}</p>
-        <p class="ticket-options-hint">Pasa el cursor para comparar. ${viewing ? "Marca los que quieras resaltar." : "Las casillas eligen qué conservar; confirma abajo."}</p>
+        <p class="ticket-options-hint">${viewing ? "Toca los billetes que quieras resaltar." : "Toca para comparar y elegir qué conservar; confirma abajo."}</p>
         <div class="ticket-collections"><div class="ticket-choices">${tickets.map((t, i) => `
           <label class="choice ticket-choice" data-ticket-index="${i}" data-ticket-id="${t.id}">
             <input type="checkbox" class="keep" value="${i}" ${ticketChoices.has(i) ? "checked" : ""}>
@@ -1534,8 +1577,8 @@ function showTunnelDialog() {
         : `<p class="tunnel-insufficient">No tienes cartas suficientes para el suplemento después de reservar el pago base.</p>`}
     </fieldset>
     <p id="tunnelTotal" class="tunnel-total" aria-live="polite"></p>
-    <button class="primary full" id="acceptTunnel" ${options.length ? "" : "disabled"}>Pagar suplemento y construir</button>
-    <button class="tertiary full" id="declineTunnel">Desistir del túnel</button>
+    <div class="dialog-actions"><button class="primary full" id="acceptTunnel" ${options.length ? "" : "disabled"}>Pagar suplemento y construir</button>
+    <button class="tertiary full" id="declineTunnel">Desistir del túnel</button></div>
     <p class="tunnel-exit-note">Al desistir conservas tus cartas, pero termina tu turno.</p>`);
   $("dialog").classList.add("tunnel-dialog");
   for (const c of t.revealed) {
@@ -1583,6 +1626,73 @@ function renderPracticeControls() {
     : "Tú + 3 bots · 0,8–1 s por acción";
 }
 
+// Reparent existing controls rather than duplicate state/listeners on rotation.
+const compactMedia = matchMedia("(max-width: 1100px), (max-height: 600px)");
+let compactPanel = "map", compactPlayer = null, compactHistoryTop = 0;
+const compactSections = {
+  cards: [document.querySelector(".game .sidepanel")],
+  destinations: [document.querySelector(".dockdestinations")],
+  history: [document.querySelector(".history-panel")],
+};
+const compactHand = document.querySelector(".dockmain"), compactPlayers = document.querySelector(".players-panel");
+const compactHomes = [...Object.values(compactSections).flat(), compactHand, compactPlayers].map(node => {
+  const anchor = document.createComment("responsive panel home");
+  node.before(anchor);
+  return { node, anchor };
+});
+function setCompactPanel(next = compactPanel) {
+  const followHistory = historyFollowing;
+  if ($("history").clientHeight) compactHistoryTop = $("history").scrollTop;
+  compactPanel = next;
+  for (const { node, anchor } of compactHomes) {
+    if (compactMedia.matches && (node === compactHand || node === compactPlayers)) continue;
+    if (node.previousSibling !== anchor) anchor.after(node);
+  }
+  if (compactMedia.matches) {
+    if (compactHand.parentElement !== $("compactHand")) $("compactHand").append(compactHand);
+    if (compactPlayers.parentElement !== $("compactPlayers")) $("compactPlayers").append(compactPlayers);
+  }
+  const open = compactMedia.matches && next !== "map";
+  if (open) $("compactPanel").append(...compactSections[next]);
+  $("compactPanel").classList.toggle("hidden", !open);
+  $("compactPanel").setAttribute("aria-label", { cards: "Cartas para robar", destinations: "Tus destinos", history: "Historial" }[next] || "Panel de juego");
+  $("game").dataset.compactPanel = compactMedia.matches ? next : "map";
+  for (const button of document.querySelectorAll("[data-panel]")) button.setAttribute("aria-pressed", String(button.dataset.panel === next));
+  $("practiceControls").classList.remove("is-open");
+  $("compactPractice").setAttribute("aria-expanded", "false");
+  compactPlayer = null;
+  updateCompactPlayer();
+  closeMapMenu();
+  if (game) {
+    layoutHand(); applyZoom();
+    if ($("history").clientHeight) $("history").scrollTop = followHistory ? $("history").scrollHeight : compactHistoryTop;
+    updateHistoryScroll();
+  }
+}
+function updateCompactStatus() {
+  if (!game) return;
+  const mine = game.current === seat && ["play", "tunnel"].includes(game.phase);
+  $("compactTurn").textContent = game.phase === "finished" ? "Partida terminada" : game.phase === "initial" ? `Eligiendo billetes · ${game.initialReadyCount}/${game.players.length} listos` : game.turnWaiting && mine ? "Elige tus billetes pendientes" : mine ? `Tu turno${game.drawCount ? " · falta 1 carta" : ""}` : `Turno de ${game.players[game.current].name}`;
+  $("compactTurn").parentElement.classList.toggle("is-mine", mine);
+  $("compactClock").dataset.clock = game.phase === "initial" ? "initial" : game.turnWaiting ? "waiting" : game.phase === "closing" ? "closing" : "turn";
+  $("compactClock").classList.toggle("hidden", game.phase === "finished");
+  $("compactPractice").classList.toggle("hidden", !practiceMode);
+  $("compactPlayers").style.setProperty("--player-count", game.players.length);
+}
+function updateCompactPlayer() {
+  const player = game?.players[compactPlayer], detail = $("compactPlayerDetail");
+  detail.classList.toggle("hidden", !player || !compactMedia.matches);
+  if (player) detail.querySelector("span").textContent = `${player.name}${compactPlayer === seat ? " · Tú" : ""} — ${game.result?.find(r => r.seat === compactPlayer)?.score ?? player.score} puntos · ${player.trains} vagones · ${player.stations} estaciones${members[compactPlayer]?.autopilot ? " · Bot de reemplazo" : ""}`;
+}
+$("compactPlayerDetail").querySelector("button").onclick = () => { compactPlayer = null; updateCompactPlayer(); };
+for (const button of document.querySelectorAll("[data-panel]")) button.onclick = () => setCompactPanel(compactPanel === button.dataset.panel ? "map" : button.dataset.panel);
+$("compactPractice").onclick = () => {
+  const open = $("practiceControls").classList.toggle("is-open");
+  $("compactPractice").setAttribute("aria-expanded", String(open));
+};
+compactMedia.addEventListener("change", () => setCompactPanel());
+setCompactPanel();
+
 // Pointer capture supports mouse, touch and pen without dragging the stop button.
 let practiceDrag = null;
 function movePracticePanel(left, top) {
@@ -1620,7 +1730,18 @@ window.addEventListener("resize", () => {
   }
 });
 
-function mapSafeArea(rect) {
+function mapSafeArea(rect, forCamera = false) {
+  if (compactMedia.matches) {
+    const panel = $("compactPanel").getBoundingClientRect(), hud = $("compactHud").getBoundingClientRect();
+    const open = !$("compactPanel").classList.contains("hidden"), beside = rect.width >= 700;
+    return GameUI.safeArea({ width: rect.width, height: rect.height }, {
+      top: Math.max($("boardtools").getBoundingClientRect().bottom, $("compactPlayers").getBoundingClientRect().bottom) - rect.top + 8,
+      right: open && beside ? rect.right - panel.left + 8 : 8,
+      // Phone sheets overlay the board: opening one must not shrink Europe
+      // into a tiny thumbnail. Menus/spotlights still use the uncovered area.
+      bottom: rect.bottom - (open && !beside && !forCamera ? panel.top : hud.top) + 8,
+    });
+  }
   const side = $("gameSidebar").getBoundingClientRect();
   const bottom = $("handdock").getBoundingClientRect();
   const top = $("boardtools").getBoundingClientRect().bottom - rect.top + 12;
@@ -1632,7 +1753,7 @@ function mapSafeArea(rect) {
 function mapViewSize() {
   const rect = $("mapscroll").getBoundingClientRect(), { width, height } = rect;
   if (!width || !height) return null;
-  return GameUI.camera(MAP_BOUNDS, { width, height }, mapSafeArea(rect), zoom, mapCenter);
+  return GameUI.camera(MAP_BOUNDS, { width, height }, mapSafeArea(rect, true), zoom, mapCenter);
 }
 function applyZoom() {
   const view = mapViewSize();
@@ -1640,9 +1761,6 @@ function applyZoom() {
   mapCenter = view.focus;
   $("board").setAttribute("viewBox",
     `${view.x} ${view.y} ${view.width} ${view.height}`);
-  $("zoomlevel").textContent = Math.round(zoom * 100) + "%";
-  $("zoomout").disabled = zoom <= GameUI.MIN_ZOOM;
-  $("zoomin").disabled = zoom >= GameUI.MAX_ZOOM;
   $("mapscroll").classList.add("can-pan");
   updateStationScale();
   updateCityLabels();
@@ -1662,9 +1780,6 @@ function setZoom(next, clientX, clientY) {
   mapCenter.y += fy * (before.scale - after.scale);
   applyZoom();
 }
-$("zoomin").onclick = () => setZoom(zoom + 0.25);
-$("zoomout").onclick = () => setZoom(zoom - 0.25);
-$("zoomfit").onclick = () => { closeMapMenu(); zoom = 1; mapCenter = { ...MAP_CENTER }; applyZoom(); };
 $("mapscroll").addEventListener("wheel", (event) => {
   event.preventDefault();
   const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? event.currentTarget.clientHeight : 1;
@@ -1672,9 +1787,20 @@ $("mapscroll").addEventListener("wheel", (event) => {
   setZoom(zoom * Math.exp(-delta * 0.002), event.clientX, event.clientY);
 }, { passive: false });
 
-let mapDrag = null, suppressMapClick = false;
+let mapDrag = null, mapPinch = null, suppressMapClick = false;
+const mapPointers = new Map();
 $("mapscroll").addEventListener("pointerdown", (event) => {
   if (event.button !== 0) return;
+  mapPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  if (mapPointers.size === 2) {
+    const [a, b] = [...mapPointers.values()];
+    mapPinch = { distance: Math.hypot(a.x - b.x, a.y - b.y), zoom };
+    mapDrag = null; suppressMapClick = true;
+    event.currentTarget.classList.remove("is-panning");
+    for (const id of mapPointers.keys()) event.currentTarget.setPointerCapture(id);
+    closeMapMenu();
+    return;
+  }
   suppressMapClick = false;
   mapDrag = {
     id: event.pointerId, x: event.clientX, y: event.clientY,
@@ -1682,6 +1808,12 @@ $("mapscroll").addEventListener("pointerdown", (event) => {
   };
 });
 $("mapscroll").addEventListener("pointermove", (event) => {
+  if (mapPointers.has(event.pointerId)) mapPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  if (mapPinch && mapPointers.size >= 2) {
+    const [a, b] = [...mapPointers.values()];
+    setZoom(GameUI.pinchZoom(mapPinch.zoom, mapPinch.distance, Math.hypot(a.x - b.x, a.y - b.y)), (a.x + b.x) / 2, (a.y + b.y) / 2);
+    return;
+  }
   if (mapDrag?.id !== event.pointerId) return;
   const dx = event.clientX - mapDrag.x, dy = event.clientY - mapDrag.y;
   if (!mapDrag.moved && Math.hypot(dx, dy) < 5) return;
@@ -1695,6 +1827,14 @@ $("mapscroll").addEventListener("pointermove", (event) => {
 });
 for (const type of ["pointerup", "pointercancel", "lostpointercapture", "pointerleave"])
   $("mapscroll").addEventListener(type, (event) => {
+    if (type === "pointerleave" && event.currentTarget.hasPointerCapture(event.pointerId)) return;
+    mapPointers.delete(event.pointerId);
+    if (mapPinch) {
+      suppressMapClick = true;
+      if (!mapPointers.size) mapPinch = null;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+      return;
+    }
     if (!mapDrag || (type === "pointerleave" && mapDrag.moved)) return;
     suppressMapClick = mapDrag.moved && type !== "pointercancel";
     mapDrag = null;
@@ -1708,8 +1848,8 @@ $("mapscroll").addEventListener("click", (event) => {
   event.preventDefault();
   event.stopPropagation();
 }, true);
-const cameraResize = new ResizeObserver(() => { closeMapMenu(); applyZoom(); layoutHand(); });
-for (const id of ["mapscroll", "gameSidebar", "handdock"]) cameraResize.observe($(id));
+const cameraResize = new ResizeObserver(() => { closeMapMenu(); applyZoom(); layoutHand(); if (game && $("ticketMap")) renderTicketMap(uiDialog === "routes" ? game.tickets : game.ticketOffer?.tickets || game.initial || []); });
+for (const id of ["mapscroll", "gameSidebar", "handdock", "compactPanel", "compactHud", "compactPlayers", "boardtools"]) cameraResize.observe($(id));
 $("expandboard").onclick = async () => {
   try {
     if (document.fullscreenElement) await document.exitFullscreen();
