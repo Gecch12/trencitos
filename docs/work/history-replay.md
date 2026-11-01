@@ -54,6 +54,11 @@ con respuesta «Success. No rows returned»; el editor coincidía exactamente co
 archivo local. Antes de publicar: salud correcta, Supabase y cero salas activas;
 la rama remota coincide con la base local. Falta desplegar el commit exacto y
 verificar API/WS e interfaz en producción.
+El primer despliegue `0883211` quedó Live a las 20:13:46 (Lima). La partida real
+de QA completó sus 169 pasos, confirmados en Supabase, pero el replay largo excedió
+la lectura monolítica. Ajuste de publicación: migración aditiva `004_archive_paging.sql`,
+autorización antes de leer pasos, páginas de 16 y validación de continuidad.
+La revisión visual también detectó y corrigió las etiquetas inglesas LONG/Pending.
 No se recupera retroactivamente el detalle de partidas borradas antes de grabarse.
 La emulación no certifica Safari/iOS/Android físicos. Los contenidos futuros,
 notificaciones, amigos y chat siguen con el alcance de esqueleto acordado.

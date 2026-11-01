@@ -96,7 +96,9 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null}={}) {
     if(!own&&record.visibility!=='public')throw fail(404,'Esta repetición no está disponible.');
     if(record.status==='active')throw fail(409,'La repetición estará disponible cuando la partida se cierre.');
     if(record.schemaVersion!==1)throw fail(409,'Esta versión de repetición no está disponible.');
-    if(audit){if(!own)throw fail(403,'Solo los participantes pueden descargar la auditoría.');return {match:summary(record,true),frames:record.frames};}
+    if(audit&&!own)throw fail(403,'Solo los participantes pueden descargar la auditoría.');
+    if(!record.frames)record.frames=await remote.readFrames(id,record.steps);
+    if(audit)return {match:summary(record,true),frames:record.frames};
     let state=null,previous=null;
     const frames=record.frames.map(frame=>{
       state=frame.snapshot?structuredClone(frame.snapshot):Replay.apply(state,frame.changes);

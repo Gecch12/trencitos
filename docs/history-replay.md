@@ -59,7 +59,12 @@ con acceso para reescribir el archivo entero.
 
 Archivo local: `{rooms, archive}` se escribe atómicamente y conserva compatibilidad
 con el array anterior. Supabase: [003_match_archive.sql](../supabase/003_match_archive.sql)
-crea metadatos, pasos y reclamaciones de invitados. El RPC v2 guarda checkpoint y
+crea metadatos, pasos y reclamaciones de invitados. La lectura usa
+[004_archive_paging.sql](../supabase/004_archive_paging.sql): primero
+metadatos/permisos y después páginas de hasta 16 pasos, tres solicitudes simultáneas.
+Se verifica la secuencia completa y se limita al cierre leído; una respuesta parcial
+no se presenta como replay válido. El plazo de lectura es 15 s por página, sin cambiar
+el plazo ni la autoridad de las escrituras. El RPC v2 guarda checkpoint y
 pasos en la misma transacción, valida secuencia y rechaza conflictos, conserva
 idempotencia y exclusión de escritores. RLS y permisos impiden acceso directo de
 `anon`/`authenticated`; solo Node utiliza las RPC con credenciales del servidor.

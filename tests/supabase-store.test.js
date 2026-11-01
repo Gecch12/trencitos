@@ -7,6 +7,16 @@ const { hashToken } = require('../room-store');
 const options = { url: 'https://fixture.supabase.co', secret: 'sb_secret_test_only' };
 const rooms = () => new Map([['ABC123', { code: 'ABC123', updated: Date.now(), members: [{ name: 'A', token: 'private-token' }] }],
   ['PRACT', { code: 'PRACT', practice: true, members: [] }]]);
+test('archive pages preserve exact sequence and reject missing frames', async () => {
+  const api=fakeSupabase(),id='33333333-3333-4333-a333-333333333333';
+  api.state.matches[id]={id,steps:49,frames:Array.from({length:49},(_,seq)=>({seq,snapshot:{value:seq}}))};
+  const store=createSupabaseStore({...options,fetchImpl:api.fetch});
+  assert.equal((await store.readArchive({},id)).matches[0].frames,undefined);
+  assert.deepEqual((await store.readFrames(id,49)).map(f=>f.seq),Array.from({length:49},(_,i)=>i));
+  assert.ok(api.calls.filter(c=>c.method==='trencitos_read_frames').every(c=>c.body.p_count<=16));
+  api.state.matches[id].frames.splice(18,1);
+  await assert.rejects(store.readFrames(id,49),{code:'STORE_UNAVAILABLE'});
+});
 test('Supabase stores private rooms with hashed recovery tokens and reloads after restart', async () => {
   const api = fakeSupabase(), first = createSupabaseStore({ ...options, fetchImpl: api.fetch });
   assert.deepEqual(await first.load(), []); await first.save(rooms());

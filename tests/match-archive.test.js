@@ -64,3 +64,12 @@ test('orphaned active recordings close on restart, and existing rooms remain act
  const {archive,room}=fixture();await archive.bootstrap(new Map([[room.code,room]]));assert.equal(archive.state.matches[room.matchId].status,'active');
  await archive.bootstrap(new Map());assert.equal(archive.state.matches[room.matchId].status,'abandoned');
 });
+test('remote frame pages are loaded only after closed-game authorization',async()=>{
+ const {archive:local,room}=fixture();local.capture(room,'Abandono');local.commit(local.prepare());
+ const {frames,...record}=local.state.matches[room.matchId];let reads=0;
+ const archive=createMatchArchive({remote:{readArchive:async()=>({matches:[record],claims:{}}),readFrames:async()=>{reads++;return frames;}}});
+ record.visibility='private';await assert.rejects(()=>archive.replay({},room.matchId),e=>e.status===404);assert.equal(reads,0);
+ record.visibility='public';await assert.rejects(()=>archive.replay({},room.matchId,true),e=>e.status===403);assert.equal(reads,0);
+ record.status='active';await assert.rejects(()=>archive.replay({},room.matchId),e=>e.status===409);assert.equal(reads,0);
+ record.status='abandoned';assert.equal((await archive.replay({},room.matchId)).full,false);assert.equal(reads,1);
+});

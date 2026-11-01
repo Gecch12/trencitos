@@ -18,7 +18,8 @@ function fakeSupabase() {
       if (method === 'ferrovia_claim_checkpoint') { state.writer = body.p_writer; return json(state); }
       if (method === 'trencitos_close_missing') return json({ok:true});
       if (method === 'trencitos_claim_guest') {state.claims[body.p_guest]=body.p_account;return json({ok:true});}
-      if (method === 'trencitos_read_archive') return json({matches:body.p_match?[state.matches[body.p_match]].filter(Boolean):Object.values(state.matches),claims:state.claims});
+      if (method === 'trencitos_read_archive_summary') return json({matches:(body.p_match?[state.matches[body.p_match]].filter(Boolean):Object.values(state.matches)).map(({frames,...metadata})=>metadata),claims:state.claims});
+      if (method === 'trencitos_read_frames') return json((state.matches[body.p_match]?.frames||[]).slice(body.p_from,body.p_from+body.p_count));
       if (state.writer !== body.p_writer || (state.commit !== body.p_commit && state.version !== body.p_version))
         return json({ message: 'FERROVIA_WRITER_CONFLICT' }, 400);
       if (state.commit !== body.p_commit) {

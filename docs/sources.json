@@ -126,6 +126,7 @@
     "i18n.js",
     "translations.js",
     "supabase/003_match_archive.sql",
+    "supabase/004_archive_paging.sql",
     "scripts/verify-match-audit.js",
     "tests/match-archive.test.js",
     "tests/archive-sql.test.js",

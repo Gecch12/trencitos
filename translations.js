@@ -741,6 +741,8 @@ const Translations = {
   "PARTIDA ABANDONADA": "GAME ABANDONED",
   "Progreso parcial · sin resultado final": "Partial progress · no final result",
   "Cartas del túnel": "Tunnel cards",
-  "Suplemento": "Extra cost"
+  "Suplemento": "Extra cost",
+  "LARGA": "LONG",
+  "Pendiente": "Pending"
 };
 if (typeof module !== "undefined") module.exports = Translations;
