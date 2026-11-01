@@ -4,7 +4,8 @@ const crypto = require("node:crypto");
 const { EventEmitter, once } = require("node:events");
 
 // A small RFC 6455 client keeps integration tests dependency-free on Node 20+.
-async function connect(port) {
+async function connect(port, { cookie = "" } = {}) {
+  if(/[\r\n]/.test(cookie)) throw Error("Invalid test cookie");
   const socket = net.connect(port, "127.0.0.1");
   const events = new EventEmitter();
   const messages = [];
@@ -60,7 +61,7 @@ async function connect(port) {
   socket.on("error", (error) => events.emit("error", error));
   await once(socket, "connect");
   const ready = once(events, "open");
-  socket.write(`GET /socket HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: ${key}\r\n\r\n`);
+  socket.write(`GET /socket HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: ${key}\r\n${cookie ? `Cookie: ${cookie}\r\n` : ""}\r\n`);
   await ready;
   return {
     send: (message) => socket.write(frame(1, JSON.stringify(message))),

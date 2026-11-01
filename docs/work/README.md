@@ -12,6 +12,8 @@ Orden de trabajo acordado:
 
 4. [Navegación y salas públicas](navigation-rooms.md): inicio adaptable, perfil y sala de espera.
 
+5. [Historial, replay e idiomas](history-replay.md): grabación durable y experiencia bilingüe.
+
 Para después:
 
 - [Preparación comercial y personalización](commerce.md).

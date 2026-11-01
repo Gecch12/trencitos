@@ -71,7 +71,7 @@ renovación. Logout revoca la sesión local en Supabase y elimina cookies.
 `game_profiles.id` es un UUID del juego, separado de `auth.users.id` y de email.
 El primer acceso conserva el apodo y color elegidos como invitado. Otro dispositivo
 carga el perfil persistente; cambios manuales posteriores guardan apodo/color.
-`/profile` concentra Account y el botón **Edit Profile**. Su modal valida el
+`/profile` concentra Cuenta y el botón **Editar perfil**. Su modal valida el
 apodo y espera la respuesta de `/api/account/profile`; un fallo deja el modal
 abierto y no sustituye el nombre mostrado. Sin cuenta se guarda localmente.
 El avatar actual sigue siendo la personita del juego, única opción del modal. Foto/nombre de Google no
@@ -83,7 +83,7 @@ incluida revocación y `not_after`, además de la verificación del servidor.
 puesto. No cambia un propietario previo ni permite dos puestos de la misma cuenta
 en una sala. Recuperar desde la cuenta es explícito, rota la credencial y reemplaza
 la conexión anterior, con guardado confirmado antes de devolver el resultado.
-Las cuentas no eliminan el límite de vida de una sala. Prácticas siguen efímeras.
+Las cuentas no eliminan el límite de vida de una sala. Sesiones de práctica siguen efímeras, pero sus archivos se conservan.
 Logout de cuenta no revoca por sí solo un enlace de partida: son credenciales
 distintas, y el enlace conserva su advertencia y control para renovarlo.
 
@@ -124,3 +124,11 @@ Dejar `AUTH_ENABLED=false` permite jugar como invitado mientras falta configurac
 Referencias oficiales: [Google en Supabase](https://supabase.com/docs/guides/auth/social-sign-in/auth-google),
 [PKCE](https://supabase.com/docs/guides/auth/sessions/pkce-flow),
 [contrato REST](https://github.com/supabase/auth/blob/master/openapi.yaml).
+
+## Historial de invitado
+
+OAuth y la consulta autenticada del perfil invocan `linkGuest` con el UUID verificado.
+El archivo se vincula por cookie privada, nunca por apodo ni por un ID enviado por
+el cliente. Logout rota la cookie. Reglas y pruebas en [historial](history-replay.md).
+Una solicitud de borrado debe revisar también las reclamaciones y los registros
+compartidos del archivo; borrar Auth no elimina automáticamente esos datos.

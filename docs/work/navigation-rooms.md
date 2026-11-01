@@ -96,3 +96,7 @@ salas/bots/espectadores y reconexión; [informe](../qa/production-shell-2026-10-
 El desarrollo posterior puede rellenar Play, amigos, chat y secciones informativas
 sin cambiar los contratos del directorio. La práctica anterior sigue en código,
 con su ciclo efímero, sin entrada visible en Play en esta etapa.
+
+La continuación de historial, idiomas y ajustes de observación se registra en
+[su ficha independiente](history-replay.md); no modifica la evidencia histórica
+de este despliegue.

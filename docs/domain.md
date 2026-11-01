@@ -87,7 +87,7 @@ Las políticas viven en [multiplayer.js](../multiplayer.js),
   lo activa directamente. Recuperar control respeta el turno automático en curso.
 - Todos desconectados: pausa durante 60 s; después se elimina la sala. La
   caducidad general de 24 h no promete una recuperación de 24 h tras abandono.
-- Práctica: un humano y tres bots, sin invitados ni persistencia. Pausa al
+- Práctica: un humano y tres bots, sin invitados ni recuperación de sesión tras reinicio; conserva historial. Pausa al
   desconectar; elimina a los 30 s. Los bots de práctica pueden conservar 2–4
   billetes iniciales, tomar destinos nuevos y construir estaciones conforme a
   las mismas reglas del motor. Resuelven ofertas pendientes también fuera de
@@ -97,3 +97,11 @@ Las políticas viven en [multiplayer.js](../multiplayer.js),
 Regresiones: [motor](../tests/engine.test.js), [tickets](../tests/tickets.test.js),
 [privacidad y multijugador](../tests/multiplayer.test.js),
 [cierre](../tests/initial-results.test.js), [simulación](../tests/simulation.test.js).
+
+## Historial y repetición
+
+Las partidas completas conservan el desglose final; las abandonadas conservan
+progreso parcial y no cuentan como resultados completados. Desconexión breve no
+es abandono. Acceso de invitados/cuentas, privacidad y retención se definen en
+[el contrato de historial](history-replay.md). Esa autoridad se aplica a todos los
+modos; un mapa futuro no puede omitir validación, filtrado ni grabación.

@@ -10,6 +10,7 @@ el guardado ni usa su clave secreta. El navegador no accede directamente a la ba
 1. En tu cuenta propia, crea un proyecto en una organización **Free**. Usa una contraseña de base de datos fuerte y guárdala; no la necesitas para configurar esta aplicación.
 2. Elige una región próxima a la de Render para reducir la demora al confirmar cada jugada.
 3. En **SQL Editor → New query**, copia el contenido completo de [`../supabase/001_active_games.sql`](../supabase/001_active_games.sql) y ejecútalo.
+   Para la versión con historial, ejecutar además [003_match_archive.sql](../supabase/003_match_archive.sql) antes de desplegar el código. Es aditiva y conserva las salas existentes; no inicia un segundo escritor.
 4. En **Settings → API Keys**, crea o copia una **secret key** (`sb_secret_…`). No uses una publishable key ni una clave legacy `anon`. Copia también el **Project URL**, con formato `https://….supabase.co`, desde el diálogo Connect o la configuración de API.
 5. Deja la Data API habilitada para `public`. La tabla tiene RLS activado, sin políticas públicas; `anon` y `authenticated` no pueden leerla ni ejecutar las funciones. Solo el servidor, con su clave secreta, accede a los datos.
 
@@ -55,7 +56,7 @@ Las pruebas automáticas usan una simulación de la Data API; estos pasos valida
 - **Partida pausada por guardado:** resuelve la conectividad/credencial, reinicia Render y reconecta. Si la respuesta se perdió pero la escritura llegó, se recupera el estado de la base, no se sobrescribe con memoria antigua. La repetición de una acción conserva su ID para evitar robar dos veces.
 - **Otro servidor tomó control:** no ejecutes dos servicios/preview/local con el mismo proyecto. El nuevo proceso invalida al anterior para impedir dos autoridades sobre una partida. No es una arquitectura multi-instancia.
 - **Todos se fueron:** se mantiene la regla acordada de abandonar tras 60 segundos sin jugadores conectados. Esto es distinto a una caída del proceso con jugadores activos: esa partida se recupera desde el checkpoint.
-- **Retención:** un checkpoint contiene las salas vigentes, no un archivo de partidas. La caducidad de 24 horas evita retención indefinida. No es un sistema de backups históricos ni recuperación punto en el tiempo.
+- **Retención:** el checkpoint contiene las salas vigentes, con caducidad de 24 horas. El archivo histórico separado conserva pasos/resultados sin caducidad automática: [contrato](history-replay.md). Vigilar tamaño de base y backups; no ofrece recuperación punto en el tiempo.
 - **Gratuidad:** confirma los planes Free y vigila límites de uso en ambos paneles. Render puede suspender o reiniciar el servicio; Supabase puede pausar proyectos inactivos. No se prometen costes cero fuera de los límites gratuitos ni disponibilidad continua.
 
 Fuentes: [Render Free](https://render.com/docs/free), [Supabase Pricing](https://supabase.com/pricing), [API keys](https://supabase.com/docs/guides/getting-started/api-keys), [seguridad de la Data API](https://supabase.com/docs/guides/api/securing-your-api).

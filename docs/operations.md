@@ -4,7 +4,7 @@
 
 Node >=20; comandos en la raíz Git (la carpeta que contiene `package.json`).
 Ejecutar `npm ci` para instalar Three.js y las herramientas de QA.
-PGlite es dependencia solo de desarrollo para comprobar SQL/permisos de identidad;
+PGlite es dependencia solo de desarrollo para comprobar SQL/permisos de identidad e historial;
 no se carga en producción. Auth es optativo: [configuración Google](GOOGLE_AUTH.md).
 `npm ci --omit=dev` basta para servir el juego; no requiere proceso de build.
 `npm start` sirve HTTP y WebSocket en el mismo proceso, puerto 3000 por defecto.
@@ -112,3 +112,8 @@ checkpoint local, un commit y un despliegue son evidencias distintas.
 Despliegue, recuperación y validación remota: [Render/Supabase](RENDER_SUPABASE.md).
 Revisión publicada y evidencia: [Producción](production.md). La preparación local
 no implica despliegue; la entrega del 2026-10-31 fue solicitada explícitamente.
+
+Historial y repetición: [contrato y comandos de prueba](history-replay.md#verificación-y-auditoría-local).
+La migración `003_match_archive.sql` debe preceder al despliegue. La suite amplia
+puede ejecutarse con `node --test --test-concurrency=1 tests/*.test.js` para evitar
+competencia entre simulaciones y servidores durante QA.

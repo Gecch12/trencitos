@@ -1,8 +1,11 @@
 'use strict';
+const I18n = require('./i18n');
 const crypto=require('node:crypto');
 // Per-action randomness stays outside serialized state. Simulations can supply
 // an isolated stream for all draws/recycles without patching global crypto.
-const actionRandom=new WeakMap();
+const actionRandom=new WeakMap(), observers=new WeakMap(), expiring=new WeakSet();
+function observe(g,callback){observers.set(g,callback)}
+function recorded(g,seat,action,automatic=false){observers.get(g)?.({seat,action:structuredClone(action),automatic})}
 const randomFor=g=>actionRandom.get(g)||crypto.randomInt;
 const {COLORS,PLAYER_COLORS,CITIES,ROUTES,TICKETS}=require('./data');
 const SCORE={1:1,2:2,3:4,4:7,6:15,8:21};
@@ -67,13 +70,14 @@ function newGame(names,first=0,now=Date.now()){if(!Array.isArray(names)||names.l
 function newRandomGame(names,now=Date.now(),random=crypto.randomInt){
  if(!Array.isArray(names)||names.length<2||names.length>5)fail('Se requieren 2–5 jugadores.');
  const g=newGame(names,random(names.length),now);
- note(g,`${g.players[g.first].name} empieza la partida (sorteo aleatorio).`,g.first);return g;
+ note(g,I18n.message`${g.players[g.first].name} empieza la partida (sorteo aleatorio).`,g.first);return g;
 }
 function historyEntries(g){return g.logs.map((text,i)=>g.history?.[i]?.text===text?g.history[i]:{id:null,text,seat:null})}
 function note(g,msg,seat=null){
+ const message=typeof msg === "object" ? msg : null; if(message) msg=I18n.format(message);
  const history=historyEntries(g);g.logSerial=(g.logSerial||0)+1;
  g.logs.unshift(msg);g.logs=g.logs.slice(0,25);
- g.history=[{id:g.logSerial,text:msg,seat},...history].slice(0,25);
+ g.history=[{id:g.logSerial,text:msg,seat,...(message?{message}:{})},...history].slice(0,25);
 }
 function assertTurn(g,seat){if(!Number.isInteger(seat)||seat!==g.current)fail('No es tu turno.')}
 function next(g,now=Date.now()){g.drawCount=0;g.pending=null;
@@ -93,17 +97,18 @@ function spend(g,p,comp){for(let k=0;k<comp.regular;k++){const i=p.hand.indexOf(
 function block(g,r,seat){return g.routes.some(x=>x.id!==r.id&&same(x,r)&&x.owner!==null&&(x.owner===seat||g.players.length<=3))}
 function action(g,seat,msg,{now=Date.now(),random=crypto.randomInt}={}){
  const previous=actionRandom.get(g);actionRandom.set(g,random);
- try{expire(g,now,random);const serial=g.turnSerial;applyAction(g,seat,msg,now);if(g.turnSerial!==serial&&g.players[seat])g.players[seat].missedTurns=0;recycleDiscards(g)}
+ try{expire(g,now,random);const serial=g.turnSerial;applyAction(g,seat,msg,now);if(g.turnSerial!==serial&&g.players[seat])g.players[seat].missedTurns=0;recycleDiscards(g);recorded(g,seat,msg)}
  finally{if(previous)actionRandom.set(g,previous);else actionRandom.delete(g)}
 }
 function settleOffer(g,seat,indexes,finalize=true,now=Date.now()){
  const p=g.players[seat],offer=p.offer,ix=indices(indexes,offer.tickets.length,1);
  p.tickets.push(...ix.map(i=>offer.tickets[i]));g.shortDeck.push(...offer.tickets.filter((_,i)=>!ix.includes(i)));p.offer=null;
- note(g,`${p.name} conservó ${ix.length} billete(s) de destino.`,seat);
+ note(g,I18n.message`${p.name} conservó ${ix.length} billete(s) de destino.`,seat);
  if(finalize&&g.phase==='play'&&g.current===seat&&g.turnWaiting)startTurn(g,now);
  if(finalize&&g.phase==='closing'&&!g.players.some(p=>p.offer))finish(g);
 }
-function applyAction(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='string'||!Number.isInteger(seat)||!g.players[seat])fail('Acción incorrecta.');const p=g.players[seat];
+function applyAction(g,seat,msg,now=Date.now()){const value=applyActionImpl(g,seat,msg,now);if(expiring.has(g))recorded(g,seat,msg,true);return value}
+function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='string'||!Number.isInteger(seat)||!g.players[seat])fail('Acción incorrecta.');const p=g.players[seat];
  if(g.phase==='finished')fail('La partida terminó.');
  if(msg.type==='keep_tickets'){
   if(!p.offer||msg.offerId!==p.offer.id)fail('Esta selección de billetes ya no está pendiente.');
@@ -129,8 +134,8 @@ function applyAction(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='stri
    const avail={...p,hand:[...p.hand]};
    if(!extra || !reserve(avail.hand,base) || !pay(avail.hand,t.color,t.surcharge,0,msg.extraWild))fail('No tienes suficientes cartas para pagar el túnel.');
    spend(g,p,base);spend(g,p,extra);
-   const r=g.routes[t.routeId];r.owner=seat;p.trains-=r.n;p.score+=SCORE[r.n];event(g,'build',seat,{routeId:r.id});note(g,`${p.name} completó el túnel ${CITIES[r.a][2]} — ${CITIES[r.b][2]}.`,seat);
-  }else note(g,`${p.name} desistió del túnel.`,seat);
+   const r=g.routes[t.routeId];r.owner=seat;p.trains-=r.n;p.score+=SCORE[r.n];event(g,'build',seat,{routeId:r.id});note(g,I18n.message`${p.name} completó el túnel ${CITIES[r.a][2]} — ${CITIES[r.b][2]}.`,seat);
+  }else note(g,I18n.message`${p.name} desistió del túnel.`,seat);
   g.discard.push(...t.revealed);g.phase='play';next(g,now);return;
  }
  if(g.phase!=='play')fail('Estado de partida incorrecto.');
@@ -143,7 +148,7 @@ function applyAction(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='stri
   g.drawSerial=(g.drawSerial||0)+1;
   g.lastDraw={id:g.drawSerial,seat,index:msg.index,color:c};
   event(g,'draw',seat,{index:msg.index,color:c});
-  note(g,`${p.name} robó una carta de tren.`,seat);
+  note(g,I18n.message`${p.name} robó una carta de tren.`,seat);
   if((msg.index>=0&&c==='wild')||g.drawCount===2||!canDrawMore(g))next(g,now);return;
  }
  if(g.drawCount>0)fail('Debes terminar de robar cartas.');
@@ -154,14 +159,14 @@ function applyAction(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='stri
   if(![...COLORS,'wild'].includes(color))fail('Color inválido.');
   const base=pay(p.hand,color,r.n,r.ferry,msg.wildCount);
   if(!base||base.wild<r.ferry)fail('No tienes cartas para esa ruta.');
-  if(!r.tunnel){spend(g,p,base);r.owner=seat;p.trains-=r.n;p.score+=SCORE[r.n];event(g,'build',seat,{routeId:r.id});note(g,`${p.name} tomó ${CITIES[r.a][2]} — ${CITIES[r.b][2]} (+${SCORE[r.n]}).`,seat);next(g,now);return}
+  if(!r.tunnel){spend(g,p,base);r.owner=seat;p.trains-=r.n;p.score+=SCORE[r.n];event(g,'build',seat,{routeId:r.id});note(g,I18n.message`${p.name} tomó ${CITIES[r.a][2]} — ${CITIES[r.b][2]} (+${SCORE[r.n]}).`,seat);next(g,now);return}
   const revealed=[];for(let i=0;i<3;i++){const c=draw(g);if(c)revealed.push(c)}
   const surcharge=revealed.filter(c=>c==='wild'||(color!=='wild'&&c===color)).length;
   g.phase='tunnel';g.pending={routeId:r.id,color,base,surcharge,revealed};
   event(g,'tunnel_reveal',seat,{routeId:r.id,paymentColor:color,base:{...base},surcharge,revealed:[...revealed]});
   g.pending.revealId=g.eventSerial;
   // Keep revealed until decision. A 0-surcharge tunnel succeeds automatically.
-  if(surcharge===0){spend(g,p,base);g.discard.push(...revealed);r.owner=seat;p.trains-=r.n;p.score+=SCORE[r.n];g.phase='play';event(g,'build',seat,{routeId:r.id});note(g,`${p.name} tomó túnel ${CITIES[r.a][2]} — ${CITIES[r.b][2]} (+${SCORE[r.n]}).`,seat);next(g,now)}
+  if(surcharge===0){spend(g,p,base);g.discard.push(...revealed);r.owner=seat;p.trains-=r.n;p.score+=SCORE[r.n];g.phase='play';event(g,'build',seat,{routeId:r.id});note(g,I18n.message`${p.name} tomó túnel ${CITIES[r.a][2]} — ${CITIES[r.b][2]} (+${SCORE[r.n]}).`,seat);next(g,now)}
   return;
  }
  if(msg.type==='draw_tickets'){
@@ -169,13 +174,13 @@ function applyAction(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='stri
   if(!g.shortDeck.length)fail('No quedan billetes de destino.');
   g.offerSerial=(g.offerSerial||0)+1;
   p.offer={id:g.offerSerial,tickets:g.shortDeck.splice(0,3),deadline:now+OFFER_MS};
-  event(g,'tickets',seat);note(g,`${p.name} está eligiendo nuevos billetes.`,seat);next(g,now);return;
+  event(g,'tickets',seat);note(g,I18n.message`${p.name} está eligiendo nuevos billetes.`,seat);next(g,now);return;
  }
  if(msg.type==='station'){
   if(!CITIES[msg.city]||p.stations<1||g.players.some(x=>x.placed.includes(msg.city)))fail('No puedes construir una estación ahí.');
   const cost=4-p.stations,comp=pay(p.hand,msg.color,cost,0,msg.wildCount);
   if(!comp)fail('Cartas insuficientes para la estación.');
-  spend(g,p,comp);p.stations--;p.placed.push(msg.city);event(g,'build',seat,{city:msg.city});note(g,`${p.name} construyó una estación en ${CITIES[msg.city][2]}.`,seat);next(g,now);return;
+  spend(g,p,comp);p.stations--;p.placed.push(msg.city);event(g,'build',seat,{city:msg.city});note(g,I18n.message`${p.name} construyó una estación en ${CITIES[msg.city][2]}.`,seat);next(g,now);return;
  }
  if(msg.type==='pass'){
   // Passing is only permitted when no other move is possible.
@@ -186,9 +191,10 @@ function applyAction(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='stri
 }
 // Absolute deadlines survive refresh/reconnection. Tick once per current turn;
 // a server restart never fast-forwards an entire absent game's turns.
-function expire(g,now=Date.now(),random=crypto.randomInt){
+function expire(g,now=Date.now(),random=crypto.randomInt){expiring.add(g);try{return expireImpl(g,now,random)}finally{expiring.delete(g)}}
+function expireImpl(g,now=Date.now(),random=crypto.randomInt){
  ensureTiming(g,now);let changed=false;
- for(let seat=0;seat<g.players.length;seat++){const offer=g.players[seat].offer;if(offer&&now>=offer.deadline){settleOffer(g,seat,[random(offer.tickets.length)],true,now);changed=true}}
+ for(let seat=0;seat<g.players.length;seat++){const offer=g.players[seat].offer;if(offer&&now>=offer.deadline){const indexes=[random(offer.tickets.length)];settleOffer(g,seat,indexes,true,now);recorded(g,seat,{type:"keep_tickets",offerId:offer.id,indexes},true);changed=true}}
  if(['finished','closing'].includes(g.phase)||!Number.isFinite(g.turnDeadline)||now<g.turnDeadline)return changed;
  const seat=g.current,serial=g.turnSerial;
  if(g.phase==='initial'){
@@ -196,12 +202,12 @@ function expire(g,now=Date.now(),random=crypto.randomInt){
    if(!g.players[i].pending.length)continue;
    const pool=g.players[i].pending.map((_,j)=>j),picked=[];
    for(let j=0;j<2;j++)picked.push(...pool.splice(random(pool.length),1));
-   note(g,`${g.players[i].name}: tiempo agotado; conservó 2 billetes al azar.`,i);
+   note(g,I18n.message`${g.players[i].name}: tiempo agotado; conservó 2 billetes al azar.`,i);
    applyAction(g,i,{type:'choose_initial',indexes:picked},now);
   }
   return true;
  }
- note(g,`${g.players[seat].name}: tiempo agotado.`,seat);
+ note(g,I18n.message`${g.players[seat].name}: tiempo agotado.`,seat);
  g.players[seat].missedTurns=(g.players[seat].missedTurns||0)+1;
  if(g.phase==='tunnel')applyAction(g,seat,{type:'decline_tunnel'},now);
  else{
@@ -275,4 +281,4 @@ function view(g,seat){const spectator=seat===-1,p=spectator?{hand:[],tickets:[],
  drawCount:own?g.drawCount:0,initial:g.phase==='initial'&&p.pending.length?p.pending:null,
  pending:p.offer?.tickets||null,ticketOffer:p.offer||null,
  tunnel:own&&g.phase==='tunnel'?g.pending:null,finalRemaining:g.finalRemaining,logs:g.logs,history:historyEntries(g),result:g.phase==='finished'?g.result:null}}
-module.exports={newGame,newRandomGame,note,action,view,connected,connectionPath,longest,stationAssignments,finish,pay,block,draw,refill,recycleDiscards,next,ensureTiming,expire,TURN_MS,INITIAL_MS,OFFER_MS,SCORE,ROUTES,TICKETS,CITIES,COLORS,possibleClaim,possibleStation};
+module.exports={observe,newGame,newRandomGame,note,action,view,connected,connectionPath,longest,stationAssignments,finish,pay,block,draw,refill,recycleDiscards,next,ensureTiming,expire,TURN_MS,INITIAL_MS,OFFER_MS,SCORE,ROUTES,TICKETS,CITIES,COLORS,possibleClaim,possibleStation};

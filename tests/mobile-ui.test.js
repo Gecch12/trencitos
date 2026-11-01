@@ -31,7 +31,7 @@ function gestures(panel = "map") {
     classList: { add: c => classes.add(c), remove: c => classes.delete(c), toggle: (c, yes) => yes ? classes.add(c) : classes.delete(c) },
     getBoundingClientRect: () => ({ left: 0, top: 0 }),
   };
-  const context = vm.createContext({
+  const context = vm.createContext({ I18n: require("../i18n"),
     $: () => viewport, compactMedia: { matches: true }, compactPanel: panel,
     mapCenter: { x: 100, y: 100 }, zoom: 1, GameUI: UI,
     closeMapMenu() {}, applyZoom() {},
@@ -124,7 +124,7 @@ test("pinch survives SVG capture transfer, suppresses clicks and allows the next
 test("ticket preview is mouse-only; touch and keyboard focus cannot stick a deselected route", () => {
   const handlers = new Map();
   const row = { addEventListener: (type, handler) => handlers.set(type, handler) };
-  const context = vm.createContext({ hoveredTicket: null, matchMedia: () => ({ matches: true }), updateTicketSelection() {} });
+  const context = vm.createContext({ I18n: require("../i18n"), hoveredTicket: null, matchMedia: () => ({ matches: true }), updateTicketSelection() {} });
   vm.runInContext(source.slice(source.indexOf("function bindTicketPreview("), source.indexOf("function showTicketDialog(")), context);
   context.bindTicketPreview(row, 2, [], 1);
   handlers.get("pointerenter")({ pointerType: "touch" });
@@ -143,7 +143,7 @@ test("ticket preview is mouse-only; touch and keyboard focus cannot stick a dese
 test("fullscreen control is hidden unless the document and method both support it", () => {
   for (const enabled of [undefined, false, true]) for (const method of [undefined, () => {}]) {
     let hidden;
-    const context = vm.createContext({
+    const context = vm.createContext({ I18n: require("../i18n"),
       document: { fullscreenEnabled: enabled, documentElement: { requestFullscreen: method } },
       $: () => ({ classList: { toggle: (_, value) => { hidden = value; } }, setAttribute() {} }),
     });
@@ -185,7 +185,7 @@ test("closing routes clears transient preview, selects Map on mobile and preserv
   for (const mobile of [true, false]) {
     let focused = null, updated = 0;
     const hidden = new Set();
-    const context = vm.createContext({
+    const context = vm.createContext({ I18n: require("../i18n"),
       uiDialog: "routes", game: {}, seat: 0, compactMedia: { matches: mobile }, compactPanel: "destinations",
       buildTarget: {}, buildSubmitting: false, pendingChoiceKey: "routes", hoveredDestination: 2,
       allDestinationsVisible: true, dialogReturnFocus: { isConnected: true, focus() { focused = "row"; } },
@@ -216,7 +216,7 @@ test("closing routes clears transient preview, selects Map on mobile and preserv
 test("main-map preview ignores touch and restored focus; overview is local UI state only", () => {
   const handlers = new Map(), toggle = {}, contextClasses = new Set();
   let updated = 0;
-  const context = vm.createContext({
+  const context = vm.createContext({ I18n: require("../i18n"),
     uiDialog: null, hoveredDestination: null, allDestinationsVisible: false, resultMapSelection: {},
     game: { tickets: [{ id: 2 }] }, compactMedia: { matches: true }, compactPanel: "destinations",
     matchMedia: () => ({ matches: true }), updateDestinationSpotlight() { updated++; },

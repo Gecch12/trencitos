@@ -21,23 +21,29 @@ Abre `http://localhost:3000` en tu navegador. Para probar con otro jugador abre 
 
 ## Inicio, perfil y salas
 
-La navegación principal tiene **Rooms**, **Play**, **More** y **Profile**. En
+La navegación principal tiene **Partidas**, **Jugar**, **Más** y **Perfil**. En
 escritorio está a la izquierda; en tablet y móvil, abajo. La cabecera agrupa el
-nombre y avatar junto a la campanita provisional. **Profile → Edit Profile**
-permite cambiar el nombre y conserva el avatar básico. El nombre se guarda en la
-cuenta si has iniciado sesión, o en este dispositivo si juegas como invitado.
-Account conserva acceso y recuperación de salas; Friends, History, Overview y
-Play quedan vacíos. More organiza las secciones futuras y el idioma **ESP**;
-los seis iconos sociales no tienen enlaces. Privacy abre el aviso existente.
+nombre y avatar junto a la campanita provisional. **Perfil → Editar perfil**
+permite cambiar el nombre y conserva el avatar básico. La cuenta guarda el perfil;
+un invitado conserva su preferencia en este navegador. Cuenta, Historial y Resumen
+tienen contenido; Amigos y Jugar siguen preparados para próximas integraciones.
+**Más → Idioma** cambia entre español (predeterminado, ESP) e inglés (ENG).
+Los seis iconos sociales siguen sin enlaces; Privacidad abre el aviso existente.
 
-**Rooms → Open Rooms** muestra las salas públicas en espera. **Create Room** crea
-una sala con código numérico automático; **Join Room** permite entrar por código.
+**Perfil → Historial** conserva partidas completas y abandonadas por separado,
+con desglose de puntos y repetición por pasos a 0,5×, 1×, 2×, 4× y 8×. Vincular
+Google conserva el historial previo de invitado en esa cuenta. Los participantes
+ven la repetición completa al cerrar; el público solo la vista sin secretos de
+salas públicas. [Detalles de conservación y acceso](docs/history-replay.md).
+
+**Partidas → Partidas abiertas** muestra las salas públicas en espera. **Crear partida** crea
+una sala con código numérico automático; **Unirse a una partida** permite entrar por código.
 Las nuevas salas son públicas por defecto. El anfitrión puede hacerlas privadas,
 elegir entre 2 y 5 plazas, añadir o retirar bots e iniciar la partida. Las salas
 anteriores sin visibilidad explícita siguen siendo privadas. Las invitaciones
 antiguas y los enlaces privados de recuperación siguen funcionando.
 
-**Spectate** lista partidas públicas en curso. Observar no ocupa un puesto,
+**Observar** lista partidas públicas en curso. Observar no ocupa un puesto,
 no permite jugar y no entrega manos, destinos, ofertas ni credenciales privadas.
 Los espectadores tampoco prolongan la vida de una sala abandonada. Las salas
 privadas solo admiten jugadores con invitación; no se pueden observar.
@@ -56,13 +62,13 @@ propio para conservar navegación y controles en pantallas bajas.
 
 ## Sala de pruebas con bots
 
-El nuevo inicio conserva **Play** vacío. La implementación de práctica y sus controles de prueba siguen disponibles en código para una futura integración; no tienen acceso visible en esta etapa. Para jugar con bots desde la interfaz actual, crea una sala y pulsa **Añadir bot**. La práctica original enfrenta a un humano con tres bots. El primer jugador se sortea entre los cuatro; todos eligen los billetes iniciales a la vez. Los tres bots confirman entre dos y cuatro billetes compatibles tras 800–1000 ms sin esperar al humano; conservan los adicionales cuando comparten un recorrido viable. Comparan recorridos alternativos y redes que conecten varios destinos, calculando las cartas y los vagones necesarios para el conjunto. Ahorran para tramos útiles, prefieren las cartas de la mesa que necesitan y varían entre opciones de valor parecido.
+El nuevo inicio conserva **Jugar** vacío. La implementación de práctica y sus controles de prueba siguen disponibles en código para una futura integración; no tienen acceso visible en esta etapa. Para jugar con bots desde la interfaz actual, crea una sala y pulsa **Añadir bot**. La práctica original enfrenta a un humano con tres bots. El primer jugador se sortea entre los cuatro; todos eligen los billetes iniciales a la vez. Los tres bots confirman entre dos y cuatro billetes compatibles tras 800–1000 ms sin esperar al humano; conservan los adicionales cuando comparten un recorrido viable. Comparan recorridos alternativos y redes que conecten varios destinos, calculando las cartas y los vagones necesarios para el conjunto. Ahorran para tramos útiles, prefieren las cartas de la mesa que necesitan y varían entre opciones de valor parecido.
 
 Cada bot conserva planes viables y los replantea ante bloqueos, amenazas o falta de progreso. Prioriza conexiones difíciles de sustituir cuando un rival se acerca, reserva colores para los siguientes tramos y estima el riesgo de los túneles. Puede desistir de un suplemento que perjudique un destino más valioso. Estima los turnos restantes a partir de las construcciones, vagones y cantidades de cartas públicos; al cerrar compara puntos de vías, destinos y la posibilidad de conseguir el Express. Solo consulta su propia mano y destinos, las vías y demás información pública; no conoce el orden de los mazos ni las cartas o destinos privados de rivales. Puede colocar estaciones si compensan su coste y pedir nuevos destinos cuando su red ofrece buenas oportunidades. Resuelve las ofertas también fuera de turno y durante el cierre, conservando al menos un billete. Antes de algunas decisiones compara continuaciones de hasta tres turnos propios y posibles respuestas rivales, con manos y robos hipotéticos. Cada acción de un turno automático se separa entre 800 y 1000 ms, incluida la segunda carta y la decisión de pagar o desistir de un túnel. Los bots que sustituyen a jugadores ausentes mantienen su política independiente de robo/construcción aleatoria; esta estrategia se usa en práctica y en los bots añadidos a salas normales; estos últimos actúan cada 900 ms y se guardan con la sala.
 
 El panel **Controles de prueba** aparece abajo a la izquierda, separado de la interfaz del juego y sobre sus diálogos. Arrástralo desde su encabezado con el ratón, o enfoca el encabezado y usa las flechas del teclado. **Terminar partida de pruebas** detiene los bots inmediatamente y muestra la puntuación actual como cierre anticipado. **Volver al inicio** elimina la sala y permite crear otra prueba.
 
-Estas salas son privadas y temporales: no admiten invitados, no se guardan en disco y se pierden al reiniciar el servidor. Al desconectarte los bots se pausan; puedes volver con el mismo navegador en menos de 30 segundos para continuar. Si no vuelves, la sala se elimina. Leer sin hacer clic o dejar la pestaña en segundo plano no cuenta como desconexión.
+Estas salas son privadas y temporales: no admiten invitados, la sesión no se recupera al reiniciar el servidor, pero su historial sí se conserva. Al desconectarte los bots se pausan; puedes volver con el mismo navegador en menos de 30 segundos para continuar. Si no vuelves, la sala se elimina. Leer sin hacer clic o dejar la pestaña en segundo plano no cuenta como desconexión.
 
 `npm test` comprueba las decisiones de los bots, partidas completas simuladas, tiempos y limpieza de salas con un reloj simulado, y la integración real por WebSocket.
 

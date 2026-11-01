@@ -12,7 +12,7 @@ function harness() {
   const events = new Map(), bounds = { x: 100, y: 80, width: 600, height: 400 };
   const svg = { clientWidth: 850, clientHeight: 360,
     addEventListener(type, fn, options) { events.set(type, { fn, options }); } };
-  const context = vm.createContext({ GameUI: UI, svg, bounds, camera: null,
+  const context = vm.createContext({ I18n: require("../i18n"), GameUI: UI, svg, bounds, camera: null,
     resultCamera: { zoom: 1, center: { x: 400, y: 280 } },
     schedule() {}, pointerPoint: e => ({ x: e.clientX, y: e.clientY }) });
   vm.runInContext(source.slice(source.indexOf("  function refreshCamera()"), source.indexOf("  function paint()")) +

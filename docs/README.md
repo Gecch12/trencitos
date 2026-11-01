@@ -6,6 +6,7 @@ No cargues todos los documentos ni todos los informes de QA al iniciar un chat.
 | Necesidad | Documento canónico |
 | --- | --- |
 | Qué hace cada componente; dónde cambiarlo | [Arquitectura](architecture.md) |
+| Historial, replay, invitados e idiomas | [Contrato de historial](history-replay.md) |
 | Conceptos, reglas, privacidad y variantes | [Dominio](domain.md) |
 | Ejecutar, probar y aislar entornos | [Operación](operations.md) |
 | Prioridades, avance y próximo paso | [Trabajo](work/README.md) |

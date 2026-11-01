@@ -31,6 +31,7 @@ function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000 })
         });
         if (!response.ok) {
           const details = await response.json().catch(() => ({}));
+          if (details.message === "GUEST_ALREADY_CLAIMED") throw Object.assign(Error("Este historial ya pertenece a otra cuenta."),{status:409,code:"GUEST_ALREADY_CLAIMED"});
           if (details.message === "FERROVIA_WRITER_CONFLICT") throw failure("STORE_CONFLICT");
           if (response.status < 500) throw failure("STORE_UNAVAILABLE");
           throw new Error("Remote storage unavailable");
@@ -42,6 +43,9 @@ function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000 })
     }
   }
   return {
+    closeMissing(ids) { return rpc("trencitos_close_missing", {p_writer:writer,p_live:ids}); },
+    readArchive(identity,id) { return rpc("trencitos_read_archive", {p_guest:identity.guestId||null,p_account:identity.accountId||null,p_match:id||null}); },
+    claimGuest(guestId,accountId) { return rpc("trencitos_claim_guest", {p_guest:guestId,p_account:accountId}); },
     async load() {
       const checkpoint = await rpc("ferrovia_claim_checkpoint", { p_writer: writer });
       if (checkpoint?.schema_version !== 1 || !Number.isSafeInteger(checkpoint.version) || checkpoint.version < 0)
@@ -50,13 +54,13 @@ function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000 })
       version = checkpoint.version;
       return checkpoint.rooms;
     },
-    async save(rooms) {
+    async save(rooms, archive) {
       if (fenced || version === null) throw failure("STORE_CONFLICT");
       const data = [...rooms.values()].filter(r => !r.practice).map(serializableRoom);
       const commit = randomUUID();
       try {
-        const result = await rpc("ferrovia_save_checkpoint", {
-          p_writer: writer, p_version: version, p_commit: commit, p_rooms: data,
+        const result = await rpc(archive ? "ferrovia_save_checkpoint_v2" : "ferrovia_save_checkpoint", {
+          p_writer: writer, p_version: version, p_commit: commit, p_rooms: data, ...(archive ? {p_archive:archive} : {}),
         });
         if (result?.commit !== commit || result.version !== version + 1) throw failure("STORE_UNCERTAIN");
         version = result.version;

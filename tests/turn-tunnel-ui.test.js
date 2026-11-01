@@ -85,7 +85,7 @@ for (const [kind, cards, surcharge] of [
 
 test("reconnect snapshots never replay stored tunnel evidence, while fresh events are consumed once", () => {
   const source = fs.readFileSync(require.resolve("../app.js"), "utf8");
-  const context = vm.createContext({ lastEffectId: null, waitingForGameStart: false, document: { hidden: false } });
+  const context = vm.createContext({ I18n: require("../i18n"), lastEffectId: null, waitingForGameStart: false, document: { hidden: false } });
   vm.runInContext(source.slice(source.indexOf("function prepareEffects("), source.indexOf("function playEffects(")), context);
   const next = { events: [{ id: 4, type: "tunnel_reveal", seat: 0, revealed: ["red"] }] };
   assert.equal(context.prepareEffects(next).length, 0);
@@ -113,7 +113,7 @@ function revealHarness(surcharge = 0, reduced = false, revealed) {
   if (revealed) event.revealed = revealed;
   const build = { id: 11, type: "build", seat: 0, routeId: 19 };
   const game = { phase: surcharge ? "tunnel" : "play", current: surcharge ? 0 : 1, turnDeadline: Date.now() + 60000, routes: [{ id: 19 }], tunnel: surcharge ? { revealId: 10 } : null };
-  const context = vm.createContext({
+  const context = vm.createContext({ I18n: require("../i18n"),
     tunnelReveal: null, game, seat: 0, serverOffset: 0, uiDialog: "build", buildTarget: {},
     reducedMotion: { matches: reduced }, document: { hidden: false, createElement: node },
     $: id => nodes[id], N: { white: "Blanco", wild: "Locomotora" }, escapeHTML: x => x,

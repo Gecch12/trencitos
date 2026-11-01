@@ -52,6 +52,7 @@
     <div id="sessionNotice" class="session-notice hidden" role="status"><span></span><button id="takeOver" class="hidden" type="button">Recuperar esta pestaña</button><button id="retrySave" class="hidden" type="button">Reintentar guardado</button></div>
     <main id="lobby" class="app-workspace" tabindex="-1" aria-label="Inicio de Trencitos">
       <section id="roomsPage" class="shell-page rooms-page" aria-label="Rooms">
+        <section id="watchUnavailable" class="room-unavailable" role="alert" tabindex="-1" hidden><h2>Esta partida ya no está disponible</h2><p>Puede haber terminado, caducado o dejado de ser pública. Elige otra partida para observar.</p></section>
         <div class="directory-layout">
           <div class="directory-main">
             <div class="segmented directory-tabs" role="tablist" aria-label="Tipo de salas">
@@ -84,7 +85,7 @@
             <a href="/profile?tab=history" data-profile="history" data-icon="history">History</a>
             <a href="/profile?tab=overview" data-profile="overview" data-icon="user">Overview</a>
           </nav>
-          <div class="profile-content"><h2 id="profileTitle">Account</h2>
+          <div class="profile-content"><h2 id="profileTitle">Account</h2><section id="historyPanel" hidden></section>
             <section id="accountPanel" class="account-panel" aria-label="Tu cuenta">
               <h3>Tu cuenta</h3>
               <div class="account-row"><span id="accountLabel">Juega como invitado o guarda tu perfil</span><button id="googleLogin" class="shell-primary" type="button" disabled>Continuar con Google</button><button id="accountLogout" class="shell-outline" type="button" hidden>Cerrar sesión</button></div>
@@ -135,12 +136,14 @@
     <dialog id="profileDialog" class="shell-dialog" aria-labelledby="editTitle"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button><h2 id="editTitle">Edit Profile</h2>
       <form id="profileForm"><label for="profileName">Nombre de usuario</label><input id="profileName" maxlength="24" required autocomplete="nickname" aria-describedby="profileError" /><fieldset class="avatar-options"><legend>Avatar</legend><button type="button" class="avatar-option" aria-label="Avatar básico" aria-pressed="true" data-icon="user"><span>Básico</span></button></fieldset><p id="profileError" class="field-error" role="alert"></p><div class="dialog-actions"><button type="button" data-close-dialog>Cancelar</button><button id="saveProfile" type="submit" class="shell-primary">Guardar</button></div></form>
     </dialog>
-    <dialog id="languageDialog" class="shell-dialog" aria-labelledby="languageTitle"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button><h2 id="languageTitle">Idioma</h2><label for="languageSelect">Idioma de la aplicación</label><select id="languageSelect"><option value="es">Español (ESP)</option></select><button type="button" class="shell-primary full" data-close-dialog>Listo</button></dialog>
+    <dialog id="languageDialog" class="shell-dialog" aria-labelledby="languageTitle"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button><h2 id="languageTitle">Idioma</h2><label for="languageSelect">Idioma de la aplicación</label><select id="languageSelect"><option value="es">Español (ESP)</option><option value="en">English (ENG)</option></select><button type="button" class="shell-primary full" data-close-dialog>Listo</button></dialog>
     <div id="homeSetup" hidden>
       <input id="nickname" maxlength="24" value="Jugador" /><span id="homeAvatar"></span>
       <form id="homeCreate"><input id="createCode" /><button id="regenerateCode" type="button">Generar código</button><p id="createCodeError"></p></form>
       <section id="homePractice" hidden><span id="practiceColorName"></span><div id="practiceColors"></div><button id="createTest" type="button">Practicar</button></section>
     </div>
+    <dialog id="replaySecrets" class="shell-dialog" aria-labelledby="replaySecretsTitle"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button><h2 id="replaySecretsTitle">Datos privados de este paso</h2><div id="replaySecretsContent"></div></dialog>
+    <section id="replayControls" class="replay-controls" aria-label="Controles de repetición" hidden></section>
     <div id="game" class="game hidden">
       <main class="game-stage" aria-label="Mesa de juego">
           <div class="mapscroll is-3d" id="mapscroll">
@@ -246,6 +249,9 @@
         <button id="leaveTest" class="full hidden" type="button">Volver al inicio</button>
       </div>
     </section>
+    <script src="translations.js"></script>
+    <script src="i18n.js"></script>
+
     <script src="data.js"></script>
     <script src="map-layout.js"></script>
     <script src="game-ui.js"></script>
@@ -253,6 +259,7 @@
     <script src="board-camera.js"></script>
     <script src="account-ui.js"></script>
     <script src="shell-icons.js"></script>
+    <script src="replay-state.js"></script><script src="history-ui.js"></script>
     <script src="shell.js"></script>
     <script src="app.js"></script>
   </body>

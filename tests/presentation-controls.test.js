@@ -10,7 +10,7 @@ test("compact-only controls start natively hidden and follow the layout, not the
   for (const id of ["compactHud", "compactPlayers"]) assert.match(html, new RegExp(`id="${id}"[^>]*\\shidden[\\s>]`));
   for (const practiceMode of [true, false]) {
     const nodes = { compactHud: {}, compactPlayers: {}, compactPractice: { classList: { toggle(_, value) { nodes.compactPractice.hidden = value; } } } };
-    const context = vm.createContext({ practiceMode, compactMedia: { matches: false }, $: id => nodes[id] });
+    const context = vm.createContext({ I18n: require("../i18n"), practiceMode, compactMedia: { matches: false }, $: id => nodes[id] });
     vm.runInContext(source.slice(source.indexOf("function syncCompactControls("), source.indexOf("function setCompactPanel(")), context);
     for (const compact of [false, true, false, true]) {
       context.compactMedia.matches = compact;
@@ -25,7 +25,7 @@ test("compact-only controls start natively hidden and follow the layout, not the
 function soundControls(storage) {
   const attributes = new Map(), button = { setAttribute: (key, value) => attributes.set(key, value) };
   let resumes = 0;
-  const context = vm.createContext({
+  const context = vm.createContext({ I18n: require("../i18n"),
     $: () => button,
     localStorage: { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value) },
     document: { addEventListener() {}, hidden: false },

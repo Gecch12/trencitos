@@ -5,7 +5,7 @@ const Lobby = require('./lobby-ui');
 const DAY = 86400000;
 const fail = (status, message) => Object.assign(new Error(message), { status });
 
-function createAccountAuth({ env = process.env, fetchImpl = fetch, now = Date.now, seats = async () => ({}) } = {}) {
+function createAccountAuth({ env = process.env, fetchImpl = fetch, now = Date.now, seats = async () => ({}), linkGuest = async()=>{}, logoutGuest=()=>{} } = {}) {
   const enabled = env.AUTH_ENABLED === 'true';
   let origin, supabase, key, cookieKey;
   if (enabled) {
@@ -121,7 +121,8 @@ function createAccountAuth({ env = process.env, fetchImpl = fetch, now = Date.no
         const session = tokenSession(await request('/auth/v1/token?grant_type=pkce',{method:'POST',body:{auth_code:code,code_verifier:flow.verifier}}));
         // Explicit server validation, never trust metadata, email or client claims.
         await request('/auth/v1/user',{token:session.access});
-        await getProfile(session);
+        const own=await getProfile(session);
+        await linkGuest(req,res,own.id);
         cookie(res,'session',session,30*86400); redirect(res,'/?auth=ok'); return true;
       }
       const readOnly = ['/api/account','/api/account/rooms'].includes(url.pathname);
@@ -143,12 +144,13 @@ function createAccountAuth({ env = process.env, fetchImpl = fetch, now = Date.no
             await request('/auth/v1/logout?scope=local',{method:'POST',token:current.access});
           } catch (error) { if (error.status !== 401) throw error; }
         }
-        refreshes.clear(); cookie(res,'session',null,0); cookie(res,'oauth',null,0);
+        refreshes.clear(); logoutGuest(req,res); cookie(res,'session',null,0); cookie(res,'oauth',null,0);
         json(res,200,{ok:true}); return true;
       }
       if (url.pathname === '/api/account' && !read(req,'session')) { json(res,200,{enabled:true,profile:null}); return true; }
       const session = await authenticate(req,res);
       let own = await getProfile(session);
+      if(url.pathname === "/api/account") await linkGuest(req,res,own.id);
       if (url.pathname === '/api/account/profile') {
         if (typeof input.nickname !== 'string' || !input.nickname.trim() || input.nickname.trim().length > 24 || /[<>"'&\p{Cc}]/u.test(input.nickname) || !Lobby.isColor(input.color)) throw fail(400,'Elige un nombre de 1 a 24 caracteres y un color del catálogo.');
         own = profile(await request('/rest/v1/rpc/game_update_profile',{method:'POST',token:session.access,body:{p_nickname:input.nickname.trim(),p_color:input.color}}));
@@ -165,6 +167,6 @@ function createAccountAuth({ env = process.env, fetchImpl = fetch, now = Date.no
     } finally { inFlight--; }
     return true;
   }
-  return {handle};
+  return {handle,async identify(req,res) { if(!enabled||!read(req,"session"))return null;try{return (await getProfile(await authenticate(req,res))).id;}catch(error){if(error.status===401)return null;throw error;} }};
 }
 module.exports = { createAccountAuth };

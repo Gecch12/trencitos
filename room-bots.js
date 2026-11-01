@@ -1,4 +1,5 @@
 "use strict";
+const I18n = require("./i18n");
 const Engine = require("./engine");
 const { chooseBotAction } = require("./bots");
 
@@ -28,7 +29,7 @@ function createRoomBots({ rooms, sendRoom, dispatch, blocked, setTimer = setTime
         const action = chooseBotAction(room.game, seat);
         if (action) Engine.action(room.game, seat, action, { now: time });
         else if (room.game.current === seat && room.game.phase === "play") {
-          Engine.note(room.game, `${room.members[seat].name} cede el turno.`, seat);
+          Engine.note(room.game, I18n.message`${room.members[seat].name} cede el turno.`, seat);
           Engine.next(room.game, time);
         }
         room.revision = (room.revision || 0) + 1;

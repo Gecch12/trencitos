@@ -4,11 +4,13 @@ const http = require("node:http"),
   path = require("node:path"),
   crypto = require("node:crypto");
 const Engine = require("./engine");
+const {createMatchArchive,safePublic}=require("./match-archive");
+const {guestId,ensureGuest}=require("./guest-identity");
 const LobbyUI = require("./lobby-ui");
 const { createPracticeController } = require("./practice");
 const { createGameClock } = require("./game-clock");
 const { createMultiplayerController, shiftDeadlines, GRACE_MS } = require("./multiplayer");
-const { hashToken, loadRooms, saveRooms } = require("./room-store");
+const { hashToken, loadState, loadRooms, saveRooms } = require("./room-store");
 const { createSupabaseStore } = require("./supabase-store");
 const { createDurableQueue } = require("./durable-queue");
 const { createAccountAuth } = require("./account-auth");
@@ -39,17 +41,20 @@ function restoreLoaded(data) {
     }
   }
 }
-if (!remoteStore) restoreLoaded(loadRooms(STORE));
+const initialState=remoteStore?null:loadState(STORE);
+const archive=createMatchArchive({remote:remoteStore,saved:initialState?.archive});
+if (!remoteStore) restoreLoaded(Array.isArray(initialState)?initialState:initialState.rooms);
 let storageFailureAt = null;
 const committed = new WeakMap();
 for (const r of rooms.values()) committed.set(r, snapshot(r));
 function captureRuntime() {
-  return { failureAt: storageFailureAt,
+  return { failureAt: storageFailureAt, archivePending:archive.snapshot(),
     rooms: [...rooms.values()].map(r => ({ room: r, data: { ...r, game: r.game ? structuredClone(r.game) : null },
       members: r.members.map(member => ({ member, data: { ...member, actionIds: [...(member.actionIds || [])] } })) })),
     peers: [...peers].map(peer => ({ peer, room: peer.room, watching: peer.watching, seat: peer.seat, token: peer.token })) };
 }
 function restoreRuntime(saved) {
+  archive.rollback(saved.archivePending);
   for (const r of rooms.values()) { clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r); }
   rooms.clear();
   for (const { room, data, members } of saved.rooms) {
@@ -60,17 +65,18 @@ function restoreRuntime(saved) {
       return Object.assign(member, data);
     });
     rooms.set(room.code, room);
+    watchRecording(room);
   }
   for (const { peer, room, watching, seat, token } of saved.peers) Object.assign(peer, { room, watching, seat, token });
   storageFailureAt = saved.failureAt;
 }
 const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, restore: restoreRuntime,
-  commit: () => remoteStore.save(rooms),
+  commit: async () => { await remoteStore.save(rooms,archive.pending); archive.commit(); },
   onFailure: error => {
     console.error("Remote storage paused:", error.code || "INTERNAL");
     storageFailureAt ??= Date.now();
-    for (const r of rooms.values()) if (!r.practice) { clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r); }
-    for (const peer of peers) if (!peer.room?.practice) {
+    for (const r of rooms.values()) { clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r); }
+    for (const peer of peers) {
       peer.send({ type: "storage", paused: true, requiresRestart: true });
       peer.send({ type: "error", code: "STORAGE_FAILED", message: "No se pudo confirmar el guardado. La partida está pausada; reinicia el servidor y reconecta para recuperar el estado guardado." });
       if (peer.room?.game) peer.send({ type: "state", game: { ...Engine.view(peer.room.game, peer.seat), revision: peer.room.revision || 0, storagePaused: true } });
@@ -78,8 +84,8 @@ const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, rest
   },
 }) : null;
 const dispatch = job => stopping ? undefined : durable ? durable.run(() => { if (!stopping) job(); }) : job();
-const practice = createPracticeController({ rooms, sendRoom, dispatch, onRemove: room => clocks.cancel(room) });
-const clocks = createGameClock({ rooms, sendRoom, dispatch, canTick: r => r.practice || (storageFailureAt === null && r.emptySince == null),
+const practice = createPracticeController({ rooms, sendRoom, dispatch, blocked:()=>storageFailureAt!==null, onRemove: room => { clocks.cancel(room); archive.capture(room,"Práctica cerrada."); return persist(); } });
+const clocks = createGameClock({ rooms, sendRoom, dispatch, canTick: r => storageFailureAt === null && (r.practice || r.emptySince == null),
   expireGame: r => { const changed = Engine.expire(r.game); if (changed) r.revision = (r.revision || 0) + 1; return changed; } });
 const multiplayer = createMultiplayerController({ rooms, sendRoom, removeRoom, dispatch,
   blocked: () => storageFailureAt !== null,
@@ -87,10 +93,10 @@ const multiplayer = createMultiplayerController({ rooms, sendRoom, removeRoom, d
   performAction: (r, seat, action) => { try { Engine.action(r.game, seat, action); r.revision = (r.revision || 0) + 1; sendRoom(r, true); } catch (e) { console.error("Replacement bot:", e.message); } } });
 const roomBots = createRoomBots({ rooms, sendRoom, dispatch, blocked: () => storageFailureAt !== null });
 function snapshot(r) {
-  return { game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
+  return { archiveHash:r.archiveHash,matchId:r.matchId,archiveSeq:r.archiveSeq,archiveFull:r.archiveFull,archiveStartedAt:r.archiveStartedAt,archiveClosedAt:r.archiveClosedAt,_archiveState:r._archiveState, game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
     hostSeat: r.hostSeat, visibility: r.visibility, maxPlayers: r.maxPlayers,
     members: r.members.map(m => ({ member: m, data: { token: m.token || m.ws?.token, tokenHash: m.tokenHash,
-      name: m.name, bot: m.bot, color: m.color, accountId: m.accountId, actionIds: [...(m.actionIds || [])], autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
+      name: m.name, bot: m.bot, color: m.color, accountId: m.accountId, guestId:m.guestId, actionIds: [...(m.actionIds || [])], autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
 }
 function persist() {
   if (remoteStore) {
@@ -100,16 +106,20 @@ function persist() {
   }
   try {
     for (const r of rooms.values()) if (!r.practice) r.savedAt = Date.now();
-    saveRooms(STORE, rooms);
-    for (const r of rooms.values()) if (!r.practice) committed.set(r, snapshot(r));
+    const archived=archive.prepare();
+    saveRooms(STORE, rooms,archived);
+    archive.commit(archived);
+    for (const r of rooms.values()) committed.set(r, snapshot(r));
     return true;
   } catch (e) {
     console.error("Could not persist rooms:", e.message);
     storageFailureAt ??= Date.now();
-    for (const r of rooms.values()) if (!r.practice) {
+    for (const r of rooms.values()) {
       const saved = committed.get(r);
       if (saved) {
         r.game = structuredClone(saved.game); r.revision = saved.revision;
+        for(const key of ["archiveHash","matchId","archiveSeq","archiveFull","archiveStartedAt","archiveClosedAt","_archiveState"])r[key]=saved[key];
+        watchRecording(r);
         r.hostSeat = saved.hostSeat; r.visibility = saved.visibility; r.maxPlayers = saved.maxPlayers;
         for (const member of r.members) if (!saved.members.some(entry => entry.member === member) && member.ws) {
           const peer = member.ws;
@@ -129,10 +139,12 @@ function persist() {
       clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r);
       for (const member of r.members) member.ws?.send({ type: "storage", paused: true });
     }
+    archive.rollback([]);
     return false;
   }
 }
 function removeRoom(r, message = "La sala ya no existe.") {
+  archive.capture(r,message);
   clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r); rooms.delete(r.code);
   for (const m of r.members) if (m.ws) {
     m.ws.send({ type: "room_closed", message }); m.ws.room = null; m.ws.seat = -1; m.ws = null;
@@ -140,7 +152,7 @@ function removeRoom(r, message = "La sala ya no existe.") {
   for (const peer of peers) if (peer.watching === r) {
     peer.watching = null; peer.send({ type: "room_closed", message });
   }
-  if (!r.practice) persist();
+  persist();
   sendDirectory();
 }
 const TYPES = {
@@ -166,16 +178,53 @@ const TYPES = {
   "/lobby.css": "text/css; charset=utf-8",
   "/lobby-ui.js": "text/javascript; charset=utf-8",
   "/account-ui.js": "text/javascript; charset=utf-8",
+  "/translations.js": "text/javascript; charset=utf-8",
+  "/replay-state.js": "text/javascript; charset=utf-8",
+  "/history-ui.js": "text/javascript; charset=utf-8",
+  "/i18n.js": "text/javascript; charset=utf-8",
   "/shell.js": "text/javascript; charset=utf-8",
   "/shell.css": "text/css; charset=utf-8",
   "/shell-icons.js": "text/javascript; charset=utf-8",
 };
-const APP_ROUTES = new Set(["/rooms", "/play", "/more", "/profile"]);
-const accountAuth = createAccountAuth({seats:createAccountSeats({rooms,dispatch,sendRoom,
+const APP_ROUTES = new Set(["/rooms", "/play", "/more", "/profile", "/replay"]);
+async function linkGuest(req,res,accountId) {
+  const id=guestId(req); if(!id)return;
+  try {
+    if(remoteStore) { await archive.claim(id,accountId); return; }
+    // Read and write local ownership inside the same queue: concurrent sign-ins
+    // must never overwrite another guest claim or a newly recorded match.
+    await dispatch(()=>{
+      const claim=archive.claim(id,accountId),old=archive.state;
+      archive.restore({...old,claims:claim.claims});
+      if(!persist()){archive.restore(old);throw Error('Guest claim failed');}
+    });
+  } catch(error) {
+    if(error.status===409){ensureGuest(req,res,true);return;}
+    throw error;
+  }
+}
+const accountAuth = createAccountAuth({linkGuest, logoutGuest:(req,res)=>ensureGuest(req,res,true),seats:createAccountSeats({rooms,dispatch,sendRoom,
   unavailable:()=>!storageReady || stopping || storageFailureAt!==null})});
 const server = http.createServer(async (req, res) => {
   let url = new URL(req.url, "http://localhost");
+  if (req.method === "GET" && (APP_ROUTES.has(url.pathname)||url.pathname === "/")) ensureGuest(req,res);
   if (await accountAuth.handle(req,res,url)) return;
+  if (url.pathname.startsWith("/api/history")) {
+    res.setHeader("Cache-Control","no-store");
+    res.setHeader("Content-Type","application/json; charset=utf-8");
+    try {
+      if(req.method!=="GET") throw Object.assign(Error("Método no permitido."),{status:405});
+      const identity={guestId:guestId(req),accountId:await accountAuth.identify(req,res)};
+      const path=url.pathname.slice("/api/history".length).replace(/^\//, "").split("/");
+      const id=path[0], audit=path[1]==="audit";
+      if(path.length>2||path[1]&&!audit)throw Object.assign(Error("Esta repetición no está disponible."),{status:404});
+      if(id&&!/^[a-f0-9-]{36}$/.test(id)) throw Object.assign(Error("Esta repetición no está disponible."),{status:404});
+      const data=id?await archive.replay(identity,id,audit):{matches:await archive.list(identity)};
+      if(audit)res.setHeader("Content-Disposition",`attachment; filename="trencitos-${id}.json"`);
+      res.end(JSON.stringify(data));
+    } catch(error){res.statusCode=error.status||503;res.end(JSON.stringify({message:error.status?error.message:"El historial no está disponible ahora."}));}
+    return;
+  }
   if (req.method !== "GET") {
     res.writeHead(405);
     return res.end();
@@ -318,18 +367,23 @@ function detachPeer(peer, disconnectedAt = Date.now()) {
   if (r.practice) practice.disconnected(r, disconnectedAt);
   sendRoom(r);
 }
+function watchRecording(r) {
+  if(r.game) Engine.observe(r.game,event=>{r.archiveAction={...event,actor:r.members[event.seat]?.bot?"bot":r.members[event.seat]?.autopilot?"replacement":event.automatic?"timer":"player"};archive.capture(r);});
+}
 function sendRoom(r, automatic = false) {
+  watchRecording(r);
   if (rooms.get(r.code) !== r) return;
   if (!automatic) r.updated = Date.now();
   if (!r.practice && storageFailureAt === null) multiplayer.reconcile(r);
   if (rooms.get(r.code) !== r) return;
   if (r.game) Engine.ensureTiming(r.game);
   r.savedAt = Date.now();
-  if (!r.practice && storageFailureAt === null) persist();
+  if (storageFailureAt === null) { archive.capture(r); persist(); }
   r.members.forEach((m, i) => {
     if (!m.ws || m.ws.closed) return;
     m.ws.send({
       type: "lobby",
+      matchId:r.matchId,
       code: r.code,
       seat: i,
       token: m.ws.token || m.token,
@@ -350,16 +404,16 @@ function sendRoom(r, automatic = false) {
         seat: j,
       })),
     });
-    m.ws.send({ type: "storage", paused: !r.practice && storageFailureAt !== null, requiresRestart: !!remoteStore });
+    m.ws.send({ type: "storage", paused: storageFailureAt !== null, requiresRestart: !!remoteStore });
     if (r.game) m.ws.send({ type: "state", game: { ...Engine.view(r.game, i), earlyFinish: !!r.earlyFinish,
-      revision: r.revision || 0, storagePaused: !r.practice && storageFailureAt !== null } });
+      revision: r.revision || 0, storagePaused: storageFailureAt !== null } });
   });
   for (const peer of peers) if (peer.watching === r) sendSpectator(peer, r);
   if (r.practice) practice.sync(r);
   else { multiplayer.sync(r); roomBots.sync(r); }
   clocks.sync(r);
   sendDirectory();
-  return r.practice || storageFailureAt === null;
+  return storageFailureAt === null;
 }
 function sendDirectory() {
   const message = { type: "directory", rooms: storageFailureAt === null ? Directory.listRooms(rooms) : [], unavailable: storageFailureAt !== null };
@@ -372,7 +426,7 @@ function sendSpectator(peer, r) {
   peer.send({ type: "lobby", code: r.code, seat: -1, spectator: true, host: false, started: true,
     sessionVersion: 1, visibility: "public", maxPlayers: Directory.capacity(r),
     members: r.members.map(m => ({ name: m.name, color: m.color, bot: !!m.bot, connected: !!m.bot || !!(m.ws && !m.ws.closed), autopilot: !!m.autopilot })) });
-  peer.send({ type: "state", game: { ...Engine.view(r.game, -1), revision: r.revision || 0, storagePaused: storageFailureAt !== null } });
+  peer.send({ type: "state", game: { ...safePublic(Engine.view(r.game, -1)), revision: r.revision || 0, storagePaused: storageFailureAt !== null } });
 }
 function deny(peer, msg, code) {
   peer.send({ type: "error", message: msg, code });
@@ -400,11 +454,11 @@ function onMessage(peer, msg) {
     if (msg.type === "leave") { peer.watching = null; peer.send({ type: "room_closed" }); return; }
     return deny(peer, "Estás observando. No puedes modificar la partida.", "SPECTATOR_READ_ONLY");
   }
-  if (msg.type === "retry_save" && peer.room && !peer.room.practice && storageFailureAt !== null) {
+  if (msg.type === "retry_save" && peer.room && storageFailureAt !== null) {
     if (remoteStore) return deny(peer, "El guardado remoto requiere reiniciar el servidor y reconectar para recuperar el checkpoint.", "STORAGE_FAILED");
     const elapsed = Date.now() - storageFailureAt;
     const absenceTimes = new Map();
-    for (const r of rooms.values()) if (!r.practice) {
+    for (const r of rooms.values()) {
       absenceTimes.set(r, { emptySince: r.emptySince, members: r.members.map(m => m.disconnectedAt) });
       shiftDeadlines(r.game, elapsed);
       if (r.emptySince != null) r.emptySince += elapsed;
@@ -412,7 +466,7 @@ function onMessage(peer, msg) {
     }
     if (persist()) {
       storageFailureAt = null;
-      for (const r of rooms.values()) if (!r.practice) sendRoom(r);
+      for (const r of rooms.values()) sendRoom(r);
     } else {
       for (const [r, times] of absenceTimes) {
         r.emptySince = times.emptySince;
@@ -422,7 +476,7 @@ function onMessage(peer, msg) {
     }
     return;
   }
-  if (storageFailureAt !== null && !peer.room?.practice && !["join", "leave", "create_test"].includes(msg.type))
+  if (storageFailureAt !== null && !["join", "leave"].includes(msg.type))
     return deny(peer, "Partida pausada: no se pudo guardar. Reintenta el guardado.", "STORAGE_FAILED");
   if (["create", "create_test"].includes(msg.type) && !peer.room) {
     if (msg.visibility !== undefined && !["public", "private"].includes(msg.visibility)) return deny(peer, "Visibilidad inválida.");
@@ -442,7 +496,7 @@ function onMessage(peer, msg) {
       token: crypto.randomBytes(24).toString("hex"),
     };
     if (msg.type === "create_test") {
-      r.practice = true;
+      r.practice = true; r.archiveFull=true; human.guestId=peer.guestId;
       peer.room = r;
       peer.seat = 0;
       human.ws = peer;
@@ -479,6 +533,7 @@ function onMessage(peer, msg) {
         peer.seat = index;
         peer.token = msg.token;
         r.members[index].ws = peer;
+        r.members[index].guestId ||= peer.guestId;
         if (!r.practice && r.game) multiplayer.requestControl(r, index);
         return sendRoom(r);
       }
@@ -585,6 +640,7 @@ function onMessage(peer, msg) {
       return deny(peer, "Se necesitan al menos dos jugadores.");
     if (r.members.some((m) => !m.bot && (!m.ws || m.ws.closed)))
       return deny(peer, "Todos deben estar conectados para iniciar.");
+    r.archiveFull=true;
     r.game = startRoomGame(r);
     return sendRoom(r);
   }
@@ -596,7 +652,7 @@ function onMessage(peer, msg) {
       sendRoom(r); peer.send({ type: "ack", id: msg.id }); return;
     }
     if (!r.practice && Engine.expire(r.game)) { r.revision = (r.revision || 0) + 1; sendRoom(r, true); }
-    if (storageFailureAt !== null && !r.practice) return deny(peer, "No se pudo guardar.", "STORAGE_FAILED");
+    if (storageFailureAt !== null) return deny(peer, "No se pudo guardar.", "STORAGE_FAILED");
     if (member.autopilot) return deny(peer, "El bot controla tu puesto. Pulsa Recuperar control.");
     // Private choices are independent: simultaneous confirmations must not
     // invalidate one another. Their pending/offer ID checks live in the engine.
@@ -606,6 +662,7 @@ function onMessage(peer, msg) {
     }
     try {
       Engine.action(r.game, peer.seat, msg.action);
+
       r.revision = (r.revision || 0) + 1;
       if (msg.id) member.actionIds = [...(member.actionIds || []), msg.id].slice(-128);
       if (sendRoom(r)) peer.send({ type: "ack", id: msg.id });
@@ -622,6 +679,7 @@ function attach(peer, r, m) {
   peer.room = r;
   peer.seat = r.members.length;
   m.ws = peer;
+  m.guestId ||= peer.guestId;
   peer.token = m.token;
   m.tokenHash = hashToken(m.token);
   r.members.push(m);
@@ -685,7 +743,7 @@ server.on("upgrade", (req, socket) => {
       accept +
       "\r\n\r\n",
   );
-  createPeer(socket);
+  createPeer(socket).guestId=guestId(req);
 });
 // WebSocket protocol pings are answered by the browser even in a background tab.
 // For a silent network failure, count absence from the last response, not from
@@ -737,12 +795,15 @@ const cleanup = setInterval(
 );
 cleanup.unref();
 server.on("close", () => clearInterval(cleanup));
-const ready = (remoteStore ? remoteStore.load().then(restoreLoaded) : Promise.resolve()).then(() => {
+const ready = (remoteStore ? remoteStore.load().then(restoreLoaded) : Promise.resolve()).then(async () => {
+  await archive.bootstrap(rooms);
+  await dispatch(()=>{for(const room of rooms.values())archive.capture(room);if(rooms.size||(!remoteStore&&Object.keys(archive.state.matches).length))persist();});
   storageReady = true;
-  for (const room of rooms.values()) { multiplayer.sync(room); clocks.sync(room); roomBots.sync(room); }
+  for (const room of rooms.values()) { watchRecording(room); multiplayer.sync(room); clocks.sync(room); roomBots.sync(room); }
 });
 async function shutdown() {
   if (stopping) return;
+  await dispatch(()=>practice.close());
   stopping = true; clocks.close(); multiplayer.close(); roomBots.close();
   // Finish an in-flight durable commit, then disconnect without recording a
   // voluntary abandonment. The next process restores the saved clock budget.

@@ -2,15 +2,15 @@
 const $ = (id) => document.getElementById(id);
 const C = GameUI.ROUTE_COLORS;
 const N = {
-  red: "Rojo",
-  blue: "Azul",
-  green: "Verde",
-  yellow: "Amarillo",
-  black: "Negro",
-  white: "Blanco",
-  orange: "Naranja",
-  purple: "Morado",
-  wild: "Locomotora",
+  red: I18n.t("Rojo"),
+  blue: I18n.t("Azul"),
+  green: I18n.t("Verde"),
+  yellow: I18n.t("Amarillo"),
+  black: I18n.t("Negro"),
+  white: I18n.t("Blanco"),
+  orange: I18n.t("Naranja"),
+  purple: I18n.t("Morado"),
+  wild: I18n.t("Locomotora"),
 };
 let sock = null,
   game = null,
@@ -27,6 +27,8 @@ let sessionReplaced = false, storagePaused = false, pendingAction = null, resend
 let homeMode = "create", homeBusy = false, lobbyStarted = false;
 let preferredColor = localStorage.getItem("rr-color");
 let account = null, shell = null;
+const replayMode = location.pathname === "/replay";
+let replayAt = null;
 let spectating = false, roomCapacity = 5, roomVisibility = 'private';
 let desiredWatch = new URLSearchParams(location.search).get('watch') || '';
 if (!LobbyUI.isColor(preferredColor)) preferredColor = LobbyUI.PALETTE[0].color;
@@ -44,7 +46,7 @@ function boardUnavailable() {
   board3D?.dispose(); board3D = null; board3DFailed = true;
   $("mapscroll").classList.remove("board-ready");
   $("boardStatus").hidden = false;
-  $("boardStatusText").textContent = "No pudimos cargar el tablero 3D. Prueba a reintentarlo o recarga la página.";
+  $("boardStatusText").textContent = I18n.t("No pudimos cargar el tablero 3D. Prueba a reintentarlo o recarga la página.");
   $("retryBoard").hidden = false;
   closeMapMenu();
 }
@@ -52,7 +54,7 @@ async function initializeBoard3D() {
   if (board3DLoading || board3D) return;
   board3DLoading = true; board3DFailed = false;
   $("boardStatus").hidden = false; $("retryBoard").hidden = true;
-  $("boardStatusText").textContent = "Preparando el tablero…";
+  $("boardStatusText").textContent = I18n.t("Preparando el tablero…");
   try {
     const { createBoard3D } = await import("./board-3d.js");
     board3D = createBoard3D({ container: $("mapscroll"), map: RailMap, network: MAP_GEOMETRY, onFailure: boardUnavailable });
@@ -85,11 +87,11 @@ async function syncWagonPreview() {
     } });
     const description = wagonPreview.update(preferredColor);
     figure.dataset.model = description.model;
-    $("wagonPreviewName").textContent = description.label;
-    $("wagonPreviewStage").setAttribute("aria-label", `${description.label}, color ${LobbyUI.PALETTE.find(p => p.color === preferredColor)?.name}`);
+    $("wagonPreviewName").textContent = I18n.t(description.label);
+    $("wagonPreviewStage").setAttribute("aria-label", I18n.t`${I18n.t(description.label)}, color ${I18n.t(LobbyUI.PALETTE.find(p => p.color === preferredColor)?.name)}`);
     $("wagonPreviewError").hidden = true;
   } catch (error) {
-    $("wagonPreviewName").textContent = "Tu selección"; $("wagonPreviewError").hidden = false;
+    $("wagonPreviewName").textContent = I18n.t("Tu selección"); $("wagonPreviewError").hidden = false;
     console.warn("Vista previa no disponible:", error.message);
   } finally { wagonPreviewLoading = false; }
 }
@@ -130,7 +132,7 @@ if (recoveryToken && /^[a-f0-9]{48}$/.test(recoveryToken) && LobbyUI.isJoinCode(
 }
 if (location.hash) history.replaceState(null, "", location.pathname + location.search);
 const savedName = localStorage.getItem("rr-name");
-if (savedName) $("nickname").value = savedName;
+$("nickname").value = savedName || I18n.t("Jugador");
 function escapeHTML(x) {
   return String(x).replace(
     /[&<>"']/g,
@@ -149,14 +151,16 @@ function status(text) {
   syncHomeAvailability();
 }
 function send(obj) {
+  if(replayMode)return;
   if (!sock || sock.readyState !== WebSocket.OPEN) {
     homeBusy = false; syncHomeAvailability();
-    error("Sin conexión.");
+    error(I18n.t("Sin conexión."));
     return;
   }
   sock.send(JSON.stringify(obj));
 }
 function error(s) {
+  s = I18n.t(s);
   $("lobbyError").textContent = s;
   if ($("joinDialog").open) $("joinCodeError").textContent = s;
   let el = $("errorMsg");
@@ -177,6 +181,7 @@ function identityKey(code) {
   return "rr-room-" + code;
 }
 function resetToLobby(message = "", preserveIdentity = false) {
+  message = I18n.t(message);
   cancelTunnelReveal();
   if (!spectating && !preserveIdentity && (room || desiredRoom)) localStorage.removeItem(identityKey(room || desiredRoom));
   spectating = false; desiredWatch = ''; roomCapacity = 5;
@@ -230,7 +235,7 @@ function resetToLobby(message = "", preserveIdentity = false) {
   renderHomeColors();
   $("lobbyError").textContent = message;
   history.replaceState(null, "", "/");
-  status(sock?.readyState === WebSocket.OPEN ? "● Conectado" : "○ Desconectado");
+  status(sock?.readyState === WebSocket.OPEN ? I18n.t("● Conectado") : I18n.t("○ Desconectado"));
   shell?.reset();
   account?.listRooms().catch(() => {});
 }
@@ -238,12 +243,12 @@ function connect() {
   if (sessionReplaced) return;
   const proto = location.protocol === "https:" ? "wss:" : "ws:";
   sock = new WebSocket(proto + "//" + location.host + "/socket");
-  status("Conectando…");
+  status(I18n.t("Conectando…"));
   sock.onopen = () => {
     resendPending = true;
     lastDrawId = null; // The reconnect snapshot is not a new draw.
     lastEffectId = null;
-    status("● Conectado");
+    status(I18n.t("● Conectado"));
     send({type:'list_rooms'});
     if (desiredWatch) send({type:'spectate',code:desiredWatch});
     else if (attempted && desiredRoom) {
@@ -268,7 +273,7 @@ function connect() {
     if (m.type === "error") {
       homeBusy = false; syncHomeAvailability();
       pendingAction = null;
-      if (desiredWatch && !room) { desiredWatch=''; error(m.message); return; }
+      if (desiredWatch && !room) { desiredWatch=''; shell.watchUnavailable(); return; }
       if (!room && ["CODE_TAKEN", "INVALID_CODE", "ROOM_NOT_FOUND"].includes(m.code)) {
         attempted = false;
         if (m.code === "CODE_TAKEN") $("createCode").value = LobbyUI.randomCode();
@@ -286,12 +291,14 @@ function connect() {
       return;
     }
     if (m.type === "room_closed") {
+      const wasWatching = spectating;
       resetToLobby(m.message || "", !!m.preserveIdentity);
+      if (wasWatching && m.message) shell.watchUnavailable();
       return;
     }
     if (m.type === "session_replaced") {
       sessionReplaced = true; pendingAction = null;
-      notice("Esta partida está abierta en otra pestaña. Aquí no tienes el control.", "takeOver");
+      notice(I18n.t("Esta partida está abierta en otra pestaña. Aquí no tienes el control."), "takeOver");
       updateCompactStatus();
       return;
     }
@@ -299,8 +306,8 @@ function connect() {
       storagePaused = m.paused;
       syncHomeAvailability();
       if (storagePaused) notice(m.requiresRestart
-        ? "Partida pausada por el guardado remoto. El administrador debe restablecer el servicio; conserva esta pestaña para reconectar."
-        : "Partida pausada: el servidor no pudo guardar. No se aceptarán jugadas hasta recuperarlo.", m.requiresRestart ? null : "retrySave");
+        ? I18n.t("Partida pausada por el guardado remoto. El administrador debe restablecer el servicio; conserva esta pestaña para reconectar.")
+        : I18n.t("Partida pausada: el servidor no pudo guardar. No se aceptarán jugadas hasta recuperarlo."), m.requiresRestart ? null : "retrySave");
       else if (!sessionReplaced) $("sessionNotice").classList.add("hidden");
       updateCompactStatus();
       return;
@@ -336,7 +343,7 @@ function connect() {
       $("sessionControls").classList.toggle("hidden", spectating || practiceMode || !sessionSupported);
       $("reclaimControl").classList.toggle("hidden", !members[seat]?.autopilot);
       $("reclaimControl").disabled = !!members[seat]?.reclaim;
-      $("reclaimControl").textContent = members[seat]?.reclaim ? "Volverás en tu siguiente turno" : "Recuperar control";
+      $("reclaimControl").textContent = members[seat]?.reclaim ? I18n.t("Volverás en tu siguiente turno") : I18n.t("Recuperar control");
       if (!spectating) localStorage.setItem(identityKey(room), token);
       localStorage.setItem("rr-name", $("nickname").value);
       if (enteringRoom || m.started) history.replaceState(null, "", spectating ? '/rooms?watch='+room : "/rooms?room=" + room);
@@ -377,7 +384,7 @@ function connect() {
     cancelCardFlights();
     cancelConstruction();
     stopSounds();
-    status(sessionReplaced ? "Otra pestaña" : "○ Desconectado");
+    status(sessionReplaced ? I18n.t("Otra pestaña") : I18n.t("○ Desconectado"));
     updateCompactStatus();
     if (game) renderDialog();
     if (sessionReplaced) return;
@@ -402,22 +409,23 @@ function renderLobby() {
   $("members").innerHTML = members
     .map(
       (m, i) =>
-        `<div class="member" data-member="${i}">${homeAvatarMarkup()}<div class="member-identity"><b>${escapeHTML(m.name)}</b><small>${[i === seat ? "Tú" : "", m.host ? "Anfitrión" : "", m.bot ? "Bot" : !m.connected ? "Sin conexión · reserva 60 s" : "", LobbyUI.PALETTE.find(p => p.color === m.color)?.name || ""].filter(Boolean).join(" · ")}</small></div>${host && !lobbyStarted && i !== seat && !practiceMode ? `<button class="member-remove" type="button" data-kick="${i}" aria-label="Retirar a ${escapeHTML(m.name)}" title="Retirar jugador">×</button>` : ""}</div>`,
+        `<div class="member" data-member="${i}">${homeAvatarMarkup(m.bot || m.autopilot)}<div class="member-identity"><b>${escapeHTML(m.name)}</b><small>${[i === seat ? I18n.t("Tú") : "", m.host ? I18n.t("Anfitrión") : "", m.bot ? "Bot" : !m.connected ? I18n.t("Sin conexión · reserva 60 s") : "", I18n.t(LobbyUI.PALETTE.find(p => p.color === m.color)?.name || "")].filter(Boolean).join(" · ")}</small></div>${host && !lobbyStarted && i !== seat && !practiceMode ? I18n.t`<button class="member-remove" type="button" data-kick="${i}" aria-label="Retirar a ${escapeHTML(m.name)}" title="Retirar jugador">×</button>` : ""}</div>`,
     )
     .join("");
   $("members").querySelectorAll("[data-member]").forEach(row => applyPlayerAppearance(row, members[+row.dataset.member].color));
   $("members").querySelectorAll("[data-kick]").forEach(button => button.onclick = () => {
-    if (confirm("¿Retirar a este participante de la sala?")) send({ type: "kick", seat: +button.dataset.kick });
+    if (confirm(I18n.t("¿Retirar a este participante de la sala?"))) send({ type: "kick", seat: +button.dataset.kick });
   });
   $("start").classList.toggle("hidden", practiceMode || !host || lobbyStarted);
   renderHomeColors();
   syncHomeAvailability();
   $("roomNote").textContent =
-    practiceMode ? "Sala de pruebas temporal · Tú y 3 bots." :
-      members.length < 2 ? "Invita a alguien para empezar." : members.some(m => !m.connected) ? "Esperando a que todos estén conectados." : host ? "Todo listo. El primer turno se sortea al empezar." : "Esperando a que el anfitrión inicie la partida.";
+    practiceMode ? I18n.t("Sala de pruebas temporal · Tú y 3 bots.") :
+      members.length < 2 ? I18n.t("Invita a alguien para empezar.") : members.some(m => !m.connected) ? I18n.t("Esperando a que todos estén conectados.") : host ? I18n.t("Todo listo. El primer turno se sortea al empezar.") : I18n.t("Esperando a que el anfitrión inicie la partida.");
   shell?.renderRoom();
 }
-function homeAvatarMarkup() {
+function homeAvatarMarkup(bot = false) {
+  if (bot) return `<span class="home-avatar is-bot" aria-hidden="true">${ShellIcons.svg('bot')}</span>`;
   return '<span class="home-avatar" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M7 27v-4a9 9 0 0 1 18 0v4Z"/></svg></span>';
 }
 function syncHomeAvailability() {
@@ -433,7 +441,7 @@ function syncHomeAvailability() {
   shell?.availability();
 }
 function homeCodeError(mode, message = "") {
-  $(mode === "create" ? "createCodeError" : "joinCodeError").textContent = message;
+  $(mode === "create" ? "createCodeError" : "joinCodeError").textContent = I18n.t(message);
   $(mode === "create" ? "createCode" : "code").setAttribute("aria-invalid", String(!!message));
 }
 function setHomeMode(mode, focus = false) {
@@ -454,17 +462,18 @@ function applyPlayerAppearance(element, color) {
 }
 function renderHomeColors() {
   applyPlayerAppearance($("homeAvatar"), preferredColor);
-  $("chosenColorName").textContent = LobbyUI.PALETTE.find(p => p.color === preferredColor)?.name || "";
+  $("chosenColorName").textContent = I18n.t(LobbyUI.PALETTE.find(p => p.color === preferredColor)?.name || "");
   $("practiceColorName").textContent = $("chosenColorName").textContent;
   for (const id of ["practiceColors", "roomColors"]) {
     const root = $(id), focused = root.contains(document.activeElement) ? document.activeElement.dataset.color : null;
     root.replaceChildren();
-    for (const { color, name } of LobbyUI.PALETTE) {
+    for (const { color, name: sourceName } of LobbyUI.PALETTE) {
+      const name = I18n.t(sourceName);
       const owner = id === "roomColors" && members.find((m, i) => i !== seat && m.color === color);
       const button = document.createElement("button"); button.type = "button"; button.dataset.color = color;
       button.dataset.finish = GameUI.playerFinish(color);
       button.style.setProperty("--choice-color", GameUI.playerColor(color));
-      button.setAttribute("aria-label", owner ? `${name}, ocupado por ${owner.name}` : name);
+      button.setAttribute("aria-label", owner ? I18n.t`${name}, ocupado por ${owner.name}` : name);
       button.title = owner ? `${name} · ${owner.name}` : name;
       button.setAttribute("aria-pressed", String(color === preferredColor));
       button.disabled = !!owner || (id === "roomColors" && lobbyStarted);
@@ -503,16 +512,16 @@ function initializeHome() {
 $("homeCreate").onsubmit = event => {
   event.preventDefault();
   if (homeBusy) return;
-  if (room) return error("Ya perteneces a una sala.");
+  if (room) return error(I18n.t("Ya perteneces a una sala."));
   const code = $("createCode").value.trim();
-  if (!LobbyUI.isNewCode(code)) { homeCodeError("create", "Usa entre 6 y 10 números, sin espacios."); $("createCode").focus(); return; }
+  if (!LobbyUI.isNewCode(code)) { homeCodeError("create", I18n.t("Usa entre 6 y 10 números, sin espacios.")); $("createCode").focus(); return; }
   attempted = false;
   homeBusy = true; syncHomeAvailability();
   send({ type: "create", name: $("nickname").value, code, color: preferredColor, visibility:'public', maxPlayers:5 });
 };
 $("createTest").onclick = () => {
   if (homeBusy) return;
-  if (room) return error("Ya perteneces a una sala.");
+  if (room) return error(I18n.t("Ya perteneces a una sala."));
   attempted = false;
   $("lobbyError").textContent = "";
   waitingForGameStart = true;
@@ -524,9 +533,9 @@ $("leaveTest").onclick = () => send({ type: "leave_test" });
 $("homeJoin").onsubmit = event => {
   event.preventDefault();
   if (homeBusy) return;
-  if (room) return error("Ya perteneces a una sala.");
+  if (room) return error(I18n.t("Ya perteneces a una sala."));
   desiredRoom = $("code").value.trim().toUpperCase();
-  if (!LobbyUI.isJoinCode(desiredRoom)) { homeCodeError("join", "Introduce un código válido de 6 a 10 caracteres."); $("code").focus(); return; }
+  if (!LobbyUI.isJoinCode(desiredRoom)) { homeCodeError("join", I18n.t("Introduce un código válido de 6 a 10 caracteres.")); $("code").focus(); return; }
   attempted = true;
   homeBusy = true; syncHomeAvailability();
   send({
@@ -543,15 +552,15 @@ async function copyInvitation() {
   const url = location.origin + "/?room=" + room;
   try {
     await navigator.clipboard.writeText(url);
-    $("copyLink").textContent = "✓ Copiado";
-    $("copyRoomInGame").textContent = "✓ Copiado";
+    $("copyLink").textContent = I18n.t("✓ Copiado");
+    $("copyRoomInGame").textContent = I18n.t("✓ Copiado");
     setTimeout(() => {
-      $("copyLink").textContent = "Copiar invitación";
-      $("copyRoomInGame").innerHTML = "↗ <span>Invitar</span>";
+      $("copyLink").textContent = I18n.t("Copiar invitación");
+      $("copyRoomInGame").innerHTML = I18n.t("↗ <span>Invitar</span>");
     }, 2400);
   } catch {
     $("copyLink").textContent = url;
-    prompt("Copia el enlace de tu sala", url);
+    prompt(I18n.t("Copia el enlace de tu sala"), url);
   }
 }
 $("copyLink").onclick = copyInvitation;
@@ -568,21 +577,22 @@ $("takeOver").onclick = () => {
 $("retrySave").onclick = () => send({ type: "retry_save" });
 $("copyRecovery").onclick = async () => {
   const url = location.origin + "/?room=" + room + "#recover=" + encodeURIComponent(token);
-  try { await navigator.clipboard.writeText(url); toast("Enlace privado copiado. Guárdalo solo para ti."); }
-  catch { prompt("Tu enlace privado de recuperación (no lo compartas)", url); }
+  try { await navigator.clipboard.writeText(url); toast(I18n.t("Enlace privado copiado. Guárdalo solo para ti.")); }
+  catch { prompt(I18n.t("Tu enlace privado de recuperación (no lo compartas)"), url); }
 };
 $("rotateRecovery").onclick = () => {
-  if (confirm("¿Invalidar el enlace privado anterior? Después copia y guarda el nuevo.")) send({ type: "rotate_token" });
+  if (confirm(I18n.t("¿Invalidar el enlace privado anterior? Después copia y guarda el nuevo."))) send({ type: "rotate_token" });
 };
 $("reclaimControl").onclick = () => send({ type: "reclaim" });
 $("leaveRoom").onclick = () => {
-  if (spectating || !game || game.phase === "finished" || confirm("¿Salir de la partida? Un bot tomará tu puesto. Si todos salen, la partida se abandonará tras 60 segundos sin conexiones.")) send({ type: "leave" });
+  if (spectating || !game || game.phase === "finished" || confirm(I18n.t("¿Salir de la partida? Un bot tomará tu puesto. Si todos salen, la partida se abandonará tras 60 segundos sin conexiones."))) send({ type: "leave" });
 };
 function act(type, other = {}) {
+  if(replayMode)return;
   if (spectating) return;
-  if (sessionReplaced || storagePaused || members[seat]?.autopilot) { error("No tienes el control de este puesto."); return; }
+  if (sessionReplaced || storagePaused || members[seat]?.autopilot) { error(I18n.t("No tienes el control de este puesto.")); return; }
   if (pendingAction) return;
-  if (sock?.readyState !== WebSocket.OPEN) { error("Sin conexión."); return; }
+  if (sock?.readyState !== WebSocket.OPEN) { error(I18n.t("Sin conexión.")); return; }
   // Let an already running older server finish its games before it is restarted.
   if (!sessionSupported) { send({ type: "action", action: { type, ...other } }); return; }
   const id = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join("");
@@ -604,7 +614,7 @@ function colorCard(c, count, click, disabled) {
   image.draggable = false;
   b.appendChild(image);
   if (count !== null && count !== undefined) {
-    b.setAttribute("aria-label", `${N[c]}: ${count} carta${count === 1 ? "" : "s"}`);
+    b.setAttribute("aria-label", I18n.t`${N[c]}: ${count} carta${count === 1 ? "" : "s"}`);
     b.title = `${N[c]} · ${count}`;
     const tag = document.createElement("span");
     tag.className = "cardcount";
@@ -615,13 +625,15 @@ function colorCard(c, count, click, disabled) {
   }
   if (click) {
     b.type = "button";
-    b.title = "Robar carta " + N[c];
+    b.title = I18n.t("Robar carta ") + N[c];
     b.disabled = disabled;
     b.onclick = click;
   }
   return b;
 }
 function playerAvatar(index, compact = false) {
+  const member = members[index];
+  if (member?.bot || member?.autopilot) return `<span class="player-avatar is-bot${compact ? " history-avatar" : ""}" aria-hidden="true">${ShellIcons.svg('bot')}</span>`;
   return `<span class="player-avatar${compact ? " history-avatar" : ""}" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M7 27v-4a9 9 0 0 1 18 0v4Z"/></svg></span>`;
 }
 function render() {
@@ -639,9 +651,9 @@ function render() {
   $("scores").innerHTML = game.players
     .map(
       (x, i) =>
-        `<div class="scorebadge ${i === game.current && ["play", "tunnel"].includes(game.phase) ? "active" : ""}" data-player="${i}" tabindex="0" aria-label="${escapeHTML(x.name)}. ${game.result?.find(r => r.seat === i)?.score ?? x.score} puntos, ${x.trains} vagones, ${x.stations} estaciones. Enfoca para resaltar sus rutas.">
-          <div class="player-heading">${playerAvatar(i)}<div class="player-details"><b title="${escapeHTML(x.name)}">${escapeHTML(x.name)}</b><div class="player-status"><span class="player-turn-tag">EN TURNO</span><span class="player-state">${[i === seat ? "Tú" : "", members[i]?.autopilot ? "Bot de reemplazo" : !members[i]?.connected ? "Sin conexión" : "", game.phase === "initial" ? (x.initialReady ? "✓ Listo" : "Eligiendo billetes") : ""].filter(Boolean).join(" · ")}</span></div></div></div>
-          <div class="player-metrics">${playerMetric("points", "Puntos", game.result?.find(r => r.seat === i)?.score ?? x.score)}${playerMetric("trains", "Vagones", x.trains)}${playerMetric("stations", "Estaciones", x.stations)}</div>
+        I18n.t`<div class="scorebadge ${i === game.current && ["play", "tunnel"].includes(game.phase) ? "active" : ""}" data-player="${i}" tabindex="0" aria-label="${escapeHTML(x.name)}. ${game.result?.find(r => r.seat === i)?.score ?? x.score} puntos, ${x.trains} vagones, ${x.stations} estaciones. Enfoca para resaltar sus rutas.">
+          <div class="player-heading">${playerAvatar(i)}<div class="player-details"><b title="${escapeHTML(x.name)}">${escapeHTML(x.name)}</b><div class="player-status"><span class="player-turn-tag">EN TURNO</span><span class="player-state">${[i === seat ? I18n.t("Tú") : "", game.phase === "initial" ? (x.initialReady ? I18n.t("✓ Listo") : I18n.t("Eligiendo billetes")) : ""].filter(Boolean).join(" · ")}</span></div></div></div>
+          <div class="player-metrics">${playerMetric("points", I18n.t("Puntos"), game.result?.find(r => r.seat === i)?.score ?? x.score)}${playerMetric("trains", I18n.t("Vagones"), x.trains)}${playerMetric("stations", I18n.t("Estaciones"), x.stations)}</div>
         </div>`,
     )
     .join("");
@@ -665,34 +677,34 @@ function render() {
   if (previousFocus !== undefined) $("scores").querySelector(`[data-player="${previousFocus}"]`)?.focus({ preventScroll: true });
   $("turntitle").textContent =
     game.phase === "finished"
-      ? "Partida terminada"
+      ? I18n.t("Partida terminada")
       : game.phase === "initial"
-        ? "Elección inicial"
+        ? I18n.t("Elección inicial")
         : active
-          ? "Tu turno"
-          : `Turno de ${game.players[game.current].name}`;
-  $("roundStatus").textContent = game.phase === "finished" ? "Final" : game.phase === "initial" ? `${game.initialReadyCount}/${game.players.length} listos` : game.finalRemaining !== null ? "Última ronda" : "";
+          ? I18n.t("Tu turno")
+          : I18n.t`Turno de ${game.players[game.current].name}`;
+  $("roundStatus").textContent = game.phase === "finished" ? I18n.t("Final") : game.phase === "initial" ? I18n.t`${game.initialReadyCount}/${game.players.length} listos` : game.finalRemaining !== null ? I18n.t("Última ronda") : "";
   $("initialStatus").classList.toggle("hidden", game.phase !== "initial");
-  $("initialStatusText").textContent = `${game.initialReadyCount}/${game.players.length} listos · ${game.players[seat]?.initialReady ? "Puedes explorar el mapa mientras esperas" : "Todos eligen a la vez"}`;
+  $("initialStatusText").textContent = I18n.t`${game.initialReadyCount}/${game.players.length} listos · ${game.players[seat]?.initialReady ? I18n.t("Puedes explorar el mapa mientras esperas") : I18n.t("Todos eligen a la vez")}`;
   $("viewResults").classList.toggle("hidden", game.phase !== "finished");
-  if (game.phase === "closing") $("roundStatus").innerHTML = 'Últimos billetes <span data-clock="closing"></span>';
+  if (game.phase === "closing") $("roundStatus").innerHTML = I18n.t('Últimos billetes <span data-clock="closing"></span>');
   $("hand").innerHTML = "";
   for (const c of [...COLORS, "wild"]) {
     let n = game.hand.filter((x) => x === c).length;
     if (n) $("hand").appendChild(colorCard(c, n, null, false));
   }
-  if (!game.hand.length) $("hand").innerHTML = '<span class="smallmuted">Aún no tienes cartas de tren.</span>';
-  $("handCount").textContent = `${game.hand.length} cartas`;
+  if (!game.hand.length) $("hand").innerHTML = I18n.t('<span class="smallmuted">Aún no tienes cartas de tren.</span>');
+  $("handCount").textContent = I18n.t`${game.hand.length} cartas`;
   $("ticketTotal").textContent = game.tickets.length;
   renderDestinations();
   layoutHand();
   const blindDeck = $("drawblind");
   const visibleCards = Array.from({ length: 5 }, (_, i) => {
     const c = game.face[i];
-    if (!c) { const empty = document.createElement("div"); empty.className = "empty-market-slot"; empty.setAttribute("aria-label", "Sin carta disponible"); return empty; }
+    if (!c) { const empty = document.createElement("div"); empty.className = "empty-market-slot"; empty.setAttribute("aria-label", I18n.t("Sin carta disponible")); return empty; }
     const card = colorCard(c, null, () => act("draw_train", { index: i }), !drawAllowed() || (c === "wild" && game.drawCount === 1));
     card.dataset.marketIndex = i;
-    card.title = `Robar ${N[c]}${c === "wild" ? " · Consume los dos robos; no puede ser tu segunda carta" : ""}`;
+    card.title = I18n.t`Robar ${N[c]}${c === "wild" ? I18n.t(" · Consume los dos robos; no puede ser tu segunda carta") : ""}`;
     card.setAttribute("aria-label", card.title);
     return card;
   });
@@ -703,9 +715,9 @@ function render() {
     !active || game.drawCount > 0 || !game.ticketDeckCount || !!game.ticketOffer;
   $("pendingTickets").classList.toggle("hidden", !game.ticketOffer);
   $("deckinfo").textContent =
-    `${game.deckCount} cartas ocultas · ${game.ticketDeckCount} destinos por robar`;
+    I18n.t`${game.deckCount} cartas ocultas · ${game.ticketDeckCount} destinos por robar`;
   $("drawstats").textContent = active ? `${game.drawCount}/2` : "";
-  $("drawstats").setAttribute("aria-label", active ? `${game.drawCount} de 2 robos usados` : "");
+  $("drawstats").setAttribute("aria-label", active ? I18n.t`${game.drawCount} de 2 robos usados` : "");
   $("pass").classList.toggle("hidden", !GameUI.canPass(game, seat, Object.keys(CITIES)));
   renderHistory();
   renderBoard();
@@ -719,11 +731,11 @@ function updateClocks() {
   if (!game) return;
   const deadlines = { initial: game.initialDeadline, turn: game.turnDeadline, offer: game.ticketOffer?.deadline, waiting: game.waitingDeadline, closing: game.closingDeadline };
   for (const node of document.querySelectorAll("[data-clock]")) {
-    const deadline = deadlines[node.dataset.clock], seconds = Number.isFinite(deadline) ? Math.max(0, Math.ceil((deadline - Date.now() - serverOffset) / 1000)) : null;
+    const deadline = deadlines[node.dataset.clock], seconds = Number.isFinite(deadline) ? Math.max(0, Math.ceil((deadline - (replayAt ?? Date.now() + serverOffset)) / 1000)) : null;
     node.textContent = seconds === null ? "" : node.dataset.clockFormat === "timer" ? `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}` : `${seconds}s`;
     node.classList.toggle("clock-warning", seconds !== null && seconds <= 10);
     node.classList.toggle("clock-urgent", seconds !== null && seconds <= 5);
-    node.setAttribute("aria-label", seconds === null ? "" : `${seconds} segundos restantes`);
+    node.setAttribute("aria-label", seconds === null ? "" : I18n.t`${seconds} segundos restantes`);
     if (node.id === "compactClock") {
       $("turnBanner").style.setProperty("--time-left", String(Math.min(1, (seconds || 0) / 60)));
       $("turnBanner").classList.toggle("is-warning", seconds !== null && seconds <= 10);
@@ -753,13 +765,13 @@ function renderHistory() {
       applyPlayerAppearance(row, player.color);
       row.dataset.actor = entry.seat;
     }
-    const text = document.createElement("span"); text.textContent = entry.text; row.appendChild(text);
+    const text = document.createElement("span"); text.textContent = entry.message ? I18n.format(entry.message) : I18n.t(entry.text); row.appendChild(text);
     return row;
   }));
   if (!logs.length) {
     const empty = document.createElement("p");
     empty.className = "history-empty";
-    empty.textContent = "Esperando el primer movimiento";
+    empty.textContent = I18n.t("Esperando el primer movimiento");
     entries.appendChild(empty);
   }
   if (readingOlder) {
@@ -851,8 +863,8 @@ const soundNodes = new Set();
 function soundLabel() {
   $("soundToggle").innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3Z"/>${muted ? '<path d="m16 9 5 6m0-6-5 6"/>' : '<path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>'}</svg>`;
   $("soundToggle").setAttribute("aria-pressed", String(!muted));
-  $("soundToggle").title = muted ? "Activar sonidos" : "Silenciar sonidos";
-  $("soundToggle").setAttribute("aria-label", "Sonido");
+  $("soundToggle").title = muted ? I18n.t("Activar sonidos") : I18n.t("Silenciar sonidos");
+  $("soundToggle").setAttribute("aria-label", I18n.t("Sonido"));
 }
 function unlockSound() {
   if (muted) return;
@@ -1003,10 +1015,10 @@ function layoutHand() {
 function renderDestinations() {
   const content = GameUI.destinationEntries(game, game.tickets).map(({ ticket: t }) => {
     const status = GameUI.destinationStatus(game, t.id);
-    const hint = !status ? "Progreso no disponible: el backend no envía este dato. Reinícialo al terminar la partida." : status.completed ? status.viaStation ? "Conectado usando una estación. Puntos al final de la partida." : "Conectado. Puntos al final de la partida." : "Destino pendiente";
+    const hint = !status ? I18n.t("Progreso no disponible: el backend no envía este dato. Reinícialo al terminar la partida.") : status.completed ? status.viaStation ? I18n.t("Conectado usando una estación. Puntos al final de la partida.") : I18n.t("Conectado. Puntos al final de la partida.") : I18n.t("Destino pendiente");
     const number = GameUI.destinationNumber(game, t.id);
-    return `<button type="button" class="destination-row ${status?.completed ? "is-complete" : ""}" data-destination="${t.id}" title="${hint} · Ver en el mapa"><span class="ticket-number"><span class="sr-only">Destino </span>${number}</span><span class="destination-endpoints">${escapeHTML(CITIES[t.a][2])} <span aria-hidden="true">→</span> ${escapeHTML(CITIES[t.b][2])}</span><strong>${t.p}<span class="sr-only"> puntos</span></strong>${!status ? '<span class="destination-unknown" aria-label="Progreso no disponible">?</span>' : status.completed ? '<span class="destination-check" aria-label="Completado">✓</span>' : '<span class="destination-pending" aria-label="Pendiente">·</span>'}</button>`;
-  }).join("") || '<p class="smallmuted">Elige tus billetes iniciales.</p>';
+    return I18n.t`<button type="button" class="destination-row ${status?.completed ? "is-complete" : ""}" data-destination="${t.id}" title="${hint} · Ver en el mapa"><span class="ticket-number"><span class="sr-only">Destino </span>${number}</span><span class="destination-endpoints">${escapeHTML(CITIES[t.a][2])} <span aria-hidden="true">→</span> ${escapeHTML(CITIES[t.b][2])}</span><strong>${t.p}<span class="sr-only"> puntos</span></strong>${!status ? I18n.t('<span class="destination-unknown" aria-label="Progreso no disponible">?</span>') : status.completed ? I18n.t('<span class="destination-check" aria-label="Completado">✓</span>') : '<span class="destination-pending" aria-label="Pendiente">·</span>'}</button>`;
+  }).join("") || I18n.t('<p class="smallmuted">Elige tus billetes iniciales.</p>');
   // Keep the user's scroll position while bots act or a new card arrives.
   if ($("ticketList")._destinationHTML !== content) {
     const focus = document.activeElement.closest("#ticketList [data-destination]")?.dataset.destination;
@@ -1028,23 +1040,23 @@ function playerMetric(type, label, value) {
 }
 const LABEL_OFFSETS = RailMap.labels;
 function plural(n, word) {
-  return n + " " + word + (n === 1 ? "" : "s");
+  return n + " " + I18n.t(word + (n === 1 ? "" : "s"));
 }
 function routeRequirementText(r) {
   const base = r.n - r.ferry;
   if (r.color === "gray") {
-    if (r.ferry) return `${base ? plural(base, "carta") + " de un mismo color + " : ""}${plural(r.ferry, "locomotora")}`;
-    return `${plural(r.n, "carta")} de un mismo color`;
+    if (r.ferry) return `${base ? plural(base, "carta") + I18n.t(" de un mismo color + ") : ""}${plural(r.ferry, "locomotora")}`;
+    return I18n.t`${plural(r.n, "carta")} de un mismo color`;
   }
   const colorName = N[r.color].toLowerCase();
-  if (r.ferry) return `${base ? plural(base, "carta") + " de color " + colorName + " + " : ""}${plural(r.ferry, "locomotora")}`;
-  return `${plural(r.n, "carta")} de color ${colorName}`;
+  if (r.ferry) return `${base ? plural(base, "carta") + I18n.t(" de color ") + colorName + " + " : ""}${plural(r.ferry, "locomotora")}`;
+  return I18n.t`${plural(r.n, "carta")} de color ${colorName}`;
 }
 function routeSummaryText(r) {
   const tags = [];
-  if (r.tunnel) tags.push("Túnel");
-  if (r.ferry) tags.push("Ferri");
-  return `${CITIES[r.a][2]} — ${CITIES[r.b][2]} · ${plural(r.n, "espacio")}${tags.length ? " · " + tags.join(" · ") : ""} · Requiere ${routeRequirementText(r)}`;
+  if (r.tunnel) tags.push(I18n.t("Túnel"));
+  if (r.ferry) tags.push(I18n.t("Ferri"));
+  return I18n.t`${CITIES[r.a][2]} — ${CITIES[r.b][2]} · ${plural(r.n, "espacio")}${tags.length ? " · " + tags.join(" · ") : ""} · Requiere ${routeRequirementText(r)}`;
 }
 function svgElements(svg) {
   return (tag, attrs = {}, parent = svg) => {
@@ -1076,10 +1088,10 @@ function drawMapBase(el, prefix) {
   for (const d of RailMap.details)
     el("path", { d, fill: "none", stroke: "#c2b797", "stroke-width": 0.7, "stroke-dasharray": "2 3", opacity: 0.55 }, geography);
   for (const [x, y, name, size, rotation] of [
-    [55, 392, "ATLÁNTICO", 13, -70],
-    [346, 615, "MEDITERRÁNEO", 11, 0],
-    [761, 473, "MAR NEGRO", 9, 0],
-    [509, 101, "BÁLTICO", 8, -25],
+    [55, 392, I18n.t("ATLÁNTICO"), 13, -70],
+    [346, 615, I18n.t("MEDITERRÁNEO"), 11, 0],
+    [761, 473, I18n.t("MAR NEGRO"), 9, 0],
+    [509, 101, I18n.t("BÁLTICO"), 8, -25],
   ]) el("text", {
     x, y, class: "sea-label", "font-size": size, "text-anchor": "middle",
     transform: `rotate(${rotation} ${x} ${y})`,
@@ -1211,7 +1223,7 @@ function renderBoard() {
   for (const [key, [x, y]] of Object.entries(RailMap.cities)) {
     const occupant = game.players.findIndex(p => p.placed.includes(key));
     const group = el("g", { transform: `translate(${x} ${y})`, class: "city-node", "data-city": key,
-      role: "button", tabindex: 0, "aria-label": `${CITIES[key][2]}${occupant >= 0 ? ` · Estación de ${game.players[occupant].name}` : " · Ver ciudad"}` });
+      role: "button", tabindex: 0, "aria-label": `${CITIES[key][2]}${occupant >= 0 ? I18n.t` · Estación de ${game.players[occupant].name}` : I18n.t(" · Ver ciudad")}` });
     if (board3D) el("circle", { r: occupant >= 0 ? 16 : 8, fill: "transparent", "pointer-events": "all", class: "city-hit" }, group);
     el("circle", { r: 6.6, fill: "#fffdf1", opacity: 0.9 }, group);
     el("circle", {
@@ -1219,7 +1231,7 @@ function renderBoard() {
       stroke: stationCity === key ? "#bd6b38" : "#6b7972",
       "stroke-width": stationCity === key ? 2.3 : 1.3, class: "city-circle",
     }, group);
-    el("title", {}, group).textContent = `${CITIES[key][2]}${occupant >= 0 ? ` · Estación de ${game.players[occupant].name}` : ""}`;
+    el("title", {}, group).textContent = `${CITIES[key][2]}${occupant >= 0 ? I18n.t` · Estación de ${game.players[occupant].name}` : ""}`;
     const selectCity = event => {
       stationCity = key;
       selected = null;
@@ -1340,16 +1352,16 @@ function showMapMenu(event, target) {
   closeMapMenu();
   const r = target.routeId === undefined ? null : game.routes.find(r => r.id === target.routeId);
   const stationOwner = target.city === undefined ? -1 : game.players.findIndex(p => p.placed.includes(target.city));
-  const owner = r ? GameUI.routeOwner(game, r, seat) : stationOwner < 0 ? null : { seat: stationOwner, color: GameUI.playerColor(game.players[stationOwner].color), label: `Estación de ${game.players[stationOwner].name}` };
+  const owner = r ? GameUI.routeOwner(game, r, seat) : stationOwner < 0 ? null : { seat: stationOwner, color: GameUI.playerColor(game.players[stationOwner].color), label: I18n.t`Estación de ${game.players[stationOwner].name}` };
   const stationsLeft = game.players[seat]?.stations || 0;
   const canBuild = !owner && amIUp() && !game.drawCount && (r || stationsLeft > 0);
   const title = r ? `${CITIES[r.a][2]} — ${CITIES[r.b][2]}` : CITIES[target.city][2];
-  const detail = r ? `${routeRequirementText(r)}${r.tunnel ? " · Túnel" : ""}${r.ferry ? " · Ferri" : ""}`
-    : stationsLeft > 0 ? `Estación · ${plural(4 - stationsLeft, "carta")} del mismo color` : "Ya construiste tus 3 estaciones";
+  const detail = r ? `${routeRequirementText(r)}${r.tunnel ? I18n.t(" · Túnel") : ""}${r.ferry ? I18n.t(" · Ferri") : ""}`
+    : stationsLeft > 0 ? I18n.t`Estación · ${plural(4 - stationsLeft, "carta")} del mismo color` : I18n.t("Ya construiste tus 3 estaciones");
   const menu = $("mapMenu");
-  menu.innerHTML = `<button class="menu-close" aria-label="Cerrar menú">×</button><h3>${escapeHTML(title)}</h3>${owner
+  menu.innerHTML = I18n.t`<button class="menu-close" aria-label="Cerrar menú">×</button><h3>${escapeHTML(title)}</h3>${owner
     ? `<p class="route-ownership"><span>${escapeHTML(owner.label)}</span></p>`
-    : `<p>${escapeHTML(detail)}</p>${canBuild ? `<button id="startBuild" class="primary full">${r ? "Construir" : "Construir estación"}</button>` : ""}`}`;
+    : `<p>${escapeHTML(detail)}</p>${canBuild ? `<button id="startBuild" class="primary full">${r ? "Construir" : I18n.t("Construir estación")}</button>` : ""}`}`;
   if (owner) {
     menu.style.setProperty("--owner-color", owner.color);
     menu.style.setProperty("--owner-surface", GameUI.playerFinish(owner.color) === "gold" ? "var(--gold-metal)" : owner.color);
@@ -1384,20 +1396,20 @@ function showBuildDialog() {
   const groups = GameUI.paymentGroups(options);
   let group = groups[0], paymentIndex = 0;
   let chosen = group.options[0]; // Server-valid combinations, minimum wildcards first.
-  showDialog(r ? "Construir ruta" : "Construir estación",
-    `${dialogClockHTML()}<div class="build-content"><div class="build-summary"><strong>${escapeHTML(r ? routeName(r) : `Estación en ${cityName(buildTarget.city)}`)}</strong>
-    ${r ? `<div class="build-track" aria-hidden="true">${'<i></i>'.repeat(r.n)}</div><span>${r.n} vagones · <b>+${GameUI.ROUTE_POINTS[r.n]} puntos</b>${r.tunnel ? " · Túnel" : r.ferry ? " · Ferry" : ""}</span>` : `<span>Estación ${result.cost} de 3 · ${plural(result.cost, "carta")}</span>`}</div>
-    <h3 class="payment-heading">${r?.tunnel ? "Pagarás inicialmente" : "Pagarás"}</h3>
+  showDialog(r ? I18n.t("Construir ruta") : I18n.t("Construir estación"),
+    I18n.t`${dialogClockHTML()}<div class="build-content"><div class="build-summary"><strong>${escapeHTML(r ? routeName(r) : I18n.t`Estación en ${cityName(buildTarget.city)}`)}</strong>
+    ${r ? I18n.t`<div class="build-track" aria-hidden="true">${'<i></i>'.repeat(r.n)}</div><span>${r.n} vagones · <b>+${GameUI.ROUTE_POINTS[r.n]} puntos</b>${r.tunnel ? I18n.t(" · Túnel") : r.ferry ? I18n.t(" · Ferri") : ""}</span>` : I18n.t`<span>Estación ${result.cost} de 3 · ${plural(result.cost, "carta")}</span>`}</div>
+    <h3 class="payment-heading">${r?.tunnel ? I18n.t("Pagarás inicialmente") : I18n.t("Pagarás")}</h3>
     <div id="paymentPreview" class="payment-preview build-payment" aria-live="polite"></div>
-    ${options.length > 1 ? `<details class="change-payment"><summary>Cambiar cartas <small>Color y locomotoras</small></summary><div class="payment-controls">
-      ${groups.length > 1 ? `<fieldset class="payment-colors"><legend>Color de las cartas normales</legend><div class="payment-color-grid">${groups.map((g, i) => `<label class="payment-color"><input type="radio" name="buildColor" value="${g.color}" ${i === 0 ? "checked" : ""}><img src="assets/cards/${g.color}.svg" alt="" draggable="false"><span>${N[g.color]}<small>${plural(game.hand.filter(c => c === g.color).length, "disponible")}</small></span></label>`).join("")}</div></fieldset>` : ""}
+    ${options.length > 1 ? I18n.t`<details class="change-payment"><summary>Cambiar cartas <small>Color y locomotoras</small></summary><div class="payment-controls">
+      ${groups.length > 1 ? I18n.t`<fieldset class="payment-colors"><legend>Color de las cartas normales</legend><div class="payment-color-grid">${groups.map((g, i) => `<label class="payment-color"><input type="radio" name="buildColor" value="${g.color}" ${i === 0 ? "checked" : ""}><img src="assets/cards/${g.color}.svg" alt="" draggable="false"><span>${N[g.color]}<small>${plural(game.hand.filter(c => c === g.color).length, "disponible")}</small></span></label>`).join("")}</div></fieldset>` : ""}
       <div class="payment-wilds"><div><strong id="wildLabel">Locomotoras</strong><small>${plural(game.hand.filter(c => c === "wild").length, "disponible")}</small></div>
         <div class="wild-stepper" role="group" aria-labelledby="wildLabel" aria-describedby="wildHint"><button id="wildLess" type="button" aria-label="Usar una locomotora menos">−</button><output id="wildCount" aria-label="Locomotoras a utilizar">${chosen.wild}</output><button id="wildMore" type="button" aria-label="Usar una locomotora más">+</button></div>
       </div><p id="wildHint" class="wild-hint"></p>
     </div></details>` : ""}
-    <p class="build-note">${r?.tunnel ? "Revelaremos hasta 3 cartas del mazo. Cada coincidencia de color o locomotora añade 1 carta. Después podrás pagar el suplemento o desistir." : r?.ferry ? `Incluye al menos ${r.ferry} locomotora(s) obligatoria(s) para este ferry.` : "Pago sugerido: utiliza la menor cantidad posible de locomotoras."}</p>
+    <p class="build-note">${r?.tunnel ? I18n.t("Revelaremos hasta 3 cartas del mazo. Cada coincidencia de color o locomotora añade 1 carta. Después podrás pagar el suplemento o desistir.") : r?.ferry ? I18n.t`Incluye al menos ${r.ferry} locomotora(s) obligatoria(s) para este ferry.` : I18n.t("Pago sugerido: utiliza la menor cantidad posible de locomotoras.")}</p>
     </div>
-    <div class="dialog-actions"><button id="confirmBuild" class="primary full">${r?.tunnel ? "Revelar cartas del túnel" : "Pagar y construir"}</button>
+    <div class="dialog-actions"><button id="confirmBuild" class="primary full">${r?.tunnel ? I18n.t("Revelar cartas del túnel") : I18n.t("Pagar y construir")}</button>
     <button id="cancelBuild" class="tertiary full">Cancelar</button></div>`, false, true);
   $("dialog").classList.add("build-dialog");
   if (r) $("dialog").querySelector(".build-track").style.setProperty("--track-color", C[r.color]);
@@ -1407,15 +1419,15 @@ function showBuildDialog() {
     if (chosen.regular) preview.appendChild(colorCard(chosen.color, chosen.regular));
     if (chosen.wild) preview.appendChild(colorCard("wild", chosen.wild));
     const caption = document.createElement("span");
-    caption.textContent = `${paymentDescription(chosen)} · ${result.cost} en total`;
+    caption.textContent = I18n.t`${paymentDescription(chosen)} · ${result.cost} en total`;
     preview.appendChild(caption);
     if ($("wildCount")) {
       $("wildCount").textContent = chosen.wild;
       $("wildLess").disabled = paymentIndex === 0;
       $("wildMore").disabled = paymentIndex === group.options.length - 1;
       const min = group.options[0].wild, max = group.options.at(-1).wild;
-      $("wildHint").textContent = chosen.regular === 0 ? "Solo locomotoras: no gastarás cartas de color."
-        : `${min === max ? `Cantidad fija: ${min}` : `Puedes usar de ${min} a ${max}`}.${r?.ferry ? ` Este ferry exige al menos ${r.ferry}.` : min ? ` Necesitas al menos ${min} para completar el pago.` : " Cada locomotora sustituye una carta de color."}`;
+      $("wildHint").textContent = chosen.regular === 0 ? I18n.t("Solo locomotoras: no gastarás cartas de color.")
+        : `${min === max ? I18n.t`Cantidad fija: ${min}` : I18n.t`Puedes usar de ${min} a ${max}`}.${r?.ferry ? I18n.t` Este ferry exige al menos ${r.ferry}.` : min ? I18n.t` Necesitas al menos ${min} para completar el pago.` : I18n.t(" Cada locomotora sustituye una carta de color.")}`;
     }
   };
   for (const input of document.querySelectorAll('[name="buildColor"]')) input.onchange = () => {
@@ -1431,8 +1443,8 @@ function showBuildDialog() {
     if (buildSubmitting) return;
     const validation = GameUI.construction(game, seat, buildTarget);
     if (validation.reason) { toast(validation.reason); return; }
-    if (!validation.options.some(o => o.color === chosen.color && o.wild === chosen.wild && o.regular === chosen.regular)) return error("Ese pago ya no está disponible.");
-    if (!sock || sock.readyState !== WebSocket.OPEN) return error("Sin conexión.");
+    if (!validation.options.some(o => o.color === chosen.color && o.wild === chosen.wild && o.regular === chosen.regular)) return error(I18n.t("Ese pago ya no está disponible."));
+    if (!sock || sock.readyState !== WebSocket.OPEN) return error(I18n.t("Sin conexión."));
     buildSubmitting = true;
     $("confirmBuild").disabled = true;
     act(r ? "claim" : "station", { ...buildTarget, color: chosen.color, wildCount: chosen.wild });
@@ -1442,7 +1454,7 @@ function showBuildDialog() {
 }
 function dialogClockHTML() {
   return game?.current === seat && ["play", "tunnel"].includes(game.phase) && !game.turnWaiting
-    ? '<div class="dialog-turn-clock">Tu turno <strong data-clock="turn" data-clock-format="timer"></strong></div>' : "";
+    ? I18n.t('<div class="dialog-turn-clock">Tu turno <strong data-clock="turn" data-clock-format="timer"></strong></div>') : "";
 }
 $("drawblind").onclick = () => act("draw_train", { index: -1 });
 $("drawtickets").onclick = () => act("draw_tickets");
@@ -1458,7 +1470,7 @@ function showDialog(title, body, ticketDialog = false, dismissible = false) {
   delete $("dialog").dataset.tunnelDecision;
   $("dialog").setAttribute("aria-labelledby", "dialogTitle");
   $("dialog").innerHTML =
-    `${dismissible ? '<button class="dialog-close" aria-label="Cerrar ventana">×</button>' : ""}<h2 id="dialogTitle" tabindex="-1">${title}</h2>${body}<p class="err" id="errorMsg"></p>`;
+    `${dismissible ? I18n.t('<button class="dialog-close" aria-label="Cerrar ventana">×</button>') : ""}<h2 id="dialogTitle" tabindex="-1">${title}</h2>${body}<p class="err" id="errorMsg"></p>`;
   const clock = $("dialog").querySelector(".dialog-turn-clock");
   if (clock) {
     const heading = document.createElement("div"); heading.className = "dialog-heading";
@@ -1547,7 +1559,7 @@ function updateDestinationSpotlight() {
   const toggle = $("toggleDestinations");
   toggle.disabled = !game?.tickets.length;
   toggle.setAttribute("aria-pressed", String(allDestinationsVisible && !toggle.disabled));
-  toggle.title = toggle.disabled ? "Conserva billetes para resaltar tus destinos" : allDestinationsVisible ? "Ocultar mis destinos" : "Resaltar mis destinos";
+  toggle.title = toggle.disabled ? I18n.t("Conserva billetes para resaltar tus destinos") : allDestinationsVisible ? I18n.t("Ocultar mis destinos") : I18n.t("Resaltar mis destinos");
   for (const label of $("board").querySelectorAll("[data-city-label]")) label.style.removeProperty("opacity");
   let overlay = $("destinationSpotlight");
   if (!overlay) {
@@ -1632,7 +1644,7 @@ function renderTicketMap(tickets) {
   for (const [i, player] of game.players.entries()) for (const city of player.placed) {
     const [x, y] = RailMap.cities[city], group = el("g", { transform: `translate(${x} ${y})`, opacity: i === seat ? 1 : .55, "data-preview-station": city }, occupied);
     drawStation(el, group, GameUI.playerColor(player.color), .9, "tickets");
-    el("title", {}, group).textContent = `Estación de ${player.name} · ${CITIES[city][2]}`;
+    el("title", {}, group).textContent = I18n.t`Estación de ${player.name} · ${CITIES[city][2]}`;
   }
   const endpoints = new Map();
   for (const { ticket, i, key, active } of visible) {
@@ -1645,14 +1657,14 @@ function renderTicketMap(tickets) {
     for (const routeId of path?.routes || []) {
       const borrowed = path.stationRoutes.includes(routeId);
       const trace = el("path", { d: MAP_GEOMETRY[routeId].d, fill: "none", stroke: borrowed ? "#c69643" : "#e7b639", "stroke-width": 15, opacity: opacity * .75, "stroke-linecap": "round", ...(borrowed ? { "stroke-dasharray": "4 4" } : {}), "data-completed-ticket": ticket.id, "data-path-route": routeId }, highlights);
-      el("title", {}, trace).textContent = borrowed ? "Tramo prestado mediante estación" : "Conexión completada";
+      el("title", {}, trace).textContent = borrowed ? I18n.t("Tramo prestado mediante estación") : I18n.t("Conexión completada");
     }
     const g = el("g", {
       class: "ticket-connection", "data-ticket-index": i,
       opacity,
     });
     el("title", {}, g).textContent =
-      `${CITIES[ticket.a][2]} → ${CITIES[ticket.b][2]} · ${ticket.p} puntos`;
+      I18n.t`${CITIES[ticket.a][2]} → ${CITIES[ticket.b][2]} · ${ticket.p} puntos`;
     const line = { x1: x, y1: y, x2: xx, y2: yy, "stroke-linecap": "round" };
     if (!path?.routes.length) {
       el("line", { ...line, stroke: "#fffefa", "stroke-width": 6 }, g);
@@ -1722,7 +1734,7 @@ function layoutTicketMapLabels() {
 }
 function updateTicketSelection(tickets, min) {
   const count = ticketChoices.size;
-  $("ticketCount").textContent = min ? `${count} de ${tickets.length} seleccionados · mínimo ${min}` : `${count} de ${tickets.length} resaltados en el mapa`;
+  $("ticketCount").textContent = min ? I18n.t`${count} de ${tickets.length} seleccionados · mínimo ${min}` : I18n.t`${count} de ${tickets.length} resaltados en el mapa`;
   if ($("keep")) $("keep").disabled = count < min;
   for (const row of $("dialog").querySelectorAll(".ticket-choice")) {
     const i = +row.dataset.ticketIndex;
@@ -1732,7 +1744,7 @@ function updateTicketSelection(tickets, min) {
   for (const row of $("dialog").querySelectorAll("[data-ticket-id]")) {
     const status = GameUI.destinationStatus(game, +row.dataset.ticketId);
     row.classList.toggle("is-complete", !!status?.completed);
-    row.querySelector(".ticket-complete").textContent = status?.completed ? `✓ Completada${status.viaStation ? " · estación" : ""}` : "";
+    row.querySelector(".ticket-complete").textContent = status?.completed ? I18n.t`✓ Completada${status.viaStation ? I18n.t(" · estación") : ""}` : "";
   }
   // Owned tickets may complete while this dialog is open. Reorder their rows,
   // never the offered tickets or their submitted indexes, and preserve focus.
@@ -1785,27 +1797,27 @@ function showTicketDialog(tickets, min, viewing = false) {
   }
   hoveredTicket = null;
   showDialog(
-    viewing ? "Tus rutas de destino" : game.phase === "initial" ? "Elige tus billetes iniciales" : "Nuevos billetes de destino",
-    `<p class="ticket-intro">${viewing ? "Tus vías construidas y el recorrido de tus destinos completados. Resaltar no descarta billetes." : `Conserva al menos ${min} billete${min > 1 ? "s" : ""}. Tus destinos permanecerán secretos hasta el final.`}</p>
-    ${!viewing ? `<div class="ticket-deadline"><strong data-clock="${choosing ? "offer" : "initial"}"></strong><span>${waiting ? "Primero elige tus billetes. Después tendrás 60 segundos completos para tu nuevo turno." : choosing ? "La partida continúa. Sin confirmar, conservarás 1 billete al azar." : "Todos eligen a la vez, con un minuto compartido. Sin confirmar, conservarás 2 billetes al azar."}</span>${choosing && !waiting ? '<button type="button" id="minimizeTickets">Elegir después ↗</button>' : ""}</div>` : ""}
+    viewing ? I18n.t("Tus rutas de destino") : game.phase === "initial" ? I18n.t("Elige tus billetes iniciales") : I18n.t("Nuevos billetes de destino"),
+    I18n.t`<p class="ticket-intro">${viewing ? I18n.t("Tus vías construidas y el recorrido de tus destinos completados. Resaltar no descarta billetes.") : I18n.t`Conserva al menos ${min} billete${min > 1 ? "s" : ""}. Tus destinos permanecerán secretos hasta el final.`}</p>
+    ${!viewing ? `<div class="ticket-deadline"><strong data-clock="${choosing ? "offer" : "initial"}"></strong><span>${waiting ? I18n.t("Primero elige tus billetes. Después tendrás 60 segundos completos para tu nuevo turno.") : choosing ? I18n.t("La partida continúa. Sin confirmar, conservarás 1 billete al azar.") : I18n.t("Todos eligen a la vez, con un minuto compartido. Sin confirmar, conservarás 2 billetes al azar.")}</span>${choosing && !waiting ? I18n.t('<button type="button" id="minimizeTickets">Elegir después ↗</button>') : ""}</div>` : ""}
     <div class="ticket-layout">
       <figure class="ticket-map-panel">
         <svg id="ticketMap" viewBox="${MAP_BOUNDS.x} ${MAP_BOUNDS.y} ${MAP_BOUNDS.width} ${MAP_BOUNDS.height}" role="img" aria-label="Vista de los destinos seleccionados" aria-describedby="ticketMapCaption"></svg>
         <figcaption id="ticketMapCaption">Tus fichas siempre visibles · Dorado: conexión completada · Discontinuas: objetivos o tramos prestados</figcaption>
       </figure>
       <div class="ticket-options">
-        <p class="ticket-options-title">${viewing ? "Tus destinos" : "Billetes para conservar"}</p>
-        <p class="ticket-options-hint">${viewing ? "Toca los billetes que quieras resaltar." : "Toca para comparar y elegir qué conservar; confirma abajo."}</p>
-        <div class="ticket-collections"><div class="ticket-choices">${tickets.map((t, i) => `
+        <p class="ticket-options-title">${viewing ? I18n.t("Tus destinos") : I18n.t("Billetes para conservar")}</p>
+        <p class="ticket-options-hint">${viewing ? I18n.t("Toca los billetes que quieras resaltar.") : I18n.t("Toca para comparar y elegir qué conservar; confirma abajo.")}</p>
+        <div class="ticket-collections"><div class="ticket-choices">${tickets.map((t, i) => I18n.t`
           <label class="choice ticket-choice" data-ticket-index="${i}" data-ticket-id="${t.id}">
             <input type="checkbox" class="keep" value="${i}" ${ticketChoices.has(i) ? "checked" : ""}>
             <span class="ticket-number"><span class="sr-only">Destino </span>${GameUI.destinationNumber(game, t.id, i)}</span>
             <span class="ticket-choice-text"><b>${escapeHTML(CITIES[t.a][2])} → ${escapeHTML(CITIES[t.b][2])}</b><small>${t.p} puntos ${t.long ? '<span class="longtag">LARGA</span>' : ""}</small><small class="ticket-complete"></small></span>
-          </label>`).join("") || '<p>Todavía no has conservado billetes.</p>'}</div>
-        ${choosing && game.tickets.length ? `<div class="retained-heading">Tus destinos actuales <small>Solo comparar</small></div><div class="retained-choices">${game.tickets.map(t => `<div class="retained-choice" data-ticket-id="${t.id}" data-owned-ticket="${t.id}"><button class="ticket-eye" type="button" aria-pressed="${retainedVisible.has(t.id)}" aria-label="Resaltar ${escapeHTML(CITIES[t.a][2])} a ${escapeHTML(CITIES[t.b][2])}">◉</button><span class="ticket-number"><span class="sr-only">Destino </span>${GameUI.destinationNumber(game, t.id)}</span><span class="ticket-choice-text"><b>${escapeHTML(CITIES[t.a][2])} → ${escapeHTML(CITIES[t.b][2])}</b><small>${t.p} puntos</small><small class="ticket-complete"></small></span></div>`).join("")}</div>` : ""}</div>
+          </label>`).join("") || I18n.t('<p>Todavía no has conservado billetes.</p>')}</div>
+        ${choosing && game.tickets.length ? I18n.t`<div class="retained-heading">Tus destinos actuales <small>Solo comparar</small></div><div class="retained-choices">${game.tickets.map(t => I18n.t`<div class="retained-choice" data-ticket-id="${t.id}" data-owned-ticket="${t.id}"><button class="ticket-eye" type="button" aria-pressed="${retainedVisible.has(t.id)}" aria-label="Resaltar ${escapeHTML(CITIES[t.a][2])} a ${escapeHTML(CITIES[t.b][2])}">◉</button><span class="ticket-number"><span class="sr-only">Destino </span>${GameUI.destinationNumber(game, t.id)}</span><span class="ticket-choice-text"><b>${escapeHTML(CITIES[t.a][2])} → ${escapeHTML(CITIES[t.b][2])}</b><small>${t.p} puntos</small><small class="ticket-complete"></small></span></div>`).join("")}</div>` : ""}</div>
         <div class="ticket-confirm">
           <p id="ticketCount" role="status" aria-live="polite"></p>
-          ${viewing ? '<button class="secondary full" id="closeRoutes">Volver al mapa</button>' : '<button class="primary full" id="keep" aria-describedby="ticketCount">Conservar seleccionados</button>'}
+          ${viewing ? I18n.t('<button class="secondary full" id="closeRoutes">Volver al mapa</button>') : I18n.t('<button class="primary full" id="keep" aria-describedby="ticketCount">Conservar seleccionados</button>')}
         </div>
       </div>
     </div>`,
@@ -1846,6 +1858,7 @@ function showTicketDialog(tickets, min, viewing = false) {
 }
 function renderDialog() {
   if (!game) return;
+  if(replayMode){if(uiDialog==="results")showResults();else if(uiDialog==="routes")showTicketDialog(game.tickets,0,true);else $("overlay").classList.add("hidden");return;}
   if (tunnelReveal) { showTunnelReveal(); return; }
   const myTurn = game.current === seat;
   if (myTurn && game.turnWaiting && game.ticketOffer) { uiDialog = "tickets"; showTicketDialog(game.ticketOffer.tickets, 1); return; }
@@ -1880,11 +1893,11 @@ const routeName = route => `${cityName(route.a)} — ${cityName(route.b)}`;
 const signedPoints = points => points >= 0 ? `+${points}` : `−${Math.abs(points)}`;
 function resultDetailHTML(result) {
   const d = result.details;
-  if (!d) return '<p>Reinicia el servidor actualizado para consultar el desglose de esta partida.</p>';
+  if (!d) return I18n.t('<p>Reinicia el servidor actualizado para consultar el desglose de esta partida.</p>');
   const view = resultView(result.seat);
-  const categories = [["routes", "Rutas", result.route], ["destinations", "Destinos", result.destination],
-    ["stations", "Estaciones", result.stations], ["express", "Camino más largo", result.express]];
-  return `<div class="score-categories" role="tablist" aria-label="Puntos de ${escapeHTML(result.name)}">${categories.map(([key, label, points]) =>
+  const categories = [["routes", I18n.t("Rutas"), result.route], ["destinations", I18n.t("Destinos"), result.destination],
+    ["stations", I18n.t("Estaciones"), result.stations], ["express", I18n.t("Camino más largo"), result.express]];
+  return I18n.t`<div class="score-categories" role="tablist" aria-label="Puntos de ${escapeHTML(result.name)}">${categories.map(([key, label, points]) =>
     `<button type="button" role="tab" id="score-tab-${result.seat}-${key}" data-score-category="${key}" aria-selected="${view.category === key}" aria-controls="score-panel-${result.seat}" tabindex="${view.category === key ? 0 : -1}"><span>${label}</span><strong>${signedPoints(points)}</strong></button>`).join("")}</div>
     <div id="score-panel-${result.seat}" class="score-panel" role="tabpanel" aria-labelledby="score-tab-${result.seat}-${view.category}"></div>`;
 }
@@ -1903,38 +1916,38 @@ function renderResultPanel(result) {
   panel.setAttribute("aria-labelledby", `score-tab-${result.seat}-${category}`);
   let title, total, content = "", caption = "", empty = "";
   if (category === "routes") {
-    title = "Rutas construidas"; total = signedPoints(result.route);
+    title = I18n.t("Rutas construidas"); total = signedPoints(result.route);
     const chosen = d.routes[view.index];
-    caption = chosen ? `${routeName(chosen)} · ${chosen.length} vagones · +${chosen.points} puntos` : "Toca los puntos de un tramo";
-    empty = d.routes.length ? "" : "Sin rutas construidas";
+    caption = chosen ? I18n.t`${routeName(chosen)} · ${chosen.length} vagones · +${chosen.points} puntos` : I18n.t("Toca los puntos de un tramo");
+    empty = d.routes.length ? "" : I18n.t("Sin rutas construidas");
     if (empty) caption = "";
-    content = `<details class="score-route-list" ${view.list ? "open" : ""}><summary>Ver lista · ${d.routes.length} tramos</summary><div class="score-choice-list">${d.routes.map((r, i) => resultChoice(i, escapeHTML(routeName(r)), r.points, view.index === i, `${r.length} vagones`)).join("")}</div></details>`;
+    content = I18n.t`<details class="score-route-list" ${view.list ? "open" : ""}><summary>Ver lista · ${d.routes.length} tramos</summary><div class="score-choice-list">${d.routes.map((r, i) => resultChoice(i, escapeHTML(routeName(r)), r.points, view.index === i, I18n.t`${r.length} vagones`)).join("")}</div></details>`;
     if (empty) content = "";
-    if (d.routeAdjustment) content += `<p class="score-warning">Ajuste de partida antigua: ${signedPoints(d.routeAdjustment)}. El registro guardado difiere del mapa.</p>`;
+    if (d.routeAdjustment) content += I18n.t`<p class="score-warning">Ajuste de partida antigua: ${signedPoints(d.routeAdjustment)}. El registro guardado difiere del mapa.</p>`;
   } else if (category === "destinations") {
-    title = "Billetes de destino"; total = signedPoints(result.destination);
+    title = I18n.t("Billetes de destino"); total = signedPoints(result.destination);
     const index = view.index ?? 0, t = d.destinations[index];
-    caption = t ? `${routeName(t)} · ${t.completed ? "Completado" : "No completado"}${t.stationRoutes.length ? " · vía estación" : ""}` : "Sin billetes de destino";
-    empty = t ? "" : "Sin billetes de destino";
+    caption = t ? `${routeName(t)} · ${t.completed ? I18n.t("Completado") : I18n.t("No completado")}${t.stationRoutes.length ? I18n.t(" · vía estación") : ""}` : I18n.t("Sin billetes de destino");
+    empty = t ? "" : I18n.t("Sin billetes de destino");
     content = `<div class="score-choice-list">${d.destinations.map((t, i) => resultChoice(i,
-      `<span class="score-status" aria-label="${t.completed ? "Completado" : "No completado"}">${t.completed ? "✓" : "✕"}</span> ${escapeHTML(routeName(t))}`,
-      t.points, index === i, t.stationRoutes.length ? "Vía estación" : "", t.completed ? "score-positive" : "score-negative")).join("")}</div>`;
+      `<span class="score-status" aria-label="${t.completed ? I18n.t("Completado") : I18n.t("No completado")}">${t.completed ? "✓" : "✕"}</span> ${escapeHTML(routeName(t))}`,
+      t.points, index === i, t.stationRoutes.length ? I18n.t("Vía estación") : "", t.completed ? "score-positive" : "score-negative")).join("")}</div>`;
   } else if (category === "stations") {
-    title = "Estaciones"; total = signedPoints(result.stations);
+    title = I18n.t("Estaciones"); total = signedPoints(result.stations);
     const station = d.stations.placed[view.index], route = station && game.routes.find(r => r.id === station.routeId);
-    caption = station ? route ? `Préstamo: ${routeName(route)} · ${game.players[route.owner].name}` : `Estación en ${cityName(station.city)}` : "Estaciones construidas";
-    empty = d.stations.placed.length ? "" : "Sin estaciones construidas";
-    content = `<p class="score-station-count">${d.stations.unused} sin construir × 4</p><div class="score-choice-list">${d.stations.placed.map((s, i) => resultChoice(i, `Estación en ${escapeHTML(cityName(s.city))}`, null, view.index === i)).join("")}</div>`;
+    caption = station ? route ? I18n.t`Préstamo: ${routeName(route)} · ${game.players[route.owner].name}` : I18n.t`Estación en ${cityName(station.city)}` : I18n.t("Estaciones construidas");
+    empty = d.stations.placed.length ? "" : I18n.t("Sin estaciones construidas");
+    content = I18n.t`<p class="score-station-count">${d.stations.unused} sin construir × 4</p><div class="score-choice-list">${d.stations.placed.map((s, i) => resultChoice(i, I18n.t`Estación en ${escapeHTML(cityName(s.city))}`, null, view.index === i)).join("")}</div>`;
   } else {
-    title = "Camino más largo"; total = signedPoints(result.express);
+    title = I18n.t("Camino más largo"); total = signedPoints(result.express);
     const compared = game.result.find(r => r.seat === view.expressSeat) || result;
-    caption = `${compared.name} · ${compared.longest} vagones`;
-    empty = compared.details?.express.routes.length ? "" : "Sin vías construidas";
+    caption = I18n.t`${compared.name} · ${compared.longest} vagones`;
+    empty = compared.details?.express.routes.length ? "" : I18n.t("Sin vías construidas");
     const standings = GameUI.resultStandings(game);
-    content = `<div class="score-choice-list score-trail-ranking" aria-label="Comparación de caminos más largos">${standings.map(r =>
-      `<button type="button" class="score-choice" data-express-seat="${r.seat}" aria-pressed="${r.seat === compared.seat}"><span class="score-trail-place">${standings.findIndex(p => p.longest === r.longest) + 1}</span>${playerAvatar(r.seat)}<span class="score-trail-name">${escapeHTML(r.name)}<small>${r.longest} vagones</small></span>${r.express ? `<strong class="score-bonus" aria-label="Bonificación: ${r.express} puntos">+${r.express}</strong>` : '<span class="score-no-bonus">—<span class="sr-only"> Sin bonificación</span></span>'}</button>`).join("")}</div>`;
+    content = I18n.t`<div class="score-choice-list score-trail-ranking" aria-label="Comparación de caminos más largos">${standings.map(r =>
+      I18n.t`<button type="button" class="score-choice" data-express-seat="${r.seat}" aria-pressed="${r.seat === compared.seat}"><span class="score-trail-place">${standings.findIndex(p => p.longest === r.longest) + 1}</span>${playerAvatar(r.seat)}<span class="score-trail-name">${escapeHTML(r.name)}<small>${r.longest} vagones</small></span>${r.express ? I18n.t`<strong class="score-bonus" aria-label="Bonificación: ${r.express} puntos">+${r.express}</strong>` : I18n.t('<span class="score-no-bonus">—<span class="sr-only"> Sin bonificación</span></span>')}</button>`).join("")}</div>`;
   }
-  panel.innerHTML = `<div class="score-section-heading"><h3>${title}</h3><strong>${total}</strong></div>
+  panel.innerHTML = I18n.t`<div class="score-section-heading"><h3>${title}</h3><strong>${total}</strong></div>
     <div class="score-detail-layout ${category === "routes" ? "score-detail-routes" : ""}">
     <figure class="score-map-panel"><div class="score-map-stage"><svg id="scoreMap" role="group" aria-label="Mapa: ${escapeHTML(title)} de ${escapeHTML(result.name)}" tabindex="0"></svg>${empty ? `<span class="score-map-empty">${empty}</span>` : ""}<button type="button" class="score-map-expand" aria-label="${view.expanded ? "Reducir" : "Ampliar"} mapa" aria-pressed="${view.expanded}" title="${view.expanded ? "Reducir" : "Ampliar"} mapa">⛶</button></div><figcaption aria-live="polite">${escapeHTML(caption)}</figcaption></figure>
     <div class="score-side-detail">${content}</div></div>`;
@@ -1952,8 +1965,8 @@ function renderResultPanel(result) {
     const expanded = panel.classList.toggle("is-map-expanded");
     view.expanded = expanded;
     event.currentTarget.setAttribute("aria-pressed", String(expanded));
-    event.currentTarget.setAttribute("aria-label", expanded ? "Reducir mapa" : "Ampliar mapa");
-    event.currentTarget.title = expanded ? "Reducir mapa" : "Ampliar mapa";
+    event.currentTarget.setAttribute("aria-label", expanded ? I18n.t("Reducir mapa") : I18n.t("Ampliar mapa"));
+    event.currentTarget.title = expanded ? I18n.t("Reducir mapa") : I18n.t("Ampliar mapa");
   };
   renderResultMap(result, GameUI.resultSelection(game, result.seat, category, view.index, view.expressSeat));
 }
@@ -1964,11 +1977,11 @@ function showResults() {
   if (!resultsSeen) expandedResults.add(game.result.find(r => r.seat === seat)?.seat ?? game.result[0].seat);
   uiDialog = "results"; resultsSeen = true;
   hoveredDestination = null;
-  showDialog(game.earlyFinish ? "Prueba terminada anticipadamente" : "Fin de partida",
-    `<div class="results-scroll">${game.earlyFinish ? '<p class="score-preview-note">Estado actual · Solo billetes conservados</p>' : ""}
-    <div class="results-list">${game.result.map((r,i) => `<details class="result-card" data-result-player="${r.seat}" data-score-seat="${r.seat}" ${expandedResults.has(r.seat) ? "open" : ""}><summary class="result-heading">${playerAvatar(r.seat)}<span class="result-player-name"><b>${i+1}. ${escapeHTML(r.name)} ${r.winner ? '<span aria-label="Ganador">🏆</span>' : ""}</b><small>Ver desglose <span class="result-chevron" aria-hidden="true">⌄</span></small></span><strong>${r.score}<small>puntos</small></strong></summary><div class="score-breakdown">${resultDetailHTML(r)}</div></details>`).join("")}</div>
+  showDialog(game.earlyFinish ? I18n.t("Prueba terminada anticipadamente") : I18n.t("Fin de partida"),
+    I18n.t`<div class="results-scroll">${game.earlyFinish ? I18n.t('<p class="score-preview-note">Estado actual · Solo billetes conservados</p>') : ""}
+    <div class="results-list">${game.result.map((r,i) => I18n.t`<details class="result-card" data-result-player="${r.seat}" data-score-seat="${r.seat}" ${expandedResults.has(r.seat) ? "open" : ""}><summary class="result-heading">${playerAvatar(r.seat)}<span class="result-player-name"><b>${i+1}. ${escapeHTML(r.name)} ${r.winner ? '<span aria-label="Ganador">🏆</span>' : ""}</b><small>Ver desglose <span class="result-chevron" aria-hidden="true">⌄</span></small></span><strong>${r.score}<small>puntos</small></strong></summary><div class="score-breakdown">${resultDetailHTML(r)}</div></details>`).join("")}</div>
     <details class="result-rules"><summary>¿Cómo se resuelven los empates?</summary><p>Más destinos completados, después más estaciones sin construir y finalmente la bonificación de camino más largo. Si persiste, se comparte la victoria.</p></details></div>
-    <div class="result-actions"><button id="exploreMap" class="primary">Explorar mapa</button>${practiceMode ? '<button id="practiceHome" class="tertiary">Volver al inicio</button>' : '<button id="rematch" class="tertiary">Revancha</button><button id="multiplayerHome" class="tertiary">Volver al inicio</button>'}</div>`, false, true);
+    <div class="result-actions"><button id="exploreMap" class="primary">Explorar mapa</button>${practiceMode ? I18n.t('<button id="practiceHome" class="tertiary">Volver al inicio</button>') : I18n.t('<button id="rematch" class="tertiary">Revancha</button><button id="multiplayerHome" class="tertiary">Volver al inicio</button>')}</div>`, false, true);
   $("dialog").classList.add("results-dialog");
   $("dialog")._resultSignature = signature;
   const heading = document.createElement("div"); heading.className = "results-header";
@@ -2010,7 +2023,7 @@ function showResults() {
 function renderResultMap(result, selection) {
   const svg = $("scoreMap"); if (!svg || !selection) return;
   const view = resultView(result.seat), prefix = `score-${result.seat}`;
-  if (view.category === "express") svg.setAttribute("aria-label", `Mapa: Camino más largo de ${game.players[selection.seat].name}`);
+  if (view.category === "express") svg.setAttribute("aria-label", I18n.t`Mapa: Camino más largo de ${game.players[selection.seat].name}`);
   const key = `${result.seat}:${view.category}:${view.category === "routes" ? "all" : view.category === "express" ? view.expressSeat : view.index}`;
   const points = [...selection.routes.flatMap(id => MAP_GEOMETRY[id]?.points || []), ...selection.endpoints.map(id => RailMap.cities[id])];
   const bounds = points.length ? { x: Math.min(...points.map(p => p[0])) - 65, y: Math.min(...points.map(p => p[1])) - 55,
@@ -2061,7 +2074,7 @@ function renderResultMap(result, selection) {
     const route = result.details.routes[index]; if (!route) return;
     view.index = index;
     for (const [id, halo] of routeGroups) halo.setAttribute("opacity", id === route.id ? ".85" : "0");
-    svg.closest("figure").querySelector("figcaption").textContent = `${routeName(route)} · ${route.length} vagones · +${route.points} puntos`;
+    svg.closest("figure").querySelector("figcaption").textContent = I18n.t`${routeName(route)} · ${route.length} vagones · +${route.points} puntos`;
     for (const node of svg.closest(".score-panel").querySelectorAll("[data-score-choice], [data-score-badge]"))
       node.setAttribute("aria-pressed", String(+(node.dataset.scoreChoice ?? node.dataset.scoreBadge) === index));
     schedule();
@@ -2098,7 +2111,7 @@ function renderResultMap(result, selection) {
       if (!onScreen(p)) continue;
       const route = result.details.routes[badge.index];
       const group = el("g", { class: "score-point-badge", "data-score-badge": badge.index, role: "button", tabindex: "0",
-        "aria-pressed": view.index === badge.index, "aria-label": `${routeName(route)}: ${badge.points} puntos, ${route.length} vagones` }, labels);
+        "aria-pressed": view.index === badge.index, "aria-label": I18n.t`${routeName(route)}: ${badge.points} puntos, ${route.length} vagones` }, labels);
       el("rect", { x: -3, y: -5, width: 42, height: 32, fill: "transparent" }, group);
       el("rect", { width: 36, height: 22, rx: 8, class: "score-point-pill" }, group);
       el("text", { x: 18, y: 15, "text-anchor": "middle" }, group).textContent = `+${badge.points}`;
@@ -2194,8 +2207,8 @@ $("resultContext").querySelector("button").onclick = () => {
 };
 
 function paymentDescription(payment) {
-  return [payment.regular ? `${payment.regular} de color ${N[payment.color].toLowerCase()}` : "",
-    payment.wild ? `${payment.wild} locomotora${payment.wild === 1 ? "" : "s"}` : ""].filter(Boolean).join(" + ");
+  return [payment.regular ? I18n.t`${payment.regular} de color ${N[payment.color].toLowerCase()}` : "",
+    payment.wild ? I18n.t`${payment.wild} locomotora${payment.wild === 1 ? "" : "s"}` : ""].filter(Boolean).join(" + ");
 }
 function paymentIcons(payment) {
   return [[payment.color, payment.regular], ["wild", payment.wild]].filter(([, n]) => n).map(([color, n]) =>
@@ -2231,9 +2244,9 @@ function showTunnelReveal() {
   const sequence = tunnelReveal, t = sequence.event;
   if ($("dialog").dataset.tunnelReveal === String(t.id)) return;
   const route = game.routes.find(r => r.id === t.routeId);
-  showDialog("Comprobando el túnel…", `${dialogClockHTML()}<p class="tunnel-route">${escapeHTML(routeName(route))}</p>
-    <p>Revelamos hasta 3 cartas. Cada ${t.paymentColor === "wild" ? "locomotora" : `carta de color ${N[t.paymentColor].toLowerCase()} o locomotora`} añade una carta al pago.</p>
-    <div id="tunnelSequence" class="tunnel-sequence">${t.revealed.map((_, i) => `<div class="tunnel-reveal" data-reveal-slot="${i}"><img class="tunnel-card-back" src="assets/cards/back.svg" alt="Carta ${i + 1} sin revelar"><span class="reveal-effect">${i + 1}</span></div>`).join("")}</div>
+  showDialog(I18n.t("Comprobando el túnel…"), I18n.t`${dialogClockHTML()}<p class="tunnel-route">${escapeHTML(routeName(route))}</p>
+    <p>Revelamos hasta 3 cartas. Cada ${t.paymentColor === "wild" ? I18n.t("locomotora") : I18n.t`carta de color ${N[t.paymentColor].toLowerCase()} o locomotora`} añade una carta al pago.</p>
+    <div id="tunnelSequence" class="tunnel-sequence">${t.revealed.map((_, i) => I18n.t`<div class="tunnel-reveal" data-reveal-slot="${i}"><img class="tunnel-card-back" src="assets/cards/back.svg" alt="Carta ${i + 1} sin revelar"><span class="reveal-effect">${i + 1}</span></div>`).join("")}</div>
     <p id="tunnelRevealStatus" class="tunnel-total" role="status">0 de ${t.revealed.length} reveladas · Suplemento: 0</p>
     <button id="skipTunnelReveal" class="tertiary full">Omitir animación</button>`);
   $("dialog").classList.add("tunnel-dialog");
@@ -2261,7 +2274,7 @@ function showNextTunnelCard(sequence, animate) {
       playSound("card");
     }
     const surcharge = t.revealed.slice(0, sequence.shown).filter(c => tunnelCardMatch(c, t.paymentColor)).length;
-    $("tunnelRevealStatus").textContent = `${sequence.shown} de ${t.revealed.length} reveladas · Suplemento: ${surcharge}`;
+    $("tunnelRevealStatus").textContent = I18n.t`${sequence.shown} de ${t.revealed.length} reveladas · Suplemento: ${surcharge}`;
   }
 }
 function revealNextTunnelCard() {
@@ -2294,9 +2307,9 @@ function finishTunnelReveal(skip = false) {
     return;
   }
   sequence.finished = true;
-  $("dialogTitle").textContent = "Túnel construido";
-  $("tunnelRevealStatus").textContent = "Sin coste adicional. Solo se paga el coste inicial.";
-  $("skipTunnelReveal").textContent = "Volver al mapa";
+  $("dialogTitle").textContent = I18n.t("Túnel construido");
+  $("tunnelRevealStatus").textContent = I18n.t("Sin coste adicional. Solo se paga el coste inicial.");
+  $("skipTunnelReveal").textContent = I18n.t("Volver al mapa");
   // Instant reveals still need time to read all three cards and the outcome.
   sequence.timer = setTimeout(() => finishTunnelReveal(true), sequence.instant ? 2100 : 700);
 }
@@ -2306,15 +2319,15 @@ function showTunnelDialog() {
   if ($("dialog").dataset.tunnelDecision === key && !$("overlay").classList.contains("hidden")) return;
   const options = GameUI.tunnelPayments(game.hand, t);
   const count = t.surcharge;
-  showDialog(`Túnel: ${count} carta${count === 1 ? "" : "s"} adicional${count === 1 ? "" : "es"}`,
-    `${dialogClockHTML()}<p class="tunnel-route">${escapeHTML(CITIES[route.a][2])} — ${escapeHTML(CITIES[route.b][2])}</p>
+  showDialog(I18n.t`Túnel: ${count} carta${count === 1 ? "" : "s"} adicional${count === 1 ? "" : "es"}`,
+    I18n.t`${dialogClockHTML()}<p class="tunnel-route">${escapeHTML(CITIES[route.a][2])} — ${escapeHTML(CITIES[route.b][2])}</p>
     <div class="tunnel-evidence"><section><h3>Cartas reveladas</h3><div id="revealed" class="tunnel-revealed"></div></section>
       <section class="tunnel-base"><h3>Pago base reservado</h3><div class="payment-icons" aria-label="${paymentDescription(t.base)}">${paymentIcons(t.base)}</div><p>Aún no se ha gastado.</p></section></div>
-    <fieldset class="tunnel-payments"><legend>${options.length > 1 ? "¿Cómo pagas el suplemento?" : "Pago del suplemento"}</legend>
+    <fieldset class="tunnel-payments"><legend>${options.length > 1 ? I18n.t("¿Cómo pagas el suplemento?") : I18n.t("Pago del suplemento")}</legend>
       ${options.length ? `<div class="tunnel-options">${options.map((option, i) => options.length === 1
         ? `<div class="tunnel-option single"><div class="payment-icons">${paymentIcons(option)}</div><span>${paymentDescription(option)}</span></div>`
         : `<label class="tunnel-option"><input type="radio" name="tunnelPayment" value="${option.wild}" ${i === 0 ? "checked" : ""}><span><span class="payment-icons">${paymentIcons(option)}</span><span class="payment-label">${paymentDescription(option)}</span></span></label>`).join("")}</div>`
-        : `<p class="tunnel-insufficient">No tienes cartas suficientes para el suplemento después de reservar el pago base.</p>`}
+        : I18n.t`<p class="tunnel-insufficient">No tienes cartas suficientes para el suplemento después de reservar el pago base.</p>`}
     </fieldset>
     <p id="tunnelTotal" class="tunnel-total" aria-live="polite"></p>
     <div class="dialog-actions"><button class="primary full" id="acceptTunnel" ${options.length ? "" : "disabled"}>Pagar suplemento y construir</button>
@@ -2330,7 +2343,7 @@ function showTunnelDialog() {
     const caption = document.createElement("span");
     caption.className = "reveal-effect";
     caption.textContent = match ? "+1" : "—";
-    caption.setAttribute("aria-label", match ? "Añade una carta al suplemento" : "No añade suplemento");
+    caption.setAttribute("aria-label", match ? I18n.t("Añade una carta al suplemento") : I18n.t("No añade suplemento"));
     item.appendChild(caption);
     $("revealed").appendChild(item);
   }
@@ -2338,7 +2351,7 @@ function showTunnelDialog() {
     : options.find(option => option.wild === +document.querySelector('input[name="tunnelPayment"]:checked')?.value);
   const total = () => {
     const payment = chosen();
-    $("tunnelTotal").textContent = payment ? `Total al construir: ${paymentDescription({ color: t.color, regular: t.base.regular + payment.regular, wild: t.base.wild + payment.wild })}.` : "";
+    $("tunnelTotal").textContent = payment ? I18n.t`Total al construir: ${paymentDescription({ color: t.color, regular: t.base.regular + payment.regular, wild: t.base.wild + payment.wild })}.` : "";
   };
   document.querySelectorAll('input[name="tunnelPayment"]').forEach(input => input.addEventListener("change", total));
   total();
@@ -2362,9 +2375,9 @@ function renderPracticeControls() {
   $("leaveTest").classList.toggle("hidden", !finished);
   $("finishTest").disabled = $("leaveTest").disabled = !online;
   $("practiceStatus").textContent = !online
-    ? "Reconectando… La sala se elimina tras 30 s de desconexión."
-    : finished ? "Prueba finalizada · Puedes iniciar otra partida."
-    : "Tú + 3 bots · 0,8–1 s por acción";
+    ? I18n.t("Reconectando… La sala se elimina tras 30 s de desconexión.")
+    : finished ? I18n.t("Prueba finalizada · Puedes iniciar otra partida.")
+    : I18n.t("Tú + 3 bots · 0,8–1 s por acción");
 }
 
 // Reparent existing controls rather than duplicate state/listeners on rotation.
@@ -2406,7 +2419,7 @@ function setCompactPanel(next = compactPanel) {
   const open = compactMedia.matches && next !== "map";
   if (open) $("compactPanel").append(...compactSections[next]);
   $("compactPanel").classList.toggle("hidden", !open);
-  $("compactPanel").setAttribute("aria-label", { cards: "Cartas para robar", destinations: "Tus destinos", history: "Historial" }[next] || "Panel de juego");
+  $("compactPanel").setAttribute("aria-label", { cards: I18n.t("Cartas para robar"), destinations: I18n.t("Tus destinos"), history: I18n.t("Historial") }[next] || I18n.t("Panel de juego"));
   $("game").dataset.compactPanel = compactMedia.matches ? next : "map";
   for (const button of document.querySelectorAll("[data-panel]")) button.setAttribute("aria-pressed", String(button.dataset.panel === next));
   $("practiceControls").classList.remove("is-open");
@@ -2426,7 +2439,7 @@ function updateCompactStatus() {
   if (!game) return;
   const controlled = sock?.readyState === WebSocket.OPEN && !sessionReplaced && !storagePaused && !members[seat]?.autopilot;
   const state = GameUI.turnPresentation(game, seat, controlled);
-  if (spectating && game.phase !== 'finished') state.hint = 'Observando la partida';
+  if (spectating && game.phase !== 'finished') state.hint = I18n.t('Observando la partida');
   if ($("compactTurn").textContent !== state.title) $("compactTurn").textContent = state.title;
   if ($("turnHint").textContent !== state.hint) $("turnHint").textContent = state.hint;
   turnBanner.classList.toggle("is-mine", state.mine);
@@ -2444,7 +2457,7 @@ function updateCompactStatus() {
 function updateCompactPlayer() {
   const player = game?.players[compactPlayer], detail = $("compactPlayerDetail");
   detail.classList.toggle("hidden", !player || !compactMedia.matches);
-  if (player) detail.querySelector("span").textContent = `${player.name}${compactPlayer === seat ? " · Tú" : ""} — ${game.result?.find(r => r.seat === compactPlayer)?.score ?? player.score} puntos · ${player.trains} vagones · ${player.stations} estaciones${members[compactPlayer]?.autopilot ? " · Bot de reemplazo" : ""}`;
+  if (player) detail.querySelector("span").textContent = I18n.t`${player.name}${compactPlayer === seat ? I18n.t(" · Tú") : ""} — ${game.result?.find(r => r.seat === compactPlayer)?.score ?? player.score} puntos · ${player.trains} vagones · ${player.stations} estaciones${members[compactPlayer]?.autopilot ? I18n.t(" · Bot de reemplazo") : ""}`;
 }
 $("compactPlayerDetail").querySelector("button").onclick = () => { compactPlayer = null; updateCompactPlayer(); };
 for (const button of document.querySelectorAll("[data-panel]")) button.onclick = () => setCompactPanel(compactPanel === button.dataset.panel ? "map" : button.dataset.panel);
@@ -2640,7 +2653,7 @@ function updateFullscreenControl() {
   const available = !!document.fullscreenElement ||
     (document.fullscreenEnabled === true && typeof document.documentElement.requestFullscreen === "function");
   $("expandboard").classList.toggle("hidden", !available);
-  $("expandboard").setAttribute("aria-label", document.fullscreenElement ? "Salir de pantalla completa" : "Pantalla completa");
+  $("expandboard").setAttribute("aria-label", document.fullscreenElement ? I18n.t("Salir de pantalla completa") : I18n.t("Pantalla completa"));
 }
 updateFullscreenControl();
 $("expandboard").onclick = async () => {
@@ -2649,7 +2662,7 @@ $("expandboard").onclick = async () => {
     else await document.documentElement.requestFullscreen();
   } catch {
     updateFullscreenControl();
-    toast("No se pudo activar la pantalla completa en este momento.");
+    toast(I18n.t("No se pudo activar la pantalla completa en este momento."));
   }
 };
 document.addEventListener("fullscreenchange", () => {
@@ -2702,16 +2715,24 @@ shell = AppShell.create({
   send, saveProfile:name=>account.updateNickname(name),
   joinRoom(code) { $('code').value=code; $('homeJoin').requestSubmit(); },
   watchRoom(code) {
-    if (room) { error('Sal de tu sala antes de observar otra partida.'); return; }
+    if (room) { error(I18n.t('Sal de tu sala antes de observar otra partida.')); return; }
     desiredWatch=code; send({type:'spectate',code});
   },
   leaveRoom:()=>send({type:'leave'}),
 });
-connect();
+if(replayMode){
+  document.body.classList.add('is-replaying');
+  HistoryUI.replay(new URLSearchParams(location.search).get('id')||'',(view,recordedMembers,context)=>{
+    game=view;members=recordedMembers;seat=context.seat;sessionSupported=true;replayAt=context.at;spectating=seat===-1;resultsSeen=true;uiDialog=null;
+    displayedHistoryKey=null;document.body.classList.toggle('is-spectating',spectating);
+    $('sessionControls').classList.add('hidden');$('connection').classList.add('hidden');
+    render();
+  });
+}else connect();
 
 $("retryBoard").onclick = initializeBoard3D;
 $("mapscroll").tabIndex = 0;
-$("mapscroll").setAttribute("aria-label", "Mapa: flechas para mover, más y menos para zoom, Inicio para centrar");
+$("mapscroll").setAttribute("aria-label", I18n.t("Mapa: flechas para mover, más y menos para zoom, Inicio para centrar"));
 $("mapscroll").addEventListener("keydown", event => {
   if (!game || event.altKey || event.ctrlKey || event.metaKey) return;
   const v = mapViewSize();

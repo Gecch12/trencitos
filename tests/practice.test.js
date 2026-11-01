@@ -4,7 +4,7 @@ const assert = require("node:assert/strict");
 const Engine = require("../engine");
 const { createPracticeController } = require("../practice");
 
-function setup(random = () => 0) {
+function setup(random = () => 0, options = {}) {
   let time = 0, id = 0;
   const timers = new Map();
   const clock = {
@@ -37,7 +37,7 @@ function setup(random = () => 0) {
   const rooms = new Map([[room.code, room]]);
   const updates = [];
   const controller = createPracticeController({
-    rooms, random, now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+    ...options, rooms, random, now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
     sendRoom: (r) => { updates.push(clock.now()); controller.sync(r); },
   });
   function disconnect(at = clock.now()) {
@@ -278,4 +278,11 @@ test("ordinary multiplayer rooms are unaffected by practice controls and expiry"
   assert.ok(rooms.has(room.code));
   assert.equal(room.game.phase, "initial");
   assert.equal(room.game.initialDone, 0);
+});
+
+test('practice bots cannot advance while durable history is unavailable',()=>{
+ let blocked=false;const {clock,room,controller}=setup(()=>0,{blocked:()=>blocked});
+ controller.sync(room);blocked=true;clock.tick(1000);assert.equal(room.game.initialDone,0);
+ controller.sync(room);clock.tick(1000);assert.equal(room.game.initialDone,0);
+ blocked=false;controller.sync(room);clock.tick(800);assert.equal(room.game.initialDone,3);controller.close();
 });

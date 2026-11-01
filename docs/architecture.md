@@ -7,7 +7,7 @@ Evidencia, integración y límites en [la ficha del tablero](work/board-3d.md).
 ## Recorrido de una jugada
 
 Navegador → mensaje WebSocket → sesión/puesto y validación del servidor →
-motor de reglas → persistencia de sala normal → vista filtrada para cada jugador
+motor de reglas → persistencia atómica de sala y archivo → vista filtrada para cada jugador
 → renderizado. La animación representa una acción aceptada; no la confirma.
 
 ## Mapa de componentes
@@ -88,14 +88,15 @@ motor de reglas → persistencia de sala normal → vista filtrada para cada jug
   existe un canvas de previsualización; se libera al salir del selector o jugar.
   ResizeObserver actualiza el encuadre; no hay bucle de animación continuo.
 - El estado completo de la partida permanece en el servidor. `view` entrega
-  mano/destinos propios y datos públicos; los destinos rivales se revelan al final.
+  mano/destinos propios y datos públicos; los destinos rivales se revelan al final solo a participantes.
 - Credencial de puesto y cuenta persistente son conceptos diferentes. Actualmente
   existen enlaces privados de recuperación y hashes guardados, más cuenta opcional
   de Supabase Auth. La cuenta no aparece en vistas rivales ni sustituye el puesto.
 - La cartografía visual está separada de `data.js`/`engine.js`. Three.js debe
   consumir la misma vista autorizada, sin duplicar el motor.
-- La práctica es efímera. Las salas normales se guardan como snapshot local o
-  checkpoint remoto; el checkpoint no es un archivo histórico de partidas.
+- La sesión de práctica es efímera, pero su archivo se conserva. Salas y grabación
+  se guardan de forma atómica; [historial/replay](history-replay.md) define retención,
+  proyecciones, API y migración SQL.
 - Supabase se usa desde Node con clave secreta, sin acceso del navegador a la
   tabla de checkpoint. RLS y permisos están definidos en SQL. Auth es un módulo
   independiente y utiliza la clave publicable y el token del propio usuario.
@@ -174,7 +175,7 @@ modo/mapa y nombres/colores públicos. Excluye práctica, privadas, abandonadas 
 terminadas. `spectate` vincula `peer.watching`, separado de `peer.room`/puesto.
 `Engine.view(game, -1)` produce la proyección pública; el servidor bloquea las
 mutaciones del observador. No expone tokens ni IDs de cuenta. Al terminar, los
-resultados siguen siendo públicos como para los jugadores.
+totales siguen siendo públicos, pero `safePublic` elimina destinos privados.
 
 El checkpoint JSON añade `visibility`, `maxPlayers` y `members.bot`, sin migración
 SQL. Ausencia de `visibility` equivale a privada. `room_settings` y `add_bot`
@@ -183,3 +184,11 @@ pero pasa por la cola durable y los mismos plazos/guardados de salas normales.
 Solo conexiones humanas mantienen la sala viva; los bots y observadores no evitan
 la pausa o caducidad. El rollback local restaura ajustes y composición de la sala,
 y libera conexiones cuya entrada no pudo guardarse.
+
+## Historial e idiomas
+
+`match-archive.js` observa el motor; `replay-state.js` conserva estados/diferencias,
+`history-ui.js` presenta historial y replay. `guest-identity.js` separa identidad
+de navegador y puesto; OAuth reclama el historial con el perfil verificado.
+`i18n.js` y `translations.js` traducen la app sin modificar datos interpolados.
+Contrato y detalles de seguridad en [historial/replay](history-replay.md).

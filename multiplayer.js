@@ -1,4 +1,5 @@
 "use strict";
+const I18n = require("./i18n");
 const Engine = require("./engine");
 const { chooseReplacementAction } = require("./bots");
 
@@ -72,12 +73,12 @@ function createMultiplayerController({ rooms, sendRoom, removeRoom, expireGame, 
         if (member.bot) return;
         if ((room.game.players[seat].missedTurns || 0) >= 2 && !member.autopilot) {
           member.autopilot = true;
-          Engine.note(room.game, `${member.name}: bot de reemplazo tras dos turnos agotados.`, seat);
+          Engine.note(room.game, I18n.message`${member.name}: bot de reemplazo tras dos turnos agotados.`, seat);
         }
         if (member.reclaim && connected(member) && (room.game.current !== seat || room.game.turnSerial !== member.reclaimSerial)) {
           member.autopilot = member.reclaim = false;
           room.game.players[seat].missedTurns = 0;
-          Engine.note(room.game, `${member.name} recuperó el control.`, seat);
+          Engine.note(room.game, I18n.message`${member.name} recuperó el control.`, seat);
         }
       });
     }

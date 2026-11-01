@@ -1,4 +1,5 @@
 "use strict";
+const I18n = require("./i18n");
 const { randomInt } = require("node:crypto");
 const Engine = require("./engine");
 const { chooseBotAction } = require("./bots");
@@ -10,6 +11,7 @@ function createPracticeController({
   sendRoom,
   dispatch = job => job(),
   onRemove = () => {},
+  blocked = () => false,
   now = Date.now,
   setTimer = setTimeout,
   clearTimer = clearTimeout,
@@ -35,7 +37,7 @@ function createPracticeController({
       active.delete(room);
     }
     if (!live(room)) return;
-    onRemove(room);
+    if(onRemove(room)===false)return;
     rooms.delete(room.code);
     room.members.forEach((member) => {
       if (member.ws) {
@@ -58,6 +60,7 @@ function createPracticeController({
   function sync(room) {
     if (!live(room)) return;
     const state = runtime(room);
+    if(blocked()){cancelBot(state);return;}
     if (!connected(room)) return disconnected(room);
     if (state.deadline !== null) {
       clearTimer(state.expiry);
@@ -74,7 +77,7 @@ function createPracticeController({
     if (state.bot !== null) return;
     state.bot = setTimer(() => dispatch(() => {
       state.bot = null;
-      if (!live(room) || !connected(room) || !canAct()) return;
+      if (!live(room) || blocked() || !connected(room) || !canAct()) return;
       // Resolve an elapsed deadline before choosing a bot move. The same time
       // is used by action(), so a delayed callback cannot act for the old seat.
       const actionTime = Date.now();
@@ -92,7 +95,7 @@ function createPracticeController({
       } else {
         // A temporary practice opponent may yield if all remaining legal
         // actions are strategically pointless. Human pass rules stay in Engine.
-        Engine.note(room.game, `${room.game.players[room.game.current].name} no encuentra una jugada útil y cede el turno.`, room.game.current);
+        Engine.note(room.game, I18n.message`${room.game.players[room.game.current].name} no encuentra una jugada útil y cede el turno.`, room.game.current);
         Engine.next(room.game);
       }
       sendRoom(room);

@@ -51,7 +51,7 @@ test('directory updates, host controls, bots, full capacity, persistence and spe
   assert.equal(full.members[2].bot,true);assert.equal(new Set(full.members.map(m=>m.color)).size,3);
   host.send({type:'add_bot'});assert.equal((await host.next('error')).code,'ROOM_FULL');
   const overflow=await client();overflow.send({type:'join',code:'834001',name:'Overflow'});assert.equal((await overflow.next('error')).code,'ROOM_FULL');
-  const saved=JSON.parse(fs.readFileSync(process.env.STATE_FILE)).find(r=>r.code==='834001');
+  const saved=JSON.parse(fs.readFileSync(process.env.STATE_FILE)).rooms.find(r=>r.code==='834001');
   assert.equal(saved.members[2].bot,true);assert.equal(saved.maxPlayers,3);assert.equal(saved.visibility,'public');
   host.send({type:'start'});await host.next('state');
   await host.next('state',m=>m.game.initialReadyCount===1,7000);

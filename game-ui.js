@@ -2,19 +2,21 @@
 
 // Pure view helpers. The server remains authoritative for every game action.
 const GameUI = (() => {
+  const I18n = typeof module !== "undefined" && module.exports ? require('./i18n') : globalThis.TrencitosI18n;
   const MIN_ZOOM = .25, MAX_ZOOM = 6;
   const ROUTE_POINTS = Object.freeze({ 1: 1, 2: 2, 3: 4, 4: 7, 6: 15, 8: 21 });
   function cityLabelScale(zoom) { return Math.min(1.6, Math.max(1, 1 + (zoom - 2.5) * .24)); }
   function turnPresentation(game, seat, controlled = true) {
     if (!game) return { title: "", hint: "", clock: null, mine: false };
     const own = game.current === seat, player = game.players[game.current];
-    if (game.phase === "finished") return { title: "PARTIDA TERMINADA", hint: "Consulta el desglose de puntos", clock: null, mine: false };
-    if (game.phase === "initial") return { title: game.initial?.length ? "ELIGE TUS DESTINOS" : "ESPERANDO AL RESTO", hint: `${game.initialReadyCount}/${game.players.length} jugadores listos`, clock: "initial", mine: false };
-    if (game.phase === "closing") return { title: "ÚLTIMOS BILLETES", hint: "Esperando las elecciones pendientes", clock: "closing", mine: false };
-    if (game.turnWaiting) return { title: own ? "ELIGE TUS BILLETES" : `Turno de ${player.name}`, hint: own ? "Después tendrás un minuto completo para jugar" : "Está eligiendo sus destinos pendientes", clock: "waiting", mine: false };
+    if (game.phase === "abandoned") return { title:I18n.t("PARTIDA ABANDONADA"), hint:I18n.t("Progreso parcial · sin resultado final"), clock:null, mine:false };
+    if (game.phase === "finished") return { title: I18n.t("PARTIDA TERMINADA"), hint: I18n.t("Consulta el desglose de puntos"), clock: null, mine: false };
+    if (game.phase === "initial") return { title: game.initial?.length ? I18n.t("ELIGE TUS DESTINOS") : I18n.t("ESPERANDO AL RESTO"), hint: I18n.t`${game.initialReadyCount}/${game.players.length} jugadores listos`, clock: "initial", mine: false };
+    if (game.phase === "closing") return { title: I18n.t("ÚLTIMOS BILLETES"), hint: I18n.t("Esperando las elecciones pendientes"), clock: "closing", mine: false };
+    if (game.turnWaiting) return { title: own ? I18n.t("ELIGE TUS BILLETES") : I18n.t`Turno de ${player.name}`, hint: own ? I18n.t("Después tendrás un minuto completo para jugar") : I18n.t("Está eligiendo sus destinos pendientes"), clock: "waiting", mine: false };
     const mine = own && controlled;
-    return { title: mine ? "TU TURNO" : own ? "TU PUESTO · SIN CONTROL" : `Turno de ${player.name}`,
-      hint: !controlled && own ? "Reconecta o recupera el control para jugar" : mine ? game.phase === "tunnel" ? "Resuelve el túnel" : game.drawCount === 1 ? "Roba una carta más" : "Elige una acción" : "Puedes explorar el mapa y tus destinos",
+    return { title: mine ? I18n.t("TU TURNO") : own ? I18n.t("TU PUESTO · SIN CONTROL") : I18n.t`Turno de ${player.name}`,
+      hint: !controlled && own ? I18n.t("Reconecta o recupera el control para jugar") : mine ? game.phase === "tunnel" ? I18n.t("Resuelve el túnel") : game.drawCount === 1 ? I18n.t("Roba una carta más") : I18n.t("Elige una acción") : I18n.t("Puedes explorar el mapa y tus destinos"),
       clock: "turn", mine };
   }
   function needsSecondDraw(game, seat, panel, controlled = true) {
@@ -40,7 +42,7 @@ const GameUI = (() => {
     const player = game.players[route.owner];
     if (!player) return null;
     return { seat: route.owner, name: player.name, color: playerColor(player.color),
-      label: route.owner === seat ? "Esta ruta es tuya" : `Ocupada por ${player.name}` };
+      label: route.owner === seat ? I18n.t("Esta ruta es tuya") : I18n.t`Ocupada por ${player.name}` };
   }
   // Logs arrive newest first and are capped on the server. Find the retained
   // prefix, including repeated messages, so the view can anchor the same row.
@@ -118,31 +120,31 @@ const GameUI = (() => {
   }
   function construction(game, seat, target) {
     const no = reason => ({ reason, options: [] });
-    if (!game || game.phase === "finished") return no("La partida ha terminado.");
-    if (game.current !== seat) return no("No es tu turno.");
-    if (game.phase !== "play" || game.turnWaiting) return no("Resuelve la acción pendiente antes de construir.");
-    if (game.drawCount) return no("Termina de robar tus cartas antes de construir.");
+    if (!game || game.phase === "finished") return no(I18n.t("La partida ha terminado."));
+    if (game.current !== seat) return no(I18n.t("No es tu turno."));
+    if (game.phase !== "play" || game.turnWaiting) return no(I18n.t("Resuelve la acción pendiente antes de construir."));
+    if (game.drawCount) return no(I18n.t("Termina de robar tus cartas antes de construir."));
     const player = game.players[seat];
     let cost, color = "gray", ferry = 0, route;
     if (target?.routeId !== undefined) {
       route = game.routes.find(r => r.id === target.routeId);
-      if (!route) return no("Esta ruta no existe.");
-      if (route.owner !== null) return no("Esta ruta ya está ocupada.");
+      if (!route) return no(I18n.t("Esta ruta no existe."));
+      if (route.owner !== null) return no(I18n.t("Esta ruta ya está ocupada."));
       const parallel = game.routes.some(r => r.id !== route.id && r.owner !== null &&
         ((r.a === route.a && r.b === route.b) || (r.a === route.b && r.b === route.a)) &&
         (r.owner === seat || game.players.length <= 3));
-      if (parallel) return no("La ruta paralela impide construir aquí.");
-      if (player.trains < route.n) return no("No te quedan suficientes vagones.");
+      if (parallel) return no(I18n.t("La ruta paralela impide construir aquí."));
+      if (player.trains < route.n) return no(I18n.t("No te quedan suficientes vagones."));
       cost = route.n;
       color = route.color;
       ferry = route.ferry;
     } else if (target?.city) {
-      if (player.stations < 1) return no("No te quedan estaciones.");
-      if (game.players.some(p => p.placed.includes(target.city))) return no("Esta ciudad ya tiene una estación.");
+      if (player.stations < 1) return no(I18n.t("No te quedan estaciones."));
+      if (game.players.some(p => p.placed.includes(target.city))) return no(I18n.t("Esta ciudad ya tiene una estación."));
       cost = 4 - player.stations;
-    } else return no("Selecciona una ruta o una ciudad.");
+    } else return no(I18n.t("Selecciona una ruta o una ciudad."));
     const options = payments(game.hand, cost, color, ferry);
-    return { reason: options.length ? null : "No tienes las cartas suficientes.", options, cost, route };
+    return { reason: options.length ? null : I18n.t("No tienes las cartas suficientes."), options, cost, route };
   }
   function tunnelPayments(hand, tunnel) {
     if (!tunnel || tunnel.surcharge < 1) return [];

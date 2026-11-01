@@ -4,7 +4,7 @@ const http = require('node:http');
 const crypto = require('node:crypto');
 const {createAccountAuth} = require('../account-auth');
 
-async function fixture(t) {
+async function fixture(t, hooks={}) {
   let auth, time=Date.now(), revoked=false, expired=false, refreshCount=0;
   const calls=[], codes=new Map(), profiles=new Map();
   const env={AUTH_ENABLED:'true',AUTH_SUPABASE_URL:'https://auth.example.test',AUTH_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',AUTH_COOKIE_SECRET:'a'.repeat(64)};
@@ -34,7 +34,7 @@ async function fixture(t) {
   t.after(()=>new Promise(ok=>server.close(ok)));
   const base=`http://127.0.0.1:${server.address().port}`;env.AUTH_BASE_URL=base;
   const seatCalls=[];
-  const reset=()=>{auth=createAccountAuth({env,fetchImpl,now:()=>time,seats:async(...args)=>{seatCalls.push(args);return {rooms:[]};}});};reset();
+  const reset=()=>{auth=createAccountAuth({...hooks,env,fetchImpl,now:()=>time,seats:async(...args)=>{seatCalls.push(args);return {rooms:[]};}});};reset();
   const jar=new Map();
   async function request(path,body,options={}) {
     const response=await fetch(base+path,{redirect:'manual',...options,headers:{cookie:[...jar].map(([k,v])=>k+'='+v).join('; '),...(body?{'Content-Type':'application/json',Origin:base}:{}),...options.headers},...(body?{method:'POST',body:JSON.stringify(body)}:{})});
@@ -91,4 +91,24 @@ test('Auth is explicitly optional and production refuses insecure or secret-key 
   assert.doesNotThrow(()=>createAccountAuth({env:{}}));
   const env={AUTH_ENABLED:'true',AUTH_BASE_URL:'http://public.example',AUTH_SUPABASE_URL:'https://auth.example',AUTH_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_x',AUTH_COOKIE_SECRET:'a'.repeat(64)};
   assert.throws(()=>createAccountAuth({env}));env.AUTH_BASE_URL='https://game.example';env.AUTH_SUPABASE_PUBLISHABLE_KEY='sb_secret_private';assert.throws(()=>createAccountAuth({env}));
+});
+
+test('verified Google callback links guest history once; logout cannot expose that history',async t=>{
+ const {createMatchArchive}=require('../match-archive'),{guestId,ensureGuest}=require('../guest-identity'),Engine=require('../engine');
+ const archive=createMatchArchive(),token=crypto.randomBytes(32).toString('hex'),guest=guestId({headers:{cookie:'trencitos_guest='+token}});
+ const room={code:'12345678',visibility:'private',archiveFull:true,members:[{name:'Guest',guestId:guest},{name:'Bot',bot:true}],game:Engine.newGame(['Guest','Bot'])};
+ archive.capture(room,'Abandono definitivo');archive.commit(archive.prepare());let linked=0;
+ const f=await fixture(t,{linkGuest:async(req,res,id)=>{linked++;const claim=archive.claim(guestId(req),id);if(claim)archive.restore({...archive.state,...claim});},logoutGuest:(req,res)=>ensureGuest(req,res,true)});
+ f.jar.set('trencitos_guest',token);
+ assert.equal((await archive.list({guestId:guest})).length,1);
+ await f.request('/auth/callback?code=invalid');assert.equal(linked,0);
+ await f.login();await f.request('/api/account');assert.equal(linked,2);
+ assert.equal((await archive.list({accountId:'stable-account'})).length,1);
+ assert.equal((await archive.list({guestId:guest})).length,0);
+ assert.equal((await archive.list({accountId:'somebody-else'})).length,0);
+ assert.equal((await archive.replay({accountId:'stable-account'},room.matchId)).full,true);
+ await f.request('/api/account/logout',{});assert.notEqual(f.jar.get('trencitos_guest'),token);
+ const loggedOut=guestId({headers:{cookie:'trencitos_guest='+f.jar.get('trencitos_guest')}});
+ assert.equal((await archive.list({guestId:loggedOut})).length,0);
+ assert.equal((await archive.list({accountId:'stable-account'})).length,1);
 });

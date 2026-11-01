@@ -37,7 +37,7 @@ test("home exposes room directory tabs, join dialog and a separate profile route
 test("online status is hidden but offline errors remain visible", () => {
   const source = fs.readFileSync(require.resolve("../app.js"), "utf8");
   const node = { dataset: {}, classList: { toggle(_, hidden) { node.hidden = hidden; } } };
-  const ctx = vm.createContext({ $: () => node, sock: { readyState: 1 }, WebSocket: { OPEN: 1 }, sessionReplaced: false, homeBusy: true, syncHomeAvailability() {} });
+  const ctx = vm.createContext({ I18n: require("../i18n"), $: () => node, sock: { readyState: 1 }, WebSocket: { OPEN: 1 }, sessionReplaced: false, homeBusy: true, syncHomeAvailability() {} });
   vm.runInContext(source.slice(source.indexOf("function status("), source.indexOf("function send(")), ctx);
   ctx.status("● Conectado"); assert.equal(node.hidden, true);
   ctx.sock.readyState = 3; ctx.status("Desconectado");

@@ -117,5 +117,19 @@
     "tests/browser-shell.cjs",
     "tests/room-directory.test.js",
     "tests/room-bots.test.js"
+  ],
+  "history-replay.md": [
+    "match-archive.js",
+    "replay-state.js",
+    "history-ui.js",
+    "guest-identity.js",
+    "i18n.js",
+    "translations.js",
+    "supabase/003_match_archive.sql",
+    "scripts/verify-match-audit.js",
+    "tests/match-archive.test.js",
+    "tests/archive-sql.test.js",
+    "tests/history-server.test.js",
+    "tests/i18n.test.js"
   ]
 }

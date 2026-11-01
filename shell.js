@@ -12,14 +12,17 @@ const AppShell = (() => {
     ];
     const slug = name => name.toLowerCase().replaceAll(' ', '-');
     const titles = new Map(groups.flatMap(([,items]) => items.map(([name]) => [slug(name),name])));
-    $('moreGroups').innerHTML = groups.map(([name, items]) => `<section class="more-group"><h2>${name}</h2>${items.length ? `<div class="menu-list">${items.map(([label,icon]) => {
-      if (label === 'Language') return `<button type="button" class="menu-row" data-language>${ShellIcons.svg(icon)}<span>${label}</span><small>ESP</small>${ShellIcons.svg('chevron')}</button>`;
-      return `<a class="menu-row" href="${label === 'Privacy' ? '/privacy.html' : '/more?section='+slug(label)}" ${label === 'Privacy' ? '' : `data-content="${slug(label)}"`}>${ShellIcons.svg(icon)}<span>${label}</span>${ShellIcons.svg('chevron')}</a>`;
+    $('moreGroups').innerHTML = groups.map(([name, items]) => `<section class="more-group"><h2>${I18n.t(name)}</h2>${items.length ? `<div class="menu-list">${items.map(([label,icon]) => {
+      if (label === 'Language') return `<button type="button" class="menu-row" data-language>${ShellIcons.svg(icon)}<span>${I18n.t(label)}</span><small>ESP</small>${ShellIcons.svg('chevron')}</button>`;
+      return `<a class="menu-row" href="${label === 'Privacy' ? '/privacy.html' : '/more?section='+slug(label)}" ${label === 'Privacy' ? '' : `data-content="${slug(label)}"`}>${ShellIcons.svg(icon)}<span>${I18n.t(label)}</span>${ShellIcons.svg('chevron')}</a>`;
     }).join('')}</div>` : ''}</section>`).join('');
     $('socialIcons').innerHTML = ['Discord','YouTube','Reddit','Instagram','Facebook','X'].map(name => `<span class="social-icon" role="img" aria-label="${name}" title="${name}">${ShellIcons.svg(name.toLowerCase())}</span>`).join('');
     ShellIcons.mount();
+    for (const el of document.querySelectorAll('.sidebar-language span, [data-language] small')) el.textContent = I18n.language === 'en' ? 'ENG' : 'ESP';
+    $('languageSelect').value = I18n.language;
+    $('languageSelect').onchange = event => { if (I18n.select(event.target.value)) location.reload(); };
 
-    function identity() { for (const el of document.querySelectorAll('[data-username]')) el.textContent = $('nickname').value || 'Jugador'; }
+    function identity() { for (const el of document.querySelectorAll('[data-username]')) el.textContent = $('nickname').value || I18n.t('Jugador'); }
     function route(url = new URL(location.href), push = false) {
       if (state().game) return;
       page = url.pathname.split('/')[1] || 'rooms';
@@ -31,7 +34,7 @@ const AppShell = (() => {
       document.body.classList.toggle('in-room', page === 'rooms' && !!state().room);
       if (page === 'rooms' && state().room) $('roompanel').classList.remove('hidden');
       else $(section ? 'contentPage' : page+'Page').hidden = false;
-      if (section) $('contentTitle').textContent = titles.get(section);
+      if (section) $('contentTitle').textContent = I18n.t(titles.get(section));
       for (const link of document.querySelectorAll('.app-nav [data-page]')) {
         link.classList.toggle('active', link.dataset.page === page);
         if (link.dataset.page === page) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current');
@@ -39,8 +42,9 @@ const AppShell = (() => {
       $('returnRoom').hidden = !state().room || page === 'rooms';
       if (page === 'profile') {
         const tab = ['account','friends','history','overview'].includes(url.searchParams.get('tab')) ? url.searchParams.get('tab') : 'account';
-        $('profileTitle').textContent = tab[0].toUpperCase()+tab.slice(1);
+        $('profileTitle').textContent = I18n.t(tab[0].toUpperCase()+tab.slice(1));
         $('accountPanel').hidden = tab !== 'account';
+        HistoryUI.profile(tab);
         for (const link of document.querySelectorAll('[data-profile]')) {
           link.classList.toggle('active',link.dataset.profile === tab);
           if (link.dataset.profile === tab) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current');
@@ -51,6 +55,7 @@ const AppShell = (() => {
     const navigate = path => route(new URL(path,location.origin), true);
     document.addEventListener('click', event => {
       const target = event.target.closest('[data-page], [data-profile], [data-content]');
+      if (location.pathname === '/replay') return;
       if (!target || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button) return;
       event.preventDefault(); navigate(target.getAttribute('href'));
     });
@@ -71,7 +76,7 @@ const AppShell = (() => {
     $('profileForm').onsubmit = async event => {
       event.preventDefault();
       const name = $('profileName').value.trim();
-      if (!name || name.length > 24 || /[<>"'&\p{Cc}]/u.test(name)) { $('profileError').textContent='Elige un nombre de 1 a 24 caracteres, sin símbolos especiales.'; return; }
+      if (!name || name.length > 24 || /[<>"'&\p{Cc}]/u.test(name)) { $('profileError').textContent=I18n.t('Elige un nombre de 1 a 24 caracteres, sin símbolos especiales.'); return; }
       $('saveProfile').disabled = true; $('profileError').textContent='';
       try { await saveProfile(name); identity(); $('profileDialog').close(); }
       catch(error) { $('profileError').textContent=error.message; }
@@ -97,15 +102,15 @@ const AppShell = (() => {
         const full = !r.started && r.members.length >= r.maxPlayers;
         const own = !!localStorage.getItem('rr-room-'+r.code);
         const seats = Array.from({length:r.maxPlayers},(_,i)=>r.members[i]);
-        return `<tr data-room-code="${escape(r.code)}" class="${full && !own?'room-full':''}"><td><button type="button" data-directory-room="${escape(r.code)}" ${full && !own?'disabled':''} aria-label="${r.started?'Observar':own?'Retomar':'Unirse a'} sala ${escape(r.code)}">${escape(r.mode)}<small>#${escape(r.code)}</small></button></td><td>${escape(r.map)}</td><td>${r.turnSeconds}s</td><td><div class="directory-seats" aria-label="${r.members.length} de ${r.maxPlayers} jugadores">${seats.map(m=>`<span class="${m?'':'empty-seat'}" ${m?`title="${escape(m.name)}"`:''}>${ShellIcons.svg(m?.bot?'bot':'user')}</span>`).join('')}</div></td></tr>`;
+        return I18n.t`<tr data-room-code="${escape(r.code)}" class="${full && !own?'room-full':''}"><td><button type="button" data-directory-room="${escape(r.code)}" ${full && !own?'disabled':''} aria-label="${r.started?I18n.t('Observar'):own?I18n.t('Retomar'):I18n.t('Unirse a')} sala ${escape(r.code)}">${escape(I18n.t(r.mode))}<small>#${escape(r.code)}</small></button></td><td>${escape(I18n.t(r.map))}</td><td>${r.turnSeconds}s</td><td><div class="directory-seats" aria-label="${r.members.length} de ${r.maxPlayers} jugadores">${seats.map(m=>`<span class="${m?'':'empty-seat'}" ${m?`title="${escape(m.name)}"`:''}>${ShellIcons.svg(m?.bot?'bot':'user')}</span>`).join('')}</div></td></tr>`;
       }).join('');
       for (const button of $('directoryRows').querySelectorAll('[data-directory-room]')) button.onclick = () => {
         if (directoryTab === 'spectate') watchRoom(button.dataset.directoryRoom);
         else joinRoom(button.dataset.directoryRoom);
       };
       $('directoryEmpty').hidden = !!rows.length;
-      $('directoryEmpty').querySelector('h1').textContent = directoryUnavailable ? 'Salas no disponibles' : directoryTab === 'spectate' ? 'Aún no hay partidas en curso' : 'No hay salas abiertas';
-      $('directoryEmpty').querySelector('p').textContent = directoryUnavailable ? 'El servidor está recuperando el guardado.' : directoryTab === 'spectate' ? 'Las partidas públicas aparecerán aquí.' : 'Crea una sala e invita a jugar.';
+      $('directoryEmpty').querySelector('h1').textContent = directoryUnavailable ? I18n.t('Salas no disponibles') : directoryTab === 'spectate' ? I18n.t('Aún no hay partidas en curso') : I18n.t('No hay salas abiertas');
+      $('directoryEmpty').querySelector('p').textContent = directoryUnavailable ? I18n.t('El servidor está recuperando el guardado.') : directoryTab === 'spectate' ? I18n.t('Las partidas públicas aparecerán aquí.') : I18n.t('Crea una sala e invita a jugar.');
     }
     function renderRoom() {
       const s = state();
@@ -116,14 +121,21 @@ const AppShell = (() => {
       $('roomCapacity').value = s.maxPlayers;
       $('roomVisibility').disabled = $('roomCapacity').disabled = !s.host || s.busy || s.started;
       for (const option of $('roomCapacity').options) option.disabled = +option.value < s.members.length;
-      $('roomVisibilityHint').textContent = s.visibility === 'public' ? 'Visible en Open Rooms. La partida se podrá observar.' : 'Solo podrán entrar quienes tengan el código o el enlace.';
+      $('roomVisibilityHint').textContent = s.visibility === 'public' ? I18n.t('Visible en Open Rooms. La partida se podrá observar.') : I18n.t('Solo podrán entrar quienes tengan el código o el enlace.');
       $('waitingHost').hidden = s.host;
       const full = s.members.length >= s.maxPlayers;
-      $('roomFriendsMessage').textContent = full ? 'La sala está llena. No puedes invitar a más amigos.' : 'Tus amigos aparecerán aquí. Mientras tanto, comparte el enlace de la sala.';
-      $('emptySeats').innerHTML = Array.from({length:Math.max(0,s.maxPlayers-s.members.length)},(_,i)=>`<div class="empty-player">${s.host?`<button type="button" class="add-bot" data-add-bot ${s.busy?'disabled':''}>${ShellIcons.svg('bot')}Añadir bot</button>`:`${ShellIcons.svg('user')}<span>Plaza disponible</span>`}</div>`).join('');
+      $('roomFriendsMessage').textContent = full ? I18n.t('La sala está llena. No puedes invitar a más amigos.') : I18n.t('Tus amigos aparecerán aquí. Mientras tanto, comparte el enlace de la sala.');
+      $('emptySeats').innerHTML = Array.from({length:Math.max(0,s.maxPlayers-s.members.length)},(_,i)=>`<div class="empty-player">${s.host?I18n.t`<button type="button" class="add-bot" data-add-bot ${s.busy?'disabled':''}>${ShellIcons.svg('bot')}Añadir bot</button>`:I18n.t`${ShellIcons.svg('user')}<span>Plaza disponible</span>`}</div>`).join('');
       for (const el of $('emptySeats').querySelectorAll('[data-add-bot]')) el.onclick = () => { el.disabled=true; send({type:'add_bot'}); };
     }
+    function watchUnavailable() {
+      $('lobbyError').textContent='';
+      navigate('/rooms');
+      $('watchUnavailable').hidden = false;
+      $('watchUnavailable').focus();
+    }
     function joined() {
+      $('watchUnavailable').hidden = true;
       $('joinDialog').close();
       $('lobbyError').textContent='';
       if (!state().started) {
@@ -144,7 +156,7 @@ const AppShell = (() => {
     }
     identity(); route();
     if (new URLSearchParams(location.search).get('room') && !state().room && !localStorage.getItem('rr-room-'+$('code').value)) $('joinDialog').showModal();
-    return {identity,renderRoom,joined,reset,receiveDirectory(message){directory=message.rooms;directoryUnavailable=message.unavailable;renderDirectory();},availability(){ $('openJoin').disabled=state().busy; if(state().room)renderRoom(); }};
+    return {identity,renderRoom,joined,reset,watchUnavailable,receiveDirectory(message){directory=message.rooms;directoryUnavailable=message.unavailable;renderDirectory();},availability(){ $('openJoin').disabled=state().busy; if(state().room)renderRoom(); }};
   }
   return { create };
 })();
