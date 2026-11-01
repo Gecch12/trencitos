@@ -42,7 +42,8 @@ test('private replay, public projection, active secrecy and completed point sour
   for(const r of data.views[0].result||[]){assert.deepEqual(r.tickets,[]);assert.deepEqual(r.details.destinations,[]);}
  }
  await assert.rejects(()=>archive.replay({},room.matchId,true),e=>e.status===403);
- room.visibility='private';save();await assert.rejects(()=>archive.replay({},room.matchId),e=>e.status===404);
+ const privateFixture=fixture('private');privateFixture.archive.capture(privateFixture.room,'Abandono');privateFixture.archive.commit(privateFixture.archive.prepare());
+ await assert.rejects(()=>privateFixture.archive.replay({},privateFixture.room.matchId),e=>e.status===404);
 });
 test('verified account merge preserves existing histories, is idempotent, and blocks another account',async()=>{
  const {archive,room,save}=fixture();archive.capture(room,'Abandono');archive.commit(archive.prepare());
@@ -72,4 +73,12 @@ test('remote frame pages are loaded only after closed-game authorization',async(
  record.visibility='public';await assert.rejects(()=>archive.replay({},room.matchId,true),e=>e.status===403);assert.equal(reads,0);
  record.status='active';await assert.rejects(()=>archive.replay({},room.matchId),e=>e.status===409);assert.equal(reads,0);
  record.status='abandoned';assert.equal((await archive.replay({},room.matchId)).full,false);assert.equal(reads,1);
+});
+test('completed archive is sealed before later disconnects and room expiry',async()=>{
+ const {archive,room,save}=fixture();Engine.finish(room.game,true);save();
+ const before=structuredClone(archive.state.matches[room.matchId]);
+ room.members[0].autopilot=true;room.members[0].ws=null;
+ archive.capture(room,'Partida abandonada: nadie se reconectó durante 60 segundos.');archive.commit(archive.prepare());
+ assert.deepEqual(archive.state.matches[room.matchId],before);
+ assert.equal(before.status,'completed');assert.ok(room.archiveClosedAt);
 });

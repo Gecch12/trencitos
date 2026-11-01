@@ -69,7 +69,9 @@ pasos en la misma transacción, valida secuencia y rechaza conflictos, conserva
 idempotencia y exclusión de escritores. RLS y permisos impiden acceso directo de
 `anon`/`authenticated`; solo Node utiliza las RPC con credenciales del servidor.
 Un fallo de guardado pausa también la práctica y sus bots: no se confirma una
-jugada cuyo historial no pudo conservarse. No hay borrado automático del historial. Vigilar el crecimiento de la base; el
+jugada cuyo historial no pudo conservarse. El cierre sella el archivo: desconexiones
+posteriores o la caducidad de la sala no agregan eventos de abandono a una partida
+ya completada. No hay borrado automático del historial. Vigilar el crecimiento de la base; el
 archivo no sustituye backups ni recuperación punto en el tiempo.
 
 Al arrancar, los archivos activos sin una sala recuperable se cierran como

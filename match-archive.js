@@ -16,7 +16,9 @@ function participant(record, identity, claims) {
 function createMatchArchive({saved={matches:{},claims:{}},remote=null}={}) {
   let state=saved, pending=new Map();
   function capture(room,endReason=null) {
-    if(!room.game) return;
+    // Closure seals the recording. Later disconnects or room expiry must not
+    // append an abandonment event to an already completed game.
+    if(!room.game || room.archiveClosedAt) return;
     room.matchId ||= randomUUID();
     const g=room.game, previous=room._archiveState;
     const members=room.members.map(m=>({name:m.name,color:m.color,bot:!!m.bot,autopilot:!!m.autopilot,connected:!!m.bot||!!(m.ws&&!m.ws.closed)}));

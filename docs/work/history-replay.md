@@ -59,6 +59,9 @@ de QA completó sus 169 pasos, confirmados en Supabase, pero el replay largo exc
 la lectura monolítica. Ajuste de publicación: migración aditiva `004_archive_paging.sql`,
 autorización antes de leer pasos, páginas de 16 y validación de continuidad.
 La revisión visual también detectó y corrigió las etiquetas inglesas LONG/Pending.
+La lectura paginada recuperó la partida de 169 pasos después del despliegue. Se
+sella además el archivo al cerrar: salir de una sala ya finalizada no debe añadir
+al replay un mensaje de abandono. Regresión específica cubierta.
 No se recupera retroactivamente el detalle de partidas borradas antes de grabarse.
 La emulación no certifica Safari/iOS/Android físicos. Los contenidos futuros,
 notificaciones, amigos y chat siguen con el alcance de esqueleto acordado.
