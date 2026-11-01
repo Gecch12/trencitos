@@ -1,5 +1,5 @@
 ---
-{"id":"history-replay","status":"validated","parent":null,"depends_on":["navigation-rooms","identity"],"branch":"main","delivery":"worktree","updated":"2026-10-31"}
+{"id":"history-replay","status":"validated","parent":null,"depends_on":["navigation-rooms","identity"],"branch":"main","delivery":"released","updated":"2026-10-31"}
 ---
 # Historial, repetición, idiomas y ajustes de observación
 
@@ -49,21 +49,36 @@ Implementación autorizada después del análisis con `$moti`. Contrato canónic
 
 ## Entrega y siguiente paso
 
-Publicación autorizada por el usuario. `003_match_archive.sql` aplicada en Supabase
-con respuesta «Success. No rows returned»; el editor coincidía exactamente con el
-archivo local. Antes de publicar: salud correcta, Supabase y cero salas activas;
-la rama remota coincide con la base local. Falta desplegar el commit exacto y
-verificar API/WS e interfaz en producción.
-El primer despliegue `0883211` quedó Live a las 20:13:46 (Lima). La partida real
-de QA completó sus 169 pasos, confirmados en Supabase, pero el replay largo excedió
-la lectura monolítica. Ajuste de publicación: migración aditiva `004_archive_paging.sql`,
-autorización antes de leer pasos, páginas de 16 y validación de continuidad.
-La revisión visual también detectó y corrigió las etiquetas inglesas LONG/Pending.
-La lectura paginada recuperó la partida de 169 pasos después del despliegue. Se
-sella además el archivo al cerrar: salir de una sala ya finalizada no debe añadir
-al replay un mensaje de abandono. Regresión específica cubierta.
-La revisión remota final de tablet corrigió también «Robar» → «Draw» en la
-navegación compacta; todos los demás textos estáticos del HTML están cubiertos.
-No se recupera retroactivamente el detalle de partidas borradas antes de grabarse.
-La emulación no certifica Safari/iOS/Android físicos. Los contenidos futuros,
-notificaciones, amigos y chat siguen con el alcance de esqueleto acordado.
+Publicado en `main` y Render, con las migraciones aditivas 003 y 004 aplicadas en
+Supabase. La [ficha de producción](../production.md) conserva el commit exacto,
+despliegue y horarios; no se modificaron credenciales ni variables.
+
+- [QA remoto completo](../qa/production-history-2026-10-31.json): partida natural
+  de 178 pasos, puntos y procedencia, cadena de auditoría válida, reconexión sin
+  duplicar acciones, replay público filtrado y abandono privado con progreso parcial.
+- [Cierre sellado](../qa/production-history-final-2026-10-31.json): salir de una
+  práctica finalizada conserva exactamente la auditoría; archivo privado inaccesible
+  a terceros y partida completa previa recuperada tras reiniciar.
+- [Comprobación de entrega](../qa/production-history-release-2026-10-31.json):
+  recursos públicos coincidentes con la revisión final, replay previo y Supabase sano.
+- Navegador en producción: ES/EN y preferencia tras recarga, aviso de sala ausente,
+  replay público con controles 0,5×–8×, móvil/tablet sin desbordamiento horizontal,
+  espectador sin mano vacía y cuatro bots con icono de robot. Capturas:
+  [aviso](../qa/history-replay/production-missing-room.png) y
+  [replay móvil](../qa/history-replay/production-replay-mobile.png).
+- La lectura inicial monolítica fallaba con un replay largo; la paginación recuperó
+  los 169 pasos ya persistidos. Se verificaron permisos antes de leer páginas,
+  continuidad y roles SQL. También se corrigieron LONG/Pending y Draw en inglés.
+- Tras el ajuste del sellado: 30/30 pruebas pertinentes de archivo, servidor,
+  práctica y almacenamiento. Última traducción: 3/3 pruebas de idiomas.
+
+La entrega está publicada; la ficha conserva `validated` mientras la dependencia
+[identidad](identity.md) completa su matriz con una segunda cuenta real.
+
+Siguiente paso: vigilar crecimiento y backups de los archivos y completar la
+matriz en dispositivos físicos de [calidad](quality.md). No se recupera
+retroactivamente el detalle de partidas borradas antes de grabarse. La unión del
+historial invitado→Google se verificó con OAuth simulado; esta entrega no repitió
+esa unión con una cuenta Google real. La emulación no certifica Safari/iOS/Android
+físicos. Los contenidos futuros, notificaciones, amigos y chat siguen con el
+alcance de esqueleto acordado.

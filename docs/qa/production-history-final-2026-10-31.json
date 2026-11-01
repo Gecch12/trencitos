@@ -1,0 +1,22 @@
+{
+  "date": "2026-11-01T01:37:59.021Z",
+  "commit": "b0d2a6d81f01f803fe179824f28e12e956a91c56",
+  "checks": [
+    "Closing a finished practice room preserves the sealed audit exactly",
+    "Private practice replay is accessible only to its guest owner",
+    "Previously completed match survives final deployment with all recorded steps"
+  ],
+  "audit": {
+    "id": "22dfaf9a-e8b6-492f-9389-e2b9f1b04488",
+    "status": "abandoned",
+    "steps": 3,
+    "integrity": true
+  },
+  "health": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 1
+  },
+  "passed": true,
+  "finished": "2026-11-01T01:38:17.006Z"
+}

@@ -1,6 +1,50 @@
 # Producción
 
-## Versión actual · 2026-10-31, 18:26 (Lima)
+## Versión actual · 2026-10-31, 20:40 (Lima)
+
+- Código: `552e241a551f95aec2115a4336dfa8f48f3b2383`, publicado en `main`.
+  Incluye historial durable, desglose de puntuación, replay y auditoría, identidad
+  invitada vinculable a Google, ES/EN y correcciones del espectador. Alcance y
+  pruebas locales en [la ficha](work/history-replay.md).
+- [Despliegue Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbj9grrbc2fs73c6odd0):
+  commit exacto, **Live** a las 20:40:35; Node 26.13.0, `npm install --omit=dev`
+  y `npm start`. Auto-Deploy continúa desactivado. Se aplicaron en Supabase las
+  migraciones aditivas 003 (archivo) y 004 (lectura paginada), verificando que el
+  editor contenía exactamente el SQL local. Sin cambios de credenciales o variables.
+- [QA remoto HTTP/WebSocket](qa/production-history-2026-10-31.json), ejecutado sobre
+  `5112690`: partida natural completa de **178 pasos**, puntos y procedencia,
+  auditoría íntegra, historial activo sin replay prematuro, reconexión que conserva
+  puesto/mano/billetes y reintento sin robo ni revisión duplicados. Abandono privado
+  conserva progreso parcial, sin ganador. Terceros reciben replay público sin
+  secretos ni auditoría; una partida privada ajena devuelve 404.
+- [Verificación del sellado](qa/production-history-final-2026-10-31.json), sobre
+  `b0d2a6d`: el archivo y la auditoría quedan idénticos después de cerrar una sala
+  ya finalizada, y la partida completa previa sigue disponible tras desplegar.
+  El commit final solo añade la traducción de «Robar» a «Draw» en el panel compacto.
+- [Verificación de la revisión final](qa/production-history-release-2026-10-31.json):
+  diez recursos públicos coinciden byte a byte con el código, replay completo
+  anterior recuperable y salud `ok: true`, `storage: supabase`.
+- El usuario autorizó expresamente desplegar con una reconexión breve mientras
+  había una partida real activa. La partida conservó su UUID y siguió registrando
+  jugadas después del reinicio. El observador recibió temporalmente el aviso de
+  partida no disponible hasta reabrir el enlace después de reconectar los jugadores;
+  no se manipuló esa partida. No equivale a verificar su mano privada desde el navegador.
+- Chrome en producción: ESP/ENG y preferencia persistente, navegación/perfil,
+  aviso de enlace ausente, replay 0,5×–8× y salto de pasos, perspectiva pública
+  sin cartas privadas. Móvil 390×844 y tablet 768×1024 sin desbordamiento horizontal;
+  espectador con panel de mano de altura cero y cuatro robots. Capturas:
+  [aviso de sala](qa/history-replay/production-missing-room.png) y
+  [replay móvil](qa/history-replay/production-replay-mobile.png).
+
+La primera lectura monolítica del replay largo excedió el plazo; la paginación
+recuperó íntegra la grabación de 169 pasos que ya estaba guardada. Se corrigieron
+también eventos posteriores al cierre para que no alteren nuevos archivos sellados.
+La unión invitado→Google se probó con OAuth simulado, sin repetirla con una cuenta
+Google real en esta entrega. La revisión responsive usa emulación, no dispositivos
+físicos. Amigos, notificaciones, chat y contenidos futuros siguen como esqueleto.
+Los commits documentales posteriores registran evidencia y no reinician el servicio.
+
+## Entrega anterior · 2026-10-31, 18:26 (Lima)
 
 - Código: `bf1c5c19ba99e2ee00e7706d52594860a5e19034`, publicado en `main`.
   Incluye navegación adaptable, perfil editable, directorio público/privado,

@@ -1,0 +1,76 @@
+{
+  "date": "2026-11-01T01:25:13.571Z",
+  "commit": "5112690a43c7c418b1fe3da33d12d04cf7cdb487",
+  "checks": [
+    "Ten public assets exactly match deployed commit",
+    "Server and migration files remain private",
+    "Real Supabase archive lists active match and blocks unfinished replay",
+    "Retrying identical action ID does not duplicate card or revision",
+    "Reconnection preserves seat, cards and destinations",
+    "Natural complete game stores full scoring provenance and valid audit hash chain",
+    "Public replay strips hidden cards/destinations and denies audit",
+    "Abandoned private match persists partial progress and is hidden from outsiders",
+    "Completed history remains available after room closure"
+  ],
+  "assets": [
+    {
+      "file": "index.html",
+      "sha256": "efb6f37ea4e8d2a906075be9df26bba40878d29f30447a4a39b23b586217c51b"
+    },
+    {
+      "file": "app.js",
+      "sha256": "c2b208b54effbed1af57d35051fc735bd5b6483bc89f24dfd299b275ff72e8c7"
+    },
+    {
+      "file": "shell.js",
+      "sha256": "e1e434951cdfa1fce709beea07ff4ae0acf6423b3215072901f4735894b179dd"
+    },
+    {
+      "file": "shell.css",
+      "sha256": "09e8cdf4d44de9e16259a34de3a8423cd5a371d6dcc5d2c49c715ee2f5c76f5b"
+    },
+    {
+      "file": "game-ui.js",
+      "sha256": "537670e513c1dea76db87107ac848bf251556068843299cbddc8f05476e562bd"
+    },
+    {
+      "file": "account-ui.js",
+      "sha256": "74b6500240aad5b9d8f878c6360c63ad4e034678bd3181e8daeec20824e65448"
+    },
+    {
+      "file": "history-ui.js",
+      "sha256": "18cb60daac513278c1777c2b218d2c67b6b7f02f85427c0da50d433a53b80802"
+    },
+    {
+      "file": "i18n.js",
+      "sha256": "d604f99da1639a1083f6a643f9cba91398620a67dceed90394133b198eb74a56"
+    },
+    {
+      "file": "translations.js",
+      "sha256": "5528f69ba6b75a9a684f380f02c79816484458b8afa0050055bdd83f2365a4d7"
+    },
+    {
+      "file": "replay-state.js",
+      "sha256": "3008e9a8fda81dc7c73219b93bbdf9934e67b2b8dda3882d631070f59f3ec0ea"
+    }
+  ],
+  "healthBefore": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 0
+  },
+  "publicMatchId": "dfd7ada3-ae21-4fcc-a893-1a6c7e127298",
+  "audit": {
+    "id": "dfd7ada3-ae21-4fcc-a893-1a6c7e127298",
+    "status": "completed",
+    "steps": 178,
+    "integrity": true
+  },
+  "healthAfter": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 1
+  },
+  "passed": true,
+  "finished": "2026-11-01T01:29:24.689Z"
+}

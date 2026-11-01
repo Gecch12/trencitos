@@ -8,6 +8,7 @@ El resultado de una ejecución nueva se registra en su ficha de trabajo.
 | --- | --- |
 | Beta inicial | [QC histórico](../QC.md) |
 | Navegación, perfil y salas públicas | [Ficha, comparación responsive y capturas](work/navigation-rooms.md) |
+| Historial, replay, invitados e idiomas | [Ficha y pruebas remotas](work/history-replay.md) |
 | Lobby y colores | [Lobby QA](lobby-qa.md) |
 | Resultados y zoom | [Resultados QA](results-qa.md) |
 | Layout adaptable | [Responsive QA](responsive-qa.md) |
