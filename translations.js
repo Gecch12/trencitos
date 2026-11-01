@@ -82,6 +82,7 @@ const Translations = {
   "¿Invalidar el enlace privado anterior? Después copia y guarda el nuevo.": "Revoke the previous private link? Then copy and save the new one.",
   "¿Salir de la partida? Un bot tomará tu puesto. Si todos salen, la partida se abandonará tras 60 segundos sin conexiones.": "Leave the game? A bot will take your seat. If everyone leaves, the game will be abandoned after 60 seconds without connections.",
   "No tienes el control de este puesto.": "You don't control this seat.",
+  "Robar": "Draw",
   "Robar carta": "Draw card",
   "EN TURNO": "PLAYING",
   "✓ Listo": "✓ Ready",

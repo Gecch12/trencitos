@@ -62,6 +62,8 @@ La revisión visual también detectó y corrigió las etiquetas inglesas LONG/Pe
 La lectura paginada recuperó la partida de 169 pasos después del despliegue. Se
 sella además el archivo al cerrar: salir de una sala ya finalizada no debe añadir
 al replay un mensaje de abandono. Regresión específica cubierta.
+La revisión remota final de tablet corrigió también «Robar» → «Draw» en la
+navegación compacta; todos los demás textos estáticos del HTML están cubiertos.
 No se recupera retroactivamente el detalle de partidas borradas antes de grabarse.
 La emulación no certifica Safari/iOS/Android físicos. Los contenidos futuros,
 notificaciones, amigos y chat siguen con el alcance de esqueleto acordado.
