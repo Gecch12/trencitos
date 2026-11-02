@@ -93,6 +93,15 @@ No reutilices procesos ni archivos de estado de otra carpeta. Los `.env` no se
 cargan automáticamente y no deben copiarse del entorno de producción. No
 conectes dos procesos al mismo checkpoint Supabase: el nuevo invalida al anterior.
 
+El backend de archivo migra automáticamente el estado anterior al formato 2 en
+el siguiente guardado. Reinicia el servidor para cargar el lector/escritor nuevo;
+recargar el navegador solo actualiza la interfaz. Para un respaldo consistente,
+detén el proceso y copia juntos `STATE_FILE`, `STATE_FILE.bak` si existe y todo
+`STATE_FILE.archive/`. Restáuralos juntos y usa una versión que lea el formato 2;
+el manifiesto ya no incluye los pasos de las repeticiones. No borres esa carpeta
+para reducir el tamaño del estado. El contrato de confirmación y recuperación
+está en [historial/replay](history-replay.md).
+
 La app de Codex tiene registrado `trains`, cuyo repo está en `trencitos`.
 Un chat local bajo ese proyecto debe usar explícitamente la ruta de su worktree
 para herramientas y servidores. La configuración de chat no demuestra aislamiento.

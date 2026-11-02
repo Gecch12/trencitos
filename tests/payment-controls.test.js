@@ -44,10 +44,10 @@ test("grouped payments obey stock, fixed colors and ferry minima, including all-
 function dialog(hand, route = { id: 0, a: "PAR", b: "BRU", color: "gray", n: 2, ferry: 0, owner: null }) {
   const nodes = {}, sent = [], messages = [];
   const game = { current: 0, phase: "play", drawCount: 0, hand, routes: [route], players: [{ trains: 45, stations: 3, placed: [] }] };
-  const node = () => ({ textContent: "", disabled: false, children: [], style: { setProperty() {} }, classList: { add() {} }, replaceChildren() { this.children = []; }, appendChild(child) { this.children.push(child); } });
+  const node = () => ({ textContent: "", disabled: false, dataset: {}, setAttribute() {}, animate() {}, children: [], style: { setProperty() {} }, classList: { add() {} }, replaceChildren() { this.children = []; }, appendChild(child) { this.children.push(child); } });
   let html, inputs = [];
   const context = vm.createContext({ I18n: require("../i18n"),
-    game, seat: 0, buildTarget: { routeId: 0 }, GameUI: UI, buildSubmitting: false,
+    game, seat: 0, buildTarget: { routeId: 0 }, GameUI: UI, buildSubmitting: false, reducedMotion: {matches: false},
     N: Object.fromEntries([...E.COLORS, "wild"].map(c => [c, c])), C: UI.ROUTE_COLORS,
     $: id => nodes[id], escapeHTML: s => s, routeName: r => `${r.a} — ${r.b}`, cityName: s => s,
     plural: (n, word) => `${n} ${word}`, dialogClockHTML: () => "", updateClocks() {}, closeOptionalDialog() {},
@@ -123,4 +123,11 @@ test("confirmation revalidates hand and turn instead of submitting stale payment
   d.nodes.confirmBuild.onclick();
   assert.equal(d.sent.length, 0);
   assert.match(d.messages[1], /turno/);
+});
+test("friendly tunnel shortfall counts only matching cards left after the base payment", () => {
+  const t={color:"red",base:{color:"red",regular:2,wild:1},surcharge:3};
+  assert.equal(UI.tunnelShortfall(["red","red","wild","blue","blue"],t),3);
+  assert.equal(UI.tunnelShortfall(["red","red","red","wild","wild"],t),1);
+  assert.equal(UI.tunnelShortfall(["red","red","red","red","wild","wild"],t),0);
+  assert.equal(UI.tunnelShortfall(["wild","wild","wild","red","red"],{color:"wild",base:{color:"wild",regular:0,wild:2},surcharge:2}),1);
 });

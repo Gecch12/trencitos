@@ -107,7 +107,7 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null}={}) {
       const projected={members:state.members,views:own?state.views:[state.views[0]]};
       const data=frame.seq%32===0||!previous?{snapshot:projected}:{changes:Replay.diff(previous,projected)};previous=projected;
       // Actions can contain private selections; only participants receive them.
-      return {seq:frame.seq,at:frame.at,events:frame.events,...(own?{action:frame.action}:{}),...data};
+      return {seq:frame.seq,at:frame.at,events:own?frame.events:frame.events.map(entry=>Engine.historyEntryView(entry,-1)),...(own?{action:frame.action}:{}),...data};
     });
     return {match:summary(record,own),full:own,frames};
   }

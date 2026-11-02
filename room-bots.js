@@ -12,6 +12,7 @@ function createRoomBots({ rooms, sendRoom, dispatch, blocked, setTimer = setTime
   function seats(room) {
     const g = room.game;
     if (!g || g.phase === "finished") return [];
+    if (g.phase === "tunnel" && g.pending?.stage) return !Engine.tunnelBusy(g) && room.members[g.current]?.bot ? [g.current] : [];
     const pending = room.members.flatMap((m, i) => m.bot && (g.players[i].pending.length || g.players[i].offer) ? [i] : []);
     if (pending.length) return pending;
     return !["initial", "closing"].includes(g.phase) && room.members[g.current]?.bot ? [g.current] : [];

@@ -26,7 +26,7 @@ test('legacy/private/practice/abandoned/finished rooms never enter the public di
   assert.doesNotMatch(JSON.stringify(entries),/secret|accountId|token/);
   assert.equal(serializableRoom(base).visibility,'private');
 });
-test('spectator projection excludes hands, destinations, hidden draws and tunnel reveals',()=>{
+test('spectator projection excludes hands, destinations and hidden draws, but includes public tunnel reveals',()=>{
   const g=Engine.newGame(['A','B']);
   g.events=[{id:1,type:'draw',seat:0,index:-1,color:'red'},{id:2,type:'tunnel_reveal',seat:0,revealed:['red']}];
   g.lastDraw={id:1,seat:0,index:-1,color:'red'};
@@ -34,7 +34,7 @@ test('spectator projection excludes hands, destinations, hidden draws and tunnel
   assert.equal(view.spectator,true);assert.equal(view.seat,-1);
   for(const key of ['hand','tickets','ticketPaths','ticketProgress']) assert.deepEqual(view[key],[]);
   for(const key of ['initial','ticketOffer','pending','tunnel','result']) assert.equal(view[key],null);
-  assert.equal(view.events.length,1);assert.equal(view.events[0].color,undefined);assert.equal(view.drawEvent.color,undefined);
+  assert.equal(view.events.length,2);assert.deepEqual(view.events[1].revealed,["red"]);assert.equal(view.events[0].color,undefined);assert.equal(view.drawEvent.color,undefined);
   for(const p of view.players){assert.equal(p.hand,undefined);assert.equal(p.tickets,undefined);}
 });
 test('directory updates, host controls, bots, full capacity, persistence and spectator permissions',async()=>{

@@ -304,7 +304,7 @@ test("WebSocket tunnel payments accept color, mixed and wild options and preserv
     const peer = await client();
     peer.send({ type: "join", code, token: "preview-human" });
     await peer.next("lobby");
-    const before = (await peer.next("state")).game;
+    const before = (await peer.next("state", m => m.game.sharedTunnel?.stage === "decision")).game;
     const routeId = before.tunnel.routeId;
     const options = UI.tunnelPayments(before.hand, before.tunnel);
     if (scenario.kind === "decline") assert.deepEqual(options, []);

@@ -31,6 +31,8 @@ comercial: conserva las variantes del proyecto.
   40 billetes cortos y 6 largos. Mesa de hasta cinco cartas.
 - La vista rival expone cantidades, piezas y vías públicas, nunca mano, oferta
   privada ni orden de mazo. Los efectos no deben filtrar un robo oculto.
+  Esto incluye miniaturas del historial y eventos del replay público: el robo
+  de una carta visible muestra su cara; el del mazo muestra el reverso a los demás.
 
 ## Fases y turno
 
@@ -56,6 +58,21 @@ el robo; no se puede cambiar a construcción.
 | Nuevos destinos | Ofrece hasta tres cortos, conserva al menos uno y devuelve rechazados al mazo corto. La elección tiene plazo propio y el juego continúa. Si vuelve su turno sin confirmar, espera antes de comenzar su minuto. |
 | Estación | Una por ciudad; costes sucesivos 1/2/3 cartas de un color, con locomotoras permitidas. Máximo tres por jugador. |
 | Pasar | Solo cuando no existe ninguna otra acción legal. |
+
+El túnel tiene etapas persistidas `reveal`, `decision` y `result`, coordinadas
+por el servidor. La revelación muestra una carta cada 700 ms y deja 700 ms tras
+la última. Congela el tiempo restante del constructor; la decisión lo reanuda.
+Solo el constructor puede pagar/desistir. El resultado se mantiene 3000 ms antes
+de avanzar turno o calcular el cierre final. Durante todo el modal se congelan
+ofertas de destinos y se rechazan sus confirmaciones; al cerrar recuperan el
+tiempo restante. Bots y humanos cumplen la misma secuencia. Las cartas reveladas,
+ruta, color usado y suplemento son públicos. Desde UI 8 también se publica la
+composición de la base comprometida y, solo al construir, el extra efectivamente
+pagado. El resto de la mano y las opciones de pago son privados. El resultado
+conserva `resultStartedAt` y distingue desistimiento voluntario de tiempo agotado;
+al desistir, la base se recupera y el gasto total es cero.
+La reconexión conserva la etapa y los plazos. Un túnel guardado con el formato
+anterior entra en decisión compartida sin reiniciar su reloj.
 
 ## Variantes y puntuación
 

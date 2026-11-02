@@ -10,7 +10,7 @@ test("blind draw color is private to its recipient in every seat's serialized vi
   E.action(g, 0, { type: "draw_train", index: -1 });
   for (let seat = 0; seat < 5; seat++) {
     const view = JSON.parse(JSON.stringify(E.view(g, seat)));
-    assert.equal(view.uiVersion, 5);
+    assert.equal(view.uiVersion, 8);
     assert.deepEqual(view.drawEvent, { id: 1, seat: 0, index: -1, ...(seat === 0 ? { color } : {}) });
     assert.equal(view.lastDraw, undefined);
     assert.ok(view.players.every(p => p.hand === undefined));
@@ -37,6 +37,30 @@ test("legacy saved games get draw events without requiring an initialized counte
   assert.equal(E.view(g, 0).drawEvent, null);
   E.action(g, 0, { type: "draw_train", index: -1 });
   assert.equal(g.lastDraw.id, 1);
+});
+test("history keeps each drawn card across saves without exposing blind colors to other seats", () => {
+  const g = E.newGame(["A", "B"]); g.phase = "play";
+  g.deck = ["blue", "orange"]; g.face = ["red", "blue", "green", "white", "yellow"];
+  E.action(g, 0, {type:"draw_train", index:-1});
+  E.action(g, 0, {type:"draw_train", index:0});
+  const saved = JSON.parse(JSON.stringify(g));
+  for (const seat of [-1, 0, 1]) {
+    const entries = E.view(saved, seat).history.filter(e=>e.draw);
+    assert.deepEqual(entries.map(e=>e.draw), [{index:0,color:"red"},{index:-1,...(seat===0?{color:"orange"}:{})}]);
+  }
+  assert.equal(saved.history[1].draw.color,"orange");
+});
+test("renewal evidence contains the triggering public market and replacement, exactly once", () => {
+  const g = E.newGame(["A", "B"]); g.phase = "play"; g.events=[];
+  g.face=["wild","wild","red","blue","green"];g.deck=["yellow","purple","black","white","wild"];
+  E.action(g,0,{type:"draw_train",index:2});
+  const refresh = g.events.filter(e=>e.type==="market_refresh");
+  assert.equal(refresh.length,1);
+  assert.deepEqual(refresh[0].before,["wild","wild","wild","blue","green"]);
+  assert.deepEqual(refresh[0].after,g.face);
+  for (const seat of [-1,0,1]) assert.deepEqual(E.view(g,seat).events.find(e=>e.type==="market_refresh"),refresh[0]);
+  E.action(g,0,{type:"draw_train",index:-1});
+  assert.equal(g.events.filter(e=>e.type==="market_refresh").length,1);
 });
 test("Madrid–Dieppe completes through Pamplona, Paris and Bruxelles, without a station", () => {
   const g = E.newGame(["A", "B", "C", "D"]); g.phase = "play";

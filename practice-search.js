@@ -70,7 +70,7 @@ function settleTunnel(game, seat) {
 // Cheap rollout policy, distinct from the root planner: no recursive search.
 function rolloutAction(game, seat, random, rootSeat = seat) {
   const p = game.players[seat];
-  if (p.offer) {
+  if (p.offer && game.phase !== "tunnel") {
     const g = P.observe(game, seat), values = T.estimateTickets(g, seat, p.offer.tickets, game.phase === "closing" ? 0 : P.horizon(g, seat));
     let indexes = values.flatMap((v, i) => v.value > 0 ? [i] : []);
     if (!indexes.length) indexes = [values.reduce((best, v, i) => v.value > values[best].value ? i : best, 0)];
@@ -159,14 +159,20 @@ function chooseLookahead(g, seat, actions, memory, random) {
     const values = [];
     for (const seed of seeds) {
       const rng = randomStream(seed), world = sampleWorld(g, seat, memory.known, rng, memory.retired);
-      let turns = 0, steps = 0, first = true;
+      let turns = 0, steps = 0, time = 0, first = true;
       while (world.phase !== "finished" && turns < LIMITS.ownTurns && steps++ < LIMITS.actionsPerBranch) {
-        const offering = world.players.findIndex(p => p.offer);
+        if (E.tunnelBusy(world)) {
+          const actor = world.current, serial = world.turnSerial;
+          time = Math.max(time, world.pending.until); E.expire(world, time, rng);
+          if (actor === seat && world.turnSerial !== serial) turns++;
+          nodes++; continue;
+        }
+        const offering = world.phase === "tunnel" ? -1 : world.players.findIndex(p => p.offer);
         const actor = offering >= 0 ? offering : world.current;
         const selected = first ? action : rolloutAction(world, actor, rng, seat);
         first = false;
         const serial = world.turnSerial;
-        if (selected) E.action(world, actor, selected, { now: steps, random: rng }); else E.next(world, steps);
+        if (selected) E.action(world, actor, selected, { now: ++time, random: rng }); else E.next(world, ++time);
         nodes++;
         if (actor === seat && world.turnSerial !== serial) turns++;
       }

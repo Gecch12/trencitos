@@ -25,6 +25,9 @@ Para después:
 Mejoras solicitadas del juego:
 
 - [Inteligencia de bots de práctica](practice-ai.md).
+- [Billetes, túneles compartidos y resultados](game-flow-ui.md).
+- [Miniaturas, renovación de cartas y pagos visuales](card-interactions.md).
+- [Rendimiento del selector de vagones](wagon-preview-performance.md).
 
 Abre solo la ficha pertinente y sus referencias. El próximo paso está allí.
 Los hitos viven dentro de la ficha hasta necesitar una entrega independiente;

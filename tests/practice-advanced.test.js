@@ -184,7 +184,8 @@ test("injected action randomness covers tunnel reveals, payments and recycling r
   const outcomes = [1, 2].map(() => {
     const copy = structuredClone(g), rng = S.randomStream(7);
     E.action(copy, 0, { type: "claim", routeId: 0, color: "red", wildCount: 0 }, { now: 0, random: rng });
-    E.action(copy, 0, { type: "pay_tunnel", extraWild: 0 }, { now: 1, random: rng });
+    E.expire(copy, copy.pending.until, rng);
+    E.action(copy, 0, { type: "pay_tunnel", extraWild: 0 }, { now: 2801, random: rng });
     return copy;
   });
   assert.deepEqual(outcomes[0], outcomes[1]);

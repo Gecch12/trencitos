@@ -67,8 +67,8 @@ function createPracticeController({
       state.expiry = state.deadline = null;
     }
     const pendingBots = () => room.members.flatMap((member, i) => member.bot && room.game.players[i].pending.length ? [i] : []);
-    const pendingOffers = () => room.members.flatMap((member, i) => member.bot && room.game.players[i].offer ? [i] : []);
-    const canAct = () => room.game.phase === "initial" ? pendingBots().length > 0
+    const pendingOffers = () => room.game.phase === "tunnel" ? [] : room.members.flatMap((member, i) => member.bot && room.game.players[i].offer ? [i] : []);
+    const canAct = () => Engine.tunnelBusy(room.game) ? false : room.game.phase === "initial" ? pendingBots().length > 0
       : room.game.phase !== "finished" && (pendingOffers().length > 0 || room.game.phase !== "closing" && room.members[room.game.current]?.bot);
     if (!canAct()) {
       cancelBot(state);
@@ -106,7 +106,7 @@ function createPracticeController({
     if (!live(room) || room.game.phase === "finished") return;
     cancelBot(runtime(room));
     // A pending tunnel has not been paid for yet; abandon it before scoring.
-    if (room.game.phase === "tunnel") room.game.discard.push(...room.game.pending.revealed);
+    if (room.game.phase === "tunnel" && room.game.pending.stage !== "result") room.game.discard.push(...room.game.pending.revealed);
     Engine.recycleDiscards(room.game);
     room.game.pending = null;
     room.game.drawCount = 0;

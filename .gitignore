@@ -1,6 +1,8 @@
 room-state.json
 room-state.json.tmp
 room-state.json.bak
+room-state.json.bak.tmp
+room-state.json.archive/
 node_modules/
 .env
 .env.*

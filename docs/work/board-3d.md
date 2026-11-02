@@ -147,7 +147,9 @@ No hay reglas de carga, selector de materiales ni identidad dorada en la UI.
 [El renderizador](../../wagon-renderer.js) comparte geometrías/materiales en
 instancias; reflejos de estudio procedurales y huella acotada. La
 [vista previa](../../wagon-preview.js) usa las mismas piezas: un canvas en práctica
-(o sala, tras confirmar el color en servidor), liberado al ocultarlo o jugar.
+y sala, liberado al ocultarlo o jugar. La selección provisional responde al clic
+y se reconcilia con el servidor; la corrección de latencia local y su evidencia
+están en [rendimiento del selector](wagon-preview-performance.md).
 
 Vías libres, túneles/ferris, círculos de ciudad, bandas, vagones y estaciones
 comparten profundidad Three.js. Los nombres quedan sobre la escena. Resaltar

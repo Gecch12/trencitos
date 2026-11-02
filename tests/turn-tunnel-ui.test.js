@@ -55,32 +55,36 @@ test("labels grow only beyond 2.5x and are capped at 24 screen pixels", () => {
 for (const [kind, cards, surcharge] of [
   ["color", ["white", "black", "wild"], 2], ["zero", ["red", "black", "blue"], 0],
   ["wild", ["red", "black", "wild"], 1], ["short", ["white", "black"], 1],
-]) test(`tunnel ${kind} emits exact evidence once, privately, without extending the deadline`, () => {
+]) test(`tunnel ${kind} shares committed cards and evidence but never the player's remaining hand`, () => {
   const g = tunnelRoom("QATEST", kind, true).game;
-  E.ensureTiming(g);
-  const deadline = g.turnDeadline;
+  const now = Date.now(), remaining = g.turnDeadline - now;
   const route = g.routes.find(r => r.tunnel && r.color === "gray" && r.n === 2);
-  E.action(g, 0, { type: "claim", routeId: route.id, color: kind === "wild" ? "wild" : "white", wildCount: kind === "wild" ? 2 : 0 });
-  const event = g.events.find(e => e.type === "tunnel_reveal");
-  assert.deepEqual(event.revealed, cards);
-  assert.equal(event.surcharge, surcharge);
-  assert.equal(E.view(g, 0).events.filter(e => e.type === "tunnel_reveal").length, 1);
-  assert.equal(E.view(g, 1).events.some(e => e.type === "tunnel_reveal"), false);
-  assert.deepEqual(E.view(JSON.parse(JSON.stringify(g)), 0).events.find(e => e.type === "tunnel_reveal"), event);
-  if (surcharge) {
-    assert.equal(g.turnDeadline, deadline);
-    assert.equal(g.pending.revealId, event.id);
-    assert.equal(route.owner, null);
-    const before = JSON.stringify(g.events);
-    assert.throws(() => E.action(g, 0, { type: "claim", routeId: route.id, color: "white", wildCount: 0 }));
-    assert.equal(JSON.stringify(g.events), before);
-  } else {
-    assert.equal(g.current, 1);
-    assert.equal(route.owner, 0);
-    assert.equal(g.phase, "play");
-    assert.ok(g.events.find(e => e.type === "build").id > event.id);
+  E.action(g, 0, { type: "claim", routeId: route.id, color: kind === "wild" ? "wild" : "white", wildCount: kind === "wild" ? 2 : 0 }, {now});
+  assert.equal(g.turnDeadline, null);
+  assert.equal(g.current, 0); assert.equal(route.owner, null);
+  for (const seat of [-1, 0, 1, 2]) {
+    const v = E.view(g, seat);
+    assert.deepEqual(v.sharedTunnel.revealed, cards);
+    assert.equal(v.sharedTunnel.surcharge, surcharge);
+    assert.equal(v.sharedTunnel.stage, "reveal");
+    assert.deepEqual(v.sharedTunnel.base, g.pending.base);
+    if (seat !== 0) {
+      assert.equal(v.tunnel, null);
+      assert.deepEqual(v.events.find(e => e.type === "tunnel_reveal").base, g.pending.base);
+    }
   }
-  assert.equal(g.deck.length + g.discard.length + g.face.length + g.players.reduce((n, p) => n + p.hand.length, 0) + (g.pending?.revealed?.length || 0), 110);
+  const end = g.pending.until;
+  assert.equal(E.expire(g, end - 1), false);
+  E.expire(g, end);
+  assert.equal(g.current, 0);
+  if (surcharge) {
+    assert.equal(g.pending.stage, "decision");
+    assert.equal(g.turnDeadline, end + remaining);
+  } else {
+    assert.equal(g.pending.stage, "result"); assert.equal(route.owner, 0);
+    E.expire(g, g.pending.until);
+    assert.equal(g.current, 1); assert.equal(g.turnDeadline, end + E.TUNNEL_RESULT_MS + E.TURN_MS);
+  }
 });
 
 test("reconnect snapshots never replay stored tunnel evidence, while fresh events are consumed once", () => {
@@ -99,167 +103,40 @@ test("reconnect snapshots never replay stored tunnel evidence, while fresh event
   assert.equal(context.prepareEffects(next).length, 0);
 });
 
-function revealHarness(surcharge = 0, reduced = false, revealed) {
+function revealHarness(reduced = false) {
   const source = fs.readFileSync(require.resolve("../app.js"), "utf8");
-  const noop = () => {}, timers = new Map(), sounds = [], builds = [];
-  let serial = 0, renders = 0;
-  const node = () => ({ dataset: {}, classList: { add: noop, remove: noop, toggle: noop }, children: [], animations: 0,
-    replaceChildren(...children) { this.children = children; }, append(child) { this.children.push(child); }, animate() { this.animations++; } });
-  const nodes = Object.fromEntries(["board", "dialog", "dialogTitle", "tunnelSequence", "tunnelRevealStatus", "skipTunnelReveal"].map(id => [id, node()]));
-  const slots = Array.from({ length: 3 }, node);
-  nodes.board.querySelectorAll = () => [];
-  nodes.tunnelSequence.querySelector = selector => slots[+selector.match(/\d+/)[0]];
-  const event = { id: 10, type: "tunnel_reveal", seat: 0, routeId: 19, paymentColor: "white", surcharge, revealed: surcharge ? ["white", "black", "wild"] : ["red", "black", "blue"] };
-  if (revealed) event.revealed = revealed;
-  const build = { id: 11, type: "build", seat: 0, routeId: 19 };
-  const game = { phase: surcharge ? "tunnel" : "play", current: surcharge ? 0 : 1, turnDeadline: Date.now() + 60000, routes: [{ id: 19 }], tunnel: surcharge ? { revealId: 10 } : null };
-  const context = vm.createContext({ I18n: require("../i18n"),
-    tunnelReveal: null, game, seat: 0, serverOffset: 0, uiDialog: "build", buildTarget: {},
-    reducedMotion: { matches: reduced }, document: { hidden: false, createElement: node },
-    $: id => nodes[id], N: { white: "Blanco", wild: "Locomotora" }, escapeHTML: x => x,
-    routeName: () => "Pamplona — Barcelona", dialogClockHTML: () => "", colorCard: color => ({ ...node(), color }),
-    syncBoard3D: noop, constructionTarget: node, playSound: kind => sounds.push(kind), animateConstruction: e => builds.push(e),
-    renderDialog: () => { renders++; }, showDialog: () => { nodes.dialog.dataset = {}; },
-    setTimeout: (fn, ms) => { timers.set(++serial, { fn, ms }); return serial; }, clearTimeout: id => timers.delete(id),
+  let time = 1000;
+  const slots = Array.from({length: 3}, () => ({children: [], animations: 0, classList: {toggle() {}},
+    replaceChildren(...children) { this.children = children; }, append(node) { this.children.push(node); }, animate() { this.animations++; return {cancel() {}}; }}));
+  const nodes = { dialog: {dataset: {}, classList: {add() {}}, querySelector() {return null;}, querySelectorAll() {return [];}}, dialogTitle: {}, tunnelRevealStatus: {},
+    tunnelSequence: { querySelector: selector => slots[+selector.match(/"(\d+)"/)[1]] } };
+  const game = {players: [{name: "A"}, {name: "B"}], routes: [{id: 0,n:2}], sharedTunnel: {id: 7, seat: 0, routeId: 0, revealed: ["red", "blue", "wild"], paymentColor: "red", surcharge: 2, stage: "reveal", startedAt: 1000, until: 3800, cardMs: 700}};
+  const context = vm.createContext({I18n: require('../i18n'), GameUI:UI, game, seat: 1, tunnelReveal: null, uiDialog: null,
+    reducedMotion: {matches: reduced}, Date: {now: () => time}, serverOffset: 0, replayAt: null,
+    document: {hidden: false, createElement: () => ({})}, $: id => nodes[id], escapeHTML: String, routeName: () => "Paris — Bruxelles",
+    colorCard: color => ({color}), playSound() {}, syncBoard3D() {}, showTunnelDialog() {throw Error('Rival cannot decide');},
+    showDialog(title) {nodes.dialog.dataset = {}; nodes.dialogTitle.textContent = title;}
   });
   vm.runInContext(source.slice(source.indexOf("function prepareTunnelReveal("), source.indexOf("function showTunnelDialog(")), context);
-  context.prepareTunnelReveal(surcharge ? [event] : [event, build]);
-  context.showTunnelReveal();
-  return { context, timers, sounds, builds, nodes, slots, event, build, renders: () => renders, next() {
-    const [id, timer] = timers.entries().next().value;
-    timers.delete(id); timer.fn(); return timer.ms;
-  } };
+  return {context, game, slots, nodes, at(value) {time = value; context.showSharedTunnel();}};
 }
-
-test("tunnel cards reveal at 700ms intervals, then zero surcharge releases exactly one build effect", () => {
-  const h = revealHarness();
-  assert.equal(h.build.deferredForTunnel, true);
-  for (const count of [1, 2, 3]) {
-    assert.equal(h.next(), 700);
-    assert.equal(h.context.tunnelReveal.shown, count);
-    assert.equal(h.sounds.length, count);
-    assert.equal(h.builds.length, 0);
-  }
-  h.next();
-  assert.equal(h.nodes.dialogTitle.textContent, "Túnel construido");
-  h.next();
-  assert.equal(h.context.tunnelReveal, null);
-  assert.equal(h.builds.length, 1);
-  assert.equal(h.renders(), 1);
-  h.context.finishTunnelReveal(true);
-  assert.equal(h.builds.length, 1);
-});
-
-test("skipping a surcharge reveal preserves its payment decision and deadline", () => {
-  const skip = revealHarness(2);
-  const deadline = skip.context.game.turnDeadline;
-  skip.nodes.skipTunnelReveal.onclick();
-  assert.equal(skip.timers.size, 0);
-  assert.equal(skip.context.game.turnDeadline, deadline);
-  assert.equal(skip.renders(), 1);
-  assert.equal(skip.builds.length, 0);
-  assert.deepEqual(skip.slots.map(slot => slot.children[0].color), skip.event.revealed);
-  assert.deepEqual(skip.slots.map(slot => slot.children[1].textContent), ["+1", "—", "+1"]);
-  const reduced = revealHarness(2, true);
-  assert.equal(reduced.next(), 0);
-  assert.equal(reduced.sounds.length, 0);
-  assert.equal(reduced.context.tunnelReveal, null);
-  assert.deepEqual(reduced.slots.map(slot => slot.children[0].color), reduced.event.revealed);
-  assert.equal(reduced.renders(), 1);
-});
-
-test("expired surcharge and explicit cancellation clean up pending timers", () => {
-  const expired = revealHarness(2);
-  expired.context.game.tunnel = null;
-  expired.context.prepareTunnelReveal([]);
-  assert.equal(expired.timers.size, 0);
-  assert.equal(expired.context.tunnelReveal, null);
-  const hidden = revealHarness();
-  hidden.context.finishTunnelReveal(true);
-  assert.equal(hidden.timers.size, 0);
-  assert.equal(hidden.context.tunnelReveal, null);
-  assert.equal(hidden.builds.length, 1);
-});
-
-test("zero surcharge finishes every card and its result even if our next turn starts during the reveal", () => {
-  const nextTurn = revealHarness();
-  const sequence = nextTurn.context.tunnelReveal;
-  nextTurn.next();
-  assert.equal(sequence.shown, 1);
-  nextTurn.context.game.current = 0;
-  const deadline = nextTurn.context.game.turnDeadline = Date.now() + 60000;
-  for (const shown of [1, 2, 3]) {
-    const pendingTimers = [...nextTurn.timers.keys()];
-    nextTurn.context.prepareTunnelReveal([]);
-    nextTurn.context.showTunnelReveal();
-    assert.equal(nextTurn.context.tunnelReveal, sequence);
-    assert.equal(sequence.shown, shown);
-    assert.deepEqual([...nextTurn.timers.keys()], pendingTimers);
-    assert.equal(nextTurn.builds.length, 0);
-    assert.equal(nextTurn.next(), 700);
-  }
-  assert.equal(sequence.finished, true);
-  assert.match(nextTurn.nodes.tunnelRevealStatus.textContent, /Sin coste adicional/);
-  nextTurn.context.prepareTunnelReveal([]);
-  assert.equal(nextTurn.context.tunnelReveal, sequence);
-  nextTurn.next();
-  assert.equal(nextTurn.context.tunnelReveal, null);
-  assert.equal(nextTurn.timers.size, 0);
-  assert.equal(nextTurn.builds.length, 1);
-  assert.equal(nextTurn.context.game.turnDeadline, deadline);
-  assert.equal(nextTurn.context.game.current, 0);
-});
-
-test("reduced motion displays all zero-surcharge evidence and a readable result instead of closing immediately", () => {
-  const h = revealHarness(0, true);
-  assert.equal(h.next(), 0);
-  assert.equal(h.context.tunnelReveal.shown, 3);
-  assert.equal(h.context.tunnelReveal.finished, true);
-  assert.deepEqual(h.slots.map(slot => slot.children[0].color), h.event.revealed);
-  assert.deepEqual(h.slots.map(slot => slot.children[1].textContent), ["—", "—", "—"]);
-  assert.ok(h.slots.every(slot => slot.animations === 0));
-  assert.equal(h.sounds.length, 0);
-  assert.equal(h.renders(), 0);
-  assert.equal(h.builds.length, 0);
-  assert.match(h.nodes.tunnelRevealStatus.textContent, /Sin coste adicional/);
-  assert.equal(h.nodes.skipTunnelReveal.textContent, "Volver al mapa");
-  assert.equal(h.next(), 2100);
-  assert.equal(h.context.tunnelReveal, null);
-  assert.equal(h.builds.length, 1);
-});
-
-for (const trigger of ["skip", "reduced motion"]) test(`${trigger} mid-reveal shows remaining cards once, and returning to map cancels the result timer`, () => {
-  const h = revealHarness();
-  h.next();
-  if (trigger === "skip") h.nodes.skipTunnelReveal.onclick();
-  else {
-    h.context.reducedMotion.matches = true;
-    h.context.skipTunnelAnimation();
-  }
-  assert.equal(h.context.tunnelReveal.shown, 3);
-  assert.deepEqual(h.slots.map(slot => slot.children[0].color), h.event.revealed);
-  assert.deepEqual(h.slots.map(slot => slot.animations), [1, 0, 0]);
-  assert.equal(h.sounds.length, 1);
-  assert.equal(h.timers.size, 1);
-  assert.equal(h.builds.length, 0);
-  h.nodes.skipTunnelReveal.onclick();
-  assert.equal(h.timers.size, 0);
-  assert.equal(h.context.tunnelReveal, null);
-  assert.equal(h.builds.length, 1);
-  h.context.finishTunnelReveal(true);
-  assert.equal(h.builds.length, 1);
-});
-
-test("empty and short decks only display actual server cards", () => {
-  for (const cards of [[], ["red", "black"]]) {
-    const h = revealHarness(0, true, cards);
-    h.next();
-    assert.equal(h.context.tunnelReveal.shown, cards.length);
-    assert.deepEqual(h.slots.slice(0, cards.length).map(slot => slot.children[0].color), cards);
-    assert.ok(h.slots.slice(cards.length).every(slot => slot.children.length === 0));
-    assert.match(h.nodes.tunnelRevealStatus.textContent, /Sin coste adicional/);
-    h.next();
-    assert.equal(h.builds.length, 1);
-    assert.equal(h.timers.size, 0);
-  }
+for (const reduced of [false, true]) test(`shared reveal follows server timestamps, including reconnect and reduced motion=${reduced}`, () => {
+  const h = revealHarness(reduced);
+  h.at(1000); assert.equal(h.context.tunnelReveal.shown, 0);
+  h.at(1700); assert.equal(h.context.tunnelReveal.shown, 1);
+  h.at(3100); assert.equal(h.context.tunnelReveal.shown, 3);
+  assert.deepEqual(h.slots.map(s => s.children[0].color), ['red','blue','wild']);
+  assert.deepEqual(h.slots.map(s => s.children[1].textContent), ['+1','—','+1']);
+  if(reduced) assert.ok(h.slots.every(s => s.animations === 0));
+  const sequence = h.context.tunnelReveal; h.at(5000);
+  assert.equal(h.context.tunnelReveal, sequence); // No client timer closes the modal.
+  h.context.cancelTunnelReveal(); h.at(5000);
+  assert.equal(h.context.tunnelReveal.shown, 3); // A cancelled/disconnected surface can hydrate the same stage.
+  h.game.sharedTunnel.stage = 'decision'; h.at(5001);
+  assert.match(h.nodes.tunnelRevealStatus.textContent, /A está decidiendo/);
+  h.game.sharedTunnel.stage = 'result'; h.game.sharedTunnel.outcome = 'declined'; h.at(6000);
+  assert.equal(h.nodes.dialogTitle.textContent, 'Túnel no construido');
+  h.game.sharedTunnel = null; h.context.prepareTunnelReveal(); assert.equal(h.context.tunnelReveal, null);
+  const reconnect = revealHarness(reduced); reconnect.at(3100);
+  assert.equal(reconnect.context.tunnelReveal.shown, 3);
 });

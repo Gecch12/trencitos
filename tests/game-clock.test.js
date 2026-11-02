@@ -85,22 +85,21 @@ test("expired turns take only available blind cards, including none, then advanc
   }
 });
 
-test("tunnel timeout declines without spending the reserved hand or resetting the clock", () => {
+test("tunnel reveal freezes the clock, timeout declines, and result precedes the next turn", () => {
   const g = playing();
   g.routes = [{ id: 0, a: "PAR", b: "BRU", n: 2, color: "red", tunnel: true, ferry: 0, owner: null }];
-  g.players[0].hand = ["red", "red", "wild"];
-  g.deck = ["red", "blue", "green"];
-  act(g, 0, { type: "claim", routeId: 0, color: "red" }, 59000);
-  assert.equal(g.phase, "tunnel");
-  assert.equal(g.turnDeadline, 60000);
-  E.expire(g, 60000);
-  assert.equal(g.current, 1);
-  assert.equal(g.phase, "play");
-  assert.deepEqual(g.players[0].hand, ["red", "red", "wild"]);
+  g.players[0].hand = ["red", "red", "red"]; g.deck = ["red", "blue", "green"];
+  act(g, 0, { type: "claim", routeId: 0, color: "red" }, 10000);
+  assert.equal(g.turnDeadline, null);
+  E.expire(g, g.pending.until);
+  assert.equal(g.turnDeadline, 62800);
+  E.expire(g, g.turnDeadline);
+  assert.equal(g.pending.stage, "result"); assert.equal(g.current, 0);
+  assert.deepEqual(g.players[0].hand, ["red", "red", "red"]);
   assert.equal(g.routes[0].owner, null);
-  assert.equal(g.deck.length, 3);
-  assert.deepEqual(g.discard, []);
-  assert.equal(g.events.filter(e => e.type === "build").length, 0);
+  E.expire(g, g.pending.until);
+  assert.equal(g.phase, "play"); assert.equal(g.current, 1);
+  assert.equal(g.turnDeadline, 122800 + E.TUNNEL_RESULT_MS);
 });
 
 test("offer stays mandatory on turn return, survives restore, then starts a full minute", () => {

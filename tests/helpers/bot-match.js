@@ -31,10 +31,11 @@ function match({ seed = 1, seats = ["new", "old", "old", "old"], first = 0, meas
     heuristic: (g, seat, rng) => policies.new(g, seat, rng, { search: false }) };
   const rngs = seats.map((_, i) => random(seed * 31 + i + 17));
   const game = engine.newGame(seats.map((policy, i) => `${policy}-${i}`), first, 0);
-  let steps = 0;
+  let steps = 0, time = 0;
   const actionCounts = {};
   while (game.phase !== "finished" && steps++ < 3000) {
-    const offered = game.players.findIndex(p => p.offer);
+    if (engine.tunnelBusy(game)) { time = Math.max(time, game.pending.until); engine.expire(game, time, engineRandom); continue; }
+    const offered = game.phase === "tunnel" ? -1 : game.players.findIndex(p => p.offer);
     const seat = game.phase === "initial" ? game.players.findIndex(p => p.pending.length) : offered >= 0 ? offered : game.current;
     const start = measure ? performance.now() : 0;
     const action = policies[seats[seat]](game, seat, rngs[seat]);
@@ -42,13 +43,13 @@ function match({ seed = 1, seats = ["new", "old", "old", "old"], first = 0, meas
     if (onAction) onAction({ action, seat, game });
     if (action) {
       if (seats[seat] === "new") actionCounts[action.type] = (actionCounts[action.type] || 0) + 1;
-      engine.action(game, seat, action, { now: steps });
+      engine.action(game, seat, action, { now: ++time });
     } else {
       if (game.phase === "closing" || game.players[seat].offer) throw Error("Unresolved bot offer");
-      engine.next(game, steps);
+      engine.next(game, ++time);
     }
     const cards = game.deck.length + game.discard.length + game.face.length + game.players.reduce((sum, p) => sum + p.hand.length, 0)
-      + (game.phase === "tunnel" ? game.pending.revealed.length : 0);
+      + (game.phase === "tunnel" && game.pending.stage !== "result" ? game.pending.revealed.length : 0);
     if (cards !== 110 || game.players.some(p => p.trains < 0 || p.stations < 0 || p.stations > 3 || p.placed.length + p.stations !== 3)) throw Error(`Invariant failed: seed ${seed}, step ${steps}`);
   }
   if (game.phase !== "finished") throw Error(`Stalled match: seed ${seed}`);

@@ -185,7 +185,8 @@ body:not(.is-playing) .session-controls { display:none; }
 @media (min-width:1101px) and (min-height:601px) {
   .is-spectating .game .turn-banner { bottom:12px; border-radius:10px; }
 }
-.player-avatar.is-bot svg,.home-avatar.is-bot svg { fill:none; stroke:currentColor; stroke-width:1.8; }
+body .player-avatar.is-bot > svg,body .home-avatar.is-bot > svg { fill:none; stroke:#21414e; stroke-width:1.3; }
+.player-avatar.is-bot svg rect,.home-avatar.is-bot svg rect { fill:#fff9e9; }
 .room-unavailable { margin:0 0 20px; padding:20px; background:#fff7e5; border:1px solid #cda75c; border-radius:10px; }
 .room-unavailable h2 { margin:0 0 8px; }
 .room-unavailable p { margin:0; }

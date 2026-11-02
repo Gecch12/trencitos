@@ -9,6 +9,10 @@ Evidencia, integración y límites en [la ficha del tablero](work/board-3d.md).
 Navegador → mensaje WebSocket → sesión/puesto y validación del servidor →
 motor de reglas → persistencia atómica de sala y archivo → vista filtrada para cada jugador
 → renderizado. La animación representa una acción aceptada; no la confirma.
+Los túneles conservan en `pending` su etapa, vencimiento y tiempos congelados;
+`Engine.deadlines` alimenta la alarma de sala y excluye ofertas pausadas. Los
+controladores de bots esperan revelación/resultado; las simulaciones de estrategia
+avanzan un reloj virtual para recorrer las mismas etapas sin esperar tiempo real.
 
 ## Mapa de componentes
 
@@ -53,7 +57,22 @@ motor de reglas → persistencia atómica de sala y archivo → vista filtrada p
   longitud máxima de guía y ocultación de colisiones; estas opciones son optativas
   y solo se activan en 3D. Foco/selección preceden a destinos y secundarios.
 - Mano, cartas, menús, pagos y mapas de detalle conservan HTML/SVG 2D.
-  La máscara del túnel también retrasa la pieza 3D hasta terminar la revelación.
+  Protocolo UI 7 añade miniaturas del historial y eventos `market_refresh` con
+  las cinco cartas públicas anteriores y nuevas. El cliente anima la renovación
+  durante 940 ms (fundido de 180 ms con movimiento reducido), bloqueando solo los
+  robos locales mientras se muestra. Una actualización más reciente, cambio de
+  tamaño, ocultación o desconexión cancela el efecto y restaura la mesa vigente.
+  La reconexión no repite eventos antiguos; los robos normales no esperan animación.
+  Los túneles usan `sharedTunnel` (protocolo UI 8): la etapa y los tiempos vienen
+  del motor. El cliente dibuja las cartas por timestamp y no puede cerrar ni
+  adelantar la secuencia. La ruta se adjudica al resolver, nunca antes de revelar.
+  El modal mantiene reserva, revelación, decisión y resultado; el desglose separa
+  base, extra y total. El motor guarda el extra cobrado y la marca de inicio del
+  resultado. El cliente anima el pago y los vagones o la devolución de la base;
+  al reconectar sitúa el efecto en el tiempo transcurrido, sin reiniciar el plazo.
+  Ocultar, redimensionar o desconectar cancela las copias volantes y deja el
+  resumen estático; movimiento reducido conserva el mismo resultado sin vuelos.
+  El color de los vagones del modal se asigna por CSSOM, respetando la CSP.
   `animateConstruction` traslada las matrices de las piezas aceptadas durante
   500 ms; los eventos existentes evitan repeticiones al reconectar. Solo renderiza
   continuamente durante esa caída, con cancelación/restauración al ocultar,
@@ -84,18 +103,26 @@ motor de reglas → persistencia atómica de sala y archivo → vista filtrada p
   mapa y se ofrece reintentar 3D, sin modificar sala ni estado del juego.
 - [wagon-preview.js](../wagon-preview.js) comparte `createWagonRenderer` con el
   tablero, con capacidad de una pieza y cámara cercana. `syncWagonPreview` sigue
-  el color elegido en práctica y el confirmado por el servidor en la sala. Solo
-  existe un canvas de previsualización; se libera al salir del selector o jugar.
+  el último color pulsado, también mientras la sala espera confirmación. El cliente
+  envía una selección a la vez y conserva solo la última pendiente; perfil,
+  almacenamiento local y miembros mantienen el color confirmado por el servidor.
+  Rechazo, desconexión o fallo de guardado restauran la selección confirmada;
+  no se permite iniciar mientras queda una selección pendiente. Solo existe un
+  canvas de previsualización; se libera al salir del selector o jugar.
   ResizeObserver actualiza el encuadre; no hay bucle de animación continuo.
 - El estado completo de la partida permanece en el servidor. `view` entrega
   mano/destinos propios y datos públicos; los destinos rivales se revelan al final solo a participantes.
+  `sharedTunnel` entrega evidencia pública a jugadores y espectadores; el pago
+  reservado y las opciones de la mano solo están disponibles para quien construye.
 - Credencial de puesto y cuenta persistente son conceptos diferentes. Actualmente
   existen enlaces privados de recuperación y hashes guardados, más cuenta opcional
   de Supabase Auth. La cuenta no aparece en vistas rivales ni sustituye el puesto.
 - La cartografía visual está separada de `data.js`/`engine.js`. Three.js debe
   consumir la misma vista autorizada, sin duplicar el motor.
 - La sesión de práctica es efímera, pero su archivo se conserva. Salas y grabación
-  se guardan de forma atómica; [historial/replay](history-replay.md) define retención,
+  se confirman de forma atómica. En disco local, un manifiesto pequeño referencia
+  el prefijo confirmado de los pasos anexados por partida; cambiar de color no
+  reescribe pasos anteriores. [Historial/replay](history-replay.md) define retención,
   proyecciones, API y migración SQL.
 - Supabase se usa desde Node con clave secreta, sin acceso del navegador a la
   tabla de checkpoint. RLS y permisos están definidos en SQL. Auth es un módulo

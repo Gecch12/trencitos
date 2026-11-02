@@ -11,7 +11,7 @@ function pick(items, random = randomInt) {
 // order, opponents' hands or their destinations. The engine validates the move.
 function chooseSimpleAction(game, seat, random = randomInt, { randomBuild = false } = {}) {
   const player = game.players[seat];
-  if (!player || game.phase === "finished") return null;
+  if (!player || game.phase === "finished" || Engine.tunnelBusy(game)) return null;
   if (game.phase === "initial") {
     if (!player.pending.length) return null;
     const indexes = player.pending.map((_, i) => i);
@@ -63,5 +63,5 @@ function chooseSimpleAction(game, seat, random = randomInt, { randomBuild = fals
 
 // Keep the previously agreed replacement policy independent of practice AI.
 const chooseReplacementAction = (game, seat, random = randomInt) => chooseSimpleAction(game, seat, random, { randomBuild: true });
-const chooseBotAction = (game, seat, random = randomInt, options) => choosePracticeAction(game, seat, random, chooseSimpleAction, options);
+const chooseBotAction = (game, seat, random = randomInt, options) => Engine.tunnelBusy(game) ? null : choosePracticeAction(game, seat, random, chooseSimpleAction, options);
 module.exports = { chooseBotAction, chooseReplacementAction };

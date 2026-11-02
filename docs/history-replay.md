@@ -28,7 +28,11 @@ activa sigue siendo efímera y no se reanuda tras reiniciar el proceso.
 
 ## Acceso
 
-Durante la partida se conserva el filtrado por puesto. Al cerrarse:
+Durante la partida se conserva el filtrado por puesto. Desde UI 8, las vistas
+públicas nuevas conservan la base comprometida de un túnel y, al construir, su
+extra pagado; no incluyen alternativas de pago ni el resto de la mano. Los
+archivos anteriores mantienen sus proyecciones originales, sin reconstruir
+composiciones de pago ausentes. Al cerrarse:
 
 | Solicitante | Sala privada | Sala pública |
 | --- | --- | --- |
@@ -57,8 +61,24 @@ Cada paso incluye fecha, acción, eventos y una cadena SHA-256. La cadena detect
 alteraciones accidentales; no equivale a una firma externa contra un administrador
 con acceso para reescribir el archivo entero.
 
-Archivo local: `{rooms, archive}` se escribe atómicamente y conserva compatibilidad
-con el array anterior. Supabase: [003_match_archive.sql](../supabase/003_match_archive.sql)
+Archivo local: el manifiesto `version: 2` conserva salas, metadatos y reclamaciones;
+los pasos viven en `STATE_FILE.archive/<hash-del-id>.jsonl`, un archivo por partida.
+Solo se serializan/anexan pasos nuevos. Se sincronizan antes de reemplazar
+atómicamente el manifiesto, que fija bytes y cantidad de pasos confirmados. Al
+recuperar se ignoran colas sin confirmar; el siguiente anexo las trunca. La copia
+`.bak` referencia su propio prefijo, recuperando sala y grabación coherentes.
+Un archivo de pasos faltante o incompleto intenta recuperar la copia y, si tampoco
+es válida, falla sin sustituir el historial por uno vacío.
+
+Se leen tanto el array antiguo como `{rooms, archive}`; el primer guardado los
+migra conservando los pasos y una copia del formato previo. Los cambios posteriores
+de color escriben solo el manifiesto y su respaldo, sin leer ni serializar el
+historial acumulado. Los pasos siguen cargándose al arrancar para servir replay;
+esta mejora reduce el coste de guardar, no la memoria total del historial.
+Para respaldar/restaurar hay que conservar juntos manifiesto, `.bak` y directorio
+`.archive`; [operación local](operations.md) explica el procedimiento.
+
+Supabase: [003_match_archive.sql](../supabase/003_match_archive.sql)
 crea metadatos, pasos y reclamaciones de invitados. La lectura usa
 [004_archive_paging.sql](../supabase/004_archive_paging.sql): primero
 metadatos/permisos y después páginas de hasta 16 pasos, tres solicitudes simultáneas.
@@ -91,6 +111,13 @@ privados. La auditoría sí contiene las cartas/destinos y el orden de mazos reg
 compartirla revela esa información de la partida cerrada.
 
 ## Interfaz e idiomas
+
+El historial en vivo muestra «nombre robó» y una miniatura por robo. `history.draw`
+conserva el origen y la carta en el estado privado; `engine.historyEntryView`
+omite el color de robos del mazo para rivales y espectadores, que ven el reverso.
+El filtro se aplica también a eventos de pasos del replay público, además de sus
+vistas. El propietario conserva sus colores tras reconectar. Los registros
+anteriores sin metadatos siguen mostrando su texto, sin inventar cartas.
 
 Perfil → Historial filtra todas/en curso/completadas/abandonadas y muestra el
 resumen de puntos. Resumen cuenta esos estados por separado. `/replay?id=UUID`

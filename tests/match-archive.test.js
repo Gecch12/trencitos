@@ -55,6 +55,20 @@ test('verified account merge preserves existing histories, is idempotent, and bl
  assert.throws(()=>archive.claim('a'.repeat(64),'account-b'),e=>e.status===409);
  assert.equal((await archive.replay({accountId:'account-a'},room.matchId)).full,true);
 });
+test('public replay redacts blind thumbnails from frame events as well as projected history',async()=>{
+ const {archive,room,save}=fixture('public');
+ for(const seat of [0,1])Engine.action(room.game,seat,{type:'choose_initial',indexes:[0,1]});
+ const color=room.game.deck.at(-1);Engine.action(room.game,0,{type:'draw_train',index:-1});save();
+ archive.capture(room,'Abandono');archive.commit(archive.prepare());
+ const publicReplay=await archive.replay({},room.matchId),own=await archive.replay({guestId:'a'.repeat(64)},room.matchId);
+ assert.ok(publicReplay.frames.flatMap(f=>f.events).some(e=>e.draw));
+ for(const e of publicReplay.frames.flatMap(f=>f.events).filter(e=>e.draw))assert.deepEqual(e.draw,{index:-1});
+ const data=Replay.at(publicReplay.frames,publicReplay.frames.length-1);
+ assert.deepEqual(data.views[0].history.find(e=>e.draw).draw,{index:-1});
+ const ownData=Replay.at(own.frames,own.frames.length-1);
+ assert.deepEqual(ownData.views[1].history.find(e=>e.draw).draw,{index:-1,color});
+ assert.deepEqual(ownData.views[2].history.find(e=>e.draw).draw,{index:-1});
+});
 test('guest ownership uses an unguessable cookie, not the nickname; cookie is HttpOnly',()=>{
  const headers={},req={headers:{'x-forwarded-proto':'https'}},res={getHeader:k=>headers[k],setHeader:(k,v)=>headers[k]=v};
  const id=ensureGuest(req,res),cookie=headers['Set-Cookie'][0];assert.match(cookie,/HttpOnly; SameSite=Lax/);assert.match(cookie,/Secure/);

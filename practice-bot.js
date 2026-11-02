@@ -79,7 +79,7 @@ const claim = c => ({ type: "claim", routeId: c.route.id, color: c.payment.color
 
 function choosePracticeAction(game, seat, random, fallback, { search = true } = {}) {
   if (!game.players[seat] || game.phase === "finished") return null;
-  const offer = game.players[seat].offer;
+  const offer = game.phase === "tunnel" ? null : game.players[seat].offer;
   if (!offer && game.phase !== "initial" && (game.phase === "closing" || game.current !== seat || game.turnWaiting)) return null;
   const g = P.observe(game, seat), memory = memoryFor(game, seat);
   P.rememberPublic(g, memory);

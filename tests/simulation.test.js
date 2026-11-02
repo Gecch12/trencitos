@@ -1,6 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),E=require('../engine');
 function play(n){let g=E.newGame(Array.from({length:n},(_,i)=>'J'+i));for(let i=0;i<n;i++)E.action(g,i,{type:'choose_initial',indexes:[0,1]});let turns=0;
  while(g.phase!=='finished'&&turns++<1500){let seat=g.current,p=g.players[seat];
+ if(E.tunnelBusy(g)){E.expire(g,g.pending.until);continue}
  if(g.phase==='tunnel'){try{E.action(g,seat,{type:'pay_tunnel',extraWild:g.pending.surcharge})}catch{E.action(g,seat,{type:'decline_tunnel'})}continue}
  const choosing=g.players.findIndex(p=>p.offer);if(choosing>=0){E.action(g,choosing,{type:'keep_tickets',offerId:g.players[choosing].offer.id,indexes:[0]});continue}
  const options=g.routes.filter(r=>r.owner===null&&!E.block(g,r,seat)&&p.trains>=r.n);

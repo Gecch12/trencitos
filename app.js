@@ -26,6 +26,26 @@ let sock = null,
 let sessionReplaced = false, storagePaused = false, pendingAction = null, resendPending = false, sessionSupported = false;
 let homeMode = "create", homeBusy = false, lobbyStarted = false;
 let preferredColor = localStorage.getItem("rr-color");
+// The preview follows the latest click; profile/room colors stay authoritative.
+let pendingRoomColor = null, colorRequest = null;
+const previewColor = () => pendingRoomColor || preferredColor;
+function cancelRoomColor() {
+  const pending = pendingRoomColor !== null;
+  pendingRoomColor = colorRequest = null;
+  if (pending) renderHomeColors();
+}
+function flushRoomColor() {
+  if (colorRequest || !pendingRoomColor) return;
+  if (pendingRoomColor === preferredColor) { cancelRoomColor(); return; }
+  colorRequest = pendingRoomColor;
+  send({ type: "select_color", color: colorRequest });
+}
+function selectRoomColor(color) {
+  if (!room || lobbyStarted || storagePaused || sessionReplaced || sock?.readyState !== WebSocket.OPEN) return;
+  pendingRoomColor = color;
+  renderHomeColors();
+  flushRoomColor();
+}
 let account = null, shell = null;
 const replayMode = location.pathname === "/replay";
 let replayAt = null;
@@ -85,10 +105,10 @@ async function syncWagonPreview() {
     wagonPreview ||= createWagonPreview({ container: $("wagonPreviewStage"), onFailure: () => {
       wagonPreview?.dispose(); wagonPreview = null; $("wagonPreviewError").hidden = false;
     } });
-    const description = wagonPreview.update(preferredColor);
+    const color = previewColor(), description = wagonPreview.update(color);
     figure.dataset.model = description.model;
     $("wagonPreviewName").textContent = I18n.t(description.label);
-    $("wagonPreviewStage").setAttribute("aria-label", I18n.t`${I18n.t(description.label)}, color ${I18n.t(LobbyUI.PALETTE.find(p => p.color === preferredColor)?.name)}`);
+    $("wagonPreviewStage").setAttribute("aria-label", I18n.t`${I18n.t(description.label)}, color ${I18n.t(LobbyUI.PALETTE.find(p => p.color === color)?.name)}`);
     $("wagonPreviewError").hidden = true;
   } catch (error) {
     $("wagonPreviewName").textContent = I18n.t("Tu selección"); $("wagonPreviewError").hidden = false;
@@ -101,6 +121,7 @@ let displayedLogs = null;
 let displayedHistoryKey = null;
 let hoveredDestination = null, allDestinationsVisible = false;
 let historyFollowing = true, lastDrawId = null;
+let marketRefresh = null;
 let lastEffectId = null, serverOffset = 0, seenOfferId = null;
 let waitingForGameStart = false;
 let retainedVisible = new Set();
@@ -181,6 +202,7 @@ function identityKey(code) {
   return "rr-room-" + code;
 }
 function resetToLobby(message = "", preserveIdentity = false) {
+  pendingRoomColor = colorRequest = null;
   message = I18n.t(message);
   cancelTunnelReveal();
   if (!spectating && !preserveIdentity && (room || desiredRoom)) localStorage.removeItem(identityKey(room || desiredRoom));
@@ -271,6 +293,13 @@ function connect() {
     }
     if (m.type === 'directory') { shell?.receiveDirectory(m); return; }
     if (m.type === "error") {
+      // Color rejections settle the in-flight choice, preserving a newer click.
+      if (colorRequest && ["COLOR_TAKEN", "INVALID_COLOR"].includes(m.code)) {
+        if (pendingRoomColor === colorRequest) pendingRoomColor = null;
+        colorRequest = null;
+        renderHomeColors();
+        flushRoomColor();
+      } else cancelRoomColor();
       homeBusy = false; syncHomeAvailability();
       pendingAction = null;
       if (desiredWatch && !room) { desiredWatch=''; shell.watchUnavailable(); return; }
@@ -298,12 +327,14 @@ function connect() {
     }
     if (m.type === "session_replaced") {
       sessionReplaced = true; pendingAction = null;
+      cancelRoomColor();
       notice(I18n.t("Esta partida está abierta en otra pestaña. Aquí no tienes el control."), "takeOver");
       updateCompactStatus();
       return;
     }
     if (m.type === "storage") {
       storagePaused = m.paused;
+      if (storagePaused) cancelRoomColor();
       syncHomeAvailability();
       if (storagePaused) notice(m.requiresRestart
         ? I18n.t("Partida pausada por el guardado remoto. El administrador debe restablecer el servicio; conserva esta pestaña para reconectar.")
@@ -331,11 +362,16 @@ function connect() {
       token = m.token;
       incomingRecovery = null;
       members = m.members;
+      if (enteringRoom || lobbyStarted || spectating) pendingRoomColor = colorRequest = null;
       if (LobbyUI.isColor(members[seat]?.color)) {
         const colorChanged = preferredColor !== members[seat].color;
         preferredColor = members[seat].color;
         localStorage.setItem("rr-color", preferredColor);
         if (colorChanged) account?.changed();
+        if (colorRequest === preferredColor) {
+          colorRequest = null;
+          if (pendingRoomColor === preferredColor) pendingRoomColor = null;
+        }
       }
       host = m.host;
       practiceMode = !!m.practice;
@@ -348,6 +384,7 @@ function connect() {
       localStorage.setItem("rr-name", $("nickname").value);
       if (enteringRoom || m.started) history.replaceState(null, "", spectating ? '/rooms?watch='+room : "/rooms?room=" + room);
       renderLobby();
+      flushRoomColor();
       shell?.joined();
       if (!spectating) account?.linkSeat();
       if (resendPending) { resendPending = false; if (pendingAction) send(pendingAction); }
@@ -358,6 +395,7 @@ function connect() {
       if (oldOffer && oldOffer.id !== m.game.ticketOffer?.id) localStorage.removeItem(`rr-choice-${room}-${seat}-${oldOffer.id}`);
       if (game?.initial && !m.game.initial) localStorage.removeItem(`rr-choice-${room}-${seat}-initial-${game.initial.map(t => t.id).join("-")}`);
       game = m.game;
+      prepareMarketRefresh(effects);
       serverOffset = (game.serverNow || Date.now()) - Date.now();
       closeMapMenu();
       if (uiDialog === "build" && (buildSubmitting || oldTurn !== game.turnSerial || !amIUp())) {
@@ -380,6 +418,7 @@ function connect() {
     }
   };
   sock.onclose = () => {
+    cancelRoomColor();
     cancelTunnelReveal();
     cancelCardFlights();
     cancelConstruction();
@@ -434,7 +473,7 @@ function syncHomeAvailability() {
   for (const tab of document.querySelectorAll("[data-home-tab]")) tab.disabled = homeBusy;
   $("regenerateCode").disabled = homeBusy;
   $("createCode").readOnly = homeBusy;
-  $("start").disabled = unavailable || members.length < 2 || members.some(m => !m.connected);
+  $("start").disabled = unavailable || pendingRoomColor !== null || members.length < 2 || members.some(m => !m.connected);
   $("roomColors").querySelectorAll("button").forEach(button => {
     button.disabled = unavailable || lobbyStarted || members.some((m, i) => i !== seat && m.color === button.dataset.color);
   });
@@ -461,9 +500,11 @@ function applyPlayerAppearance(element, color) {
   element.dataset.finish = GameUI.playerFinish(color);
 }
 function renderHomeColors() {
-  applyPlayerAppearance($("homeAvatar"), preferredColor);
-  $("chosenColorName").textContent = I18n.t(LobbyUI.PALETTE.find(p => p.color === preferredColor)?.name || "");
+  const selectedColor = previewColor();
+  applyPlayerAppearance($("homeAvatar"), selectedColor);
+  $("chosenColorName").textContent = I18n.t(LobbyUI.PALETTE.find(p => p.color === selectedColor)?.name || "");
   $("practiceColorName").textContent = $("chosenColorName").textContent;
+  $("roomColors").setAttribute("aria-busy", String(pendingRoomColor !== null));
   for (const id of ["practiceColors", "roomColors"]) {
     const root = $(id), focused = root.contains(document.activeElement) ? document.activeElement.dataset.color : null;
     root.replaceChildren();
@@ -475,11 +516,11 @@ function renderHomeColors() {
       button.style.setProperty("--choice-color", GameUI.playerColor(color));
       button.setAttribute("aria-label", owner ? I18n.t`${name}, ocupado por ${owner.name}` : name);
       button.title = owner ? `${name} · ${owner.name}` : name;
-      button.setAttribute("aria-pressed", String(color === preferredColor));
+      button.setAttribute("aria-pressed", String(color === selectedColor));
       button.disabled = !!owner || (id === "roomColors" && lobbyStarted);
-      if (color === preferredColor) button.innerHTML = '<span aria-hidden="true">✓</span>';
+      if (color === selectedColor) button.innerHTML = '<span aria-hidden="true">✓</span>';
       button.onclick = () => {
-        if (id === "roomColors") send({ type: "select_color", color });
+        if (id === "roomColors") selectRoomColor(color);
         else { preferredColor = color; localStorage.setItem("rr-color", color); renderHomeColors(); account?.changed(); }
       };
       root.appendChild(button);
@@ -588,6 +629,7 @@ $("leaveRoom").onclick = () => {
   if (spectating || !game || game.phase === "finished" || confirm(I18n.t("¿Salir de la partida? Un bot tomará tu puesto. Si todos salen, la partida se abandonará tras 60 segundos sin conexiones."))) send({ type: "leave" });
 };
 function act(type, other = {}) {
+  if (type === "draw_train" && marketRefresh) return;
   if(replayMode)return;
   if (spectating) return;
   if (sessionReplaced || storagePaused || members[seat]?.autopilot) { error(I18n.t("No tienes el control de este puesto.")); return; }
@@ -603,7 +645,7 @@ function amIUp() {
   return !sessionReplaced && !storagePaused && sock?.readyState === WebSocket.OPEN && !members[seat]?.autopilot && game && game.current === seat && game.phase === "play" && !game.turnWaiting;
 }
 function drawAllowed() {
-  return amIUp() && game.drawCount < 2;
+  return !marketRefresh && amIUp() && game.drawCount < 2;
 }
 function colorCard(c, count, click, disabled) {
   const b = document.createElement(click ? "button" : "div");
@@ -644,7 +686,7 @@ function render() {
   $("lobby").classList.add("hidden");
   $("game").classList.remove("hidden");
   renderPracticeControls();
-  $("serverWarning").classList.toggle("hidden", game.uiVersion >= 5 && sessionSupported);
+  $("serverWarning").classList.toggle("hidden", game.uiVersion >= 8 && sessionSupported);
   const active = amIUp();
   const previousFocus = document.activeElement.closest("[data-player]")?.dataset.player;
   const previousHover = $("scores").querySelector(".scorebadge:hover")?.dataset.player;
@@ -698,19 +740,7 @@ function render() {
   $("ticketTotal").textContent = game.tickets.length;
   renderDestinations();
   layoutHand();
-  const blindDeck = $("drawblind");
-  const visibleCards = Array.from({ length: 5 }, (_, i) => {
-    const c = game.face[i];
-    if (!c) { const empty = document.createElement("div"); empty.className = "empty-market-slot"; empty.setAttribute("aria-label", I18n.t("Sin carta disponible")); return empty; }
-    const card = colorCard(c, null, () => act("draw_train", { index: i }), !drawAllowed() || (c === "wild" && game.drawCount === 1));
-    card.dataset.marketIndex = i;
-    card.title = I18n.t`Robar ${N[c]}${c === "wild" ? I18n.t(" · Consume los dos robos; no puede ser tu segunda carta") : ""}`;
-    card.setAttribute("aria-label", card.title);
-    return card;
-  });
-  $("market").replaceChildren(...visibleCards, blindDeck);
-  $("drawblind").disabled =
-    !drawAllowed() || game.deckCount + game.discardCount === 0;
+  renderMarket();
   $("drawtickets").disabled =
     !active || game.drawCount > 0 || !game.ticketDeckCount || !!game.ticketOffer;
   $("pendingTickets").classList.toggle("hidden", !game.ticketOffer);
@@ -731,21 +761,41 @@ function updateClocks() {
   if (!game) return;
   const deadlines = { initial: game.initialDeadline, turn: game.turnDeadline, offer: game.ticketOffer?.deadline, waiting: game.waitingDeadline, closing: game.closingDeadline };
   for (const node of document.querySelectorAll("[data-clock]")) {
-    const deadline = deadlines[node.dataset.clock], seconds = Number.isFinite(deadline) ? Math.max(0, Math.ceil((deadline - (replayAt ?? Date.now() + serverOffset)) / 1000)) : null;
+    const deadline = deadlines[node.dataset.clock];
+    const frozen = game.sharedTunnel && (node.dataset.clock === "offer" ? game.sharedTunnel.offerRemaining : node.dataset.clock === "turn" && game.sharedTunnel.stage === "reveal" ? game.sharedTunnel.turnRemaining : null);
+    const remaining = frozen != null ? frozen : Number.isFinite(deadline) ? Math.max(0, deadline - (replayAt ?? Date.now() + serverOffset)) : null;
+    const seconds = remaining === null ? null : Math.ceil(remaining / 1000);
     node.textContent = seconds === null ? "" : node.dataset.clockFormat === "timer" ? `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}` : `${seconds}s`;
     node.classList.toggle("clock-warning", seconds !== null && seconds <= 10);
     node.classList.toggle("clock-urgent", seconds !== null && seconds <= 5);
     node.setAttribute("aria-label", seconds === null ? "" : I18n.t`${seconds} segundos restantes`);
-    if (node.id === "compactClock") {
-      $("turnBanner").style.setProperty("--time-left", String(Math.min(1, (seconds || 0) / 60)));
-      $("turnBanner").classList.toggle("is-warning", seconds !== null && seconds <= 10);
-      $("turnBanner").classList.toggle("is-urgent", seconds !== null && seconds <= 5);
+    const bar = node.id === "compactClock" ? $("turnBanner") : node.closest("[data-countdown]");
+    if (bar) {
+      bar.style.setProperty("--time-left", String(Math.min(1, (remaining || 0) / 60000)));
+      bar.classList.toggle("is-warning", seconds !== null && seconds <= 10);
+      bar.classList.toggle("is-urgent", seconds !== null && seconds <= 5);
     }
   }
-  if (tunnelReveal?.event.surcharge && game.turnDeadline - Date.now() - serverOffset <= 5000) finishTunnelReveal(true);
+  updateSharedTunnel();
 }
 setInterval(updateClocks, 250);
 $("pendingTickets").onclick = () => { if (game?.ticketOffer) { uiDialog = "tickets"; showTicketDialog(game.ticketOffer.tickets, 1); } };
+function renderMarket() {
+  const blindDeck = $("drawblind");
+  const visibleCards = Array.from({ length: 5 }, (_, i) => {
+    const c = game.face[i];
+    if (!c) { const empty = document.createElement("div"); empty.className = "empty-market-slot"; empty.setAttribute("aria-label", I18n.t("Sin carta disponible")); return empty; }
+    const card = colorCard(c, null, () => act("draw_train", { index: i }), !drawAllowed() || (c === "wild" && game.drawCount === 1));
+    card.dataset.marketIndex = i;
+    card.title = I18n.t`Robar ${N[c]}${c === "wild" ? I18n.t(" · Consume los dos robos; no puede ser tu segunda carta") : ""}`;
+    card.setAttribute("aria-label", card.title);
+    return card;
+  });
+  $("market").classList.toggle("market-refreshing", !!marketRefresh);
+  $("market").replaceChildren(...visibleCards, blindDeck, ...(marketRefresh?.layer ? [marketRefresh.layer] : []));
+  $("drawblind").disabled =
+    !drawAllowed() || game.deckCount + game.discardCount === 0;
+}
 function renderHistory() {
   const logs = game.logs, list = $("history"), entries = $("historyEntries");
   const history = game.history || logs.map(text => ({ text, seat: null }));
@@ -765,7 +815,18 @@ function renderHistory() {
       applyPlayerAppearance(row, player.color);
       row.dataset.actor = entry.seat;
     }
-    const text = document.createElement("span"); text.textContent = entry.message ? I18n.format(entry.message) : I18n.t(entry.text); row.appendChild(text);
+    const text = document.createElement("span");
+    if (entry.draw && player) {
+      text.className = "history-draw";
+      text.textContent = I18n.t`${player.name} robó` + " ";
+      const card = document.createElement("img");
+      const color = N[entry.draw.color] ? entry.draw.color : "back";
+      card.src = `assets/cards/${color}.svg`; card.draggable = false;
+      card.alt = color === "back" ? I18n.t("Carta oculta del mazo") : N[color];
+      card.title = card.alt;
+      text.appendChild(card);
+    } else text.textContent = entry.message ? I18n.format(entry.message) : I18n.t(entry.text);
+    row.appendChild(text);
     return row;
   }));
   if (!logs.length) {
@@ -852,7 +913,8 @@ function playEffects(events) {
         if (!reducedMotion.matches && event.source?.width) animateCardFlight(event);
       }, drawDelay);
       effectTimers.add(timer); drawDelay += 180;
-    } else if (event.type === "tickets") playSound("card");
+    } else if (event.type === "market_refresh" && event.id === marketRefresh?.id) animateMarketRefresh();
+    else if (event.type === "tickets") playSound("card");
     else if (event.type === "build" && !event.deferredForTunnel) animateConstruction(event);
     else if (event.type === "turn" && event.seat === seat) playSound("bell");
   }
@@ -889,7 +951,7 @@ function playSound(kind) {
   };
   if (kind === "bell") { tone(880, .7, .085); tone(1760, .42, .035); tone(2376, .2, .012); return; }
   if (kind === "build") { tone(155, .16, .14 * 1.15, "triangle"); tone(310, .09, .045 * 1.15); }
-  const duration = kind === "card" ? .19 : .065;
+  const duration = kind === "shuffle" ? .42 : kind === "card" ? .19 : .065;
   const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * duration), ctx.sampleRate), data = buffer.getChannelData(0);
   for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
   const source = ctx.createBufferSource(), filter = ctx.createBiquadFilter(), gain = ctx.createGain();
@@ -898,7 +960,65 @@ function playSound(kind) {
   source.connect(filter).connect(gain).connect(ctx.destination); source.start(at); source.stop(at + duration);
   soundNodes.add(source); source.onended = () => { soundNodes.delete(source); source.disconnect(); filter.disconnect(); gain.disconnect(); };
 }
+function prepareMarketRefresh(events) {
+  const same = cards => JSON.stringify(cards) === JSON.stringify(game.face);
+  if (marketRefresh && (!same(marketRefresh.after) || game.phase !== "play")) cancelMarketRefresh(false);
+  const event = events.findLast(e => e.type === "market_refresh");
+  if (!event || !same(event.after) || game.phase !== "play" || document.hidden || !$("market").getBoundingClientRect().width) return;
+  cancelMarketRefresh(false);
+  marketRefresh = { ...event, layer: null, animations: [], timer: null };
+}
+function cancelMarketRefresh(redraw = true) {
+  if (!marketRefresh) return;
+  const current = marketRefresh; marketRefresh = null;
+  clearTimeout(current.timer);
+  current.animations.forEach(animation => animation.cancel()); current.layer?.remove();
+  $("market").classList.remove("market-refreshing");
+  if (redraw && game) renderMarket();
+}
+function animateMarketRefresh() {
+  const current = marketRefresh;
+  if (!current || current.layer) return;
+  const market = $("market"), bounds = market.getBoundingClientRect(), deck = $("drawblind").getBoundingClientRect();
+  const slots = [...market.querySelectorAll("[data-market-index]")].map(node => node.getBoundingClientRect());
+  if (slots.length !== 5 || !bounds.width) { cancelMarketRefresh(); return; }
+  const layer = document.createElement("div"); layer.className = "market-refresh-layer";
+  layer.setAttribute("role", "status"); layer.setAttribute("aria-label", I18n.t("Renovando las cartas de la mesa"));
+  current.layer = layer; market.appendChild(layer);
+  const duration = reducedMotion.matches ? 180 : 940;
+  const card = (color, i) => {
+    const rect = slots[i], image = document.createElement("img");
+    image.src = `assets/cards/${color}.svg`; image.alt = ""; image.draggable = false;
+    Object.assign(image.style, {left: `${rect.x - bounds.x}px`, top: `${rect.y - bounds.y}px`, width: `${rect.width}px`, height: `${rect.height}px`});
+    layer.appendChild(image); return image;
+  };
+  const move = (x, y, scale = 1, rotation = 0) => `translate(${x}px,${y}px) scale(${scale}) rotate(${rotation}deg)`;
+  current.before.forEach((color, i) => {
+    const image = card(color, i), rect = slots[i];
+    const gather = move(bounds.x + bounds.width / 2 - rect.x - rect.width / 2, bounds.y + bounds.height / 2 - rect.y - rect.height / 2, .8, (i - 2) * 9);
+    const intoDeck = move(deck.x - rect.x, deck.y - rect.y, .25, (i - 2) * 3);
+    const frames = reducedMotion.matches ? [{opacity:1},{opacity:0}] : [
+      {transform:move(0,0),opacity:1,filter:"brightness(1)",offset:0},
+      {transform:move(0,0),opacity:1,filter:color === "wild" ? "brightness(1.3) drop-shadow(0 0 6px #e6bc4d)" : "brightness(1)",offset:.18},
+      {transform:gather,opacity:1,filter:"brightness(1)",offset:.43},
+      {transform:intoDeck,opacity:0,offset:.6}, {transform:intoDeck,opacity:0,offset:1}
+    ];
+    current.animations.push(image.animate(frames,{duration,fill:"forwards",easing:"ease-in-out"}));
+  });
+  current.after.forEach((color, i) => {
+    const image = card(color, i), rect = slots[i], start = .56 + i * .035;
+    const from = move(deck.x - rect.x, deck.y - rect.y, .25, (2 - i) * 5);
+    const frames = reducedMotion.matches ? [{opacity:0},{opacity:1}] : [
+      {transform:from,opacity:0,offset:0},{transform:from,opacity:0,offset:start},
+      {transform:from,opacity:1,offset:start+.01},{transform:move(0,0),opacity:1,offset:start+.26},{transform:move(0,0),opacity:1,offset:1}
+    ];
+    current.animations.push(image.animate(frames,{duration,fill:"forwards",easing:"ease-out"}));
+  });
+  playSound("shuffle");
+  current.timer = setTimeout(() => { if (marketRefresh === current) cancelMarketRefresh(); }, duration);
+}
 function cancelCardFlights() {
+  cancelMarketRefresh();
   for (const timer of effectTimers) clearTimeout(timer);
   effectTimers.clear();
   for (const flight of cardFlights) { flight.animations.forEach(a => a.cancel()); flight.node.remove(); }
@@ -999,10 +1119,10 @@ function cancelConstruction() {
   }
   constructionFlights.clear();
 }
-document.addEventListener("visibilitychange", () => { if (document.hidden) { finishTunnelReveal(true); cancelCardFlights(); cancelConstruction(); stopSounds(); } });
+document.addEventListener("visibilitychange", () => { if (document.hidden) { cancelCardFlights(); cancelConstruction(); cancelTunnelMotion(); stopSounds(); } else updateSharedTunnel(); });
 reducedMotion.addEventListener("change", () => { if (reducedMotion.matches) cancelConstruction(); });
-window.addEventListener("resize", () => { cancelCardFlights(); cancelConstruction(); });
-reducedMotion.addEventListener("change", () => { if (reducedMotion.matches) skipTunnelAnimation(); cancelCardFlights(); cancelConstruction(); });
+window.addEventListener("resize", () => { cancelCardFlights(); cancelConstruction(); cancelTunnelMotion(); });
+reducedMotion.addEventListener("change", () => { cancelCardFlights(); cancelConstruction(); cancelTunnelMotion(); });
 function layoutHand() {
   const cards = [...$("hand").querySelectorAll(".traincard")];
   if (!cards.length) return;
@@ -1113,7 +1233,7 @@ function syncBoard3D() {
   const cityFocus = document.activeElement.closest?.("#board [data-city]");
   board3D.update({ routes: game.routes.map(({ id, owner, color, tunnel, ferry, a, b }) => ({ id, owner, color, tunnel, ferry, a, b })),
     players: game.players.map(p => ({ color: GameUI.playerColor(p.color), placed: [...p.placed] })),
-    hiddenRoute: tunnelReveal?.build?.routeId ?? null, highlight, spotlight: boardSpotlight,
+    hiddenRoute: null, highlight, spotlight: boardSpotlight,
     selectedRoute: selected ?? (focus ? +focus.dataset.routeId : null), selectedCity: stationCity ?? cityFocus?.dataset.city ?? null,
     routeColors: C });
 }
@@ -1399,15 +1519,15 @@ function showBuildDialog() {
   showDialog(r ? I18n.t("Construir ruta") : I18n.t("Construir estación"),
     I18n.t`${dialogClockHTML()}<div class="build-content"><div class="build-summary"><strong>${escapeHTML(r ? routeName(r) : I18n.t`Estación en ${cityName(buildTarget.city)}`)}</strong>
     ${r ? I18n.t`<div class="build-track" aria-hidden="true">${'<i></i>'.repeat(r.n)}</div><span>${r.n} vagones · <b>+${GameUI.ROUTE_POINTS[r.n]} puntos</b>${r.tunnel ? I18n.t(" · Túnel") : r.ferry ? I18n.t(" · Ferri") : ""}</span>` : I18n.t`<span>Estación ${result.cost} de 3 · ${plural(result.cost, "carta")}</span>`}</div>
-    <h3 class="payment-heading">${r?.tunnel ? I18n.t("Pagarás inicialmente") : I18n.t("Pagarás")}</h3>
+    <h3 class="payment-heading">${r?.tunnel ? I18n.t("Cartas que reservas") : I18n.t("Pagarás")}</h3>
     <div id="paymentPreview" class="payment-preview build-payment" aria-live="polite"></div>
-    ${options.length > 1 ? I18n.t`<details class="change-payment"><summary>Cambiar cartas <small>Color y locomotoras</small></summary><div class="payment-controls">
-      ${groups.length > 1 ? I18n.t`<fieldset class="payment-colors"><legend>Color de las cartas normales</legend><div class="payment-color-grid">${groups.map((g, i) => `<label class="payment-color"><input type="radio" name="buildColor" value="${g.color}" ${i === 0 ? "checked" : ""}><img src="assets/cards/${g.color}.svg" alt="" draggable="false"><span>${N[g.color]}<small>${plural(game.hand.filter(c => c === g.color).length, "disponible")}</small></span></label>`).join("")}</div></fieldset>` : ""}
-      <div class="payment-wilds"><div><strong id="wildLabel">Locomotoras</strong><small>${plural(game.hand.filter(c => c === "wild").length, "disponible")}</small></div>
+    ${options.length > 1 ? I18n.t`<details class="change-payment"><summary>Cambiar cartas</summary><div class="payment-controls">
+      ${groups.length > 1 ? I18n.t`<fieldset class="payment-colors"><legend class="sr-only">Color de las cartas normales</legend><div class="payment-color-grid">${groups.map((g, i) => { const count = game.hand.filter(c => c === g.color).length, label = `${N[g.color]} · ${plural(count, "disponible")}`; return `<label class="payment-color" title="${escapeHTML(label)}"><input type="radio" name="buildColor" value="${g.color}" aria-label="${escapeHTML(label)}" ${i === 0 ? "checked" : ""}><img src="assets/cards/${g.color}.svg" alt="" draggable="false"><span class="payment-stock" aria-hidden="true">${count}</span></label>`; }).join("")}</div></fieldset>` : ""}
+      <div class="payment-wilds"><div class="wild-stock"><span class="payment-stock-card"><img src="assets/cards/wild.svg" alt="" draggable="false"><span class="payment-stock" aria-hidden="true">${game.hand.filter(c => c === "wild").length}</span></span><strong id="wildLabel">Locomotoras<span class="sr-only"> · ${plural(game.hand.filter(c => c === "wild").length, "disponible")}</span></strong></div>
         <div class="wild-stepper" role="group" aria-labelledby="wildLabel" aria-describedby="wildHint"><button id="wildLess" type="button" aria-label="Usar una locomotora menos">−</button><output id="wildCount" aria-label="Locomotoras a utilizar">${chosen.wild}</output><button id="wildMore" type="button" aria-label="Usar una locomotora más">+</button></div>
       </div><p id="wildHint" class="wild-hint"></p>
     </div></details>` : ""}
-    <p class="build-note">${r?.tunnel ? I18n.t("Revelaremos hasta 3 cartas del mazo. Cada coincidencia de color o locomotora añade 1 carta. Después podrás pagar el suplemento o desistir.") : r?.ferry ? I18n.t`Incluye al menos ${r.ferry} locomotora(s) obligatoria(s) para este ferry.` : I18n.t("Pago sugerido: utiliza la menor cantidad posible de locomotoras.")}</p>
+    ${r?.tunnel ? "" : `<p class="build-note">${r?.ferry ? I18n.t`Incluye al menos ${r.ferry} locomotora(s) obligatoria(s) para este ferry.` : I18n.t("Pago sugerido: utiliza la menor cantidad posible de locomotoras.")}</p>`}
     </div>
     <div class="dialog-actions"><button id="confirmBuild" class="primary full">${r?.tunnel ? I18n.t("Revelar cartas del túnel") : I18n.t("Pagar y construir")}</button>
     <button id="cancelBuild" class="tertiary full">Cancelar</button></div>`, false, true);
@@ -1416,11 +1536,17 @@ function showBuildDialog() {
   const updatePreview = () => {
     const preview = $("paymentPreview");
     preview.replaceChildren();
+    preview.setAttribute("aria-label", I18n.t`${paymentDescription(chosen)} · ${result.cost} en total`);
+    const symbol = value => { const node = document.createElement("span"); node.className = "payment-symbol"; node.textContent = value; node.setAttribute("aria-hidden", "true"); preview.appendChild(node); };
     if (chosen.regular) preview.appendChild(colorCard(chosen.color, chosen.regular));
+    if (chosen.regular && chosen.wild) symbol("+");
     if (chosen.wild) preview.appendChild(colorCard("wild", chosen.wild));
-    const caption = document.createElement("span");
-    caption.textContent = I18n.t`${paymentDescription(chosen)} · ${result.cost} en total`;
-    preview.appendChild(caption);
+    symbol("=");
+    const total = document.createElement("strong"); total.className = "payment-sum";
+    total.innerHTML = `${result.cost}<small>${I18n.t(result.cost === 1 ? "carta" : "cartas")}</small>`;
+    preview.appendChild(total);
+    if (preview.dataset.payment && !reducedMotion.matches) preview.animate([{opacity:.65, transform:"translateY(3px)"},{opacity:1, transform:"translateY(0)"}],{duration:160,easing:"ease-out"});
+    preview.dataset.payment = `${chosen.color}/${chosen.wild}`;
     if ($("wildCount")) {
       $("wildCount").textContent = chosen.wild;
       $("wildLess").disabled = paymentIndex === 0;
@@ -1466,7 +1592,7 @@ function showDialog(title, body, ticketDialog = false, dismissible = false) {
   $("overlay").classList.remove("hidden");
   $("dialog").classList.toggle("ticket-dialog", ticketDialog);
   $("dialog").classList.remove("tunnel-dialog", "results-dialog", "build-dialog");
-  delete $("dialog").dataset.tunnelReveal;
+  delete $("dialog").dataset.sharedTunnel;
   delete $("dialog").dataset.tunnelDecision;
   $("dialog").setAttribute("aria-labelledby", "dialogTitle");
   $("dialog").innerHTML =
@@ -1481,7 +1607,7 @@ function showDialog(title, body, ticketDialog = false, dismissible = false) {
   updateDestinationSpotlight();
 }
 function closeOptionalDialog() {
-  if (!uiDialog) return;
+  if (!uiDialog || game?.sharedTunnel) return;
   if (game?.turnWaiting && game.current === seat && game.ticketOffer) return;
   const choosing = uiDialog === "tickets";
   const closingResults = uiDialog === "results";
@@ -1798,12 +1924,11 @@ function showTicketDialog(tickets, min, viewing = false) {
   hoveredTicket = null;
   showDialog(
     viewing ? I18n.t("Tus rutas de destino") : game.phase === "initial" ? I18n.t("Elige tus billetes iniciales") : I18n.t("Nuevos billetes de destino"),
-    I18n.t`<p class="ticket-intro">${viewing ? I18n.t("Tus vías construidas y el recorrido de tus destinos completados. Resaltar no descarta billetes.") : I18n.t`Conserva al menos ${min} billete${min > 1 ? "s" : ""}. Tus destinos permanecerán secretos hasta el final.`}</p>
-    ${!viewing ? `<div class="ticket-deadline"><strong data-clock="${choosing ? "offer" : "initial"}"></strong><span>${waiting ? I18n.t("Primero elige tus billetes. Después tendrás 60 segundos completos para tu nuevo turno.") : choosing ? I18n.t("La partida continúa. Sin confirmar, conservarás 1 billete al azar.") : I18n.t("Todos eligen a la vez, con un minuto compartido. Sin confirmar, conservarás 2 billetes al azar.")}</span>${choosing && !waiting ? I18n.t('<button type="button" id="minimizeTickets">Elegir después ↗</button>') : ""}</div>` : ""}
+    I18n.t`${viewing ? `<p class="ticket-intro">${I18n.t("Tus vías construidas y el recorrido de tus destinos completados. Resaltar no descarta billetes.")}</p>` : ""}
+    ${!viewing ? `<div class="ticket-deadline" data-countdown><strong data-clock="${choosing ? "offer" : "initial"}" data-clock-format="timer"></strong>${choosing && !waiting ? I18n.t('<button type="button" id="minimizeTickets">Ver mapa</button>') : ""}</div>` : ""}
     <div class="ticket-layout">
       <figure class="ticket-map-panel">
-        <svg id="ticketMap" viewBox="${MAP_BOUNDS.x} ${MAP_BOUNDS.y} ${MAP_BOUNDS.width} ${MAP_BOUNDS.height}" role="img" aria-label="Vista de los destinos seleccionados" aria-describedby="ticketMapCaption"></svg>
-        <figcaption id="ticketMapCaption">Tus fichas siempre visibles · Dorado: conexión completada · Discontinuas: objetivos o tramos prestados</figcaption>
+        <svg id="ticketMap" viewBox="${MAP_BOUNDS.x} ${MAP_BOUNDS.y} ${MAP_BOUNDS.width} ${MAP_BOUNDS.height}" role="img" aria-label="Vista de los destinos seleccionados"></svg>
       </figure>
       <div class="ticket-options">
         <p class="ticket-options-title">${viewing ? I18n.t("Tus destinos") : I18n.t("Billetes para conservar")}</p>
@@ -1859,7 +1984,7 @@ function showTicketDialog(tickets, min, viewing = false) {
 function renderDialog() {
   if (!game) return;
   if(replayMode){if(uiDialog==="results")showResults();else if(uiDialog==="routes")showTicketDialog(game.tickets,0,true);else $("overlay").classList.add("hidden");return;}
-  if (tunnelReveal) { showTunnelReveal(); return; }
+  if (game.sharedTunnel) { showSharedTunnel(); return; }
   const myTurn = game.current === seat;
   if (myTurn && game.turnWaiting && game.ticketOffer) { uiDialog = "tickets"; showTicketDialog(game.ticketOffer.tickets, 1); return; }
   if (game.phase === "finished" && (!resultsSeen || uiDialog === "results")) { showResults(); return; }
@@ -1891,15 +2016,19 @@ function renderDialog() {
 const cityName = city => CITIES[city]?.[2] || city;
 const routeName = route => `${cityName(route.a)} — ${cityName(route.b)}`;
 const signedPoints = points => points >= 0 ? `+${points}` : `−${Math.abs(points)}`;
-function resultDetailHTML(result) {
-  const d = result.details;
-  if (!d) return I18n.t('<p>Reinicia el servidor actualizado para consultar el desglose de esta partida.</p>');
-  const view = resultView(result.seat);
-  const categories = [["routes", I18n.t("Rutas"), result.route], ["destinations", I18n.t("Destinos"), result.destination],
+function resultCategories(result) {
+  return [["routes", I18n.t("Rutas"), result.route], ["destinations", I18n.t("Destinos"), result.destination],
     ["stations", I18n.t("Estaciones"), result.stations], ["express", I18n.t("Camino más largo"), result.express]];
-  return I18n.t`<div class="score-categories" role="tablist" aria-label="Puntos de ${escapeHTML(result.name)}">${categories.map(([key, label, points]) =>
-    `<button type="button" role="tab" id="score-tab-${result.seat}-${key}" data-score-category="${key}" aria-selected="${view.category === key}" aria-controls="score-panel-${result.seat}" tabindex="${view.category === key ? 0 : -1}"><span>${label}</span><strong>${signedPoints(points)}</strong></button>`).join("")}</div>
-    <div id="score-panel-${result.seat}" class="score-panel" role="tabpanel" aria-labelledby="score-tab-${result.seat}-${view.category}"></div>`;
+}
+function resultRowHTML(result, index) {
+  const open = expandedResults.has(result.seat), view = resultView(result.seat);
+  return `<tbody data-result-player="${result.seat}" data-score-seat="${result.seat}">
+    <tr class="result-summary"><th scope="row"><button type="button" class="result-heading" aria-expanded="${open}" aria-controls="score-detail-${result.seat}">
+      ${playerAvatar(result.seat)}<span class="result-player-name">${index + 1}. ${escapeHTML(result.name)} ${result.winner ? '<span aria-label="'+I18n.t("Ganador")+'">🏆</span>' : ""}</span><span class="result-chevron" aria-hidden="true">${open ? "▾" : "▸"}</span></button></th>
+      ${resultCategories(result).map(([key, label, points]) => `<td><button type="button" id="score-tab-${result.seat}-${key}" data-score-category="${key}" aria-pressed="${open && view.category === key}" aria-expanded="${open && view.category === key}" aria-controls="score-panel-${result.seat}" aria-label="${escapeHTML(result.name)}: ${label}, ${signedPoints(points)}" class="score-cell${points < 0 ? " is-negative" : ""}">${signedPoints(points)}</button></td>`).join("")}
+      <td class="score-total">${result.score}</td></tr>
+    <tr class="result-detail" id="score-detail-${result.seat}" ${open ? "" : "hidden"}><td colspan="6"><div class="score-breakdown"><div id="score-panel-${result.seat}" class="score-panel" role="region" aria-labelledby="score-tab-${result.seat}-${view.category}"></div></div></td></tr>
+  </tbody>`;
 }
 function resultView(playerSeat) {
   if (!resultViews.has(playerSeat)) resultViews.set(playerSeat, { category: "routes", index: null, expressSeat: playerSeat, list: false, expanded: false });
@@ -1974,13 +2103,15 @@ function showResults() {
   if (game?.phase !== "finished") return;
   const signature = JSON.stringify([game.result, game.players.map(p => p.color)]);
   if (uiDialog === "results" && $("dialog")._resultSignature === signature && $("dialog").querySelector(".results-scroll") && !$("overlay").classList.contains("hidden")) return;
-  if (!resultsSeen) expandedResults.add(game.result.find(r => r.seat === seat)?.seat ?? game.result[0].seat);
+  if (!resultsSeen) expandedResults.clear();
   uiDialog = "results"; resultsSeen = true;
   hoveredDestination = null;
   showDialog(game.earlyFinish ? I18n.t("Prueba terminada anticipadamente") : I18n.t("Fin de partida"),
     I18n.t`<div class="results-scroll">${game.earlyFinish ? I18n.t('<p class="score-preview-note">Estado actual · Solo billetes conservados</p>') : ""}
-    <div class="results-list">${game.result.map((r,i) => I18n.t`<details class="result-card" data-result-player="${r.seat}" data-score-seat="${r.seat}" ${expandedResults.has(r.seat) ? "open" : ""}><summary class="result-heading">${playerAvatar(r.seat)}<span class="result-player-name"><b>${i+1}. ${escapeHTML(r.name)} ${r.winner ? '<span aria-label="Ganador">🏆</span>' : ""}</b><small>Ver desglose <span class="result-chevron" aria-hidden="true">⌄</span></small></span><strong>${r.score}<small>puntos</small></strong></summary><div class="score-breakdown">${resultDetailHTML(r)}</div></details>`).join("")}</div>
-    <details class="result-rules"><summary>¿Cómo se resuelven los empates?</summary><p>Más destinos completados, después más estaciones sin construir y finalmente la bonificación de camino más largo. Si persiste, se comparte la victoria.</p></details></div>
+    <div class="results-table-scroll"><table class="results-table"><caption class="sr-only">Puntuación final por jugador</caption>
+    <thead><tr><th scope="col">Jugador</th><th scope="col">Rutas</th><th scope="col">Destinos</th><th scope="col">Estaciones</th><th scope="col">Camino más largo</th><th scope="col">Total</th></tr></thead>
+    ${game.result.map(resultRowHTML).join("")}</table></div>
+    </div>
     <div class="result-actions"><button id="exploreMap" class="primary">Explorar mapa</button>${practiceMode ? I18n.t('<button id="practiceHome" class="tertiary">Volver al inicio</button>') : I18n.t('<button id="rematch" class="tertiary">Revancha</button><button id="multiplayerHome" class="tertiary">Volver al inicio</button>')}</div>`, false, true);
   $("dialog").classList.add("results-dialog");
   $("dialog")._resultSignature = signature;
@@ -1988,29 +2119,37 @@ function showResults() {
   $("dialog").prepend(heading); heading.append($("dialogTitle"), $("dialog").querySelector(".dialog-close"));
   $("dialog").querySelector(".results-scroll").append($("errorMsg"));
   for (const card of $("dialog").querySelectorAll("[data-result-player]")) applyPlayerAppearance(card, game.players[+card.dataset.resultPlayer].color);
-  for (const details of $("dialog").querySelectorAll("[data-score-seat]")) {
-    const playerSeat = +details.dataset.scoreSeat, result = game.result.find(r => r.seat === playerSeat);
-    details.querySelector(".result-heading").onclick = event => {
-      event.preventDefault(); const open = !details.open;
+  for (const row of $("dialog").querySelectorAll("[data-score-seat]")) {
+    const playerSeat = +row.dataset.scoreSeat, result = game.result.find(r => r.seat === playerSeat);
+    const tabs = [...row.querySelectorAll("[data-score-category]")];
+    const select = (category, toggle = false) => {
+      const open = !(toggle && expandedResults.has(playerSeat));
+      const view = resultView(playerSeat);
+      if (view.category !== category) { view.category = category; view.index = null; }
       resultMapCleanup?.(); resultMapCleanup = null; expandedResults.clear();
       for (const other of $("dialog").querySelectorAll("[data-score-seat]")) {
-        other.open = other === details && open; other.querySelector(".score-panel")?.replaceChildren();
+        const active = other === row && open;
+        other.querySelector(".result-detail").hidden = !active;
+        other.querySelector(".result-heading").setAttribute("aria-expanded", String(active));
+        other.querySelector(".result-chevron").textContent = active ? "▾" : "▸";
+        other.querySelector(".score-panel").replaceChildren();
+        for (const button of other.querySelectorAll("[data-score-category]")) {
+          const selected = active && button.dataset.scoreCategory === category;
+          button.setAttribute("aria-pressed", String(selected));
+          button.setAttribute("aria-expanded", String(selected));
+        }
       }
       if (open) { expandedResults.add(playerSeat); renderResultPanel(result); }
     };
-    const tabs = [...details.querySelectorAll("[data-score-category]")];
+    row.querySelector(".result-heading").onclick = () => select(resultView(playerSeat).category, true);
     for (const tab of tabs) {
-      tab.onclick = () => {
-        const view = resultView(playerSeat); view.category = tab.dataset.scoreCategory; view.index = null;
-        for (const other of tabs) { other.setAttribute("aria-selected", String(other === tab)); other.tabIndex = other === tab ? 0 : -1; }
-        renderResultPanel(result);
-      };
+      tab.onclick = () => select(tab.dataset.scoreCategory);
       tab.onkeydown = event => {
         const index = tabs.indexOf(tab), target = event.key === "ArrowRight" ? (index + 1) % tabs.length : event.key === "ArrowLeft" ? (index + tabs.length - 1) % tabs.length : event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : null;
         if (target !== null) { event.preventDefault(); tabs[target].focus(); tabs[target].click(); }
       };
     }
-    if (details.open) renderResultPanel(result);
+    if (expandedResults.has(playerSeat)) renderResultPanel(result);
   }
   $("exploreMap").onclick = closeOptionalDialog;
   if (practiceMode) $("practiceHome").onclick = () => send({ type: "leave_test" });
@@ -2214,147 +2353,167 @@ function paymentIcons(payment) {
   return [[payment.color, payment.regular], ["wild", payment.wild]].filter(([, n]) => n).map(([color, n]) =>
     `<span class="payment-chip"><img src="assets/cards/${color}.svg" alt="${N[color]}" draggable="false"><strong>×${n}</strong></span>`).join('<span class="payment-plus" aria-hidden="true">+</span>');
 }
-// Presentation only: the server has already drawn these exact cards. A zero
-// surcharge still advances its turn immediately; only our build effect waits.
-function prepareTunnelReveal(events) {
-  if (tunnelReveal?.event.surcharge && game.tunnel?.revealId !== tunnelReveal.event.id) cancelTunnelReveal();
-  // A completed tunnel's evidence outlives turn changes, including a fast round
-  // returning to us. This is local presentation; the server keeps playing.
-  const event = events.find(e => e.type === "tunnel_reveal" && e.seat === seat);
-  if (!event) return;
-  cancelTunnelReveal();
-  const build = events.find(e => e.type === "build" && e.seat === seat && e.routeId === event.routeId && e.id > event.id);
-  if (build) build.deferredForTunnel = true;
-  tunnelReveal = { event, build, shown: 0, timer: null, started: false, finished: false };
-  uiDialog = buildTarget = null;
+// Presentation follows the server's shared stages; no client can skip the room clock.
+function prepareTunnelReveal() {
+  if (!game.sharedTunnel) cancelTunnelReveal();
+  else if (uiDialog === "build") { uiDialog = buildTarget = null; buildSubmitting = false; }
 }
-function syncTunnelMask() {
-  syncBoard3D();
-  $("board").querySelectorAll(".awaiting-tunnel-reveal").forEach(node => node.classList.remove("awaiting-tunnel-reveal"));
-  if (tunnelReveal?.build) constructionTarget(tunnelReveal.build)?.classList.add("awaiting-tunnel-reveal");
+function syncTunnelMask() { syncBoard3D(); }
+function cancelTunnelMotion() {
+  for (const animation of tunnelReveal?.animations || []) animation.cancel();
+  for (const node of tunnelReveal?.flights || []) node.remove();
+  if (tunnelReveal) { tunnelReveal.animations = []; tunnelReveal.flights = []; }
 }
-function cancelTunnelReveal() {
-  if (!tunnelReveal) return;
-  clearTimeout(tunnelReveal.timer);
-  tunnelReveal = null;
-  syncTunnelMask();
-}
+function cancelTunnelReveal() { cancelTunnelMotion(); tunnelReveal = null; }
 function tunnelCardMatch(color, paymentColor) { return color === "wild" || (paymentColor !== "wild" && color === paymentColor); }
-function showTunnelReveal() {
-  const sequence = tunnelReveal, t = sequence.event;
-  if ($("dialog").dataset.tunnelReveal === String(t.id)) return;
-  const route = game.routes.find(r => r.id === t.routeId);
-  showDialog(I18n.t("Comprobando el túnel…"), I18n.t`${dialogClockHTML()}<p class="tunnel-route">${escapeHTML(routeName(route))}</p>
-    <p>Revelamos hasta 3 cartas. Cada ${t.paymentColor === "wild" ? I18n.t("locomotora") : I18n.t`carta de color ${N[t.paymentColor].toLowerCase()} o locomotora`} añade una carta al pago.</p>
-    <div id="tunnelSequence" class="tunnel-sequence">${t.revealed.map((_, i) => I18n.t`<div class="tunnel-reveal" data-reveal-slot="${i}"><img class="tunnel-card-back" src="assets/cards/back.svg" alt="Carta ${i + 1} sin revelar"><span class="reveal-effect">${i + 1}</span></div>`).join("")}</div>
-    <p id="tunnelRevealStatus" class="tunnel-total" role="status">0 de ${t.revealed.length} reveladas · Suplemento: 0</p>
-    <button id="skipTunnelReveal" class="tertiary full">Omitir animación</button>`);
-  $("dialog").classList.add("tunnel-dialog");
-  $("dialog").dataset.tunnelReveal = String(t.id);
-  $("skipTunnelReveal").onclick = () => sequence.finished ? finishTunnelReveal(true) : skipTunnelAnimation();
-  if (sequence.started) return;
-  sequence.started = true;
-  if (document.hidden) { finishTunnelReveal(true); return; }
-  const instant = reducedMotion.matches || !t.revealed.length || (t.surcharge && game.turnDeadline - Date.now() - serverOffset <= 5000);
-  sequence.timer = setTimeout(instant ? skipTunnelAnimation : revealNextTunnelCard, instant ? 0 : 700);
+function tunnelSteps(stage) {
+  const active = { reveal: 1, decision: 2, result: 3 }[stage];
+  return `<ol class="tunnel-steps" aria-label="${I18n.t("Progreso del túnel")}">${["Reserva", "Revelación", "Decisión", "Resultado"].map((label, i) => `<li class="${i < active ? "is-done" : i === active ? "is-current" : ""}" ${i === active ? 'aria-current="step"' : ""}><span>${i < active ? "✓" : i + 1}</span>${I18n.t(label)}</li>`).join("")}</ol>`;
 }
-function showNextTunnelCard(sequence, animate) {
-  const { event: t } = sequence;
-  if (sequence.shown >= t.revealed.length) return;
-  const i = sequence.shown++;
-  const slot = $("tunnelSequence")?.querySelector(`[data-reveal-slot="${i}"]`);
-  if (slot) {
-    const match = tunnelCardMatch(t.revealed[i], t.paymentColor);
+function tunnelEvidence(t) {
+  return `<section class="tunnel-evidence"><h3>${I18n.t("Cartas reveladas")}</h3>
+    <div id="tunnelSequence" class="tunnel-sequence">${t.revealed.map((_, i) => I18n.t`<div class="tunnel-reveal" data-reveal-slot="${i}"><img class="tunnel-card-back" src="assets/cards/back.svg" alt="Carta ${i + 1} sin revelar"><span class="reveal-effect">${i + 1}</span></div>`).join("")}</div>
+    <p id="tunnelRevealStatus" class="tunnel-total" role="status"></p></section>`;
+}
+function tunnelPaymentBlock(label, payment, kind, hint = "") {
+  const count = payment ? payment.regular + payment.wild : null;
+  const description = count === null ? hint : count ? paymentDescription(payment) : I18n.t("0 cartas");
+  return `<section class="tunnel-payment-block" data-tunnel-payment="${kind}"><h3>${label}</h3>
+    <div class="payment-icons" aria-label="${escapeHTML(description)}">${count ? paymentIcons(payment) : `<strong class="tunnel-payment-empty">${count === null ? "…" : "0"}</strong>`}</div>
+    <small>${escapeHTML(count === null ? hint : count === 1 ? I18n.t("1 carta") : I18n.t`${count} cartas`)}</small></section>`;
+}
+function tunnelLedger(t, extra = null) {
+  const result = t.stage === "result", declined = result && t.outcome !== "built";
+  const zero = { color: t.paymentColor, regular: 0, wild: 0 };
+  if (result) extra = declined ? zero : t.extra;
+  const total = declined ? zero : t.base && extra ? { color: t.paymentColor, regular: t.base.regular + extra.regular, wild: t.base.wild + extra.wild } : null;
+  return `<div class="tunnel-ledger${declined ? " is-returned" : ""}">
+    ${tunnelPaymentBlock(I18n.t(declined ? "Base recuperada" : result ? "Base pagada" : "Base reservada"), t.base, "base")}
+    <span class="tunnel-math" aria-hidden="true">${declined ? "↩" : "+"}</span>
+    ${tunnelPaymentBlock(I18n.t(declined ? "Extra no cobrado" : result ? "Extra pagado" : "Extra"), extra, "extra", t.stage === "reveal" ? I18n.t("Por revelar") : result ? I18n.t("Sin desglose guardado") : I18n.t`${t.surcharge} por elegir`)}
+    <span class="tunnel-math" aria-hidden="true">${declined ? "·" : "="}</span>
+    ${tunnelPaymentBlock(I18n.t(declined ? "Total gastado" : result ? "Total pagado" : "Total al construir"), total, "total", I18n.t("Pendiente"))}
+    </div>`;
+}
+function tunnelOutcome(t, route) {
+  const built = t.outcome === "built", mine = t.seat === seat;
+  const caption = built ? I18n.t`+${GameUI.ROUTE_POINTS[route.n]} puntos · ${route.n} vagones` : t.reason === "timeout" ? I18n.t("Tiempo agotado · Túnel no construido") : I18n.t("Intento cancelado · Túnel no construido");
+  return `<div class="tunnel-outcome ${built ? "is-built" : "is-declined"}">
+    <div class="tunnel-track" aria-hidden="true">${Array.from({length:route.n}, () => '<i></i>').join("")}<b class="tunnel-outcome-mark">${built ? "✓" : "×"}</b></div>
+    <p role="status">${caption}</p>
+    ${built ? "" : `<div class="tunnel-return-target"><span>${escapeHTML(mine ? I18n.t("Tu mano") : I18n.t`Mano de ${game.players[t.seat].name}`)}</span><div class="payment-icons">${t.base ? paymentIcons(t.base) : ""}</div><strong>${I18n.t(mine ? "Conservas tus cartas" : "Conserva sus cartas")}</strong></div>`}
+    </div>`;
+}
+function startTunnelPresentation(t) {
+  cancelTunnelReveal();
+  const key = `${t.id}-${t.stage}`;
+  $("dialog").classList.add("tunnel-dialog");
+  $("dialog").dataset.sharedTunnel = key;
+  $("dialog").scrollTop = 0;
+  $("dialog").querySelector('.tunnel-outcome')?.style.setProperty('--builder-color', GameUI.playerColor(game.players[t.seat].color));
+  tunnelReveal = { key, shown: 0, animations: [], flights: [] };
+  updateSharedTunnel();
+  if (t.stage === "result") animateTunnelResult(t);
+}
+function showSharedTunnel() {
+  const t = game.sharedTunnel;
+  if (t.stage === "decision" && t.seat === seat) { showTunnelDialog(); return; }
+  const key = `${t.id}-${t.stage}`;
+  if ($("dialog").dataset.sharedTunnel === key && tunnelReveal?.key === key) { updateSharedTunnel(); return; }
+  const result = t.stage === "result";
+  const title = result ? (t.outcome === "built" ? I18n.t("Túnel construido") : I18n.t("Túnel no construido"))
+    : t.stage === "decision" ? I18n.t`Túnel: ${t.surcharge} carta${t.surcharge === 1 ? "" : "s"} adicional${t.surcharge === 1 ? "" : "es"}` : I18n.t("Comprobando el túnel…");
+  const name = game.players[t.seat].name, route = game.routes.find(r => r.id === t.routeId);
+  showDialog(title, `<p class="tunnel-route">${escapeHTML(name)} · ${escapeHTML(routeName(route))}</p>
+    ${tunnelSteps(t.stage)}${result ? "" : tunnelEvidence(t)}
+    <div id="tunnelTotal">${tunnelLedger(t)}</div>
+    ${result ? tunnelOutcome(t, route) : ""}
+    ${t.stage === "decision" ? `<div class="dialog-turn-clock">${escapeHTML(name)} <strong data-clock="turn" data-clock-format="timer"></strong></div>` : ""}`);
+  startTunnelPresentation(t);
+}
+function updateSharedTunnel() {
+  const t = game?.sharedTunnel, sequence = tunnelReveal;
+  if (!t || !sequence || $("dialog").dataset.sharedTunnel !== sequence.key || t.stage === "result") return;
+  const now = replayAt ?? Date.now() + serverOffset;
+  const count = t.stage === "reveal" ? Math.max(0, Math.min(t.revealed.length, Math.floor((now - t.startedAt) / t.cardMs))) : t.revealed.length;
+  while (sequence.shown < count) {
+    const i = sequence.shown++, slot = $("tunnelSequence")?.querySelector(`[data-reveal-slot="${i}"]`);
+    if (!slot) continue;
     slot.replaceChildren(colorCard(t.revealed[i], null));
+    const match = tunnelCardMatch(t.revealed[i], t.paymentColor);
     slot.classList.toggle("is-match", match);
-    const effect = document.createElement("span"); effect.className = "reveal-effect"; effect.textContent = match ? "+1" : "—";
-    slot.append(effect);
-    if (animate && !reducedMotion.matches && !document.hidden) {
-      slot.animate([{ transform: "translateY(-16px) rotateY(-85deg)", opacity: .4 }, { transform: "translateY(0) rotateY(0)", opacity: 1 }], { duration: 500, easing: "ease-in-out" });
+    const effect = document.createElement("span"); effect.className = "reveal-effect"; effect.textContent = match ? "+1" : "—"; slot.append(effect);
+    if (t.stage === "reveal" && !reducedMotion.matches && !document.hidden && count === sequence.shown) {
+      sequence.animations.push(slot.animate([{ transform: "translateY(-16px) rotateY(-85deg)", opacity: .4 }, { transform: "translateY(0) rotateY(0)", opacity: 1 }], { duration: 500, easing: "ease-in-out" }));
       playSound("card");
     }
-    const surcharge = t.revealed.slice(0, sequence.shown).filter(c => tunnelCardMatch(c, t.paymentColor)).length;
-    $("tunnelRevealStatus").textContent = I18n.t`${sequence.shown} de ${t.revealed.length} reveladas · Suplemento: ${surcharge}`;
+  }
+  const status = $("tunnelRevealStatus");
+  const surcharge = t.revealed.slice(0, count).filter(c => tunnelCardMatch(c, t.paymentColor)).length;
+  if (status) status.textContent = t.stage === "decision" ? (t.seat === seat ? t.surcharge === 1 ? I18n.t("1 carta adicional") : I18n.t`${t.surcharge} cartas adicionales` : I18n.t`${game.players[t.seat].name} está decidiendo.`)
+    : I18n.t`${count} de ${t.revealed.length} reveladas · Suplemento: ${surcharge}`;
+  if (t.stage === "reveal") {
+    const extra = $("dialog").querySelector('[data-tunnel-payment="extra"] .tunnel-payment-empty');
+    if (extra && extra.textContent !== `+${surcharge}`) {
+      extra.textContent = `+${surcharge}`;
+      if (!reducedMotion.matches && !document.hidden) sequence.animations.push(extra.animate([{transform:"scale(1.2)"},{transform:"scale(1)"}],{duration:220}));
+    }
   }
 }
-function revealNextTunnelCard() {
-  const sequence = tunnelReveal;
-  if (!sequence || sequence.finished) return;
-  showNextTunnelCard(sequence, true);
-  // Leave the third card time to land and be read before showing the decision.
-  sequence.timer = setTimeout(sequence.shown < sequence.event.revealed.length ? revealNextTunnelCard : () => finishTunnelReveal(), 700);
-}
-function skipTunnelAnimation() {
-  const sequence = tunnelReveal;
-  if (!sequence || sequence.finished) return;
-  clearTimeout(sequence.timer);
-  sequence.instant = true;
-  // Skipping motion must not skip the evidence, especially with no surcharge:
-  // there is no subsequent payment dialog to display those cards again.
-  while (sequence.shown < sequence.event.revealed.length) showNextTunnelCard(sequence, false);
-  finishTunnelReveal();
-}
-function finishTunnelReveal(skip = false) {
-  const sequence = tunnelReveal;
-  if (!sequence) return;
-  clearTimeout(sequence.timer);
-  const { event: t, build } = sequence;
-  // Keep all evidence on screen for the payment decision, including when skipped.
-  if (t.surcharge || skip) {
-    cancelTunnelReveal();
-    renderDialog();
-    if (build) animateConstruction(build);
-    return;
+function animateTunnelResult(t) {
+  // Seek into the server's result window on reconnect; never restart its clock.
+  const elapsed = Date.now() + serverOffset - t.resultStartedAt;
+  if (!Number.isFinite(elapsed) || elapsed >= t.until - t.resultStartedAt || reducedMotion.matches || document.hidden || sock?.readyState !== WebSocket.OPEN) return;
+  const sequence = tunnelReveal, built = t.outcome === "built";
+  const animate = (node, frames, delay, duration) => {
+    if (!node || elapsed >= delay + duration) return null;
+    const motion = node.animate(frames, {delay, duration, easing:"cubic-bezier(.2,.7,.25,1)", fill:"backwards"});
+    motion.currentTime = Math.max(0, elapsed); sequence.animations.push(motion); return motion;
+  };
+  const target = $("dialog").querySelector(built ? '[data-tunnel-payment="total"] .payment-icons' : '.tunnel-return-target .payment-icons');
+  const destination = target?.getBoundingClientRect();
+  if (destination?.width) for (const kind of built ? ["base", "extra"] : ["base"]) {
+    $("dialog").querySelectorAll(`[data-tunnel-payment="${kind}"] .payment-chip`).forEach((chip, i) => {
+      const delay = (kind === "extra" ? 580 : 120) + i * 100, duration = 650;
+      if (elapsed >= delay + duration) return;
+      const from = chip.getBoundingClientRect(), clone = chip.cloneNode(true);
+      clone.classList.add("tunnel-flight"); clone.setAttribute("aria-hidden", "true");
+      Object.assign(clone.style, {left:from.x+"px",top:from.y+"px",width:from.width+"px",height:from.height+"px"});
+      document.body.appendChild(clone); sequence.flights.push(clone);
+      const dx = destination.x + (destination.width-from.width)/2 - from.x, dy = destination.y - from.y;
+      const motion = animate(clone, [{transform:"translate(0,0) scale(1)",opacity:0,offset:0}, {transform:"translate(0,-8px) scale(1.08)",opacity:1,offset:.15}, {transform:`translate(${dx}px,${dy}px) scale(.8)`,opacity:0,offset:1}], delay, duration);
+      if (motion) motion.onfinish = () => clone.remove(); else clone.remove();
+    });
   }
-  sequence.finished = true;
-  $("dialogTitle").textContent = I18n.t("Túnel construido");
-  $("tunnelRevealStatus").textContent = I18n.t("Sin coste adicional. Solo se paga el coste inicial.");
-  $("skipTunnelReveal").textContent = I18n.t("Volver al mapa");
-  // Instant reveals still need time to read all three cards and the outcome.
-  sequence.timer = setTimeout(() => finishTunnelReveal(true), sequence.instant ? 2100 : 700);
+  $("dialog").querySelectorAll('.tunnel-track i').forEach((wagon, i) => animate(wagon,
+    built ? [{transform:"translateY(-18px) scale(.8)",opacity:0},{transform:"translateY(0) scale(1)",opacity:1}]
+      : [{transform:"translateY(0)",opacity:1},{transform:"translateY(7px)",opacity:.25},{transform:"translateY(0)",opacity:1}],
+    built ? 1200 + i * 80 : 550 + i * 60, 380));
+  animate($("dialog").querySelector('.tunnel-outcome-mark'), [{transform:"scale(.4)",opacity:0},{transform:"scale(1)",opacity:1}], built ? 1700 : 1050, 380);
+  animate(target, [{opacity:.3},{opacity:1}], built ? 1100 : 750, 400);
 }
 function showTunnelDialog() {
-  const t = game.tunnel, route = game.routes.find(r => r.id === t.routeId);
+  const t = game.tunnel, shared = { ...game.sharedTunnel, base: t.base }, route = game.routes.find(r => r.id === t.routeId);
   const key = JSON.stringify([t.revealId, t.routeId, t.revealed, game.hand]);
   if ($("dialog").dataset.tunnelDecision === key && !$("overlay").classList.contains("hidden")) return;
   const options = GameUI.tunnelPayments(game.hand, t);
   const count = t.surcharge;
   showDialog(I18n.t`Túnel: ${count} carta${count === 1 ? "" : "s"} adicional${count === 1 ? "" : "es"}`,
-    I18n.t`${dialogClockHTML()}<p class="tunnel-route">${escapeHTML(CITIES[route.a][2])} — ${escapeHTML(CITIES[route.b][2])}</p>
-    <div class="tunnel-evidence"><section><h3>Cartas reveladas</h3><div id="revealed" class="tunnel-revealed"></div></section>
-      <section class="tunnel-base"><h3>Pago base reservado</h3><div class="payment-icons" aria-label="${paymentDescription(t.base)}">${paymentIcons(t.base)}</div><p>Aún no se ha gastado.</p></section></div>
-    <fieldset class="tunnel-payments"><legend>${options.length > 1 ? I18n.t("¿Cómo pagas el suplemento?") : I18n.t("Pago del suplemento")}</legend>
-      ${options.length ? `<div class="tunnel-options">${options.map((option, i) => options.length === 1
-        ? `<div class="tunnel-option single"><div class="payment-icons">${paymentIcons(option)}</div><span>${paymentDescription(option)}</span></div>`
-        : `<label class="tunnel-option"><input type="radio" name="tunnelPayment" value="${option.wild}" ${i === 0 ? "checked" : ""}><span><span class="payment-icons">${paymentIcons(option)}</span><span class="payment-label">${paymentDescription(option)}</span></span></label>`).join("")}</div>`
-        : I18n.t`<p class="tunnel-insufficient">No tienes cartas suficientes para el suplemento después de reservar el pago base.</p>`}
+    `${dialogClockHTML()}<p class="tunnel-route">${escapeHTML(routeName(route))}</p>
+    ${tunnelSteps("decision")}${tunnelEvidence(shared)}
+    <div id="tunnelTotal" aria-live="polite"></div>
+    <fieldset class="tunnel-payments"><legend>${options.length > 1 ? I18n.t("¿Cómo pagas el suplemento?") : ""}</legend>
+      ${options.length > 1 ? `<div class="tunnel-options">${options.map((option, i) => `<label class="tunnel-option"><input type="radio" name="tunnelPayment" value="${option.wild}" ${i === 0 ? "checked" : ""}><span><span class="payment-icons">${paymentIcons(option)}</span><span class="payment-label">${paymentDescription(option)}</span></span></label>`).join("")}</div>`
+        : options.length ? "" : `<p class="tunnel-insufficient">${GameUI.tunnelShortfall(game.hand, t) === 1 ? I18n.t("Te falta 1 carta para completar este túnel.") : I18n.t`Te faltan ${GameUI.tunnelShortfall(game.hand, t)} cartas para completar este túnel.`}</p>`}
     </fieldset>
-    <p id="tunnelTotal" class="tunnel-total" aria-live="polite"></p>
-    <div class="dialog-actions"><button class="primary full" id="acceptTunnel" ${options.length ? "" : "disabled"}>Pagar suplemento y construir</button>
-    <button class="tertiary full" id="declineTunnel">Desistir del túnel</button></div>
-    <p class="tunnel-exit-note">Al desistir conservas tus cartas, pero termina tu turno.</p>`);
-  $("dialog").classList.add("tunnel-dialog");
+    <div class="dialog-actions"><button class="primary full" id="acceptTunnel" ${options.length ? "" : "disabled"}>${I18n.t("Pagar suplemento y construir")}</button>
+    <button class="tertiary full" id="declineTunnel">${I18n.t("Desistir del túnel")}</button></div>`);
   $("dialog").dataset.tunnelDecision = key;
-  for (const c of t.revealed) {
-    const match = c === "wild" || (t.color !== "wild" && c === t.color);
-    const item = document.createElement("div");
-    item.className = `tunnel-reveal${match ? " is-match" : ""}`;
-    item.appendChild(colorCard(c, null));
-    const caption = document.createElement("span");
-    caption.className = "reveal-effect";
-    caption.textContent = match ? "+1" : "—";
-    caption.setAttribute("aria-label", match ? I18n.t("Añade una carta al suplemento") : I18n.t("No añade suplemento"));
-    item.appendChild(caption);
-    $("revealed").appendChild(item);
-  }
   const chosen = () => options.length === 1 ? options[0]
     : options.find(option => option.wild === +document.querySelector('input[name="tunnelPayment"]:checked')?.value);
-  const total = () => {
-    const payment = chosen();
-    $("tunnelTotal").textContent = payment ? I18n.t`Total al construir: ${paymentDescription({ color: t.color, regular: t.base.regular + payment.regular, wild: t.base.wild + payment.wild })}.` : "";
-  };
+  const total = () => { $("tunnelTotal").innerHTML = tunnelLedger(shared, chosen()); };
   document.querySelectorAll('input[name="tunnelPayment"]').forEach(input => input.addEventListener("change", total));
-  total();
+  total(); startTunnelPresentation(shared);
   const submit = type => {
     if ($("declineTunnel").disabled) return;
     const option = chosen();

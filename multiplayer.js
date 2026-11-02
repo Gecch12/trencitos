@@ -11,6 +11,11 @@ function shiftDeadlines(game, elapsed) {
     if (Number.isFinite(game[key])) game[key] += elapsed;
   for (const player of game.players)
     if (player.offer) player.offer.deadline += elapsed;
+  if (game.phase === "tunnel" && game.pending?.stage) {
+    game.pending.startedAt += elapsed;
+    if (Number.isFinite(game.pending.resultStartedAt)) game.pending.resultStartedAt += elapsed;
+    if (Number.isFinite(game.pending.until)) game.pending.until += elapsed;
+  }
 }
 
 // Room lifecycle is separate from rules. No timer or socket is persisted.
@@ -94,7 +99,7 @@ function createMultiplayerController({ rooms, sendRoom, removeRoom, expireGame, 
       state.lifecycle.unref?.();
     }
     if (!room.game || room.emptySince != null || !room.members[room.game.current]?.autopilot ||
-      ["initial", "finished", "closing"].includes(room.game.phase) || room.game.turnWaiting) return;
+      ["initial", "finished", "closing"].includes(room.game.phase) || room.game.turnWaiting || Engine.tunnelBusy(room.game)) return;
     state.bot = setTimer(() => dispatch(() => {
       if (!live(room) || blocked() || room.emptySince != null) return;
       if (expireGame(room)) return;

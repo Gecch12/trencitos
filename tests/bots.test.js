@@ -127,11 +127,13 @@ test("tunnel surcharge is paid only after reserving the base payment", () => {
     Engine.action(game, 1, { type: "claim", routeId: 0, color: "red", wildCount: 0 });
     assert.equal(game.phase, "tunnel");
     assert.equal(game.pending.surcharge, 1);
+    Engine.expire(game, game.pending.until);
     const action = chooseBotAction(game, 1, first);
     assert.equal(action.type, canAfford ? "pay_tunnel" : "decline_tunnel");
     Engine.action(game, 1, action);
     assert.equal(game.routes[0].owner, canAfford ? 1 : null);
     assert.equal(game.players[1].hand.length, canAfford ? 0 : 2);
+    Engine.expire(game, game.pending.until);
     assert.equal(game.phase, "play");
     assert.equal(game.current, 2);
   }
@@ -143,7 +145,9 @@ test("all-locomotive tunnels, including a zero surcharge, resolve legally", () =
     game.players[1].hand = ["wild", "wild", "wild"];
     game.deck = ["blue", "green", surcharge ? "wild" : "red"];
     Engine.action(game, 1, chooseBotAction(game, 1, first));
+    Engine.expire(game, game.pending.until);
     if (surcharge) Engine.action(game, 1, chooseBotAction(game, 1, first));
+    Engine.expire(game, game.pending.until);
     assert.equal(game.routes[0].owner, 1);
     assert.equal(game.current, 2);
   }
@@ -164,7 +168,8 @@ test("complete simulated games preserve cards and reach final-round scoring", ()
     const rng = random(simulation + 1);
     let steps = 0;
     while (game.phase !== "finished" && steps++ < 5000) {
-      const offering = game.players.findIndex(p => p.offer);
+      if (Engine.tunnelBusy(game)) { Engine.expire(game, game.pending.until, rng); continue; }
+      const offering = game.phase === "tunnel" ? -1 : game.players.findIndex(p => p.offer);
       const seat = game.phase === "initial" ? game.players.findIndex(p => p.pending.length) : offering >= 0 ? offering : game.current;
       const action = chooseBotAction(game, seat, rng);
       if (action) {
@@ -173,7 +178,7 @@ test("complete simulated games preserve cards and reach final-round scoring", ()
       } else Engine.next(game);
       const cards = game.deck.length + game.discard.length + game.face.length +
         game.players.reduce((sum, player) => sum + player.hand.length, 0) +
-        (game.phase === "tunnel" ? game.pending.revealed.length : 0);
+        (game.phase === "tunnel" && game.pending.stage !== "result" ? game.pending.revealed.length : 0);
       assert.equal(cards, 110);
       assert.ok(game.players.every((player) => player.trains >= 0 && player.stations >= 0 && player.stations + player.placed.length === 3));
     }
@@ -190,7 +195,8 @@ for (const count of [2, 3, 5]) test(`strategic bots finish ${count}-player games
     const rng = random(count * 10 + run);
     let steps = 0;
     while (game.phase !== "finished" && steps++ < 3000) {
-      const offering = game.players.findIndex(p => p.offer);
+      if (Engine.tunnelBusy(game)) { Engine.expire(game, game.pending.until, rng); continue; }
+      const offering = game.phase === "tunnel" ? -1 : game.players.findIndex(p => p.offer);
       const seat = game.phase === "initial" ? game.players.findIndex(p => p.pending.length) : offering >= 0 ? offering : game.current;
       const action = chooseBotAction(game, seat, rng);
       if (action) {
@@ -198,7 +204,7 @@ for (const count of [2, 3, 5]) test(`strategic bots finish ${count}-player games
         Engine.action(game, seat, action);
       } else Engine.next(game);
       assert.equal(game.deck.length + game.discard.length + game.face.length + game.players.reduce((sum, p) => sum + p.hand.length, 0)
-        + (game.phase === "tunnel" ? game.pending.revealed.length : 0), 110);
+        + (game.phase === "tunnel" && game.pending.stage !== "result" ? game.pending.revealed.length : 0), 110);
       assert.ok(game.players.every(p => p.trains >= 0 && p.stations >= 0 && p.stations + p.placed.length === 3));
     }
     assert.equal(game.phase, "finished", `${count} players, run ${run}, ${steps} steps`);

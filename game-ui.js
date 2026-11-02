@@ -146,6 +146,11 @@ const GameUI = (() => {
     const options = payments(game.hand, cost, color, ferry);
     return { reason: options.length ? null : I18n.t("No tienes las cartas suficientes."), options, cost, route };
   }
+  function tunnelShortfall(hand, tunnel) {
+    const matching = hand.filter(c => c === "wild" || c === tunnel.color).length;
+    const available = Math.max(0, matching - tunnel.base.regular - tunnel.base.wild);
+    return Math.max(0, tunnel.surcharge - available);
+  }
   function tunnelPayments(hand, tunnel) {
     if (!tunnel || tunnel.surcharge < 1) return [];
     const remaining = [...hand];
@@ -248,6 +253,6 @@ const GameUI = (() => {
     }
     return base;
   }
-  return { resultStandings, resultSelection, payments, paymentGroups, tunnelPayments, construction, canPass, camera, safeArea, pinchZoom, pinchTransform, zoomTransform, cityLabelScale, turnPresentation, needsSecondDraw, ROUTE_POINTS, overviewLabels, endpointPosition, playerColor, playerFinish, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, destinationEntries, destinationNumber, destinationSpotlightSelection, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, MIN_ZOOM, MAX_ZOOM };
+  return { resultStandings, resultSelection, payments, paymentGroups, tunnelPayments, tunnelShortfall, construction, canPass, camera, safeArea, pinchZoom, pinchTransform, zoomTransform, cityLabelScale, turnPresentation, needsSecondDraw, ROUTE_POINTS, overviewLabels, endpointPosition, playerColor, playerFinish, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, destinationEntries, destinationNumber, destinationSpotlightSelection, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, MIN_ZOOM, MAX_ZOOM };
 })();
 if (typeof module !== "undefined") module.exports = GameUI;

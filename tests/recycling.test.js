@@ -12,7 +12,7 @@ function state() {
   g.routes = [{ id: 0, a: "PAR", b: "BRU", n: 2, color: "red", ferry: 0, tunnel: false, owner: null }];
   return g;
 }
-const inventory = g => [...g.deck, ...g.discard, ...g.face, ...g.players.flatMap(p => p.hand), ...(g.phase === "tunnel" ? g.pending.revealed : [])].sort();
+const inventory = g => [...g.deck, ...g.discard, ...g.face, ...g.players.flatMap(p => p.hand), ...(g.phase === "tunnel" && g.pending.stage !== "result" ? g.pending.revealed : [])].sort();
 
 test("construction immediately shuffles spent cards with the remaining deck exactly once", t => {
   const g = state();
@@ -45,10 +45,12 @@ for (const decision of ["pay_tunnel", "decline_tunnel"]) test(`pending tunnel is
   assert.deepEqual(g.players[0].hand, hand);
   assert.deepEqual(g.deck, ["purple"]);
   assert.deepEqual(inventory(g), before);
+  E.expire(g, g.pending.until);
   const pending = structuredClone(g);
   assert.throws(() => E.action(g, 0, { type: "pay_tunnel", extraWild: 0 }), /cartas/);
   assert.deepEqual(g, pending);
   E.action(g, 0, { type: decision, extraWild: 1 });
+  E.expire(g, g.pending.until);
   assert.equal(g.phase, "play"); assert.deepEqual(g.discard, []);
   assert.equal(g.deck.length, decision === "pay_tunnel" ? 7 : 4);
   assert.equal(random.mock.callCount(), g.deck.length - 1);

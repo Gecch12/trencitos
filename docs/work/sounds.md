@@ -4,7 +4,8 @@
 # Sonidos personalizables
 
 Pendiente aprobado para pulir después: sonidos al desplegar/desglosar cartas y
-construir. Ya existen efectos sintetizados de papel, construcción y turno en
+construir. Ya existen efectos sintetizados de papel, barajado al renovar la mesa,
+construcción y turno en
 [app.js](../../app.js); eso no implementa selección de packs.
 
 ## Hitos de definición

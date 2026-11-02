@@ -64,7 +64,7 @@ function renderHarness() {
   const g = resultsRoom().game, result = g.result.find(r => r.seat === 0);
   const controls = { onclick: null, setAttribute() {} };
   const panel = { innerHTML: "", setAttribute() {}, querySelectorAll: () => [], querySelector: () => controls, classList: { toggle() {} } };
-  const context = vm.createContext({ I18n: require("../i18n"), game: g, resultViews: new Map(), resultMapCleanup: null, GameUI: UI,
+  const context = vm.createContext({ I18n: require("../i18n"), game: g, resultViews: new Map(), expandedResults: new Set(), resultMapCleanup: null, GameUI: UI,
     $: () => panel, CITIES: E.CITIES, playerAvatar: () => '<span class="player-avatar"></span>',
     applyPlayerAppearance() {}, renderResultMap() {},
     escapeHTML: x => String(x).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;") });
@@ -91,9 +91,12 @@ test("comparison UI renders everyone, marks bonuses and escapes player names", (
   assert.match(panel.innerHTML, /Bonificación: 10 puntos/);
   assert.doesNotMatch(panel.innerHTML, /Se suman los vagones|Máximo de la partida/);
 });
-test("point categories expose keyboard tabs and signed destination penalties", () => {
+test("table category buttons expose controls and signed destination penalties", () => {
   const { result, context, panel } = renderHarness();
-  assert.equal((context.resultDetailHTML(result).match(/role="tab"/g) || []).length, 4);
+  const row = context.resultRowHTML(result, 0);
+  assert.equal((row.match(/data-score-category=/g) || []).length, 4);
+  assert.match(row, /colspan="6"/);
+  assert.match(row, /aria-expanded="false"/);
   context.resultView(0).category = "destinations"; context.resultView(0).index = 2;
   context.renderResultPanel(result);
   assert.match(panel.innerHTML, /No completado/); assert.match(panel.innerHTML, /−20/);
