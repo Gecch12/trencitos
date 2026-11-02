@@ -1,0 +1,100 @@
+{
+  "date": "2026-11-02T11:39:58.263Z",
+  "commit": "f4584c9a3b17ed0b69f2e720e809b5dfc20c953e",
+  "deployment": {
+    "id": "dep-dbk7c2h42hec73erof9g",
+    "liveAt": "2026-11-02T06:38:26-05:00",
+    "durationSeconds": 38.9
+  },
+  "checks": [
+    "17 public assets exactly match the deployed code commit",
+    "Six private code/configuration paths remain inaccessible",
+    "Previously completed 178-step replay remains accessible after restart",
+    "Production WebSocket uses UI 8; private practice, initial tickets, two draws and three bot turns work without leaking bot hands",
+    "Practice result totals render in protocol; only the QA practice was closed"
+  ],
+  "assets": [
+    {
+      "file": "index.html",
+      "sha256": "1ab71993fbfa45e0f4ee0654658e821a9b87451aa72c82988c92e472297fe4db"
+    },
+    {
+      "file": "app.js",
+      "sha256": "961d5f48a1d25455ba18da87f33bba6a8fe1d81daad87a27f6cd73cd714af4d8"
+    },
+    {
+      "file": "game-ui.js",
+      "sha256": "ba26e50b630c330ed8315d358d214251047d894cf7d941e77a7baca679da8e41"
+    },
+    {
+      "file": "game.css",
+      "sha256": "e94347649bc9229a9055158749df7ee38ecef1abf5669a4343cbff20c4c85d63"
+    },
+    {
+      "file": "responsive.css",
+      "sha256": "d582618ec4c7e80808f3cf8e62a2303918043d34e0ffc2d5489f09e4e849c222"
+    },
+    {
+      "file": "translations.js",
+      "sha256": "df51e8ba2ea9140de59eca158b990531de7ad3e4ec3c74f0ca7c54bfe4614a20"
+    },
+    {
+      "file": "shell.js",
+      "sha256": "e1e434951cdfa1fce709beea07ff4ae0acf6423b3215072901f4735894b179dd"
+    },
+    {
+      "file": "shell.css",
+      "sha256": "04b4731f20194ba7738ea35354e8bfd6701994350b94e237327dcf8964046d9f"
+    },
+    {
+      "file": "lobby-ui.js",
+      "sha256": "daa48f1a71e9661945b55082b0ddf76d6d32fe5731161eaf000d088856ed0b36"
+    },
+    {
+      "file": "lobby.css",
+      "sha256": "881b226d84879ab9f89852328610fa936977ed410de5b9adae0bce51ba1a7cdd"
+    },
+    {
+      "file": "board-3d.js",
+      "sha256": "a90e06ae7c6aedbe15e6141ed899a7915c63c5baa25694d3dd79f0f8fef97a0e"
+    },
+    {
+      "file": "board-3d.css",
+      "sha256": "3eb8561981dbe1d2b93b2dff7f2f809518e53e9bf509b1903f831b9d1412ac36"
+    },
+    {
+      "file": "wagon-renderer.js",
+      "sha256": "89eb7f3cf52484b634da91bd512ab49a0fdd537bafa21f0b8a3df7346cd54ecc"
+    },
+    {
+      "file": "wagon-preview.js",
+      "sha256": "4067dd72ad2472e9af8e312aa95709fea9fa32454bc8d8b420e9bb8fcca5acf4"
+    },
+    {
+      "file": "wagon-models.mjs",
+      "sha256": "a6c2a3833da80e76e4191c568f65c72ad9bc7025ba79e0948995d0c12b78fa20"
+    },
+    {
+      "file": "history-ui.js",
+      "sha256": "18cb60daac513278c1777c2b218d2c67b6b7f02f85427c0da50d433a53b80802"
+    },
+    {
+      "file": "replay-state.js",
+      "sha256": "3008e9a8fda81dc7c73219b93bbdf9934e67b2b8dda3882d631070f59f3ec0ea"
+    }
+  ],
+  "health": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 0
+  },
+  "passed": true,
+  "finished": "2026-11-02T11:40:24.675Z",
+  "browserChecks": [
+    "Chrome HTTPS directory connected with enabled controls",
+    "No browser console errors or warnings"
+  ],
+  "limitations": [
+    "Remote smoke test does not repeat all six local tunnel scenarios or device matrix"
+  ]
+}

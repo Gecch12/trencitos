@@ -1,13 +1,13 @@
 ---
-{"id":"wagon-preview-performance","status":"validated","parent":"board-3d","depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-02"}
+{"id":"wagon-preview-performance","status":"validated","parent":"board-3d","depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-02"}
 ---
 # Respuesta del selector de vagones
 
 Problema: cada selección esperaba el guardado síncrono de salas más todo el
 historial local. Volver a un color conocido repetía el trabajo, aunque el canvas,
-geometrías y materiales de Three ya se reutilizaban. Implementación local sobre
-`main`, sin commit ni despliegue; se conservó la separación de archivos que ya
-estaba modificada al iniciar esta implementación.
+geometrías y materiales de Three ya se reutilizaban. Implementación integrada en
+`main` y publicada; se conservó la separación de archivos que ya estaba
+modificada al iniciar esta implementación.
 
 ## Alcance
 
@@ -54,15 +54,14 @@ y [respaldo/reinicio](../operations.md). El backend Supabase no cambia.
 
 ## Siguiente paso
 
-Para activar el escritor nuevo en la sesión local hay que reiniciar su proceso;
-el navegador necesita recarga para la selección provisional. Antes de entregar
-conjuntamente los frentes concurrentes, repetir su regresión integrada.
-No se reinició el proceso del usuario ni se publicó esta revisión.
+Regresión integrada completada y revisión publicada. Recargar producción para
+recibir el selector actualizado. El escritor local requiere reiniciar su proceso
+al terminar la partida activa; no se reinició el proceso del usuario.
 
-## Preparación de producción · 2026-11-02
+## Entrega en producción · 2026-11-02
 
-Publicación solicitada por el usuario. La combinación final de estos cambios
-pasó 353/353 pruebas y los recorridos de túneles y flujo en Chrome. Se entrega
-junto con las mejoras de cartas, resultados y selector, sin cambios de SQL
-ni credenciales. El despliegue y la verificación remota se registran en
-[Producción](../production.md) cuando finalicen.
+Publicado en `main` y Render con el commit `f4584c9`; **Live** a las 06:38:26
+(Lima). La combinación final pasó 353/353 pruebas y los recorridos Chrome de
+túneles y flujo. La verificación remota confirmó archivos idénticos, UI 8,
+práctica con bots, resultados, historial anterior y salud de Supabase.
+Evidencia y límites en [Producción](../production.md).

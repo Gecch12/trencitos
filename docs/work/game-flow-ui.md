@@ -1,5 +1,5 @@
 ---
-{"id":"game-flow-ui","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-02"}
+{"id":"game-flow-ui","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-02"}
 ---
 # Billetes, túneles compartidos y tabla final
 
@@ -87,15 +87,14 @@ Evidencia de la ampliación:
 
 ## Siguiente paso
 
-Ampliación implementada y validada. Para usar UI 8, reiniciar el
-servidor local al terminar la partida activa y recargar el navegador. No se ha
-reiniciado el proceso del usuario, hecho commit ni publicado en producción.
-La emulación de Chrome no sustituye pruebas en dispositivos físicos.
+Ampliación publicada: recargar producción para usar UI 8. El proceso local del
+usuario no se reinició; su actualización requiere reiniciarlo al terminar la
+partida activa. La emulación de Chrome no sustituye dispositivos físicos.
 
-## Preparación de producción · 2026-11-02
+## Entrega en producción · 2026-11-02
 
-Publicación solicitada por el usuario. La combinación final de estos cambios
-pasó 353/353 pruebas y los recorridos de túneles y flujo en Chrome. Se entrega
-junto con las mejoras de cartas, resultados y selector, sin cambios de SQL
-ni credenciales. El despliegue y la verificación remota se registran en
-[Producción](../production.md) cuando finalicen.
+Publicado en `main` y Render con el commit `f4584c9`; **Live** a las 06:38:26
+(Lima). La combinación final pasó 353/353 pruebas y los recorridos Chrome de
+túneles y flujo. La verificación remota confirmó archivos idénticos, UI 8,
+práctica con bots, resultados, historial anterior y salud de Supabase.
+Evidencia y límites en [Producción](../production.md).

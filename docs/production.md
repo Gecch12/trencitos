@@ -1,6 +1,37 @@
 # Producción
 
-## Versión actual · 2026-10-31, 20:40 (Lima)
+## Versión actual · 2026-11-02, 06:38 (Lima)
+
+- Código: `f4584c9a3b17ed0b69f2e720e809b5dfc20c953e`, publicado en `main`.
+  Incluye pagos base/extra/total y desenlace animado del túnel para toda la mesa,
+  devolución al desistir, UI 8, mejoras de cartas, billetes, resultados y selector
+  de vagones. Alcance en [flujo](work/game-flow-ui.md),
+  [cartas](work/card-interactions.md) y [selector](work/wagon-preview-performance.md).
+- [Despliegue Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbk7c2h42hec73erof9g):
+  manual del commit exacto, **Live** a las 06:38:26; duración 38,9 s,
+  Node 26.13.0, `npm install --omit=dev` y `npm start`.
+  Auto-Deploy continúa desactivado. Sin migraciones SQL ni cambios de variables
+  o credenciales. El usuario autorizó publicar; no había salas antes del despliegue.
+- Antes de publicar: **353/353 pruebas** y recorridos Chrome de túneles y flujo
+  correctos. Los seis desenlaces se verificaron localmente con constructor,
+  rival y espectador, incluyendo reconexión, móvil y movimiento reducido.
+- [QA remoto HTTP/WebSocket](qa/production-tunnels-2026-11-02.json): 17 recursos
+  públicos coinciden byte a byte con el commit y seis rutas privadas devuelven
+  404. El replay completo anterior de 178 pasos continúa accesible tras reiniciar.
+- Práctica aislada en producción: protocolo UI 8, billetes iniciales, dos robos,
+  turnos de tres bots y resultados con totales coherentes. Se comprobó que las
+  manos de los bots siguen privadas y se cerró únicamente esa práctica de QA.
+  Salud final: HTTP 200, `ok: true`, `storage: supabase`, `rooms: 0`.
+- Chrome sobre HTTPS: directorio conectado y controles habilitados, sin errores
+  ni advertencias de consola. Evidencia local del despliegue en
+  `.qa/release-f4584c9/render-live.png` (ignorada por Git).
+
+La verificación remota es un smoke test del despliegue; no repite los seis
+desenlaces de túnel ni la matriz de dispositivos. Los archivos de esos flujos
+coinciden con los validados localmente. El servidor local del usuario permanece
+sin reiniciar. Los commits documentales posteriores solo registran evidencia.
+
+## Entrega anterior · 2026-10-31, 20:40 (Lima)
 
 - Código: `552e241a551f95aec2115a4336dfa8f48f3b2383`, publicado en `main`.
   Incluye historial durable, desglose de puntuación, replay y auditoría, identidad

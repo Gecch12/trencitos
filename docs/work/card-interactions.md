@@ -1,5 +1,5 @@
 ---
-{"id":"card-interactions","status":"done","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"integrated","updated":"2026-11-02"}
+{"id":"card-interactions","status":"done","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"released","updated":"2026-11-02"}
 ---
 # Cartas, pagos y limpieza de la interfaz
 
@@ -44,15 +44,15 @@ pendientes de resultados/avatar, además de las cinco propuestas sobre cartas.
 
 ## Siguiente paso
 
-Implementación y revisión terminadas. El backend nuevo requiere reinicio local
-(UI 7) y recarga al terminar la partida activa. No se ha reiniciado el servidor
-habitual ni publicado ni hecho commit. La emulación móvil de Chrome no equivale
-a una prueba en dispositivo físico.
+Implementación publicada junto con UI 8 y el desenlace del túnel. Recargar
+producción para recibirla. El servidor local habitual no se reinició; hacerlo
+al terminar la partida activa. La emulación móvil no equivale a un dispositivo
+físico.
 
-## Preparación de producción · 2026-11-02
+## Entrega en producción · 2026-11-02
 
-Publicación solicitada por el usuario. La combinación final de estos cambios
-pasó 353/353 pruebas y los recorridos de túneles y flujo en Chrome. Se entrega
-junto con las mejoras de cartas, resultados y selector, sin cambios de SQL
-ni credenciales. El despliegue y la verificación remota se registran en
-[Producción](../production.md) cuando finalicen.
+Publicado en `main` y Render con el commit `f4584c9`; **Live** a las 06:38:26
+(Lima). La combinación final pasó 353/353 pruebas y los recorridos Chrome de
+túneles y flujo. La verificación remota confirmó archivos idénticos, UI 8,
+práctica con bots, resultados, historial anterior y salud de Supabase.
+Evidencia y límites en [Producción](../production.md).
