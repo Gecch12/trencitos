@@ -22,19 +22,29 @@ Abre `http://localhost:3000` en tu navegador. Para probar con otro jugador abre 
 ## Inicio, perfil y salas
 
 La navegación principal tiene **Partidas**, **Jugar**, **Más** y **Perfil**. En
-escritorio está a la izquierda; en tablet y móvil, abajo. La cabecera agrupa el
-nombre y avatar junto a la campanita provisional. **Perfil → Editar perfil**
+escritorio está a la izquierda; en tablet y móvil, abajo. El nombre se consulta
+en el perfil; la cabecera no muestra usuario ni campana. **Perfil → Editar perfil**
 permite cambiar el nombre y conserva el avatar básico. La cuenta guarda el perfil;
 un invitado conserva su preferencia en este navegador. Cuenta, Historial y Resumen
 tienen contenido; Amigos y Jugar siguen preparados para próximas integraciones.
-**Más → Idioma** cambia entre español (predeterminado, ESP) e inglés (ENG).
+**Más → Idioma** cambia entre español (predeterminado, ESP) e inglés (ENG),
+también en móvil. Durante la partida está en **Menú de partida → Idioma**;
+recarga conservando el puesto, los plazos y los billetes pendientes seleccionados.
 Los seis iconos sociales siguen sin enlaces; Privacidad abre el aviso existente.
 
 **Perfil → Historial** conserva partidas completas y abandonadas por separado,
-con desglose de puntos y repetición por pasos a 0,5×, 1×, 2×, 4× y 8×. Vincular
+en filas compactas con fecha, puesto propio, jugadores, duración, estado y acceso
+a la repetición. Tocar una fila abre su desglose; solo uno permanece abierto.
+En móvil cada partida ocupa dos líneas. Las partidas en curso o abandonadas no
+tienen puesto final; la duración parcial lleva `~`. El icono de información
+explica el acceso al historial. La repetición avanza por pasos a 0,5×, 1×, 2×, 4× y 8×. Vincular
 Google conserva el historial previo de invitado en esa cuenta. Los participantes
 ven la repetición completa al cerrar; el público solo la vista sin secretos de
 salas públicas. [Detalles de conservación y acceso](docs/history-replay.md).
+
+Editar perfil solicita al navegador desactivar el autocompletado del apodo;
+conserva el nombre actual como valor editable. Los avatares personalizables
+siguen [pendientes](docs/work/commerce.md).
 
 **Partidas → Partidas abiertas** muestra las salas públicas en espera. **Crear partida** crea
 una sala con código numérico automático; **Unirse a una partida** permite entrar por código.
@@ -43,6 +53,11 @@ elegir entre 2 y 5 plazas, añadir o retirar bots e iniciar la partida. Las sala
 anteriores sin visibilidad explícita siguen siendo privadas. Las invitaciones
 antiguas y los enlaces privados de recuperación siguen funcionando.
 
+Cada bot añadido recibe al azar uno de los colores libres, todos con la misma
+probabilidad. Se respetan también los colores reservados por jugadores
+desconectados. El color queda guardado al añadirlo y se conserva al reconectar o
+iniciar la partida; retirar el bot vuelve a dejar ese color disponible.
+
 **Observar** lista partidas públicas en curso. Observar no ocupa un puesto,
 no permite jugar y no entrega manos, destinos, ofertas ni credenciales privadas.
 Los espectadores tampoco prolongan la vida de una sala abandonada. Las salas
@@ -50,15 +65,32 @@ privadas solo admiten jugadores con invitación; no se pueden observar.
 
 La sala de espera distribuye jugadores/amigos, configuración y chat en tres
 columnas; en pantallas pequeñas se usan pestañas. Amigos y chat son componentes
-preparados para una integración posterior. Modo Clásico, mapa Europa, 60 segundos
-por turno y primer jugador al azar conservan las reglas actuales.
+preparados para una integración posterior. Modo Clásico, miniatura plana de Europa,
+visibilidad pública/privada y número destacado de jugadores aparecen en una fila.
+La sección **Tiempos** agrupa turno (30/60/90 s), extra para nuevos billetes
+(+15/+30 s) e iniciales (30/60/90 s). El anfitrión ajusta plazas y tiempos con
+flechas. La invitación es compacta y la paleta comparte fila con la vista previa
+del vagón. La sala aprovecha la altura sin cabecera vacía: desde 1366×768 al
+100 % de zoom cabe sin scroll; ventanas bajas y móvil conservan desplazamiento
+y un pie reservado para **Iniciar partida**. Los valores predeterminados son
+5 plazas y 60/+30/60 s;
+no se pueden reducir plazas ocupadas. El primer jugador sigue siendo al azar.
+Los ajustes se guardan y quedan bloqueados al comenzar; la revancha los conserva.
 
-En la sala de espera cada participante elige uno de dieciocho colores libres: rojo, azul, verde, ámbar, morado, marrón, amarillo, negro, gris, magenta, turquesa, azul noche, borgoña, verde oliva, marfil, coral, lavanda y azul hielo. Amarillo lleva deportivos y ámbar lleva grano; ambos usan pintura normal, sin presentación dorada. El servidor reserva el color incluso durante la ventana de reconexión, rechaza elecciones simultáneas duplicadas y lo guarda tanto en disco como en Supabase. Cambiar de puesto por la salida de otro participante no cambia tu color. Tras empezar, la elección queda bloqueada y se usa en trenes, estaciones, avatar e historial. El navegador recuerda nombre y color preferido (si está libre); al recargar una sala conocida recupera el puesto con su credencial local.
+En la sala de espera cada participante elige uno de veintiún colores libres: rojo, azul, verde, ámbar, morado, marrón, amarillo, negro, gris, magenta, turquesa, azul noche, borgoña, verde oliva, marfil, coral, lavanda, azul hielo, jade, índigo y rosa. Jade lleva hongos, índigo cristales y rosa confitería; las cargas multicolores son decorativas. Amarillo lleva deportivos y ámbar lleva grano; ambos usan pintura normal, sin presentación dorada. El servidor reserva el color incluso durante la ventana de reconexión, rechaza elecciones simultáneas duplicadas y lo guarda tanto en disco como en Supabase. Cambiar de puesto por la salida de otro participante no cambia tu color. Tras empezar, la elección queda bloqueada y se usa en trenes, estaciones, avatar e historial. El navegador recuerda nombre y color preferido (si está libre); al recargar una sala conocida recupera el puesto con su credencial local.
 
-Durante una partida, la cabecera conserva la marca y el botón de sonido. La
-conexión solo aparece cuando requiere atención; los avisos de desconexión y
+Durante una partida no hay cabecera superior. Una columna de iconos arriba a la
+izquierda ofrece menú, pantalla completa y resaltado de destinos. El menú contiene
+invitación, sonido, idioma, recuperación privada y abandono; cierra al tocar fuera,
+pulsar Escape o ejecutar una opción. La conexión solo aparece cuando requiere atención; los avisos de desconexión y
 fallos de guardado no se ocultan. Las listas y paneles tienen desplazamiento
 propio para conservar navegación y controles en pantallas bajas.
+
+**H** alterna el resaltado de destinos y muestra un aviso, igual que **M** para
+el sonido. No actúa al escribir ni dentro de los diálogos. El menú agrupa
+**Copiar enlace de recuperación** y **Cambiar enlace de recuperación** bajo
+**Recuperar mi puesto**. Cambiarlo invalida el anterior; luego debes copiar el
+nuevo. No reinicia la partida ni prolonga la vida de la sala.
 
 ## Sala de pruebas con bots
 
@@ -87,14 +119,17 @@ El mapa se mueve arrastrando y se acerca con rueda o pellizco, sin botones de
 menos, más o centrado. Con el mapa enfocado, las flechas desplazan, `+`/`−`
 cambian el zoom e **Inicio** restaura el encuadre.
 
-En móvil, las tarjetas de jugadores conservan avatar, nombre, puntos, vagones y
-estaciones en menos altura, sin la etiqueta duplicada «En turno». La barra
+Cada tarjeta de jugador muestra puntos, cartas en mano (incluidas locomotoras),
+vagones y estaciones. El recuento de cartas es público; sus colores permanecen
+privados. En móvil y tablet, los cuatro indicadores forman una cuadrícula 2×2
+con el puntaje más grande y en negrita, también con cinco jugadores y tres cifras.
+Se conservan avatar y nombre, sin la etiqueta duplicada «En turno». La barra
 inferior muestra el turno y un reloj más pequeño en una sola línea, con los
 colores y la banda de tiempo habituales. Se ocultan el subtítulo de ayuda y
 «Solo tú la ves». La mano permite deslizar las cartas horizontalmente sin
 recortar sus contadores; las esquinas redondeadas pertenecen al propio dibujo.
 
-La mesa ocupa la pantalla sin scroll de página: el mapa y el mar forman un fondo continuo, visible entre los paneles flotantes. La mano permanece abajo. La columna derecha contiene **Historial**, siempre abierto con scroll interno; **Robos**, en dos filas de tres posiciones (cinco cartas y el mazo); y **Jugadores**, anclados abajo con altura reservada para cinco, sin tarjetas vacías. El historial muestra los últimos 25 movimientos en orden cronológico: los nuevos aparecen abajo y, si hay pocos, se apoyan en el borde inferior. Sigue los nuevos eventos solo si estás al final; al leer movimientos anteriores conserva la posición y ofrece **Nuevos ↓**. Su barra permanece visible cuando hay desbordamiento, independientemente de la configuración de macOS, y admite arrastre, rueda y teclado. **Encajar** centra la cartografía al 100% en el espacio libre hasta la mano. El zoom permite alejar hasta **25%** y acercar hasta **600%**: con el puntero sobre el mapa, la rueda cambia la escala alrededor del cursor. Arrastra con el botón izquierdo a cualquier escala, incluso al 25% y al 100%; un clic sin arrastre sigue seleccionando una ruta o ciudad. El botón ⛶ activa pantalla completa sin ocultar la mano ni las acciones. El sidebar tiene scroll propio solo cuando falta altura; su rueda no altera el mapa. El icono **i** junto a ROBOS muestra las cantidades restantes de ambos mazos al pasar el ratón o enfocarlo con teclado.
+La mesa ocupa la pantalla sin scroll de página: el mapa y el mar forman un fondo continuo, visible entre los paneles flotantes. La mano permanece abajo. La cabecera crema de **Jugadores** mantiene el contraste con el mapa atenuado; **Última ronda** usa una etiqueta ámbar y **Final** una azul petróleo. La columna derecha contiene **Historial**, siempre abierto con scroll interno; **Robos**, en dos filas de tres posiciones (cinco cartas y el mazo); y **Jugadores**, anclados abajo con altura reservada para cinco, sin tarjetas vacías. El historial muestra los últimos 25 movimientos en orden cronológico: los nuevos aparecen abajo y, si hay pocos, se apoyan en el borde inferior. Sigue los nuevos eventos solo si estás al final; al leer movimientos anteriores conserva la posición y ofrece **Nuevos ↓**. Su barra permanece visible cuando hay desbordamiento, independientemente de la configuración de macOS, y admite arrastre, rueda y teclado. **Encajar** centra la cartografía al 100% en el espacio libre hasta la mano. El zoom permite alejar hasta **25%** y acercar hasta **600%**: con el puntero sobre el mapa, la rueda cambia la escala alrededor del cursor. Arrastra con el botón izquierdo a cualquier escala, incluso al 25% y al 100%; un clic sin arrastre sigue seleccionando una ruta o ciudad. El botón ⛶ activa pantalla completa sin ocultar la mano ni las acciones. El sidebar tiene scroll propio solo cuando falta altura; su rueda no altera el mapa. El icono **i** junto a ROBOS muestra las cantidades restantes de ambos mazos al pasar el ratón o enfocarlo con teclado.
 
 El historial acompaña cada robo nuevo con una miniatura: las cartas tomadas de la mesa son públicas; las del mazo muestran el reverso a los demás y la cara solo a quien roba. Los registros antiguos sin ese dato conservan su texto.
 
@@ -102,13 +137,33 @@ El mercado ocupa **dos filas y tres columnas**: cinco cartas visibles y un mazo 
 
 Al aparecer tres locomotoras, un brillo señala la renovación: las cinco cartas se reúnen en abanico, vuelven al mazo y salen las nuevas escalonadas. El efecto dura 940 ms y bloquea los robos locales mientras se muestra; con movimiento reducido se usa un fundido de 180 ms. Una jugada más reciente restaura la mesa vigente. Los robos normales responden sin esperar su animación.
 
+Cada renovación nueva suena como una recogida, barajado y reparto de papel en
+940 ms. El sonido también funciona con el mercado móvil cerrado, respetando
+silencio y pestaña oculta; abrir el panel o reconectar no vuelve a reproducirlo.
+
 Las ocho cartas de color tienen vagones SVG diferentes: rojo/pasajeros, azul/cisterna de combustible, verde/alfalfa, amarillo/tolva de grano, negro/carbón, blanco/piedra, naranja/troncos y morado/mercancías cerrado. Comparten ruedas de radios y marco ornamental, sin nombres de color impresos. Conservan esos nombres en su descripción accesible y tooltip. El fondo mate coincide con la tonalidad de las rutas del mapa; rojo y naranja ya no tienen degradado oscuro y el negro es profundo. Fuera de turno, las cartas y ambos mazos mantienen el 80 % de opacidad, sin desaturación; los controles habilitados siguen al 100 %. Las cargas son decorativas: no modifican ninguna regla.
 
 Al aceptar un robo, el servidor emite un identificador de movimiento. La carta viaja durante **750 ms** hasta la mano propia o el avatar rival. Los robos de la mesa muestran su color; los del mazo viajan boca abajo y solo se giran para quien roba. El servidor no envía el color oculto a los demás jugadores. Una reconexión no reproduce robos anteriores y los movimientos rechazados no generan animación. Se respeta la preferencia de movimiento reducido y se cancelan vuelos al ocultar la pestaña, redimensionar, desconectar o terminar la partida.
 
-Los efectos de sonido son originales y sintetizados localmente: papel al robar cada carta o pedir una oferta de destinos, barajado al renovar la mesa, golpe de madera al completar una ruta o colocar una estación, y campana solo al comenzar tu turno. Los movimientos públicos de rivales también se oyen, sin revelar cartas ocultas. El altavoz de la cabecera permite silenciar y recuerda la preferencia; el navegador requiere una primera interacción para activar audio. No se reproducen efectos históricos al reconectar ni mientras la pestaña está oculta.
+Los efectos de sonido son originales y sintetizados localmente: papel al robar cada carta o pedir una oferta de destinos, barajado al renovar la mesa, golpe de madera al completar una ruta o colocar una estación, y campana solo al comenzar tu turno. Los movimientos públicos de rivales también se oyen, sin revelar cartas ocultas. El altavoz del menú o la tecla **M** permiten silenciar y recuerdan la preferencia;
+un toast confirma el cambio y el atajo no actúa al escribir ni se repite al mantener
+la tecla pulsada. Marcar un billete inicial o nuevo produce un solo roce continuo
+de pluma de 130–150 ms, desmarcarlo uno de 105 ms y confirmar conserva la firma
+de varios trazos de 350 ms al recibir la
+aceptación del servidor. No suena al comparar destinos, recuperar borradores ni
+recibir cambios de otros jugadores; los trazos rápidos no se superponen; el navegador requiere una primera interacción para activar audio. No se reproducen efectos históricos al reconectar ni mientras la pestaña está oculta.
+
+Al quedar menos de cinco segundos de tu turno o de tu elección de billetes
+iniciales/nuevos, suena un tic-tac de reloj de pared una vez por segundo.
+También avisa con la oferta minimizada; se detiene al resolverla o vencer el
+plazo y respeta silencio, pausas y desconexiones. No avisa de relojes ajenos ni
+en repeticiones. Varias vistas del mismo reloj no duplican el sonido.
 
 Cada jugador se identifica por su nombre, color y familia de vagones, sin símbolos geométricos por puesto. El avatar conserva el color como fondo. El robot usa relleno marfil y contorno oscuro como la persona, con antena dorada. Pasar el cursor o enfocar al jugador resalta sus rutas. La nueva paleta amarillo/ámbar también se aplica a partidas existentes, sin modificar sus claves de color guardadas. Las rutas neutras son gris medio; las blancas y sus cartas son marfil claro. Esta distinción visual no cambia el reglamento.
+
+Jugadores, historial, resultados y clasificación del camino más largo comparten
+las proporciones del avatar: el robot ocupa el 80 % del interior del círculo,
+con un pequeño margen uniforme alrededor.
 
 Pulsa una ruta libre y después **Construir** para abrir el pago. El botón solo aparece durante tu turno jugable, antes de robar una carta y sin elecciones obligatorias pendientes; fuera de turno o al terminar, el menú es informativo. Si ya está ocupada, muestra únicamente al propietario; las propias indican «Esta ruta es tuya». Cada carril de una ruta doble se evalúa por separado. Se comprueban todos los colores legales y las locomotoras disponibles; si no alcanzan, aparece un aviso. Un túnel requiere poder pagar su coste inicial, no el suplemento todavía desconocido. Al revelarlo, el modal señala qué cartas aumentan el coste, muestra el pago base reservado y ofrece las combinaciones legales del suplemento (color, locomotoras o ambos), con el total antes de confirmar. No cuenta dos veces las cartas reservadas. Pulsa una ciudad libre para **Construir estación**; una ocupada identifica al dueño. Las estaciones tienen tejado y fachada del color del jugador, borde marfil, contorno oscuro y tamaño mínimo legible al alejar el mapa. Cancelar o Escape antes de confirmar no consume el turno; una vez revelado un túnel, hay que pagar o desistir. Desistir conserva la mano, pero termina el turno.
 
@@ -130,12 +185,14 @@ Pasar el cursor o enfocar un mini billete de **Tus destinos** oscurece solo el m
 
 Una construcción aceptada hace descender las piezas 3D, ya orientadas sobre sus casillas, durante **500 ms**, con un ligero desfase entre vagones. Las estaciones usan el mismo gesto. Al aterrizar suena una sola vez el golpe. La banda de propiedad señala la conexión aceptada. La caída de piezas no retrasa por sí misma el turno ni se repite al reconectar. En túneles se respeta además la secuencia compartida descrita abajo. Con movimiento reducido, la colocación y su sonido son inmediatos; ocultar, desconectar o redimensionar termina los efectos pendientes sin alterar la jugada.
 
-- **Elección inicial simultánea: un minuto compartido.** Cada jugador recibe sus cuatro billetes privados y confirma al menos dos, en cualquier orden. Quien confirma puede explorar el mapa mientras espera; se muestra cuántos están listos. Al confirmar todos comienza el jugador sorteado, no el primero en confirmar. Al vencer el plazo, cada pendiente conserva dos billetes distintos al azar y empieza la partida. Reconectar no reinicia el minuto; las partidas antiguas conservan sus elecciones y usan el plazo que ya tenían.
-- **Túneles compartidos:** todos los jugadores y espectadores ven quién intenta la ruta, las cartas reveladas y el resultado. Cada carta aparece cada 700 ms; tras la última se dejan otros 700 ms antes de resolver. Durante la revelación el reloj del constructor está congelado. Con suplemento solo él decide pagar o desistir usando el tiempo que le quedaba; al agotarse, desiste. Sin suplemento se construye automáticamente. El resultado dura un segundo y se cierra solo, antes de comenzar el siguiente turno. Los bots respetan estas etapas. Los billetes pendientes conservan su borrador y su tiempo restante mientras el modal está abierto. Recargar, reducir movimiento u ocultar una pestaña no adelanta ni prolonga los plazos del servidor.
-- **Turno normal: 60 segundos.** Una primera carta no reinicia el reloj. Al vencer, se roban del mazo las dos cartas pendientes, o solo la restante. Si no hay suficientes, se toman las disponibles y pasa el turno. Un túnel aún sin resolver se abandona conservando el pago reservado.
-- Pedir nuevos destinos consume el turno inmediatamente: el siguiente jugador continúa mientras eliges. Cada oferta privada tiene **60 segundos propios**. **Ver mapa** minimiza el diálogo sin detener el reloj ni borrar tu selección; **Elegir billetes** permite volver mientras juegan los demás; si vuelve tu turno pendiente de elegir, se abre y debe resolverse primero. Confirmar (o vencer el plazo de elección) inicia entonces los **60 segundos completos del nuevo turno**. Confirmar fuera de turno no modifica el reloj del jugador activo.
+- **Elección inicial simultánea: 30, 60 o 90 segundos compartidos.** Cada jugador recibe sus cuatro billetes privados y confirma al menos dos, en cualquier orden. Quien confirma puede explorar el mapa mientras espera; se muestra cuántos están listos. Al confirmar todos comienza el jugador sorteado, no el primero en confirmar. Al vencer el plazo, cada pendiente conserva dos billetes distintos al azar y empieza la partida. Reconectar no reinicia el plazo; las partidas antiguas conservan sus elecciones y usan el plazo que ya tenían.
+- **Túneles compartidos:** todos los jugadores y espectadores ven quién intenta la ruta, las cartas reveladas y el resultado. Cada carta aparece cada 700 ms; tras la última se dejan otros 700 ms antes de resolver. Durante la revelación el reloj del constructor está congelado. Con suplemento solo él decide pagar o desistir usando el tiempo que le quedaba; al agotarse, desiste. Sin suplemento se construye automáticamente. El resultado dura tres segundos y se cierra solo, antes de comenzar el siguiente turno. Los bots respetan estas etapas. Los billetes pendientes conservan su borrador y su tiempo restante mientras el modal está abierto. Recargar, reducir movimiento u ocultar una pestaña no adelanta ni prolonga los plazos del servidor.
+- **Turno normal: 30, 60 o 90 segundos según la sala.** Una primera carta no reinicia el reloj. Al vencer, se roban del mazo las dos cartas pendientes, o solo la restante. Si no hay suficientes, se toman las disponibles y pasa el turno. Un túnel aún sin resolver se abandona conservando el pago reservado.
+- Pedir nuevos destinos consume el turno inmediatamente: el siguiente jugador continúa mientras eliges. Cada oferta privada recibe **el tiempo restante del turno +15 o +30 segundos**,
+según la sala. Por ejemplo, 20 s restantes con +30 s dan 50 s para elegir. **Ver mapa** minimiza el diálogo sin detener el reloj ni borrar tu selección; **Elegir billetes** permite volver mientras juegan los demás; si vuelve tu turno pendiente de elegir, se abre y debe resolverse primero. Confirmar (o vencer el plazo de elección) inicia entonces la **duración completa configurada para el nuevo turno**. Confirmar fuera de turno no modifica el reloj del jugador activo.
 - No se puede pedir otra oferta sin resolver la anterior. Al vencer la oferta sin confirmar, se conserva exactamente un billete al azar entre los ofrecidos; las casillas marcadas son solo un borrador, no una confirmación.
 - Si termina la última ronda con ofertas pendientes, se espera su plazo restante antes de puntuar. Terminar una prueba manualmente las resuelve al azar de inmediato.
+- Las partidas ya iniciadas sin configuración mantienen sus turnos y ofertas de 60 s; no se reinician plazos al actualizar.
 - El servidor conserva plazos absolutos, resuelve automáticamente incluso sin acciones del navegador y no concede tiempo extra por recargar o reconectar. Las selecciones de la oferta se guardan como borrador local y se restauran mientras siga vigente.
 
 ### Revisar el final
@@ -154,12 +211,12 @@ Una construcción aceptada hace descender las piezas 3D, ya orientadas sobre sus
 
 ### Sesiones, ausencias y recuperación
 
-- Los billetes iniciales y las ofertas nuevas empiezan sin casillas marcadas. La confirmación requiere el mínimo y los borradores manuales sobreviven a recargas. Sin confirmar, sigue aplicándose la selección aleatoria al vencer los 60 segundos.
+- Los billetes iniciales y las ofertas nuevas empiezan sin casillas marcadas. La confirmación requiere el mínimo y los borradores manuales sobreviven a recargas. Sin confirmar, sigue aplicándose la selección aleatoria al vencer su plazo.
 - Solo hay tres estaciones por jugador, con costes 1/2/3. Una vez agotadas, el menú informa de ello sin ofrecer construcción ni un coste de cuatro cartas.
-- **Partida**, en la cabecera, permite salir, copiar el **enlace privado de recuperación** y renovarlo. La invitación pública solo contiene el código de sala; el enlace de recuperación contiene una credencial en el fragmento, se limpia de la barra al entrar y nunca debe compartirse. En disco se guarda su hash. Renovarlo revoca el anterior. La cuenta opcional de Google añade recuperación de salas vinculadas; requiere [activación](docs/GOOGLE_AUTH.md).
+- **Menú de partida**, en el engranaje, permite abandonar, copiar el **enlace privado de recuperación** y renovarlo. La invitación pública solo contiene el código de sala; el enlace de recuperación contiene una credencial en el fragmento, se limpia de la barra al entrar y nunca debe compartirse. En disco se guarda su hash. Renovarlo revoca el anterior. La cuenta opcional de Google añade recuperación de salas vinculadas; requiere [activación](docs/GOOGLE_AUTH.md).
 - En la sala previa, salir libera el puesto inmediatamente; una desconexión lo reserva 60 segundos. El anfitrión puede retirar a otro participante antes de empezar. Si sale, la autoridad pasa a otro conectado; si pierde conexión, se espera el margen de 60 segundos.
 - En partida, los puestos y las piezas nunca se eliminan por desconexión. Después de **dos turnos consecutivos agotados**, un bot de reemplazo decide al azar entre construir una ruta pagable o robar una fuente legal de mesa/mazo. No pide destinos, no coloca estaciones ni consulta cartas rivales. Resuelve el suplemento de sus túneles según pueda pagarlo. Una salida voluntaria activa el bot directamente.
-- Si el bot tiene el control, usa **Partida → Recuperar control**; una reconexión lo solicita automáticamente. Se devuelve al siguiente turno humano, sin interrumpir una primera carta o un túnel del bot. Completar un turno manual rompe la racha de ausencias; tomar solo una carta no la rompe.
+- Si el bot tiene el control, usa **Menú de partida → Recuperar control**; una reconexión lo solicita automáticamente. Se devuelve al siguiente turno humano, sin interrumpir una primera carta o un túnel del bot. Completar un turno manual rompe la racha de ausencias; tomar solo una carta no la rompe.
 - Una segunda pestaña toma la sesión y la anterior deja de reconectarse. Esta ofrece un botón explícito para recuperar el control de la conexión.
 - Si **todos** pierden conexión, se detienen relojes y bots durante un margen de reconexión de 60 segundos. Al regresar se conserva el tiempo restante, no se reinicia el turno. Si nadie vuelve, se abandona y elimina la sala, sin simular partidas entre bots. No se ofrece reanudación a las 24 horas. Las salas que sigan existiendo mantienen el límite general de inactividad de 24 horas.
 - Al terminar, **Volver al inicio** permite salir y **Revancha** reúne en una sala nueva a quienes acepten. Los resultados anteriores se conservan mientras exista su sala (el mismo margen de abandono se aplica si todos se marchan).
@@ -249,7 +306,7 @@ Si falla el guardado remoto, no hay fallback al disco efímero: se pausa y no se
 
 - Mapa continuo de fondo, zoom 25%–300%, arrastre a cualquier escala y pantalla completa conservando los controles.
 - Etiquetas de ciudades reforzadas, rutas coloreadas con mayor contraste y selección visible.
-- Jugadores en el lateral, con iconos y contadores de puntos, vagones y estaciones.
+- Jugadores en el lateral, con iconos y contadores de puntos, cartas, vagones y estaciones.
 - Mano de cartas SVG siempre visible, con contadores grandes; cuatro destinos visibles y consulta en **Ver rutas**, construcción contextual e historial abierto con scroll independiente.
 - Botón **Invitar** durante partidas multijugador; las salas con bots siguen siendo privadas para su creador.
 - Descripción explícita del coste de cada ruta, incluidos los requisitos de locomotoras de los ferris.

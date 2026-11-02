@@ -24,6 +24,8 @@ Para después:
 
 Mejoras solicitadas del juego:
 
+- [Controles de mesa y sala](table-controls.md).
+
 - [Inteligencia de bots de práctica](practice-ai.md).
 - [Billetes, túneles compartidos y resultados](game-flow-ui.md).
 - [Miniaturas, renovación de cartas y pagos visuales](card-interactions.md).

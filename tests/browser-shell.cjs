@@ -4,7 +4,7 @@ const {chromium}=require('playwright');
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'trencitos-shell-'));
 process.env.STATE_BACKEND='file';process.env.STATE_FILE=path.join(temp,'rooms.json');process.env.AUTH_ENABLED='false';
 const app=require('../server');
-const out=path.resolve(__dirname,'../docs/qa');fs.mkdirSync(out,{recursive:true});
+const out=path.resolve(process.env.QA_OUT || path.join(__dirname,'../docs/qa'));fs.mkdirSync(out,{recursive:true});
 const report={date:new Date().toISOString(),tests:[],responsive:[],errors:[]};
 const save=()=>fs.writeFileSync(path.join(out,'shell-report.json'),JSON.stringify(report,null,2)+'\n');
 (async()=>{
@@ -39,12 +39,12 @@ const save=()=>fs.writeFileSync(path.join(out,'shell-report.json'),JSON.stringif
  try{
   await Promise.all(pages.map(p=>p.goto(base+'/rooms')));
   await host.waitForFunction(()=>!document.querySelector('#create').disabled);
-  await name(host,'Maquinista');await host.reload();await host.waitForFunction(()=>document.querySelector('.header-user strong').textContent==='Maquinista');
-  await host.locator('#editProfile').click();await host.locator('#profileName').fill('Descartar');await host.keyboard.press('Escape');assert.equal(await host.locator('.header-user strong').textContent(),'Maquinista');
+  await name(host,'Maquinista');await host.reload();await host.waitForFunction(()=>document.querySelector('.profile-heading [data-username]').textContent==='Maquinista');
+  await host.locator('#editProfile').click();await host.locator('#profileName').fill('Descartar');await host.keyboard.press('Escape');assert.equal(await host.locator('.profile-heading [data-username]').textContent(),'Maquinista');
   await shot(host,'profile-desktop');await host.locator('#editProfile').click();await shot(host,'edit-profile');await host.keyboard.press('Escape');
   await nav(host,'more');assert.equal(await host.locator('#socialIcons a').count(),0);assert.equal(await host.locator('#socialIcons > span').count(),6);
-  await host.locator('#moreGroups [data-language]').click();assert.equal(await host.locator('#languageSelect option').count(),1);await host.keyboard.press('Escape');
-  await host.locator('[data-content="rules"]').click();assert.equal(await host.locator('#contentTitle').textContent(),'Rules');await host.goBack();assert.equal(await host.locator('#morePage').isVisible(),true);
+  await host.locator('#moreGroups [data-language]').click();assert.equal(await host.locator('#languageSelect option').count(),2);await host.keyboard.press('Escape');
+  await host.locator('[data-content="rules"]').click();assert.equal(await host.locator('#contentTitle').textContent(),'Reglas');await host.goBack();assert.equal(await host.locator('#morePage').isVisible(),true);
   for(const [w,h] of [[1920,929],[1440,900],[1280,800],[1181,820],[1180,820],[1025,768],[1024,768],[992,900],[991,900],[768,1024],[767,1024],[521,844],[520,844],[390,844],[360,800],[844,390]]){
    await nav(host,'more');await layout(host,'more',w,h);
    if([1920,768,390].includes(w))await shot(host,`more-${w}`);
@@ -59,9 +59,9 @@ const save=()=>fs.writeFileSync(path.join(out,'shell-report.json'),JSON.stringif
   await host.setViewportSize({width:1920,height:929});await host.locator('#create').click();await host.waitForSelector('#roompanel:not(.hidden)');
   const code=await host.locator('#roomcode').textContent();
   await viewer.waitForSelector(`[data-directory-room="${code}"]`);
-  await host.locator('#roomVisibility').selectOption('private');await viewer.waitForFunction(code=>!document.querySelector(`[data-directory-room="${code}"]`),code);
-  await host.locator('#roomVisibility').selectOption('public');await viewer.waitForSelector(`[data-directory-room="${code}"]`);
-  await host.locator('#roomCapacity').selectOption('3');await host.locator('[data-add-bot]').first().click();await host.waitForFunction(()=>document.querySelector('#roomCount').textContent==='2/3');
+  await host.locator('#roomVisibility').click();await viewer.waitForFunction(code=>!document.querySelector(`[data-directory-room="${code}"]`),code);
+  await host.locator('#roomVisibility').click();await viewer.waitForSelector(`[data-directory-room="${code}"]`);
+  for(const value of [4,3]){await host.locator('[data-setting="roomCapacity"] [data-step="-1"]').click();await host.waitForFunction(value=>+document.querySelector('#roomCapacity').value===value,value);}await host.locator('[data-add-bot]').first().click();await host.waitForFunction(()=>document.querySelector('#roomCount').textContent==='2/3');
   await nav(host,'profile');
   await name(guest,'Pasajera');await nav(guest,'rooms');await guest.locator('#openJoin').click();await guest.locator('#code').fill(code);await guest.locator('#join').click();await guest.waitForSelector('#roompanel:not(.hidden)');
   await host.waitForFunction(()=>document.querySelector('#roomCount').textContent==='3/3');assert.equal(await host.locator('#profilePage').isVisible(),true);assert.match(host.url(),/profile/);
@@ -87,16 +87,16 @@ const save=()=>fs.writeFileSync(path.join(out,'shell-report.json'),JSON.stringif
   await host.waitForFunction(()=>game?.phase==='play');
   await viewer.locator('#spectateTab').click();await viewer.locator(`[data-directory-room="${code}"]`).click();await viewer.waitForFunction(()=>game?.spectator&&!!board3D);
   assert.deepEqual(await viewer.evaluate(()=>({seat,hand:game.hand,tickets:game.tickets,initial:game.initial,offer:game.ticketOffer,token})),{seat:-1,hand:[],tickets:[],initial:null,offer:null,token:undefined});
-  assert.equal(await viewer.locator('.dockmain').isVisible(),false);assert.equal(await viewer.locator('#sessionControls').isVisible(),false);
+  assert.equal(await viewer.locator('.dockmain').isVisible(),false);assert.equal(await viewer.locator('#sessionControls').isVisible(),true);assert.equal(await viewer.locator('#privateSession').isVisible(),false);
   await shot(viewer,'spectate-desktop');await viewer.setViewportSize({width:390,height:844});await shot(viewer,'spectate-mobile');
   await viewer.reload();await viewer.waitForFunction(()=>game?.spectator);assert.equal(app.rooms.get(code).members.length,3);
-  await viewer.locator('#leaveWatch').click();await viewer.waitForSelector('#roomsPage:visible');assert.equal(app.rooms.get(code).members.length,3);
+  await viewer.locator('#sessionControls summary').click();await viewer.locator('#leaveWatch').click();await viewer.waitForSelector('#roomsPage:visible');assert.equal(app.rooms.get(code).members.length,3);
   report.tests.push('Real public/private directory, create/join, independent host/guest, settings authorization, full room, durable bots, initial selection, spectator privacy/reload/exit');
   // A backend-confirmed profile write must close the modal only on success.
   const account=await newPage();let stored={id:'test-account',initialized:true,nickname:'Cuenta QA',color:'#d9564a'},fail=false;
   await account.route('**/api/account**',async route=>{const u=new URL(route.request().url());if(u.pathname==='/api/account/profile'){if(fail)return route.fulfill({status:500,json:{message:'Guardado de prueba rechazado'}});stored={...stored,...route.request().postDataJSON()};return route.fulfill({json:{profile:stored}});}return route.fulfill({json:u.pathname.endsWith('/rooms')?{rooms:[]}:{enabled:true,profile:stored}});});
-  await account.goto(base+'/profile');await account.waitForFunction(()=>document.querySelector('.header-user strong').textContent==='Cuenta QA');await name(account,'Nuevo nombre');assert.equal(stored.nickname,'Nuevo nombre');await account.reload();await account.waitForFunction(()=>document.querySelector('.header-user strong').textContent==='Nuevo nombre');
-  fail=true;await account.locator('#editProfile').click();await account.locator('#profileName').fill('No guardar');await account.locator('#saveProfile').click();await account.waitForFunction(()=>document.querySelector('#profileError').textContent.includes('rechazado'));assert.equal(await account.locator('#profileDialog').evaluate(el=>el.open),true);assert.equal(await account.locator('.header-user strong').textContent(),'Nuevo nombre');
+  await account.goto(base+'/profile');await account.waitForFunction(()=>document.querySelector('.profile-heading [data-username]').textContent==='Cuenta QA');await name(account,'Nuevo nombre');assert.equal(stored.nickname,'Nuevo nombre');await account.reload();await account.waitForFunction(()=>document.querySelector('.profile-heading [data-username]').textContent==='Nuevo nombre');
+  fail=true;await account.locator('#editProfile').click();await account.locator('#profileName').fill('No guardar');await account.locator('#saveProfile').click();await account.waitForFunction(()=>document.querySelector('#profileError').textContent.includes('rechazado'));assert.equal(await account.locator('#profileDialog').evaluate(el=>el.open),true);assert.equal(await account.locator('.profile-heading [data-username]').textContent(),'Nuevo nombre');
   report.tests.push('Profile API success/reload and failure keeps modal/name unchanged (HTTP double, no production account)');
   // Expected 500 for the deliberately rejected profile request above.
   report.errors=report.errors.filter(e=>!e.includes('500 (Internal Server Error)'));

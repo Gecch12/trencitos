@@ -32,6 +32,9 @@ const PLAYER_PALETTE = [
   { color: "#ed897c", name: "Coral" },
   { color: "#b9ace2", name: "Lavanda" },
   { color: "#9ed7ed", name: "Azul hielo" },
+  { color: "#71bba0", name: "Jade" },
+  { color: "#6269c7", name: "Índigo" },
+  { color: "#edadd0", name: "Rosa" },
 ];
 const PLAYER_COLORS = PLAYER_PALETTE.map(({ color }) => color);
 const CITIES = {

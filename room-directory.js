@@ -8,7 +8,7 @@ function listRooms(rooms) {
   return [...rooms.values()].filter(room => isPublic(room) && room.game?.phase !== "finished" && room.emptySince == null)
     .map(room => ({
       code: room.code, started: !!room.game, maxPlayers: capacity(room),
-      mode: "Clásico", map: "Europa", turnSeconds: Engine.TURN_MS / 1000,
+      mode: "Clásico", map: "Europa", turnSeconds: room.game?.timing?.turnSeconds || room.timing?.turnSeconds || Engine.TURN_MS / 1000,
       members: room.members.map(m => ({ name: m.name, color: m.color, bot: !!m.bot })),
     })).sort((a, b) => a.code.localeCompare(b.code));
 }

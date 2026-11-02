@@ -1,5 +1,6 @@
 'use strict';
 const I18n = require('./i18n');
+const GameTiming = require('./game-timing');
 const crypto=require('node:crypto');
 // Per-action randomness stays outside serialized state. Simulations can supply
 // an isolated stream for all draws/recycles without patching global crypto.
@@ -20,14 +21,14 @@ function event(g,type,seat,details={}){g.eventSerial=(g.eventSerial||0)+1;(g.eve
 function startTurn(g,now=Date.now()){
  g.turnSerial=(g.turnSerial||0)+1;g.turnSeat=g.current;g.turnClockPhase=g.phase==='initial'?'initial':'play';
  g.turnWaiting=!!(g.phase==='play'&&g.players[g.current].offer);
- if(g.phase==='initial')g.initialDeadline??=Number.isFinite(g.turnDeadline)?g.turnDeadline:now+INITIAL_MS;
- g.turnDeadline=g.phase==='initial'?g.initialDeadline:g.turnWaiting?null:now+TURN_MS;
+ if(g.phase==='initial')g.initialDeadline??=Number.isFinite(g.turnDeadline)?g.turnDeadline:now+(g.timing?.initialSeconds*1000||INITIAL_MS);
+ g.turnDeadline=g.phase==='initial'?g.initialDeadline:g.turnWaiting?null:now+(g.timing?.turnSeconds*1000||TURN_MS);
  if(!g.turnWaiting&&g.phase!=='initial')event(g,'turn',g.current);
 }
 function ensureTiming(g,now=Date.now()){
  if(g.phase==='tunnel'&&g.pending&&!g.pending.stage){
   // Resume older payment decisions without replaying the reveal or granting time.
-  g.turnDeadline=Number.isFinite(g.turnDeadline)?g.turnDeadline:now+TURN_MS;
+  g.turnDeadline=Number.isFinite(g.turnDeadline)?g.turnDeadline:now+(g.timing?.turnSeconds*1000||TURN_MS);
   Object.assign(g.pending,{stage:'decision',startedAt:now,until:null,turnRemaining:Math.max(0,g.turnDeadline-now),
    offerRemaining:g.players.map(p=>p.offer?Math.max(0,p.offer.deadline-now):null)});
  }
@@ -35,7 +36,7 @@ function ensureTiming(g,now=Date.now()){
  if(g.phase==='initial'){
   // Upgrade sequential saved games without discarding choices or granting a
   // new minute. The existing absolute deadline becomes the shared deadline.
-  g.initialDeadline??=Number.isFinite(g.turnDeadline)?g.turnDeadline:now+INITIAL_MS;
+  g.initialDeadline??=Number.isFinite(g.turnDeadline)?g.turnDeadline:now+(g.timing?.initialSeconds*1000||INITIAL_MS);
   g.initialDone=g.players.filter(p=>!p.pending.length).length;
   g.current=g.first;g.turnSeat=g.first;g.turnClockPhase='initial';g.turnWaiting=false;g.turnDeadline=g.initialDeadline;
   return;
@@ -74,17 +75,18 @@ function refill(g){
  g.face=shuffle(g.face,randomFor(g));
  event(g,'market_refresh',null,{before,after:[...g.face]});
 }
-function newGame(names,first=0,now=Date.now()){if(!Array.isArray(names)||names.length<2||names.length>5)fail('Se requieren 2–5 jugadores.');
+function newGame(names,first=0,now=Date.now(),timing=null){if(!Array.isArray(names)||names.length<2||names.length>5)fail('Se requieren 2–5 jugadores.');
  if(!Number.isInteger(first)||first<0||first>=names.length)fail('Primer jugador inválido.');
  let g={phase:'initial',current:first,first,initialDone:0,players:names.map((name,i)=>({name:String(name).slice(0,24),color:PLAYER_COLORS[i],hand:[],tickets:[],pending:[],trains:45,stations:3,placed:[],score:0})),routes:ROUTES.map(r=>({...r,owner:null})),deck:shuffle(COLORS.flatMap(x=>Array(12).fill(x)).concat(Array(14).fill('wild'))),discard:[],face:[],shortDeck:shuffle(TICKETS.filter(x=>!x.long)),finalRemaining:null,lastTrigger:null,drawCount:0,pending:null,logs:[],result:null};
+ if(timing)g.timing=GameTiming.normalize(timing);
  const long=shuffle(TICKETS.filter(x=>x.long));
  g.players.forEach(p=>{for(let j=0;j<4;j++)p.hand.push(draw(g));p.pending=[long.pop(),...g.shortDeck.splice(0,3)]});
  refill(g);startTurn(g,now);return g}
 // Production starts are chosen once on the server; explicit first seats remain
 // available for deterministic fixtures and rule tests.
-function newRandomGame(names,now=Date.now(),random=crypto.randomInt){
+function newRandomGame(names,now=Date.now(),random=crypto.randomInt,timing=null){
  if(!Array.isArray(names)||names.length<2||names.length>5)fail('Se requieren 2–5 jugadores.');
- const g=newGame(names,random(names.length),now);
+ const g=newGame(names,random(names.length),now,timing);
  note(g,I18n.message`${g.players[g.first].name} empieza la partida (sorteo aleatorio).`,g.first);return g;
 }
 function historyEntries(g){return g.logs.map((text,i)=>g.history?.[i]?.text===text?g.history[i]:{id:null,text,seat:null})}
@@ -199,7 +201,8 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
   if(p.offer)fail('Confirma primero tus billetes pendientes.');
   if(!g.shortDeck.length)fail('No quedan billetes de destino.');
   g.offerSerial=(g.offerSerial||0)+1;
-  p.offer={id:g.offerSerial,tickets:g.shortDeck.splice(0,3),deadline:now+OFFER_MS};
+  const duration=g.timing?Math.max(0,g.turnDeadline-now)+g.timing.ticketExtraSeconds*1000:OFFER_MS;
+  p.offer={id:g.offerSerial,tickets:g.shortDeck.splice(0,3),duration,deadline:now+duration};
   event(g,'tickets',seat);note(g,I18n.message`${p.name} está eligiendo nuevos billetes.`,seat);next(g,now);return;
  }
  if(msg.type==='station'){
@@ -317,7 +320,7 @@ function addScoreDetails(g,trails=g.players.map((_,i)=>longestTrail(g,i))){
 function drawEvent(g,seat){const e=g.lastDraw;if(!e)return null;return {id:e.id,seat:e.seat,index:e.index,...(e.index>=0||e.seat===seat?{color:e.color}:{})}}
 function view(g,seat){const spectator=seat===-1,p=spectator?{hand:[],tickets:[],pending:[],offer:null}:g.players[seat],own=seat===g.current,details=spectator?{progress:[],paths:[]}:destinationDetails(g,seat);if(g.phase==='finished'&&g.result.some(r=>!r.details))addScoreDetails(g);return {
  spectator,
- uiVersion:8,serverNow:Date.now(),turnDeadline:g.turnDeadline,turnSerial:g.turnSerial,turnWaiting:!!g.turnWaiting,
+ uiVersion:9,timing:g.timing||null,serverNow:Date.now(),turnDeadline:g.turnDeadline,turnSerial:g.turnSerial,turnWaiting:!!g.turnWaiting,
  initialDeadline:g.initialDeadline,initialReadyCount:g.players.filter(p=>!p.pending.length).length,
  waitingDeadline:g.turnWaiting?g.players[g.current].offer?.deadline:null,
  closingDeadline:g.phase==='closing'?Math.max(...g.players.map(p=>p.offer?.deadline||0)):null,

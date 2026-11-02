@@ -75,6 +75,25 @@ test('guest ownership uses an unguessable cookie, not the nickname; cookie is Ht
  req.headers.cookie=cookie.split(';')[0];assert.equal(guestId(req),id);assert.equal(ensureGuest(req,res),id);
  assert.notEqual(ensureGuest(req,res,true),id);assert.equal(guestId({headers:{cookie:'trencitos_guest=Rooms'}}),null);
 });
+test('history identifies the owned seat with duplicate names, applies all tie breaks and leaves unfinished ranks empty',async()=>{
+ const {archive,room,save}=fixture();const identity={guestId:'b'.repeat(64)};
+ let row=(await archive.list(identity))[0];assert.equal(row.ownSeat,1);assert.equal(row.rank,null);
+ Engine.finish(room.game,true);save();
+ const record=archive.state.matches[room.matchId];record.players.forEach(p=>p.name='Angel');
+ const base={score:100,completed:2,stations:8,express:0};
+ record.scores=[{seat:0,...base},{seat:1,...base}];
+ row=(await archive.list(identity))[0];assert.equal(row.rank,1);assert.equal(row.ownSeat,1);
+ for(const delta of [{score:101},{completed:3},{stations:12},{express:10}]){
+  record.scores[0]={seat:0,...base,...delta};assert.equal((await archive.list(identity))[0].rank,2);
+ }
+ record.scores[0]={seat:0,...base,score:99,completed:20,stations:12,express:10};
+ assert.equal((await archive.list(identity))[0].rank,1);
+ record.status='abandoned';assert.equal((await archive.list(identity))[0].rank,null);
+ const claim=await archive.claim(identity.guestId,'account-b');archive.restore({...archive.state,...claim});
+ row=(await archive.list({accountId:'account-b'}))[0];assert.equal(row.ownSeat,1);
+ assert.ok(row.players.every(p=>!('guestId' in p)&&!('accountId' in p)));
+ assert.deepEqual(await archive.list(identity),[]);
+});
 test('orphaned active recordings close on restart, and existing rooms remain active',async()=>{
  const {archive,room}=fixture();await archive.bootstrap(new Map([[room.code,room]]));assert.equal(archive.state.matches[room.matchId].status,'active');
  await archive.bootstrap(new Map());assert.equal(archive.state.matches[room.matchId].status,'abandoned');

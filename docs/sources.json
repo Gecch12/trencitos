@@ -14,6 +14,7 @@
     "supabase/",
     "package.json",
     "app.js",
+    "game-ui.js",
     "board-3d.js",
     "board-camera.js",
     "map-layout.js",
@@ -30,7 +31,8 @@
     "room-bots.js",
     "shell.js",
     "shell.css",
-    "shell-icons.js"
+    "shell-icons.js",
+    "game-timing.js"
   ],
   "domain.md": [
     "engine.js",
@@ -41,7 +43,10 @@
     "lobby-ui.js",
     "account-seats.js",
     "room-directory.js",
-    "room-bots.js"
+    "room-bots.js",
+    "game-timing.js",
+    "server.js",
+    "room-store.js"
   ],
   "operations.md": [
     "package.json",
@@ -132,5 +137,24 @@
     "tests/archive-sql.test.js",
     "tests/history-server.test.js",
     "tests/i18n.test.js"
+  ],
+  "work/table-controls.md": [
+    "game-timing.js",
+    "shell.js",
+    "shell.css",
+    "app.js",
+    "game.css",
+    "responsive.css",
+    "index.html",
+    "tests/room-timing.test.js",
+    "tests/browser-table-controls.cjs",
+    "game-ui.js",
+    "tests/presentation-controls.test.js",
+    "tests/browser-player-feedback.cjs",
+    "tests/browser-refinements.cjs",
+    "history-ui.js",
+    "match-archive.js",
+    "wagon-models.mjs",
+    "wagon-renderer.js"
   ]
 }

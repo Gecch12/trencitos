@@ -22,6 +22,20 @@ const GameUI = (() => {
   function needsSecondDraw(game, seat, panel, controlled = true) {
     return !!(controlled && game?.phase === "play" && !game.turnWaiting && game.current === seat && game.drawCount === 1 && panel !== "cards");
   }
+  // Only deadlines that still require this player's decision can make a sound.
+  function urgentClock(game, seat, now) {
+    if (!game || seat < 0 || game.spectator || !game.players[seat] || ["finished", "abandoned"].includes(game.phase)) return null;
+    const clocks = [];
+    if (game.phase === "initial" && game.initial?.length) clocks.push({ kind: "initial", deadline: game.initialDeadline });
+    if (game.ticketOffer && game.sharedTunnel?.offerRemaining == null) clocks.push({ kind: "offer", deadline: game.ticketOffer.deadline });
+    if (game.current === seat && !game.turnWaiting && !game.ticketOffer &&
+        (game.phase === "play" || game.phase === "tunnel" && game.sharedTunnel?.stage === "decision")) {
+      clocks.push({ kind: "turn", deadline: game.turnDeadline });
+    }
+    const clock = clocks.filter(c => Number.isFinite(c.deadline) && c.deadline > now && c.deadline - now < 5000)
+      .sort((a, b) => a.deadline - b.deadline)[0];
+    return clock ? { ...clock, seconds: Math.ceil((clock.deadline - now) / 1000) } : null;
+  }
   const YELLOW = "#f4d83d";
   const WHITE = "#fff9e9", NEUTRAL = "#929da5";
   // Shared map/card presentation palette. Asset tests guard against hue drift.
@@ -187,8 +201,8 @@ const GameUI = (() => {
     return { x: Math.max(left, Math.min(right, cx + dx * ratio)), y: Math.max(top, Math.min(bottom, cy + dy * ratio)), outside, angle: Math.atan2(dy, dx) * 180 / Math.PI };
   }
   // Fit in the unobscured rectangle, while the SVG still fills the whole stage.
-  function safeArea(viewport, { top = 8, right = 8, bottom = 8 } = {}) {
-    return { x: 8, y: Math.max(8, top), width: Math.max(1, viewport.width - 8 - right), height: Math.max(1, viewport.height - Math.max(8, top) - bottom) };
+  function safeArea(viewport, { top = 8, right = 8, bottom = 8, left = 8 } = {}) {
+    return { x: Math.max(8, left), y: Math.max(8, top), width: Math.max(1, viewport.width - Math.max(8, left) - right), height: Math.max(1, viewport.height - Math.max(8, top) - bottom) };
   }
   function pinchZoom(startZoom, startDistance, distance) {
     return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, startZoom * Math.max(1, distance) / Math.max(1, startDistance)));
@@ -253,6 +267,6 @@ const GameUI = (() => {
     }
     return base;
   }
-  return { resultStandings, resultSelection, payments, paymentGroups, tunnelPayments, tunnelShortfall, construction, canPass, camera, safeArea, pinchZoom, pinchTransform, zoomTransform, cityLabelScale, turnPresentation, needsSecondDraw, ROUTE_POINTS, overviewLabels, endpointPosition, playerColor, playerFinish, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, destinationEntries, destinationNumber, destinationSpotlightSelection, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, MIN_ZOOM, MAX_ZOOM };
+  return { resultStandings, resultSelection, payments, paymentGroups, tunnelPayments, tunnelShortfall, construction, canPass, camera, safeArea, pinchZoom, pinchTransform, zoomTransform, cityLabelScale, turnPresentation, needsSecondDraw, urgentClock, ROUTE_POINTS, overviewLabels, endpointPosition, playerColor, playerFinish, routeOwner, historyPrependCount, historyAnchorIndex, newDrawEvent, destinationStatus, destinationEntries, destinationNumber, destinationSpotlightSelection, ROUTE_COLORS, YELLOW, WHITE, NEUTRAL, MIN_ZOOM, MAX_ZOOM };
 })();
 if (typeof module !== "undefined") module.exports = GameUI;

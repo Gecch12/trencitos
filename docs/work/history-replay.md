@@ -1,10 +1,14 @@
 ---
-{"id":"history-replay","status":"validated","parent":null,"depends_on":["navigation-rooms","identity"],"branch":"main","delivery":"released","updated":"2026-10-31"}
+{"id":"history-replay","status":"validated","parent":null,"depends_on":["navigation-rooms","identity"],"branch":"main","delivery":"released","updated":"2026-11-02"}
 ---
 # Historial, repetición, idiomas y ajustes de observación
 
 Implementación autorizada después del análisis con `$moti`. Contrato canónico:
 [historial y replay](../history-replay.md). No implementa nuevos mapas.
+
+Refinamiento local de 2026-11-02: historial compacto y puesto del usuario por
+identidad, registrado y verificado en [Controles de mesa y sala](table-controls.md).
+La entrega histórica de abajo no incluye todavía este refinamiento.
 
 ## Aceptación
 

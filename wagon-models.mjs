@@ -18,6 +18,9 @@ export const WAGON_STYLES = Object.freeze([
   { color: '#ed897c', model: 'fruit', label: 'Fruta' },
   { color: '#b9ace2', model: 'flowers', label: 'Flores' },
   { color: '#9ed7ed', model: 'boat', label: 'Lancha' },
+  { color: '#71bba0', model: 'mushrooms', label: 'Jardín de hongos' },
+  { color: '#6269c7', model: 'crystals', label: 'Cristales' },
+  { color: '#edadd0', model: 'candy', label: 'Confitería' },
 ].map(style => Object.freeze({ finish: 'paint', ...style })));
 
 export function wagonStyle(color, customization = {}) {
@@ -58,6 +61,46 @@ export function wagonParts(model) {
     add('wheel', [x, y * 1.13, 1.4], [1.25, .18, 1.25], '#84918e', 'metal');
   }
   switch (model) {
+    case 'mushrooms': {
+      openBed(1.5);
+      box([0,0,3.85], [16.8,6.1,.55], '#729861', 'cargo');
+      for (const [x,z,color] of [[-5.5,7.1,'#ed816c'],[.2,8.2,'#c95471'],[5.7,6.7,'#e4b84c']]) {
+        add('disc',[x,0,(z+2.9)/2],[1.5,1.5,z-3.9],'#f6e7bc','cargo');
+        add('disc',[x,0,z-1.05],[5.5,5.8,.22],'#f4dcab','cargo');
+        add('mushroom-cap',[x,0,z],[5.6,6,2.3],color,'cargo');
+        for (const [dx,dy,dz,r] of [[0,0,1.1,1.1],[-1.2,-1.1,.7,.8],[1.1,1,.73,.9]]) {
+          add('mound',[x+dx,dy,z+dz],[r,r,.18],'#fff2d4','cargo');
+        }
+      }
+      for (const x of [-7.6,-2.7,3.3,7.9]) add('mound',[x,-2.4,4.25],[2.1,1.2,.6],'#97b977','cargo');
+      break;
+    }
+    case 'crystals': {
+      openBed(1.5);
+      box([0,0,3.8],[16.7,6.1,.45],'#546389','cargo');
+      for (const [x,y,height,width,color] of [
+        [-5.6,.6,4.5,3.4,'#ab87eb'],[-.6,.6,6.3,3.6,'#73d6df'],[5,.5,5.3,3.3,'#df8bc8'],
+        [-3,-1.8,3.1,2.5,'#df8bc8'],[2,-1.7,3.8,2.8,'#ab87eb'],[7,-1.4,2.4,2.2,'#73d6df'],
+      ]) add('crystal',[x,y,3.9+height/2],[width,width,height],color,'glass');
+      break;
+    }
+    case 'candy': {
+      openBed(1.6);
+      for (const [x,y,z,color] of [[-5.5,.8,7.4,'#f1ca64'],[0,.8,8.1,'#ee87b2'],[5.5,.8,7.1,'#7bc6c7']]) {
+        add('disc',[x,y,5.4],[.55,.55,3],'#fff0cd','cargo');
+        add('wheel',[x,y,z],[3.8,.9,3.8],color,'cargo');
+        for (const side of [-1,1]) {
+          add('wheel',[x,y+side*.47,z],[2.7,.12,2.7],'#fff1d4','cargo');
+          add('wheel',[x,y+side*.55,z],[1.7,.1,1.7],color,'cargo');
+          add('wheel',[x,y+side*.61,z],[.65,.08,.65],'#fff1d4','cargo');
+        }
+      }
+      for (const [x,color] of [[-3,'#b19bdf'],[3.4,'#e99779']]) {
+        add('mound',[x,-1.7,4.9],[3.1,2.6,1.9],color,'cargo');
+        for (const side of [-1,1]) add('rock',[x+side*2,-1.7,4.9],[1.5,2.4,1.7],color,'cargo');
+      }
+      break;
+    }
     case 'crane': {
       const superstructure = parts.length;
       box([0, 0, 3.2], [19.5, 7.8, .7]);

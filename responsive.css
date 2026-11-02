@@ -2,7 +2,7 @@
 .compact-hud, .compact-panel, .compact-players, .compact-player-detail { display: none; }
 
 @media (max-width: 1100px), (max-height: 600px) {
-  body.is-playing { --top-height: calc(50px + env(safe-area-inset-top)); --compact-bottom: calc(182px + env(safe-area-inset-bottom)); --compact-players-height: 64px; }
+  body.is-playing { --top-height: 0px; --compact-bottom: calc(182px + env(safe-area-inset-bottom)); --compact-players-height: 90px; }
   .top, .is-playing .top { padding: env(safe-area-inset-top) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left)); height: var(--top-height, 54px); gap: 8px; }
   .top .brand { gap: 7px; min-width: 0; }
   .top .brand strong { font-size: 15px; }
@@ -14,13 +14,14 @@
   .top .sound-toggle { width: 44px; height: 44px; padding: 0; border-radius: 50%; }
   .top .sound-label { display: none; }
   .top .session-controls summary { padding: 5px; font-size: 12px; }
-  .session-controls > div { position: fixed; top: var(--top-height, 54px); right: max(8px, env(safe-area-inset-right)); width: min(310px, calc(100vw - 16px)); max-height: calc(100dvh - 75px); overflow-y: auto; }
+  .session-controls > .game-menu { max-height: calc(100dvh - var(--compact-players-height) - 32px - env(safe-area-inset-top)); }
   .session-controls button { min-height: 44px; }
   .session-notice { top: var(--top-height, 54px); flex-wrap: wrap; max-height: 40dvh; overflow-y: auto; }
   .session-notice button { min-height: 44px; }
   .game .mapscroll { height: 100%; min-height: 0 !important; max-height: none !important; touch-action: none; }
   .game .sidebar, .game .handdock { display: none; }
-  .game .boardtools { top: calc(var(--compact-players-height) + 14px); left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); flex-wrap: wrap; justify-content: flex-start; gap: 6px; }
+  .game .boardtools { top: calc(var(--compact-players-height) + 14px + env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); gap: 6px; }
+  .game .board-status-actions { top: calc(var(--compact-players-height) + 14px + env(safe-area-inset-top)); left: max(60px, calc(env(safe-area-inset-left) + 52px)); right: max(8px, env(safe-area-inset-right)); }
   .game .boardtools button { min-height: 44px; }
   .game .boardexpand { min-width: 44px; }
   .game .copy-game { min-width: 44px; }
@@ -67,7 +68,7 @@
   /* Lifting a card would clip its counter at the horizontal scroller's top. */
   .game #compactHand .hand .traincard:hover { transform: none; }
   .game #compactHand .cardcount { font-size: 13px; width: 22px; height: 22px; top: -6px; left: -4px; border-width: 2px; }
-  .compact-players { display: block; position: absolute; z-index: 3; left: max(6px, env(safe-area-inset-left)); right: max(6px, env(safe-area-inset-right)); top: 6px; height: var(--compact-players-height); }
+  .compact-players { display: block; position: absolute; z-index: 3; left: max(6px, env(safe-area-inset-left)); right: max(6px, env(safe-area-inset-right)); top: calc(6px + env(safe-area-inset-top)); height: var(--compact-players-height); }
   .game .compact-players .players-panel { min-height: 0; padding: 0; }
   .compact-players .players-panel > .sectiontitle { display: none; }
   .game .compact-players #scores { display: grid; grid-template-columns: repeat(var(--player-count, 5), minmax(0, 1fr)); gap: 4px; }
@@ -75,16 +76,14 @@
   .compact-players .scorebadge::before { display: none; }
   .game .compact-players .player-heading { gap: 4px; width: 100%; }
   .game .compact-players .player-avatar { width: 18px; height: 18px; flex: 0 0 18px; }
-  .game .compact-players .player-avatar > svg { width: 88%; height: 88%; }
   .game .compact-players .player-details b { font-size: 11px; }
   .game .compact-players .player-status { display: none; }
-  .game .compact-players .player-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px 3px; width: 100%; }
-  .game .compact-players .player-metric { display: flex; flex-direction: row; gap: 2px; min-width: 0; align-items: center; justify-content: center; }
-  .game .compact-players .player-metric:first-child { grid-column: 1 / -1; }
+  .game .compact-players .player-metrics { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr); gap: 2px; width: 100%; align-items:center; }
+  .game .compact-players .player-metric { display: flex; flex-direction: column; gap: 1px; min-width: 0; align-items: center; justify-content: center; }
   .game .compact-players .player-metric svg { width: 10px; height: 10px; flex-shrink: 0; }
-  .game .compact-players .player-metric strong { font-size: 10px; line-height: 12px; font-variant-numeric: tabular-nums; }
+  .game .compact-players .player-metric strong { font-size: 11px; line-height: 12px; font-variant-numeric: tabular-nums; }
   .game .compact-players .player-metric:first-child svg { width: 12px; height: 12px; }
-  .game .compact-players .player-metric:first-child strong { font-size: 18px; line-height: 20px; }
+  .game .compact-players .player-metric:first-child strong { font-size: clamp(16px,4.6vw,20px); line-height: 22px; font-weight: 800; }
   .compact-player-detail { display: flex; align-items: center; gap: 8px; position: absolute; z-index: 7; top: calc(var(--compact-players-height) + 12px); left: 8px; right: 8px; background: #fffcf5; border: 1px solid #c7b48b; border-radius: 10px; padding: 5px 8px 5px 12px; font-size: 13px; box-shadow: 0 4px 20px #163b4d33; }
   .compact-player-detail span { flex: 1; }
   .compact-player-detail button { min-width: 44px; min-height: 44px; background: transparent; color: #284b5d; font-size: 24px; }
@@ -179,7 +178,7 @@
   .top:has(#sessionControls:not(.hidden)) .brand strong { font-size: 14px; }
 }
 @media (max-width: 699px) and (max-height: 700px) {
-  body.is-playing { --compact-bottom: calc(160px + env(safe-area-inset-bottom)); --compact-players-height: 58px; }
+  body.is-playing { --compact-bottom: calc(160px + env(safe-area-inset-bottom)); --compact-players-height: 84px; }
   .game .compact-players .scorebadge { gap: 1px; padding-block: 3px; }
   .game .compact-players .player-avatar { width: 16px; height: 16px; flex-basis: 16px; }
   .compact-nav { height: 44px; }
@@ -200,7 +199,7 @@
   .ticket-options .ticket-options-hint { display: none; }
 }
 @media (min-width: 700px) and (max-height: 500px) {
-  body.is-playing { --top-height: calc(42px + env(safe-area-inset-top)); --compact-bottom: calc(146px + env(safe-area-inset-bottom)); --compact-players-height: 58px; }
+  body.is-playing { --top-height: calc(42px + env(safe-area-inset-top)); --compact-bottom: calc(146px + env(safe-area-inset-bottom)); --compact-players-height: 84px; }
   .compact-players { left: auto; width: 44%; }
   .game .boardtools, .game[data-compact-panel]:not([data-compact-panel="map"]) .boardtools { top: 6px; right: calc(44% + 12px); }
   .game .compact-players .scorebadge { gap: 1px; padding: 3px; }

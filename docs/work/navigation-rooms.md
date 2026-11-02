@@ -100,3 +100,6 @@ con su ciclo efímero, sin entrada visible en Play en esta etapa.
 La continuación de historial, idiomas y ajustes de observación se registra en
 [su ficha independiente](history-replay.md); no modifica la evidencia histórica
 de este despliegue.
+
+La ampliación del menú de partida, controles de sala y relojes configurables
+se registra en [Controles de mesa y sala](table-controls.md).

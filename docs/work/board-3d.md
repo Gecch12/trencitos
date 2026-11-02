@@ -1,5 +1,5 @@
 ---
-{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"released","updated":"2026-10-31"}
+{"id":"board-3d","status":"validated","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"released","updated":"2026-11-02"}
 ---
 # Tablero 3D y familia de vagones
 
@@ -11,6 +11,10 @@ M10 está publicada en `2a46f58`; evidencia y límites en [producción](../produ
 M11 está publicada en `2308691`; evidencia remota en [producción](../production.md).
 M12 está publicada en `bf1c5c1` junto con la navegación; evidencia remota en
 [producción](../production.md).
+
+Ampliación local de 2026-11-02: hongos/jade, cristales/índigo y confitería/rosa
+llevan el catálogo del checkout a 21 familias. Implementación y evidencia en
+[Controles de mesa y sala](table-controls.md); esta ampliación aún no está publicada.
 
 ## Hitos
 

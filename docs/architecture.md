@@ -14,6 +14,32 @@ Los túneles conservan en `pending` su etapa, vencimiento y tiempos congelados;
 controladores de bots esperan revelación/resultado; las simulaciones de estrategia
 avanzan un reloj virtual para recorrer las mismas etapas sin esperar tiempo real.
 
+La sala guarda `timing` y lo copia al iniciar el motor. El servidor valida
+los tres valores, permisos y persistencia antes de publicarlos; un fallo de
+guardado restaura también estos ajustes. UI 9 expone `timing` y la duración
+de cada oferta para las barras. Los plazos los calcula solo el motor.
+
+El menú flotante y los steppers reutilizan el mismo estado en escritorio y
+móvil. La cámara reserva una franja izquierda para los iconos, sin descontar
+su altura completa al mapa. Los sonidos de pluma son locales y la firma
+se reproduce una vez al confirmar el ACK del comando de selección.
+La sala separa opciones generales y tiempos; sus grupos responden al ancho del
+panel con container queries. El pie de inicio conserva su espacio mientras el
+contenido puede desplazarse en alturas pequeñas. Marcar/desmarcar billetes usa
+una envolvente continua; la firma conserva la secuencia de trazos original.
+
+Las cuatro métricas de cada jugador usan la vista pública del motor, incluido
+`handCount`; no se reciben manos rivales para contar cartas. `playerAvatar` y
+los estilos comunes de `.player-avatar` mantienen las proporciones del símbolo
+en panel, historial, resultados y clasificación, aunque cambie el círculo.
+
+`GameUI.urgentClock` selecciona el plazo propio activo bajo cinco segundos;
+`updateClockSound` lo consulta una vez por actualización, fuera del recorrido
+de elementos visuales. Deduplica cada segundo del plazo y sintetiza clics
+alternos. Excluye ofertas pausadas por túneles y turnos sin decisión, además
+de silencio, pestaña oculta, desconexión, guardado pausado, piloto automático,
+espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
+
 ## Mapa de componentes
 
 | Responsabilidad | Código y puntos de entrada |
@@ -21,6 +47,7 @@ avanzan un reloj virtual para recorrer las mismas etapas sin esperar tiempo real
 | HTTP, WebSocket, salas, credenciales, despachar y confirmar acciones | [server.js](../server.js): `dispatch`, `persist`, `sendRoom` |
 | Reglas, fases, pagos, cierre y privacidad | [engine.js](../engine.js): `newRandomGame`, `action`, `expire`, `finish`, `view` |
 | Ciudades, rutas, billetes y paleta | [data.js](../data.js) |
+| Valores permitidos de relojes y defaults compartidos | [game-timing.js](../game-timing.js): `valid`, `normalize` |
 | Relojes, desconexiones y recuperación | [game-clock.js](../game-clock.js), [multiplayer.js](../multiplayer.js) |
 | Práctica y políticas de bots | [practice.js](../practice.js), [practice-bot.js](../practice-bot.js), [practice-planner.js](../practice-planner.js), [practice-tactics.js](../practice-tactics.js), [practice-search.js](../practice-search.js), [bots.js](../bots.js) |
 | Estado local y hash de credenciales | [room-store.js](../room-store.js): `serializableRoom`, `loadRooms`, `saveRooms` |
@@ -63,6 +90,9 @@ avanzan un reloj virtual para recorrer las mismas etapas sin esperar tiempo real
   robos locales mientras se muestra. Una actualización más reciente, cambio de
   tamaño, ocultación o desconexión cancela el efecto y restaura la mesa vigente.
   La reconexión no repite eventos antiguos; los robos normales no esperan animación.
+  El sonido `shuffle` depende del evento fresco `market_refresh`, no de la
+  animación ni de la visibilidad del panel. Una única fuente de audio contiene
+  la recogida, barajado y reparto, por lo que M cancela toda la secuencia.
   Los túneles usan `sharedTunnel` (protocolo UI 8): la etapa y los tiempos vienen
   del motor. El cliente dibuja las cartas por timestamp y no puede cerrar ni
   adelantar la secuencia. La ruta se adjudica al resolver, nunca antes de revelar.
@@ -81,8 +111,11 @@ avanzan un reloj virtual para recorrer las mismas etapas sin esperar tiempo real
   de la selección autorizada del cliente. Atenúa el contexto y conserva los mismos
   vagones y colores; `destinationSpotlight` solo contiene etiquetas e indicadores,
   sin clonar vagones/estaciones SVG. No entrega manos ni billetes al renderizador.
-- Cada uno de los 18 colores tiene un modelo propio. A la familia inspirada en
-  cartas se suman grúa, vino, tractores, cemento, fruta, flores y lancha. El modelo
+- Cada uno de los 21 colores tiene un modelo propio. A la familia inspirada en
+  cartas se suman grúa, vino, tractores, cemento, fruta, flores, lancha y los
+  modelos fantásticos de hongos (jade), cristales (índigo) y confitería (rosa).
+  Sus cargas multicolores conservan base y laterales del color del propietario.
+  Las nuevas cúpulas y prismas comparten geometrías instanciadas. El modelo
   depende del propietario, nunca de cartas pagadas ni color de la ruta. No hay
   reglas de carga. Modelo, pintura y acabado son dimensiones separadas, aún sin
   selector de cosméticos ni catálogo comercial. `wagonStyle` conserva el amarillo

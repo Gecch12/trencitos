@@ -10,13 +10,19 @@ comercial: conserva las variantes del proyecto.
   privada recupera un puesto; el código público no autentica a su propietario.
   Las nuevas salas son públicas por defecto, con opción privada; las antiguas sin
   este campo siguen privadas. El anfitrión fija capacidad 2–5 y añade/retira bots
-  antes de empezar. La capacidad incluye humanos y bots.
+  antes de empezar. La capacidad incluye humanos y bots. Configura además turno
+  e iniciales de 30/60/90 s y extra de billetes de 15/30 s (defaults 60/60/+30).
+  La configuración se guarda en sala y partida, solo cambia antes del inicio y
+  se conserva en la revancha. El directorio anuncia el turno real de la sala.
 - **Jugador:** puesto, nombre, color, mano privada, destinos y piezas. Empieza con
-  45 vagones, 3 estaciones y 4 cartas. Dieciocho colores de jugador no equivalen a
+  45 vagones, 3 estaciones y 4 cartas. Veintiún colores de jugador no equivalen a
   los ocho colores de cartas/rutas. El lobby reserva colores únicos; iniciada la
   partida quedan fijos. Ver [lobby-ui.js](../lobby-ui.js) y [pruebas](../tests/lobby-server.test.js).
   La clave persistida de color es estable; cambiar su pintura visible no cambia
   el propietario, la reserva del lobby ni los colores de cartas/pagos.
+  Al añadir un bot, el servidor sortea uniformemente entre los colores libres,
+  excluyendo también reservas de humanos desconectados. Guarda esa elección;
+  retirarlo libera el color y reconectar/iniciar no vuelve a sortearlo.
 - **Cuenta opcional:** UUID persistente distinto del puesto. Guarda apodo y color/vagón;
   vincular exige la credencial privada y recuperar exige la cuenta propietaria. Nunca
   concede otra mano ni prolonga la vida de una sala. Práctica invitada sigue disponible.
@@ -39,12 +45,12 @@ comercial: conserva las variantes del proyecto.
 `initial` → `play` ↔ `tunnel` → `closing` si quedan ofertas → `finished`.
 
 El primer jugador se sortea una vez. Cada jugador recibe un billete largo y tres
-cortos y conserva al menos dos, simultáneamente, dentro de un minuto compartido.
+cortos y conserva al menos dos, simultáneamente, dentro del plazo compartido configurado de 30, 60 o 90 segundos.
 Al terminar todos, juega el sorteado. El vencimiento conserva dos al azar por
 jugador pendiente. Reconectar no reinicia los plazos.
 
 Una acción por turno: robar cartas, construir ruta, pedir destinos o construir
-estación. El turno dura 60 segundos. Tras robar la primera carta hay que resolver
+estación. El turno dura los 30, 60 o 90 segundos configurados. Tras robar la primera carta hay que resolver
 el robo; no se puede cambiar a construcción.
 
 | Acción | Regla |
@@ -55,9 +61,14 @@ el robo; no se puede cambiar a construcción.
 | Túnel | Revela hasta tres cartas; cada coincidencia de color o locomotora añade coste. Pago íntegramente con locomotoras solo coincide con locomotoras. |
 | Decisión del túnel | Reserva pago base al calcular disponibilidad. Sin suplemento se construye automáticamente; con suplemento paga o desiste. Desistir conserva la mano y consume turno. |
 | Ruta doble | Un jugador no toma ambos carriles; con 2–3 jugadores solo puede ocuparse uno. |
-| Nuevos destinos | Ofrece hasta tres cortos, conserva al menos uno y devuelve rechazados al mazo corto. La elección tiene plazo propio y el juego continúa. Si vuelve su turno sin confirmar, espera antes de comenzar su minuto. |
+| Nuevos destinos | Ofrece hasta tres cortos, conserva al menos uno y devuelve rechazados al mazo corto. La elección recibe el tiempo restante del turno más 15 o 30 s configurados; el siguiente jugador continúa. Si vuelve su turno sin confirmar, espera antes de comenzar su tiempo completo. |
 | Estación | Una por ciudad; costes sucesivos 1/2/3 cartas de un color, con locomotoras permitidas. Máximo tres por jugador. |
 | Pasar | Solo cuando no existe ninguna otra acción legal. |
+
+Las partidas iniciadas sin `timing` conservan los relojes anteriores de 60 s
+y la oferta independiente de 60 s. Nunca se reemplazan plazos existentes.
+`ticketOffer.duration` conserva la duración original para dibujar la barra
+correctamente al recargar o durante una pausa.
 
 El túnel tiene etapas persistidas `reveal`, `decision` y `result`, coordinadas
 por el servidor. La revelación muestra una carta cada 700 ms y deja 700 ms tras

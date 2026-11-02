@@ -49,7 +49,7 @@ function selectRoomColor(color) {
 let account = null, shell = null;
 const replayMode = location.pathname === "/replay";
 let replayAt = null;
-let spectating = false, roomCapacity = 5, roomVisibility = 'private';
+let spectating = false, roomCapacity = 5, roomVisibility = 'private', roomTiming = GameTiming.normalize();
 let desiredWatch = new URLSearchParams(location.search).get('watch') || '';
 if (!LobbyUI.isColor(preferredColor)) preferredColor = LobbyUI.PALETTE[0].color;
 const MAP_BOUNDS = RailMap.bounds;
@@ -192,11 +192,11 @@ function error(s) {
   if ($("acceptTunnel")) $("acceptTunnel").disabled = !GameUI.tunnelPayments(game.hand, game.tunnel).length;
   if ($("declineTunnel")) $("declineTunnel").disabled = false;
 }
-function toast(message) {
+function toast(message, duration = 4000) {
   clearTimeout(toastTimer);
   $("toast").textContent = message;
   $("toast").classList.remove("hidden");
-  toastTimer = setTimeout(() => $("toast").classList.add("hidden"), 4000);
+  toastTimer = setTimeout(() => $("toast").classList.add("hidden"), duration);
 }
 function identityKey(code) {
   return "rr-room-" + code;
@@ -214,7 +214,7 @@ function resetToLobby(message = "", preserveIdentity = false) {
   host = practiceMode = attempted = false;
   lobbyStarted = homeBusy = false;
   pendingAction = null; storagePaused = false;
-  $("sessionControls").classList.add("hidden");
+  $("sessionControls").open = false;
   $("sessionNotice").classList.add("hidden");
   selected = stationCity = null;
   zoom = 1;
@@ -344,7 +344,10 @@ function connect() {
       return;
     }
     if (m.type === "ack") {
-      if (pendingAction?.id === m.id) pendingAction = null;
+      if (pendingAction?.id === m.id) {
+        if (["choose_initial", "keep_tickets"].includes(pendingAction.action.type)) playSound("pen-sign");
+        pendingAction = null;
+      }
       return;
     }
     if (m.type === "lobby") {
@@ -356,7 +359,7 @@ function connect() {
       room = m.code;
       spectating = !!m.spectator;
       desiredWatch = spectating ? room : '';
-      roomCapacity = m.maxPlayers || 5; roomVisibility = m.visibility || 'private';
+      roomCapacity = m.maxPlayers || 5; roomVisibility = m.visibility || 'private'; roomTiming = GameTiming.normalize(m.timing);
       desiredRoom = room;
       seat = m.seat;
       token = m.token;
@@ -376,7 +379,8 @@ function connect() {
       host = m.host;
       practiceMode = !!m.practice;
       sessionSupported = m.sessionVersion >= 1;
-      $("sessionControls").classList.toggle("hidden", spectating || practiceMode || !sessionSupported);
+      $("privateSession").hidden = spectating || practiceMode || !sessionSupported;
+      $("leaveRoom").hidden = spectating;
       $("reclaimControl").classList.toggle("hidden", !members[seat]?.autopilot);
       $("reclaimControl").disabled = !!members[seat]?.reclaim;
       $("reclaimControl").textContent = members[seat]?.reclaim ? I18n.t("Volverás en tu siguiente turno") : I18n.t("Recuperar control");
@@ -594,10 +598,9 @@ async function copyInvitation() {
   try {
     await navigator.clipboard.writeText(url);
     $("copyLink").textContent = I18n.t("✓ Copiado");
-    $("copyRoomInGame").textContent = I18n.t("✓ Copiado");
+    toast(I18n.t("Enlace de invitación copiado"), 2200);
     setTimeout(() => {
       $("copyLink").textContent = I18n.t("Copiar invitación");
-      $("copyRoomInGame").innerHTML = I18n.t("↗ <span>Invitar</span>");
     }, 2400);
   } catch {
     $("copyLink").textContent = url;
@@ -626,6 +629,7 @@ $("rotateRecovery").onclick = () => {
 };
 $("reclaimControl").onclick = () => send({ type: "reclaim" });
 $("leaveRoom").onclick = () => {
+  if (practiceMode) { if (game?.phase === "finished" || confirm(I18n.t("¿Abandonar esta partida de práctica?"))) send({type:"leave_test"}); return; }
   if (spectating || !game || game.phase === "finished" || confirm(I18n.t("¿Salir de la partida? Un bot tomará tu puesto. Si todos salen, la partida se abandonará tras 60 segundos sin conexiones."))) send({ type: "leave" });
 };
 function act(type, other = {}) {
@@ -686,16 +690,16 @@ function render() {
   $("lobby").classList.add("hidden");
   $("game").classList.remove("hidden");
   renderPracticeControls();
-  $("serverWarning").classList.toggle("hidden", game.uiVersion >= 8 && sessionSupported);
+  $("serverWarning").classList.toggle("hidden", game.uiVersion >= 9 && sessionSupported);
   const active = amIUp();
   const previousFocus = document.activeElement.closest("[data-player]")?.dataset.player;
   const previousHover = $("scores").querySelector(".scorebadge:hover")?.dataset.player;
   $("scores").innerHTML = game.players
     .map(
       (x, i) =>
-        I18n.t`<div class="scorebadge ${i === game.current && ["play", "tunnel"].includes(game.phase) ? "active" : ""}" data-player="${i}" tabindex="0" aria-label="${escapeHTML(x.name)}. ${game.result?.find(r => r.seat === i)?.score ?? x.score} puntos, ${x.trains} vagones, ${x.stations} estaciones. Enfoca para resaltar sus rutas.">
+        I18n.t`<div class="scorebadge ${i === game.current && ["play", "tunnel"].includes(game.phase) ? "active" : ""}" data-player="${i}" tabindex="0" aria-label="${escapeHTML(x.name)}. ${game.result?.find(r => r.seat === i)?.score ?? x.score} puntos, ${x.handCount ?? "—"} cartas, ${x.trains} vagones, ${x.stations} estaciones. Enfoca para resaltar sus rutas.">
           <div class="player-heading">${playerAvatar(i)}<div class="player-details"><b title="${escapeHTML(x.name)}">${escapeHTML(x.name)}</b><div class="player-status"><span class="player-turn-tag">EN TURNO</span><span class="player-state">${[i === seat ? I18n.t("Tú") : "", game.phase === "initial" ? (x.initialReady ? I18n.t("✓ Listo") : I18n.t("Eligiendo billetes")) : ""].filter(Boolean).join(" · ")}</span></div></div></div>
-          <div class="player-metrics">${playerMetric("points", I18n.t("Puntos"), game.result?.find(r => r.seat === i)?.score ?? x.score)}${playerMetric("trains", I18n.t("Vagones"), x.trains)}${playerMetric("stations", I18n.t("Estaciones"), x.stations)}</div>
+          <div class="player-metrics">${playerMetric("points", I18n.t("Puntos"), game.result?.find(r => r.seat === i)?.score ?? x.score)}${playerMetric("cards", I18n.t("Cartas en mano"), x.handCount ?? "—")}${playerMetric("trains", I18n.t("Vagones"), x.trains)}${playerMetric("stations", I18n.t("Estaciones"), x.stations)}</div>
         </div>`,
     )
     .join("");
@@ -725,6 +729,7 @@ function render() {
         : active
           ? I18n.t("Tu turno")
           : I18n.t`Turno de ${game.players[game.current].name}`;
+  $("roundStatus").dataset.phase = game.phase === "finished" ? "finished" : game.finalRemaining !== null ? "last" : "normal";
   $("roundStatus").textContent = game.phase === "finished" ? I18n.t("Final") : game.phase === "initial" ? I18n.t`${game.initialReadyCount}/${game.players.length} listos` : game.finalRemaining !== null ? I18n.t("Última ronda") : "";
   $("initialStatus").classList.toggle("hidden", game.phase !== "initial");
   $("initialStatusText").textContent = I18n.t`${game.initialReadyCount}/${game.players.length} listos · ${game.players[seat]?.initialReady ? I18n.t("Puedes explorar el mapa mientras esperas") : I18n.t("Todos eligen a la vez")}`;
@@ -759,11 +764,12 @@ function render() {
 }
 function updateClocks() {
   if (!game) return;
+  const now = replayAt ?? Date.now() + serverOffset;
   const deadlines = { initial: game.initialDeadline, turn: game.turnDeadline, offer: game.ticketOffer?.deadline, waiting: game.waitingDeadline, closing: game.closingDeadline };
   for (const node of document.querySelectorAll("[data-clock]")) {
     const deadline = deadlines[node.dataset.clock];
     const frozen = game.sharedTunnel && (node.dataset.clock === "offer" ? game.sharedTunnel.offerRemaining : node.dataset.clock === "turn" && game.sharedTunnel.stage === "reveal" ? game.sharedTunnel.turnRemaining : null);
-    const remaining = frozen != null ? frozen : Number.isFinite(deadline) ? Math.max(0, deadline - (replayAt ?? Date.now() + serverOffset)) : null;
+    const remaining = frozen != null ? frozen : Number.isFinite(deadline) ? Math.max(0, deadline - now) : null;
     const seconds = remaining === null ? null : Math.ceil(remaining / 1000);
     node.textContent = seconds === null ? "" : node.dataset.clockFormat === "timer" ? `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}` : `${seconds}s`;
     node.classList.toggle("clock-warning", seconds !== null && seconds <= 10);
@@ -771,11 +777,14 @@ function updateClocks() {
     node.setAttribute("aria-label", seconds === null ? "" : I18n.t`${seconds} segundos restantes`);
     const bar = node.id === "compactClock" ? $("turnBanner") : node.closest("[data-countdown]");
     if (bar) {
-      bar.style.setProperty("--time-left", String(Math.min(1, (remaining || 0) / 60000)));
+      const duration = node.dataset.clock === "initial" ? (game.timing?.initialSeconds || 60) * 1000
+        : node.dataset.clock === "offer" ? game.ticketOffer?.duration || 60000 : (game.timing?.turnSeconds || 60) * 1000;
+      bar.style.setProperty("--time-left", String(Math.min(1, (remaining || 0) / duration)));
       bar.classList.toggle("is-warning", seconds !== null && seconds <= 10);
       bar.classList.toggle("is-urgent", seconds !== null && seconds <= 5);
     }
   }
+  updateClockSound(now);
   updateSharedTunnel();
 }
 setInterval(updateClocks, 250);
@@ -913,7 +922,11 @@ function playEffects(events) {
         if (!reducedMotion.matches && event.source?.width) animateCardFlight(event);
       }, drawDelay);
       effectTimers.add(timer); drawDelay += 180;
-    } else if (event.type === "market_refresh" && event.id === marketRefresh?.id) animateMarketRefresh();
+    } else if (event.type === "market_refresh") {
+      // The renewal is public even when the compact market panel is closed.
+      playSound("shuffle");
+      if (event.id === marketRefresh?.id) animateMarketRefresh();
+    }
     else if (event.type === "tickets") playSound("card");
     else if (event.type === "build" && !event.deferredForTunnel) animateConstruction(event);
     else if (event.type === "turn" && event.seat === seat) playSound("bell");
@@ -922,8 +935,24 @@ function playEffects(events) {
 // Small original synthesized effects: no external audio, tracking or downloads.
 let soundContext = null, muted = localStorage.getItem("rr-muted") === "true";
 const soundNodes = new Set();
+let penSound = null;
+let urgentClockKey = null, lastClockSoundAt = -Infinity;
+const playedClockSeconds = new Set();
+function updateClockSound(now) {
+  if (muted || document.hidden || soundContext?.state !== "running" || replayAt !== null || spectating ||
+      sessionReplaced || storagePaused || game?.storagePaused || pendingAction || members[seat]?.autopilot ||
+      sock?.readyState !== WebSocket.OPEN) return;
+  const clock = GameUI.urgentClock(game, seat, now);
+  if (!clock) return;
+  const key = `${room}:${seat}:${clock.kind}:${clock.deadline}`;
+  if (key !== urgentClockKey) { urgentClockKey = key; playedClockSeconds.clear(); }
+  const at = performance.now();
+  if (playedClockSeconds.has(clock.seconds) || at - lastClockSoundAt < 900) return;
+  playedClockSeconds.add(clock.seconds); lastClockSoundAt = at;
+  playSound(clock.seconds % 2 ? "clock-tick" : "clock-tock");
+}
 function soundLabel() {
-  $("soundToggle").innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3Z"/>${muted ? '<path d="m16 9 5 6m0-6-5 6"/>' : '<path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>'}</svg>`;
+  $("soundToggle").innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3Z"/>${muted ? '<path d="m16 9 5 6m0-6-5 6"/>' : '<path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>'}</svg><span>${I18n.t(muted ? "Sonido desactivado" : "Sonido activado")}</span><kbd>M</kbd>`;
   $("soundToggle").setAttribute("aria-pressed", String(!muted));
   $("soundToggle").title = muted ? I18n.t("Activar sonidos") : I18n.t("Silenciar sonidos");
   $("soundToggle").setAttribute("aria-label", I18n.t("Sonido"));
@@ -934,14 +963,89 @@ function unlockSound() {
   if (!Context) return;
   try { soundContext ||= new Context(); soundContext.resume().catch(() => {}); } catch (_) {}
 }
-function stopSounds() { for (const node of soundNodes) { try { node.stop(); } catch (_) {} } soundNodes.clear(); }
-$("soundToggle").onclick = () => { muted = !muted; localStorage.setItem("rr-muted", String(muted)); soundLabel(); if (muted) stopSounds(); else unlockSound(); };
+function stopSounds() { for (const node of soundNodes) { try { node.stop(); } catch (_) {} } soundNodes.clear(); penSound = null; }
+function toggleSound() {
+  muted = !muted; localStorage.setItem("rr-muted", String(muted)); soundLabel();
+  if (muted) stopSounds(); else unlockSound();
+  toast(I18n.t(muted ? "Sonido silenciado" : "Sonido activado"), 1800);
+}
+$("soundToggle").onclick = toggleSound;
 document.addEventListener("pointerdown", unlockSound, { passive: true });
 document.addEventListener("keydown", unlockSound);
+document.addEventListener("keydown", event => {
+  if (!game || event.defaultPrevented || event.repeat || event.ctrlKey || event.metaKey || event.altKey ||
+      !["m", "h"].includes(event.key.toLowerCase()) || event.isComposing ||
+      event.target.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) return;
+  if (event.key.toLowerCase() === "m") { event.preventDefault(); toggleSound(); }
+  else if (!uiDialog && !document.querySelector("dialog[open]") && $("overlay").classList.contains("hidden") && !$("toggleDestinations").disabled) {
+    event.preventDefault(); toggleDestinationHighlight();
+  }
+});
 soundLabel();
 function playSound(kind) {
   if (muted || document.hidden || soundContext?.state !== "running") return;
   const ctx = soundContext, at = ctx.currentTime;
+  if (kind === "shuffle") {
+    // One paper sequence: gather, shuffle, then five light dealing strokes.
+    const duration = .94, buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * duration), ctx.sampleRate);
+    const data = buffer.getChannelData(0), strokes = [[.01,.17,.65],[.2,.3,.8], ...Array.from({length:5},(_,i)=>[.57+i*.065,.1,.5])];
+    let grain = 0;
+    for (let i = 0; i < data.length; i++) {
+      const time = i / ctx.sampleRate;
+      grain = grain * .3 + (Math.random() * 2 - 1) * .7;
+      let envelope = 0;
+      for (const [start, length, gain] of strokes) {
+        const progress = (time - start) / length;
+        if (progress > 0 && progress < 1) envelope += gain * Math.sin(Math.PI * progress);
+      }
+      data[i] = grain * envelope;
+    }
+    const source = ctx.createBufferSource(), filter = ctx.createBiquadFilter(), gain = ctx.createGain();
+    source.buffer = buffer; filter.type = "bandpass"; filter.frequency.value = 1500; filter.Q.value = .55; gain.gain.value = .28;
+    source.connect(filter).connect(gain).connect(ctx.destination); soundNodes.add(source);
+    source.start(at); source.stop(at + duration);
+    source.onended = () => { soundNodes.delete(source); source.disconnect(); filter.disconnect(); gain.disconnect(); };
+    return;
+  }
+  if (kind === "clock-tick" || kind === "clock-tock") {
+    // A short mechanical click: filtered noise and two damped wood resonances.
+    const duration = .065, frequency = kind === "clock-tick" ? 1450 : 1100;
+    const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * duration), ctx.sampleRate), data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      const t = i / ctx.sampleRate, attack = 1 - Math.exp(-t * 1800);
+      data[i] = attack * ((Math.random() * 2 - 1) * Math.exp(-t * 130) * .5 +
+        Math.sin(2 * Math.PI * frequency * t) * Math.exp(-t * 100) * .35 +
+        Math.sin(2 * Math.PI * frequency * .46 * t) * Math.exp(-t * 60) * .18);
+    }
+    const source = ctx.createBufferSource(), filter = ctx.createBiquadFilter(), gain = ctx.createGain();
+    source.buffer = buffer; filter.type = "lowpass"; filter.frequency.value = 3800; gain.gain.value = .2;
+    source.connect(filter).connect(gain).connect(ctx.destination); soundNodes.add(source);
+    source.start(at); source.stop(at + duration);
+    source.onended = () => { soundNodes.delete(source); source.disconnect(); filter.disconnect(); gain.disconnect(); };
+    return;
+  }
+  if (kind.startsWith("pen")) {
+    // Short, irregular strokes through paper; a new mark replaces the last one.
+    if (penSound) { try { penSound.stop(); } catch (_) {} }
+    const signing = kind === "pen-sign", undo = kind === "pen-undo";
+    const duration = signing ? .35 : undo ? .105 : .13 + Math.random() * .02;
+    const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * duration), ctx.sampleRate);
+    const data = buffer.getChannelData(0), strokes = signing ? 5 : 1;
+    let grain = 0;
+    for (let i = 0; i < data.length; i++) {
+      const progress = i / data.length;
+      grain = grain * .55 + (Math.random() * 2 - 1) * .45;
+      const stroke = Math.pow(Math.max(0, Math.sin(progress * strokes * Math.PI)), .7);
+      data[i] = grain * stroke * Math.sin(Math.PI * progress);
+    }
+    const source = ctx.createBufferSource(), filter = ctx.createBiquadFilter(), gain = ctx.createGain();
+    source.buffer = buffer; filter.type = "bandpass"; filter.frequency.value = 1700 + Math.random() * 350; filter.Q.value = .6;
+    gain.gain.setValueAtTime(undo ? .12 : .19, at);
+    source.connect(filter).connect(gain).connect(ctx.destination);
+    penSound = source; soundNodes.add(source); source.start(at); source.stop(at + duration);
+    source.onended = () => { if (penSound === source) penSound = null; soundNodes.delete(source); source.disconnect(); filter.disconnect(); gain.disconnect(); };
+    return;
+  }
   const tone = (frequency, duration, volume, type = "sine") => {
     const source = ctx.createOscillator(), gain = ctx.createGain();
     source.type = type; source.frequency.setValueAtTime(frequency, at);
@@ -951,7 +1055,7 @@ function playSound(kind) {
   };
   if (kind === "bell") { tone(880, .7, .085); tone(1760, .42, .035); tone(2376, .2, .012); return; }
   if (kind === "build") { tone(155, .16, .14 * 1.15, "triangle"); tone(310, .09, .045 * 1.15); }
-  const duration = kind === "shuffle" ? .42 : kind === "card" ? .19 : .065;
+  const duration = kind === "card" ? .19 : .065;
   const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * duration), ctx.sampleRate), data = buffer.getChannelData(0);
   for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
   const source = ctx.createBufferSource(), filter = ctx.createBiquadFilter(), gain = ctx.createGain();
@@ -1014,7 +1118,6 @@ function animateMarketRefresh() {
     ];
     current.animations.push(image.animate(frames,{duration,fill:"forwards",easing:"ease-out"}));
   });
-  playSound("shuffle");
   current.timer = setTimeout(() => { if (marketRefresh === current) cancelMarketRefresh(); }, duration);
 }
 function cancelCardFlights() {
@@ -1153,10 +1256,11 @@ function renderDestinations() {
 function playerMetric(type, label, value) {
   const icons = {
     points: '<path d="M7 3h10v5a5 5 0 0 1-10 0ZM7 4H3v3a4 4 0 0 0 5 4m9-7h4v3a4 4 0 0 1-5 4M12 13v5m-4 2h8"/>',
+    cards: '<rect x="8" y="5" width="12" height="16" rx="2"/><path d="M16 5V3H4v15h4m4-9h4m-4 4h4"/>',
     trains: '<rect x="3" y="4" width="18" height="11" rx="2"/><path d="M7 8h3m4 0h3M2 13h20"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
     stations: '<path d="m2 9 10-7 10 7M5 8v13h14V8M9 21v-7h6v7M10 8h4"/>',
   };
-  return `<span class="player-metric" title="${label}: ${value}" aria-label="${label}: ${value}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[type]}</svg><strong aria-hidden="true">${value}</strong></span>`;
+  return `<span class="player-metric" data-metric="${type}" title="${label}: ${value}" aria-label="${label}: ${value}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[type]}</svg><strong aria-hidden="true">${value}</strong></span>`;
 }
 const LABEL_OFFSETS = RailMap.labels;
 function plural(n, word) {
@@ -1653,7 +1757,7 @@ for (const type of ["pointerover", "pointerout"]) $("ticketList").addEventListen
   if (type === "pointerout" && hoveredDestination === id) hoveredDestination = null;
   updateDestinationSpotlight();
 });
-$("toggleDestinations").onclick = () => {
+function toggleDestinationHighlight() {
   if (!game?.tickets.length) return;
   allDestinationsVisible = !allDestinationsVisible;
   hoveredDestination = null;
@@ -1663,7 +1767,9 @@ $("toggleDestinations").onclick = () => {
   }
   if (compactMedia.matches) setCompactPanel("map");
   updateDestinationSpotlight();
-};
+  toast(I18n.t(allDestinationsVisible ? "Destinos resaltados" : "Resaltado desactivado"), 1800);
+}
+$("toggleDestinations").onclick = toggleDestinationHighlight;
 // Numbers belong to the ticket, not the city: a shared endpoint carries all of
 // its badges. Wrap long collections so the labels remain inside the viewport.
 function destinationBadgeSize(count) {
@@ -1686,6 +1792,7 @@ function updateDestinationSpotlight() {
   toggle.disabled = !game?.tickets.length;
   toggle.setAttribute("aria-pressed", String(allDestinationsVisible && !toggle.disabled));
   toggle.title = toggle.disabled ? I18n.t("Conserva billetes para resaltar tus destinos") : allDestinationsVisible ? I18n.t("Ocultar mis destinos") : I18n.t("Resaltar mis destinos");
+  if (!toggle.disabled) toggle.title += " (H)";
   for (const label of $("board").querySelectorAll("[data-city-label]")) label.style.removeProperty("opacity");
   let overlay = $("destinationSpotlight");
   if (!overlay) {
@@ -1957,7 +2064,7 @@ function showTicketDialog(tickets, min, viewing = false) {
       if (e.target.checked) ticketChoices.add(i);
       else ticketChoices.delete(i);
       hoveredTicket = null;
-      if (!viewing) localStorage.setItem(draftKey, JSON.stringify([...ticketChoices]));
+      if (!viewing) { localStorage.setItem(draftKey, JSON.stringify([...ticketChoices])); playSound(e.target.checked ? "pen" : "pen-undo"); }
       updateTicketSelection(tickets, min);
     });
     bindTicketPreview(row, i, tickets, min);
@@ -2616,7 +2723,7 @@ function updateCompactStatus() {
 function updateCompactPlayer() {
   const player = game?.players[compactPlayer], detail = $("compactPlayerDetail");
   detail.classList.toggle("hidden", !player || !compactMedia.matches);
-  if (player) detail.querySelector("span").textContent = I18n.t`${player.name}${compactPlayer === seat ? I18n.t(" · Tú") : ""} — ${game.result?.find(r => r.seat === compactPlayer)?.score ?? player.score} puntos · ${player.trains} vagones · ${player.stations} estaciones${members[compactPlayer]?.autopilot ? I18n.t(" · Bot de reemplazo") : ""}`;
+  if (player) detail.querySelector("span").textContent = I18n.t`${player.name}${compactPlayer === seat ? I18n.t(" · Tú") : ""} — ${game.result?.find(r => r.seat === compactPlayer)?.score ?? player.score} puntos · ${player.handCount ?? "—"} cartas · ${player.trains} vagones · ${player.stations} estaciones${members[compactPlayer]?.autopilot ? I18n.t(" · Bot de reemplazo") : ""}`;
 }
 $("compactPlayerDetail").querySelector("button").onclick = () => { compactPlayer = null; updateCompactPlayer(); };
 for (const button of document.querySelectorAll("[data-panel]")) button.onclick = () => setCompactPanel(compactPanel === button.dataset.panel ? "map" : button.dataset.panel);
@@ -2669,7 +2776,8 @@ function mapSafeArea(rect, forCamera = false) {
     const panel = $("compactPanel").getBoundingClientRect(), hud = $("compactHud").getBoundingClientRect();
     const open = !$("compactPanel").classList.contains("hidden"), beside = rect.width >= 700;
     return GameUI.safeArea({ width: rect.width, height: rect.height }, {
-      top: Math.max($("boardtools").getBoundingClientRect().bottom, $("compactPlayers").getBoundingClientRect().bottom) - rect.top + 8,
+      top: Math.max($("boardStatusActions").getBoundingClientRect().bottom, $("compactPlayers").getBoundingClientRect().bottom) - rect.top + 8,
+      left: $("boardtools").getBoundingClientRect().right - rect.left + 8,
       right: open && beside ? rect.right - panel.left + 8 : 8,
       // Phone sheets overlay the board: opening one must not shrink Europe
       // into a tiny thumbnail. Menus/spotlights still use the uncovered area.
@@ -2678,9 +2786,10 @@ function mapSafeArea(rect, forCamera = false) {
   }
   const side = $("gameSidebar").getBoundingClientRect();
   const bottom = $("turnBanner").getBoundingClientRect();
-  const top = $("boardtools").getBoundingClientRect().bottom - rect.top + 12;
+  const top = $("boardStatusActions").getBoundingClientRect().bottom - rect.top + 12;
+  const left = $("boardtools").getBoundingClientRect().right - rect.left + 12;
   return {
-    x: 16, y: top, width: side.left - rect.left - 32,
+    x: left, y: top, width: side.left - rect.left - left - 16,
     height: bottom.top - rect.top - top - 12,
   };
 }
@@ -2807,7 +2916,7 @@ $("mapscroll").addEventListener("click", (event) => {
   event.stopPropagation();
 }, true);
 const cameraResize = new ResizeObserver(() => { closeMapMenu(); applyZoom(); layoutHand(); if (game && $("ticketMap")) renderTicketMap(uiDialog === "routes" ? game.tickets : game.ticketOffer?.tickets || game.initial || []); });
-for (const id of ["mapscroll", "gameSidebar", "handdock", "turnBanner", "compactPanel", "compactHud", "compactPlayers", "boardtools"]) cameraResize.observe($(id));
+for (const id of ["mapscroll", "gameSidebar", "handdock", "turnBanner", "compactPanel", "compactHud", "compactPlayers", "boardtools", "boardStatusActions"]) cameraResize.observe($(id));
 function updateFullscreenControl() {
   const available = !!document.fullscreenElement ||
     (document.fullscreenEnabled === true && typeof document.documentElement.requestFullscreen === "function");
@@ -2832,9 +2941,26 @@ window.addEventListener("pageshow", updateFullscreenControl);
 document.addEventListener("pointerdown", event => {
   if (!event.target.closest("#mapMenu, .route-group, .city-node")) closeMapMenu();
 });
+function closeGameMenu(restoreFocus = false) {
+  const menu = $("sessionControls");
+  if (!menu.open) return;
+  menu.open = false;
+  if (restoreFocus) menu.querySelector("summary").focus();
+}
+document.addEventListener("pointerdown", event => {
+  if (!event.target.closest("#sessionControls")) closeGameMenu();
+});
+document.addEventListener("focusin", event => {
+  if (!event.target.closest("#sessionControls")) closeGameMenu();
+});
+$("sessionControls").addEventListener("click", event => {
+  if (event.target.closest("button")) closeGameMenu(!document.querySelector("dialog[open]"));
+});
 window.addEventListener("keydown", (e) => {
+  if (e.target.closest?.("dialog[open]")) return;
   if (e.key === "Escape") {
-    if (uiDialog) { e.preventDefault(); closeOptionalDialog(); }
+    if ($("sessionControls").open) { e.preventDefault(); closeGameMenu(true); }
+    else if (uiDialog) { e.preventDefault(); closeOptionalDialog(); }
     else if (!$("mapMenu").classList.contains("hidden")) {
       e.preventDefault(); closeMapMenu();
       const selector = stationCity ? `[data-city="${stationCity}"]` : `[data-route-id="${selected}"]`;
@@ -2869,7 +2995,7 @@ account = AccountUI.create({
   },
 });
 shell = AppShell.create({
-  state:()=>({room,game,members,host,seat,spectator:spectating,maxPlayers:roomCapacity,visibility:roomVisibility,started:lobbyStarted,
+  state:()=>({room,game,members,host,seat,spectator:spectating,maxPlayers:roomCapacity,visibility:roomVisibility,timing:roomTiming,started:lobbyStarted,
     busy:homeBusy || sock?.readyState !== WebSocket.OPEN || sessionReplaced || storagePaused}),
   send, saveProfile:name=>account.updateNickname(name),
   joinRoom(code) { $('code').value=code; $('homeJoin').requestSubmit(); },
@@ -2884,7 +3010,7 @@ if(replayMode){
   HistoryUI.replay(new URLSearchParams(location.search).get('id')||'',(view,recordedMembers,context)=>{
     game=view;members=recordedMembers;seat=context.seat;sessionSupported=true;replayAt=context.at;spectating=seat===-1;resultsSeen=true;uiDialog=null;
     displayedHistoryKey=null;document.body.classList.toggle('is-spectating',spectating);
-    $('sessionControls').classList.add('hidden');$('connection').classList.add('hidden');
+    $('privateSession').hidden=true;$('leaveRoom').hidden=true;$('leaveWatch').hidden=true;$('connection').classList.add('hidden');
     render();
   });
 }else connect();

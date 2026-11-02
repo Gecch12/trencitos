@@ -78,13 +78,18 @@ test("practice assigns the chosen color to the human and distinct colors to all 
 test("saved colors survive a restart and legacy alphanumeric recovery links still work", async () => {
   const { c, lobby } = await create("88990011", colors[3]);
   c.send({ type: "select_color", color: colors[4] }); await c.next("lobby", m => m.members[0].color === colors[4]);
+  c.send({ type: "add_bot" });
+  const savedColors = (await c.next("lobby", m => m.members.length === 2)).members.map(m => m.color);
+  assert.equal(new Set(savedColors).size, 2);
   const legacy = await create("99001122", colors[2]);
   const r = app.rooms.get(legacy.lobby.code); app.rooms.delete(r.code); r.code = "OLD123"; app.rooms.set(r.code, r);
   legacy.c.send({ type: "select_color", color: colors[2] }); await legacy.c.next("lobby", m => m.code === "OLD123");
-  assert.equal(loadRooms(process.env.STATE_FILE).find(r => r.code === lobby.code).members[0].color, colors[4]);
+  assert.deepEqual(loadRooms(process.env.STATE_FILE).find(r => r.code === lobby.code).members.map(m => m.color), savedColors);
   await stop(); await boot();
   const rejoined = await client(); rejoined.send({ type: "join", code: lobby.code, token: lobby.token, color: colors[0] });
-  assert.equal((await rejoined.next("lobby")).members[0].color, colors[4]);
+  assert.deepEqual((await rejoined.next("lobby")).members.map(m => m.color), savedColors);
+  rejoined.send({ type: "start" });
+  assert.deepEqual((await rejoined.next("state")).game.players.map(p => p.color), savedColors);
   const old = await client(); old.send({ type: "join", code: "old123", token: legacy.lobby.token });
   assert.equal((await old.next("lobby")).members[0].color, colors[2]);
 });

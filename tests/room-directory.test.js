@@ -37,6 +37,25 @@ test('spectator projection excludes hands, destinations and hidden draws, but in
   assert.equal(view.events.length,2);assert.deepEqual(view.events[1].revealed,["red"]);assert.equal(view.events[0].color,undefined);assert.equal(view.drawEvent.color,undefined);
   for(const p of view.players){assert.equal(p.hand,undefined);assert.equal(p.tickets,undefined);}
 });
+test('added bots can receive every free color, respect disconnected reservations and release their color on removal',async t=>{
+  const colors=require('../data').PLAYER_COLORS, crypto=require('node:crypto');
+  const host=await client();host.send({type:'create',code:'834004',name:'Host',color:colors[0],visibility:'private'});await host.next('lobby');
+  const guest=await client();guest.send({type:'join',code:'834004',name:'Guest',color:colors.at(-1)});await guest.next('lobby');
+  guest.close();await host.next('lobby',m=>m.members.length===2&&!m.members[1].connected);
+  const available=colors.slice(1,-1);
+  let index=0;
+  // Exercise each possible random outcome without a probabilistic assertion.
+  t.mock.method(crypto,'randomInt',max=>{assert.equal(max,available.length);return index;});
+  for(;index<available.length;index++){
+    host.send({type:'add_bot'});const added=await host.next('lobby',m=>m.members.length===3);
+    assert.deepEqual(added.members.map(m=>m.color),[colors[0],colors.at(-1),available[index]]);
+    assert.equal(added.members[2].bot,true);
+    const saved=JSON.parse(fs.readFileSync(process.env.STATE_FILE)).rooms.find(r=>r.code==='834004');
+    assert.deepEqual(saved.members.map(m=>m.color),added.members.map(m=>m.color));
+    host.send({type:'kick',seat:2});const removed=await host.next('lobby',m=>m.members.length===2);
+    assert.deepEqual(removed.members.map(m=>m.color),[colors[0],colors.at(-1)]);
+  }
+});
 test('directory updates, host controls, bots, full capacity, persistence and spectator permissions',async()=>{
   const lobby=await client();lobby.send({type:'list_rooms'});await lobby.next('directory');
   const host=await client();host.send({type:'create',code:'834001',name:'Host',maxPlayers:3});
@@ -72,8 +91,8 @@ test('failed local save restores room settings and bot membership without strand
   host.send({type:'add_bot'});await host.next('error',m=>m.code==='STORAGE_FAILED');
   assert.equal(app.rooms.get('834003').members.length,1);
   fs.rmdirSync(temp);host.send({type:'retry_save'});await flush(host);
-  fs.mkdirSync(temp);host.send({type:'room_settings',visibility:'private',maxPlayers:2});await host.next('error',m=>m.code==='STORAGE_FAILED');
-  assert.equal(app.rooms.get('834003').visibility,'public');assert.equal(app.rooms.get('834003').maxPlayers,5);
+  fs.mkdirSync(temp);host.send({type:'room_settings',visibility:'private',maxPlayers:2,timing:{turnSeconds:90,ticketExtraSeconds:15,initialSeconds:30}});await host.next('error',m=>m.code==='STORAGE_FAILED');
+  assert.equal(app.rooms.get('834003').visibility,'public');assert.equal(app.rooms.get('834003').maxPlayers,5);assert.deepEqual(app.rooms.get('834003').timing,{turnSeconds:60,ticketExtraSeconds:30,initialSeconds:60});
   fs.rmdirSync(temp);host.send({type:'retry_save'});await flush(host);
   host.send({type:'add_bot'});await host.next('lobby',m=>m.members.length===2);
   fs.mkdirSync(temp);host.send({type:'kick',seat:1});await flush(host);

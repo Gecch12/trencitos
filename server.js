@@ -4,6 +4,7 @@ const http = require("node:http"),
   path = require("node:path"),
   crypto = require("node:crypto");
 const Engine = require("./engine");
+const GameTiming = require("./game-timing");
 const {createMatchArchive,safePublic}=require("./match-archive");
 const {guestId,ensureGuest}=require("./guest-identity");
 const LobbyUI = require("./lobby-ui");
@@ -94,7 +95,7 @@ const multiplayer = createMultiplayerController({ rooms, sendRoom, removeRoom, d
 const roomBots = createRoomBots({ rooms, sendRoom, dispatch, blocked: () => storageFailureAt !== null });
 function snapshot(r) {
   return { archiveHash:r.archiveHash,matchId:r.matchId,archiveSeq:r.archiveSeq,archiveFull:r.archiveFull,archiveStartedAt:r.archiveStartedAt,archiveClosedAt:r.archiveClosedAt,_archiveState:r._archiveState, game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
-    hostSeat: r.hostSeat, visibility: r.visibility, maxPlayers: r.maxPlayers,
+    hostSeat: r.hostSeat, visibility: r.visibility, maxPlayers: r.maxPlayers, timing: r.timing ? {...r.timing} : undefined,
     members: r.members.map(m => ({ member: m, data: { token: m.token || m.ws?.token, tokenHash: m.tokenHash,
       name: m.name, bot: m.bot, color: m.color, accountId: m.accountId, guestId:m.guestId, actionIds: [...(m.actionIds || [])], autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
 }
@@ -120,7 +121,7 @@ function persist() {
         r.game = structuredClone(saved.game); r.revision = saved.revision;
         for(const key of ["archiveHash","matchId","archiveSeq","archiveFull","archiveStartedAt","archiveClosedAt","_archiveState"])r[key]=saved[key];
         watchRecording(r);
-        r.hostSeat = saved.hostSeat; r.visibility = saved.visibility; r.maxPlayers = saved.maxPlayers;
+        r.hostSeat = saved.hostSeat; r.visibility = saved.visibility; r.maxPlayers = saved.maxPlayers; r.timing = saved.timing;
         for (const member of r.members) if (!saved.members.some(entry => entry.member === member) && member.ws) {
           const peer = member.ws;
           peer.room = null; peer.seat = -1; member.ws = null;
@@ -172,6 +173,7 @@ const TYPES = {
   "/style.css": "text/css; charset=utf-8",
   "/data.js": "text/javascript; charset=utf-8",
   "/map-layout.js": "text/javascript; charset=utf-8",
+  "/game-timing.js": "text/javascript; charset=utf-8",
   "/game-ui.js": "text/javascript; charset=utf-8",
   "/game.css": "text/css; charset=utf-8",
   "/responsive.css": "text/css; charset=utf-8",
@@ -391,7 +393,7 @@ function sendRoom(r, automatic = false) {
       started: !!r.game,
       practice: !!r.practice,
       visibility: Directory.isPublic(r) ? "public" : "private",
-      maxPlayers: Directory.capacity(r),
+      maxPlayers: Directory.capacity(r), timing: GameTiming.normalize(r.timing),
       sessionVersion: 1,
       members: r.members.map((x, j) => ({
         name: x.name,
@@ -424,7 +426,7 @@ function sendSpectator(peer, r) {
     peer.watching = null; peer.send({ type: "room_closed", message: "Esta partida ya no está disponible para observar." }); return;
   }
   peer.send({ type: "lobby", code: r.code, seat: -1, spectator: true, host: false, started: true,
-    sessionVersion: 1, visibility: "public", maxPlayers: Directory.capacity(r),
+    sessionVersion: 1, visibility: "public", maxPlayers: Directory.capacity(r), timing: GameTiming.normalize(r.timing),
     members: r.members.map(m => ({ name: m.name, color: m.color, bot: !!m.bot, connected: !!m.bot || !!(m.ws && !m.ws.closed), autopilot: !!m.autopilot })) });
   peer.send({ type: "state", game: { ...safePublic(Engine.view(r.game, -1)), revision: r.revision || 0, storagePaused: storageFailureAt !== null } });
 }
@@ -481,6 +483,7 @@ function onMessage(peer, msg) {
   if (["create", "create_test"].includes(msg.type) && !peer.room) {
     if (msg.visibility !== undefined && !["public", "private"].includes(msg.visibility)) return deny(peer, "Visibilidad inválida.");
     if (msg.maxPlayers !== undefined && (!Number.isInteger(msg.maxPlayers) || msg.maxPlayers < 2 || msg.maxPlayers > 5)) return deny(peer, "Elige entre 2 y 5 jugadores.");
+    if (msg.timing !== undefined && !GameTiming.valid(msg.timing)) return deny(peer, "Configuración de tiempos inválida.");
     if (msg.color !== undefined && !LobbyUI.isColor(msg.color)) return deny(peer, "Color inválido.", "INVALID_COLOR");
     let code = msg.type === "create" ? msg.code : undefined;
     if (code !== undefined) {
@@ -488,7 +491,7 @@ function onMessage(peer, msg) {
       if (rooms.has(code)) return deny(peer, "Ese código ya está en uso. Elige otro o genera uno nuevo.", "CODE_TAKEN");
     } else do { code = LobbyUI.randomCode(crypto.randomInt); } while (rooms.has(code));
     const r = { code, hostSeat: 0, updated: Date.now(), game: null, members: [], revision: 0,
-      visibility: msg.type === "create_test" ? "private" : msg.visibility || "public", maxPlayers: msg.maxPlayers || 5 };
+      visibility: msg.type === "create_test" ? "private" : msg.visibility || "public", maxPlayers: msg.maxPlayers || 5, timing: GameTiming.normalize(msg.timing) };
     rooms.set(code, r);
     const human = {
       name: cleanName(msg.name),
@@ -563,12 +566,15 @@ function onMessage(peer, msg) {
     if (msg.type === "add_bot") {
       if (r.members.length >= Directory.capacity(r)) return deny(peer, "La sala está llena. No puedes añadir más bots.", "ROOM_FULL");
       let n = 1; while (r.members.some(m => m.name === `Bot ${n}`)) n++;
-      r.members.push({ name: `Bot ${n}`, bot: true, color: LobbyUI.freeColor(r.members) });
+      const availableColors = LobbyUI.PALETTE.filter(({ color }) => !r.members.some(member => member.color === color));
+      r.members.push({ name: `Bot ${n}`, bot: true, color: availableColors[crypto.randomInt(availableColors.length)].color });
     } else {
       if (!["public", "private"].includes(msg.visibility) || !Number.isInteger(msg.maxPlayers) || msg.maxPlayers < 2 || msg.maxPlayers > 5)
         return deny(peer, "Elige una visibilidad y una capacidad de 2 a 5 jugadores.");
       if (msg.maxPlayers < r.members.length) return deny(peer, "Retira participantes antes de reducir las plazas.");
+      if (msg.timing !== undefined && !GameTiming.valid(msg.timing)) return deny(peer, "Configuración de tiempos inválida.");
       r.visibility = msg.visibility; r.maxPlayers = msg.maxPlayers;
+      r.timing = GameTiming.normalize(msg.timing || r.timing);
     }
     if (!sendRoom(r)) deny(peer, "No se pudo guardar la configuración de la sala.", "STORAGE_FAILED");
     return;
@@ -617,7 +623,7 @@ function onMessage(peer, msg) {
       let code; do { code = LobbyUI.randomCode(crypto.randomInt); } while (rooms.has(code));
       r.rematchCode = code;
       rooms.set(code, { code, updated: Date.now(), hostSeat: 0, members: [], game: null, revision: 0,
-        visibility: r.visibility || "private", maxPlayers: Directory.capacity(r) });
+        visibility: r.visibility || "private", maxPlayers: Directory.capacity(r), timing: GameTiming.normalize(r.game?.timing || r.timing) });
     }
     const next = rooms.get(r.rematchCode), member = r.members[peer.seat];
     if (next.game) return deny(peer, "La revancha ya empezó. Crea otra sala desde el inicio.");
@@ -692,7 +698,7 @@ function attach(peer, r, m) {
   }
 }
 function startRoomGame(r) {
-  const game = Engine.newRandomGame(r.members.map(m => m.name));
+  const game = Engine.newRandomGame(r.members.map(m => m.name), Date.now(), crypto.randomInt, GameTiming.normalize(r.timing));
   game.players.forEach((player, i) => { player.color = r.members[i].color; });
   return game;
 }

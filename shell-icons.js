@@ -2,6 +2,12 @@
 // Small original line icons share Trencitos' rail geometry and warm accent.
 const ShellIcons = (() => {
   const paths = {
+    link: '<path d="m13 19 6-6M11 22l-2 2a6 6 0 0 1-8-8l7-7a6 6 0 0 1 8 0m5 1 2-2a6 6 0 0 1 8 8l-7 7a6 6 0 0 1-8 0" transform="translate(1 -1) scale(.92)"/>',
+    key: '<circle cx="11" cy="11" r="7"/><path d="m16 16 12 12m-6-6 4-4m-8 0 4-4"/>',
+    lock: '<rect x="6" y="14" width="20" height="15" rx="3"/><path d="M10 14V9a6 6 0 0 1 12 0v5m-6 6v4"/>',
+    refresh: '<path d="M26 12a11 11 0 0 0-20-2M6 20a11 11 0 0 0 20 2M26 4v8h-8M6 28v-8h8"/>',
+    fullscreen: '<path d="M12 4H4v8m16-8h8v8M4 20v8h8m16-8v8h-8"/>',
+    exit: '<path d="M14 4H5v24h9m5-20 8 8-8 8m-8-8h16"/>',
     rooms: '<rect x="6" y="4" width="20" height="21" rx="6"/><path d="M6 15h20M12 4v11M20 4v11M11 25l-3 4m13-4 3 4"/><circle cx="11" cy="20" r="1"/><circle cx="21" cy="20" r="1"/>',
     play: '<path d="M10 7v18l17-9Z"/><path class="icon-accent" d="M4 4v24"/>',
     more: '<path d="M5 8h22M5 16h22M5 24h22"/><path class="icon-accent" d="M5 8h6M5 16h10M5 24h6"/>',
@@ -9,7 +15,7 @@ const ShellIcons = (() => {
     friends: '<circle cx="12" cy="11" r="5"/><path d="M3 28v-3a9 9 0 0 1 18 0v3ZM23 6a5 5 0 0 1 0 10m2 4a8 8 0 0 1 4 7"/>',
     bell: '<path d="M7 22h18l-3-4v-7a6 6 0 0 0-12 0v7ZM13 26a3 3 0 0 0 6 0M16 3v2"/>',
     globe: '<circle cx="16" cy="16" r="12"/><ellipse cx="16" cy="16" rx="5" ry="12"/><path d="M4 16h24"/>',
-    settings: '<path d="m13 3-1 4-4 2-4-1-2 5 3 3v4l-2 3 4 4 4-2 4 1 2 4 5-1 1-4 3-3 4 1 2-5-3-3-1-4 2-3-4-4-3 2-4-1Z" transform="translate(0 -1) scale(.96)"/><circle cx="16" cy="16" r="5"/>',
+    settings: '<path d="M13.22 6.92 13.83 3.69 18.17 3.69 18.78 6.92 20.46 7.61 23.17 5.76 26.24 8.83 24.39 11.54 25.08 13.22 28.31 13.83 28.31 18.17 25.08 18.78 24.39 20.46 26.24 23.17 23.17 26.24 20.46 24.39 18.78 25.08 18.17 28.31 13.83 28.31 13.22 25.08 11.54 24.39 8.83 26.24 5.76 23.17 7.61 20.46 6.92 18.78 3.69 18.17 3.69 13.83 6.92 13.22 7.61 11.54 5.76 8.83 8.83 5.76 11.54 7.61Z"/><circle cx="16" cy="16" r="4.5"/>',
     history: '<path d="M6 5h19v23H6ZM11 11h9m-9 5h9m-9 5h5"/><path class="icon-accent" d="M3 9h6M3 16h6M3 23h6"/>',
     book: '<path d="M16 8v21M16 8C12 4 6 4 3 5v21c4-1 9-1 13 3 4-4 9-4 13-3V5c-3-1-9-1-13 3Z"/>',
     help: '<circle cx="16" cy="16" r="12"/><path d="M12 11a4 4 0 1 1 6 4c-2 1-2 2-2 4m0 5h.01"/>',

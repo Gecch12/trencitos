@@ -118,9 +118,19 @@ omite el color de robos del mazo para rivales y espectadores, que ven el reverso
 El filtro se aplica también a eventos de pasos del replay público, además de sus
 vistas. El propietario conserva sus colores tras reconectar. Los registros
 anteriores sin metadatos siguen mostrando su texto, sin inventar cartas.
+Los avatares del historial comparten las proporciones del panel y resultados;
+la repetición no reproduce avisos de cuenta atrás de los plazos archivados.
 
-Perfil → Historial filtra todas/en curso/completadas/abandonadas y muestra el
-resumen de puntos. Resumen cuenta esos estados por separado. `/replay?id=UUID`
+Perfil → Historial filtra todas/en curso/completadas/abandonadas y presenta filas
+compactas con fecha, puesto, jugadores, duración, estado y replay; dos líneas
+por partida en móvil. La fila abre un único desglose de puntos y el icono de
+repetición navega directamente. La duración es tiempo de calendario entre inicio
+y cierre; lleva `~` si la grabación es parcial y `—` mientras siga en curso.
+El servidor añade `ownSeat` y `rank` al listado privado a partir de la identidad
+verificada y sus reclamaciones de invitado, nunca del nombre. El puesto solo
+existe al completar: compara puntos, destinos completados, puntos de estaciones
+y Express, compartiendo puesto en empate exacto. No expone IDs de propiedad.
+Resumen cuenta los estados por separado. `/replay?id=UUID`
 reutiliza el tablero, mano y resultados, sin conexión de juego ni envío de acciones.
 Tiene inicio/final, pasos, búsqueda por acción, barra de posición, pausa y velocidades
 0,5×, 1×, 2×, 4× y 8×. Los participantes pueden elegir cualquier perspectiva y consultar
@@ -128,6 +138,9 @@ cartas/destinos del paso; la vista pública recibe únicamente su proyección.
 
 `i18n.js` y `translations.js` localizan HTML, accesibilidad, mensajes y registros.
 Español es el valor inicial; Más → Idioma permite ESP o ENG y guarda `rr-language`.
+Durante la partida se accede desde el engranaje, también en móvil. El cambio
+recarga la misma URL y conserva credencial y borradores locales; no reinicia
+los plazos del servidor.
 El cambio recarga la ruta actual, conservando los mecanismos de reconexión.
 Las plantillas se traducen antes de interpolar nombres, códigos y otros valores:
 los datos del jugador no se traducen ni cambian de identidad. Las ciudades conservan

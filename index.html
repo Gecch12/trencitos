@@ -34,21 +34,11 @@
       </div>
       <div class="topright">
         <button id="returnRoom" class="return-room" type="button" hidden>Volver a mi sala</button>
-        <button id="leaveWatch" class="leave-watch" type="button" hidden>Dejar de observar</button>
-        <details id="sessionControls" class="session-controls hidden"><summary>Partida</summary><div>
-          <button id="copyRecovery" type="button">Copiar mi enlace de recuperación</button>
-          <small>Es privado: quien lo tenga podrá jugar en tu puesto. No es una invitación.</small>
-          <button id="rotateRecovery" type="button">Renovar mi enlace privado</button>
-          <button id="reclaimControl" class="hidden" type="button">Recuperar control</button>
-          <button id="leaveRoom" type="button">Salir de la sala</button>
-        </div></details>
-        <button id="soundToggle" class="sound-toggle" type="button" aria-label="Sonido" title="Silenciar sonidos" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3Z"/><path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg></button>
-        <a class="header-user" href="/profile" data-page="profile"><span class="identity-avatar" data-icon="user"></span><strong data-username>Jugador</strong></a>
-        <button class="notification-bell" type="button" aria-label="Notificaciones, próximamente" title="Notificaciones · Próximamente" disabled data-icon="bell"></button>
-        <span id="serverWarning" class="server-warning hidden" tabindex="0" role="status">⚠ Servidor anterior<span>El backend aún usa una versión anterior. Reinícialo al terminar la partida y recarga la página.</span></span>
-        <span class="pill hidden" id="connection" role="status">Conectando…</span>
+
       </div>
     </header>
+    <div class="connection-status"><span id="serverWarning" class="server-warning hidden" tabindex="0" role="status">⚠ Servidor anterior<span>El backend aún usa una versión anterior. Reinícialo al terminar la partida y recarga la página.</span></span>
+        <span class="pill hidden" id="connection" role="status">Conectando…</span></div>
     <div id="sessionNotice" class="session-notice hidden" role="status"><span></span><button id="takeOver" class="hidden" type="button">Recuperar esta pestaña</button><button id="retrySave" class="hidden" type="button">Reintentar guardado</button></div>
     <main id="lobby" class="app-workspace" tabindex="-1" aria-label="Inicio de Trencitos">
       <section id="roomsPage" class="shell-page rooms-page" aria-label="Rooms">
@@ -112,13 +102,18 @@
           <header class="room-title"><h1>Sala: <span id="roomcode"></span></h1><button id="leaveLobby" type="button" class="icon-button" aria-label="Salir de la sala" data-icon="close"></button></header>
           <div class="room-settings-scroll">
             <section class="room-invitation"><h2>Invitar amigos</h2><div><input id="roomInviteLink" readonly aria-label="Enlace de invitación" /><button id="copyLink" class="shell-primary" type="button">Copiar</button></div></section>
-            <section class="room-setting-group"><h2>Modo de juego</h2><div class="setting-cards"><div class="setting-card selected" data-icon="play"><strong>Clásico</strong></div></div></section>
-            <section class="room-setting-group"><h2>Mapa</h2><div class="setting-cards"><div class="setting-card selected" data-icon="map"><strong>Europa</strong></div></div></section>
-            <section class="room-setting-group"><h2>Configuración</h2><div class="room-setting-fields">
-              <label>Visibilidad<select id="roomVisibility"><option value="public">Pública</option><option value="private">Privada</option></select></label>
-              <label>Jugadores<select id="roomCapacity"><option value="2">2 jugadores</option><option value="3">3 jugadores</option><option value="4">4 jugadores</option><option value="5" selected>5 jugadores</option></select></label>
-              <div class="fixed-setting"><span>Tiempo por turno</span><strong>60 segundos</strong></div><div class="fixed-setting"><span>Primer turno</span><strong>Al azar</strong></div>
-            </div><p id="roomVisibilityHint" class="shell-muted">Visible en Open Rooms. La partida se podrá observar.</p></section>
+            <div class="room-game-options">
+              <section class="room-setting-group"><h2>Modo de juego</h2><div class="setting-cards"><div class="setting-card selected" data-icon="play"><strong>Clásico</strong></div></div></section>
+              <section class="room-setting-group"><h2>Mapa</h2><div class="setting-cards"><div class="setting-card selected map-setting"><svg id="roomMapPreview" viewBox="-60 -10 980 660" aria-hidden="true"></svg><strong>Europa</strong></div></div></section>
+              <section class="room-setting-group"><h2>Visibilidad</h2><button id="roomVisibility" class="setting-card visibility-setting" type="button" value="public" aria-label="Cambiar visibilidad" aria-describedby="roomVisibilityHint"><span data-visibility-icon></span><strong>Pública</strong></button></section>
+              <section class="room-setting-group capacity-setting"><h2><label for="roomCapacity">Jugadores</label></h2><div class="setting-card selected"><div class="room-stepper" data-setting="roomCapacity"></div></div></section>
+            </div>
+            <p id="roomVisibilityHint" class="shell-muted room-visibility-hint">Visible en Partidas abiertas. La partida se podrá observar.</p>
+            <section class="room-setting-group room-timing" aria-labelledby="roomTimingTitle"><h2 id="roomTimingTitle">Tiempos</h2><div class="room-setting-fields">
+              <div class="room-setting-field"><label for="roomTurnSeconds">Tiempo por turno</label><div class="room-stepper" data-setting="roomTurnSeconds"></div></div>
+              <div class="room-setting-field"><label for="roomTicketExtra">Extra para nuevos billetes</label><div class="room-stepper" data-setting="roomTicketExtra"></div></div>
+              <div class="room-setting-field"><label for="roomInitialSeconds">Billetes iniciales</label><div class="room-stepper" data-setting="roomInitialSeconds"></div></div>
+            </div><p class="shell-muted timing-hint">El extra se suma al tiempo restante del turno.</p></section>
             <section class="room-setting-group appearance-setting"><fieldset class="color-choice"><legend>Tu color <span id="chosenColorName"></span></legend><div id="roomColors" class="color-options"></div></fieldset>
               <figure id="wagonPreview" class="wagon-preview" hidden><div id="wagonPreviewStage" class="wagon-preview-stage" role="img" aria-label="Vista previa de tu vagón"></div><figcaption><span>Tu vagón</span><strong id="wagonPreviewName">Cargando…</strong></figcaption><p id="wagonPreviewError" hidden>La vista previa no está disponible.</p></figure>
               <p id="roomNote" class="shell-muted" role="status"></p>
@@ -134,7 +129,7 @@
       <form id="homeJoin" novalidate><label for="code">Código de invitación</label><input id="code" maxlength="10" autocomplete="off" spellcheck="false" placeholder="Introduce el código" aria-describedby="joinCodeHint joinCodeError" required /><p id="joinCodeHint" class="shell-muted">Pídeselo a quien creó la sala.</p><p id="joinCodeError" class="field-error" role="alert"></p><button id="join" type="submit" class="shell-primary full">Unirme a la sala</button></form>
     </dialog>
     <dialog id="profileDialog" class="shell-dialog" aria-labelledby="editTitle"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button><h2 id="editTitle">Edit Profile</h2>
-      <form id="profileForm"><label for="profileName">Nombre de usuario</label><input id="profileName" maxlength="24" required autocomplete="nickname" aria-describedby="profileError" /><fieldset class="avatar-options"><legend>Avatar</legend><button type="button" class="avatar-option" aria-label="Avatar básico" aria-pressed="true" data-icon="user"><span>Básico</span></button></fieldset><p id="profileError" class="field-error" role="alert"></p><div class="dialog-actions"><button type="button" data-close-dialog>Cancelar</button><button id="saveProfile" type="submit" class="shell-primary">Guardar</button></div></form>
+      <form id="profileForm" autocomplete="off"><label for="profileName">Nombre de usuario</label><input id="profileName" maxlength="24" required autocomplete="off" aria-describedby="profileError" /><fieldset class="avatar-options"><legend>Avatar</legend><button type="button" class="avatar-option" aria-label="Avatar básico" aria-pressed="true" data-icon="user"><span>Básico</span></button></fieldset><p id="profileError" class="field-error" role="alert"></p><div class="dialog-actions"><button type="button" data-close-dialog>Cancelar</button><button id="saveProfile" type="submit" class="shell-primary">Guardar</button></div></form>
     </dialog>
     <dialog id="languageDialog" class="shell-dialog" aria-labelledby="languageTitle"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button><h2 id="languageTitle">Idioma</h2><label for="languageSelect">Idioma de la aplicación</label><select id="languageSelect"><option value="es">Español (ESP)</option><option value="en">English (ENG)</option></select><button type="button" class="shell-primary full" data-close-dialog>Listo</button></dialog>
     <div id="homeSetup" hidden>
@@ -154,18 +149,35 @@
           </div>
           <p id="maphint" class="sr-only">Pellizca con dos dedos o usa la rueda para acercar y alejar. Arrastra para mover el mapa. Toca una ruta o ciudad para construir.</p>
           <div class="boardtools" id="boardtools">
-              <button id="copyRoomInGame" class="copy-game" title="Copiar enlace privado">↗ <span>Invitar</span></button>
+              <details id="sessionControls" class="session-controls">
+                <summary aria-label="Menú de partida" title="Menú de partida" data-icon="settings"></summary>
+                <div class="game-menu">
+                  <button id="copyRoomInGame" type="button" data-icon="link">Copiar enlace de invitación</button>
+                  <button id="soundToggle" type="button" aria-label="Sonido" aria-pressed="true"></button>
+                  <button type="button" data-language data-icon="globe">Idioma <small>ESP</small></button>
+                  <section id="privateSession" class="private-session">
+                    <strong>Recuperar mi puesto</strong>
+                    <button id="copyRecovery" type="button" data-icon="key">Copiar enlace de recuperación</button>
+                    <small>Es privado: quien lo tenga podrá jugar en tu puesto. No es una invitación.</small>
+                    <button id="rotateRecovery" type="button" data-icon="refresh">Cambiar enlace de recuperación</button>
+                    <button id="reclaimControl" class="hidden" type="button">Recuperar control</button>
+                  </section>
+                  <button id="leaveRoom" class="menu-leave" type="button" data-icon="exit">Abandonar partida</button>
+                  <button id="leaveWatch" class="menu-leave" type="button" hidden data-icon="exit">Dejar de observar</button>
+                </div>
+              </details>
               <button
                 class="boardexpand hidden"
                 id="expandboard"
                 title="Pantalla completa"
-                aria-label="Pantalla completa"
+                aria-label="Pantalla completa" data-icon="fullscreen"
               >
-                ⛶
               </button>
-              <button id="toggleDestinations" class="destination-toggle" type="button" aria-label="Resaltar mis destinos" aria-pressed="false" title="Resaltar mis destinos" disabled>
+              <button id="toggleDestinations" class="destination-toggle" type="button" aria-label="Resaltar mis destinos" aria-keyshortcuts="H" aria-pressed="false" title="Resaltar mis destinos (H)" disabled>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8c3 0 2 8 6 8h6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-dasharray="2 2"/><circle cx="5" cy="7" r="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="19" cy="16" r="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="5" cy="7" r="1" fill="currentColor"/><circle cx="19" cy="16" r="1" fill="currentColor"/></svg>
               </button>
+          </div>
+          <div id="boardStatusActions" class="board-status-actions">
               <button id="pendingTickets" class="pending-tickets hidden" type="button" aria-haspopup="dialog">Elegir billetes <span data-clock="offer"></span></button>
               <span id="initialStatus" class="initial-status hidden" role="status"><span id="initialStatusText"></span> · <strong data-clock="initial"></strong></span>
               <button id="viewResults" class="pending-tickets hidden" type="button" aria-haspopup="dialog">Ver resultados</button>
@@ -254,6 +266,7 @@
 
     <script src="data.js"></script>
     <script src="map-layout.js"></script>
+    <script src="game-timing.js"></script>
     <script src="game-ui.js"></script>
     <script src="lobby-ui.js"></script>
     <script src="board-camera.js"></script>

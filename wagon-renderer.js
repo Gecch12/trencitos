@@ -123,6 +123,10 @@ export function createWagonRenderer({ renderer, instances, put, capacity = 300 }
     const a = i*Math.PI/3;
     return new THREE.SphereGeometry(1,8,4).scale(.23,.23,.45).translate(.27*Math.cos(a),.27*Math.sin(a),0);
   }));
+  shapes['mushroom-cap'] = new THREE.SphereGeometry(.5,16,8,0,Math.PI*2,0,Math.PI/2)
+    .rotateX(Math.PI/2).scale(1,1,2).translate(0,0,-.5);
+  shapes.crystal = latheStrips([[[0,-.5],[.5,-.5],[.5,.12],[0,.5]]],6).rotateX(Math.PI/2);
+  shapes.crystal.computeVertexNormals();
   // A pointed hull and a broad stern, unlike the symmetric tanker and road cars.
   const hullOutline = [[-.5,-.42],[.16,-.5],[.35,-.32],[.5,0],[.35,.32],[.16,.5],[-.5,.42]];
   const hull = [], bottomHull = hullOutline.map(([x,y]) => [x*.88,y*.45,-.5]);

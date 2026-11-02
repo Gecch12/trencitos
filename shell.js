@@ -20,7 +20,7 @@ const AppShell = (() => {
     ShellIcons.mount();
     for (const el of document.querySelectorAll('.sidebar-language span, [data-language] small')) el.textContent = I18n.language === 'en' ? 'ENG' : 'ESP';
     $('languageSelect').value = I18n.language;
-    $('languageSelect').onchange = event => { if (I18n.select(event.target.value)) location.reload(); };
+    $('languageSelect').onchange = event => { if (event.target.value !== I18n.language && I18n.select(event.target.value)) location.reload(); };
 
     function identity() { for (const el of document.querySelectorAll('[data-username]')) el.textContent = $('nickname').value || I18n.t('Jugador'); }
     function route(url = new URL(location.href), push = false) {
@@ -94,7 +94,34 @@ const AppShell = (() => {
     }
     setupTabs('[data-directory]', tab => { directoryTab=tab.dataset.directory; $('roomDirectory').setAttribute('aria-labelledby',tab.id); renderDirectory(); });
     setupTabs('button[data-room-tab]', tab => { $('roompanel').dataset.roomTab=tab.dataset.roomTab; });
-    for (const id of ['roomVisibility','roomCapacity']) $(id).onchange = () => send({ type:'room_settings',visibility:$('roomVisibility').value,maxPlayers:+$('roomCapacity').value });
+    const settings = {
+      roomCapacity: { values: [2,3,4,5], key: 'maxPlayers' },
+      roomTurnSeconds: { values: GameTiming.options.turnSeconds, key: 'turnSeconds' },
+      roomTicketExtra: { values: GameTiming.options.ticketExtraSeconds, key: 'ticketExtraSeconds' },
+      roomInitialSeconds: { values: GameTiming.options.initialSeconds, key: 'initialSeconds' },
+    };
+    const configure = patch => {
+      const s = state();
+      if (!s.host || s.busy || s.started) return;
+      send({ type:'room_settings', visibility:s.visibility, maxPlayers:s.maxPlayers, timing:GameTiming.normalize(s.timing), ...patch });
+    };
+    for (const [id, spec] of Object.entries(settings)) {
+      const group = document.querySelector(`[data-setting="${id}"]`);
+      group.innerHTML = `<button type="button" data-step="-1" aria-label="${I18n.t('Disminuir')}">‹</button><div>${id === 'roomTicketExtra' ? '<span aria-hidden="true">+</span>' : ''}<input id="${id}" type="number" readonly min="${spec.values[0]}" max="${spec.values.at(-1)}" step="${id === 'roomCapacity' ? 1 : id === 'roomTicketExtra' ? 15 : 30}" />${id === 'roomCapacity' ? '' : '<span aria-hidden="true">s</span>'}</div><button type="button" data-step="1" aria-label="${I18n.t('Aumentar')}">›</button>`;
+      const adjust = step => {
+        const s=state(), values=spec.values.filter(value=>id!=='roomCapacity'||value>=s.members.length);
+        const next=values[values.indexOf(+$(id).value)+step];
+        if (next === undefined) return;
+        configure(id === 'roomCapacity' ? {maxPlayers:next} : {timing:{...GameTiming.normalize(s.timing),[spec.key]:next}});
+      };
+      group.querySelectorAll('button').forEach(button=>button.onclick=()=>adjust(+button.dataset.step));
+      $(id).onkeydown = event => {
+        if (!['ArrowLeft','ArrowDown','ArrowRight','ArrowUp'].includes(event.key)) return;
+        event.preventDefault(); adjust(['ArrowLeft','ArrowDown'].includes(event.key) ? -1 : 1);
+      };
+    }
+    $('roomVisibility').onclick=()=>configure({visibility:state().visibility==='public'?'private':'public'});
+    $('roomMapPreview').innerHTML = `<rect x="-60" y="-10" width="980" height="660" fill="#bbd6d9"/>${RailMap.land.map(d=>`<path d="${d}" fill="#f3ead3" stroke="#b8b49f" stroke-width="2"/>`).join('')}`;
 
     function renderDirectory() {
       const rows = directory.filter(r => r.started === (directoryTab === 'spectate'));
@@ -118,9 +145,23 @@ const AppShell = (() => {
       $('roomCount').textContent = `${s.members.length}/${s.maxPlayers}`;
       $('roomInviteLink').value = location.origin+'/?room='+s.room;
       $('roomVisibility').value = s.visibility;
-      $('roomCapacity').value = s.maxPlayers;
-      $('roomVisibility').disabled = $('roomCapacity').disabled = !s.host || s.busy || s.started;
-      for (const option of $('roomCapacity').options) option.disabled = +option.value < s.members.length;
+      const locked = !s.host || s.busy || s.started;
+      $('roomVisibility').disabled = locked;
+      $('roomVisibility').querySelector('[data-visibility-icon]').innerHTML = ShellIcons.svg(s.visibility === 'public' ? 'globe' : 'lock');
+      $('roomVisibility').querySelector('strong').textContent = I18n.t(s.visibility === 'public' ? 'Pública' : 'Privada');
+      $('roomVisibility').dataset.visibility = s.visibility;
+      $('roomVisibility').setAttribute('aria-label', I18n.t(s.visibility === 'public' ? 'Visibilidad: pública. Cambiar a privada' : 'Visibilidad: privada. Cambiar a pública'));
+      const timing = GameTiming.normalize(s.timing);
+      for (const [id,spec] of Object.entries(settings)) {
+        const value=id==='roomCapacity'?s.maxPlayers:timing[spec.key], input=$(id), group=input.closest('.room-stepper');
+        input.value=value; input.disabled=locked;
+        input.min=id==='roomCapacity'?Math.max(2,s.members.length):spec.values[0];
+        input.setAttribute('aria-valuetext', id==='roomCapacity'?I18n.t`${value} jugadores`:I18n.t`${value} segundos`);
+        for (const button of group.querySelectorAll('button')) {
+          const next=spec.values[spec.values.indexOf(value)+ +button.dataset.step];
+          button.disabled=locked||next===undefined||(id==='roomCapacity'&&next<s.members.length);
+        }
+      }
       $('roomVisibilityHint').textContent = s.visibility === 'public' ? I18n.t('Visible en Open Rooms. La partida se podrá observar.') : I18n.t('Solo podrán entrar quienes tengan el código o el enlace.');
       $('waitingHost').hidden = s.host;
       const full = s.members.length >= s.maxPlayers;

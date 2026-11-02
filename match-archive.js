@@ -10,8 +10,19 @@ function safePublic(view) {
   if(result.result) for(const row of result.result){row.tickets=[];row.individualTickets=[];row.stationRoutes=[];if(row.details) row.details.destinations=[];}
   return result;
 }
-function participant(record, identity, claims) {
-  return record.players.some(p=>!p.bot && (identity.accountId && (p.accountId===identity.accountId || claims[p.guestId]===identity.accountId) || identity.guestId && p.guestId===identity.guestId && !claims[p.guestId]));
+function participantSeat(record, identity, claims) {
+  return record.players.findIndex(p=>!p.bot && (identity.accountId && (p.accountId===identity.accountId || claims[p.guestId]===identity.accountId) || identity.guestId && p.guestId===identity.guestId && !claims[p.guestId]));
+}
+const participant = (record, identity, claims) => participantSeat(record, identity, claims) >= 0;
+function placement(record, seat) {
+  if (record.status !== 'completed') return null;
+  const own = record.scores.find(s => s.seat === seat), keys = ['score','completed','stations','express'];
+  if (!own || record.scores.some(s => s.partial || keys.some(key => !Number.isFinite(s[key])))) return null;
+  // Same tie-break order as Engine.finish; exact ties share a position.
+  return 1 + record.scores.filter(s => {
+    for (const key of keys) if (s[key] !== own[key]) return s[key] > own[key];
+    return false;
+  }).length;
 }
 function createMatchArchive({saved={matches:{},claims:{}},remote=null}={}) {
   let state=saved, pending=new Map();
@@ -86,7 +97,10 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null}={}) {
   }
   async function list(identity) {
     const {matches,claims}=await records(identity,null);
-    return matches.filter(r=>participant(r,identity,claims)).sort((a,b)=>b.startedAt-a.startedAt).map(r=>summary(r,true));
+    return matches.filter(r=>participant(r,identity,claims)).sort((a,b)=>b.startedAt-a.startedAt).map(r=>{
+      const ownSeat=participantSeat(r,identity,claims);
+      return {...summary(r,true),ownSeat,rank:placement(r,ownSeat)};
+    });
   }
   function summary(r,own) {
     return {...r,frames:undefined,players:r.players.map(({name,color,bot})=>({name,color,bot})),scores:r.scores.map(score=>own?score:{seat:score.seat,route:score.route,score:score.score,partial:score.partial,winner:score.winner})};
