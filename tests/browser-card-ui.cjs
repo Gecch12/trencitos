@@ -18,7 +18,7 @@ function room(code,refresh) {
 (async()=>{
  await app.ready;await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
  const base='http://127.0.0.1:'+app.server.address().port;
- browser=await chromium.launch({channel:'chrome',headless:true});
+ browser=await chromium.launch({channel:'chrome',headless:true,args:process.env.CI?['--enable-unsafe-swiftshader']:[]});
  async function page(room,seat,options={}) {
   const context=await browser.newContext({viewport:{width:1440,height:900},...options});const p=await context.newPage();p.setDefaultTimeout(10000);
   if(seat>=0)await p.addInitScript(({code,token})=>localStorage.setItem('rr-room-'+code,token),{code:room.code,token:room.members[seat].token});
@@ -36,10 +36,12 @@ function room(code,refresh) {
   }).observe(document.body,{childList:true});
  });
  await actor.locator('#drawblind').click();await actor.waitForFunction(()=>game.history.some(e=>e.draw));
- for(const p of [actor,rival,spectator])await p.waitForSelector('.history-draw img');
- assert.match(await actor.locator('.history-draw img').last().getAttribute('src'),/back.svg/);
+ // Drawn cards are separate from initial hands, refills and market renewals.
+ const drawnCards='.history-drawn-cards img';
+ for(const p of [actor,rival,spectator])await p.waitForSelector(drawnCards);
+ assert.match(await actor.locator(drawnCards).last().getAttribute('src'),/back.svg/);
  assert.equal(await actor.evaluate(()=>game.history.find(e=>e.draw).draw.color),'orange');
- for(const p of [rival,spectator])assert.match(await p.locator('.history-draw img').last().getAttribute('src'),/back.svg/);
+ for(const p of [rival,spectator])assert.match(await p.locator(drawnCards).last().getAttribute('src'),/back.svg/);
  for(const p of [rival,spectator]){
   await p.waitForFunction(()=>observedDrawFlights.length);
   assert.deepEqual(await p.evaluate(()=>observedDrawFlights[0]),{color:'back',duration:680});
@@ -47,9 +49,9 @@ function room(code,refresh) {
  assert.equal(await actor.locator('.market-refresh-layer').count(),0);
  await actor.locator('[data-market-index="0"]').click();
  await Promise.all([actor,rival,spectator].map(p=>p.waitForFunction(()=>game.history.filter(e=>e.draw).length===2)));
- for(const p of [actor,rival,spectator])assert.match(await p.locator('.history-draw img').last().getAttribute('src'),/red.svg/);
- await rival.reload();await rival.waitForSelector('.history-draw img');
- assert.match(await rival.locator('.history-draw img').first().getAttribute('src'),/back.svg/);
+ for(const p of [actor,rival,spectator])assert.deepEqual(await p.locator(drawnCards).evaluateAll(imgs=>imgs.map(img=>img.getAttribute('src'))),['/assets/cards/back.svg','/assets/cards/red.svg']);
+ await rival.reload();await rival.waitForSelector(drawnCards);
+ assert.match(await rival.locator(drawnCards).first().getAttribute('src'),/back.svg/);
  await rival.locator('#history').screenshot({path:path.join(out,'history.png')});
  report.checks.push('Public/blind thumbnails for actor, rival and spectator; reload; ordinary draws stay immediate');
  await Promise.all([actor,rival,spectator].map(p=>p.close()));

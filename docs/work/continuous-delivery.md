@@ -98,3 +98,9 @@ imagen decodificada justo antes de retirarlo. Conserva la exigencia de revelar
 el color antes de llegar a la mano y no modifica la animación del producto.
 Se vuelve a ejecutar CI completo antes de desplegar. Evidencia local en
 `.qa/all-changes-release-2026-11-03/`.
+
+La segunda ejecución superó los dieciséis casos de robos. La prueba de historial
+todavía seleccionaba cualquier miniatura, incluyendo la reposición que sigue
+al robo en el nuevo diario. Se acota a las cartas robadas y comprueba su secuencia
+completa (oculta, roja) en actor/rival/espectador. Los dos recorridos añadidos al
+workflow usan también SwiftShader explícito en CI, igual que los anteriores.

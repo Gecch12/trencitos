@@ -24,7 +24,7 @@ async function main(){
  const game=E.newGame(['Cuenta QA','Rival'],1,Date.now(),{turnSeconds:600});game.phase='play';game.players.forEach(p=>{p.pending=[];p.tickets=[];});E.ensureTiming(game);
  const room={code:'81234567',updated:Date.now(),game,members:game.players.map((p,i)=>({name:p.name,color:p.color,token:(i?'b':'a').repeat(48),...(i?{}:{accountId:'local-account',autopilot:true})}))};
  app.rooms.set(room.code,room);
- browser=await chromium.launch({channel:'chrome',headless:true});
+ browser=await chromium.launch({channel:'chrome',headless:true,args:process.env.CI?['--enable-unsafe-swiftshader']:[]});
  async function page(context){const p=await context.newPage();p.setDefaultTimeout(12000);p.on('pageerror',e=>report.errors.push(e.message));return p;}
  const first=await browser.newContext(),a=await page(first);
  await a.route('https://identity.example.test/auth/v1/authorize**',async route=>{
