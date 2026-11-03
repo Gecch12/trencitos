@@ -18,7 +18,7 @@ cambios de esta entrega. El trabajo visual de otros chats permanece separado.
 ## Hitos de la fase
 
 - [x] Pagos y decisión de construcción extraídos, puente compatible y validación registrada.
-- [ ] Transiciones de túnel y turno extraídas, con tiempo/azar explícitos.
+- [x] Transiciones de túnel y turno extraídas, con tiempo explícito y cartas reveladas suministradas.
 - [ ] Creación, reparto, destinos, estaciones y puntuación extraídos.
 - [ ] Consultas sin mutación y compatibilidad de resultados/temporizadores fuera de ellas.
 - [ ] Europa completa verificada, incluyendo bots, privacidad, guardado y replay.
@@ -50,12 +50,13 @@ legada antes de invocar la política; no convierte guardados ni añade campos al
 protocolo. `MapDefinition` completo y el registro versionado siguen pendientes
 de fase 4. Los datos transitorios del puente no se persisten.
 
-Fase, turno, vencimientos, consumo efectivo de cartas, revelación/resolución de
-túneles, textos de historial y proyecciones aún pertenecen a la fachada. En
-particular, una acción tardía sigue pudiendo resolver antes un vencimiento.
-Este corte no promete pureza del resto del motor ni un segundo mapa jugable.
+En ese primer corte, fase, turno, vencimientos y resolución de túneles seguían
+en la fachada; el segundo corte descrito abajo extrae parte de ellos. El consumo
+efectivo de cartas, textos de historial y proyecciones continúan allí. Una acción
+tardía sigue pudiendo resolver antes un vencimiento. Ninguno de estos cortes
+promete pureza de todo el motor ni un segundo mapa jugable.
 
-## Evidencia
+## Evidencia del primer corte
 
 - [Contrato de construcción existente](../../tests/route-claim-contract.test.js):
   se conserva sin modificaciones para comparar el comportamiento anterior.
@@ -102,11 +103,79 @@ autenticación externa desactivada. Las pruebas SQL/remotas usan simuladores;
 no certifican Render, Supabase real ni dispositivos físicos. No se han migrado
 guardados, integrado el trabajo visual de otros worktrees ni publicado cambios.
 
+## Segundo corte: túneles y turnos
+
+Base: `7a0fddc` más los cambios de esta entrega.
+
+- [tunnel.js](../../game/domain/tunnel.js) calcula suplemento, reserva base/extra,
+  decide pagar/desistir y planifica `reveal → decision → result`, vencimiento y
+  reanudación de ofertas. Recibe cartas reveladas, `now` y duraciones; no roba
+  cartas, importa datos de Europa ni consulta reloj/azar por su cuenta.
+- [turn.js](../../game/domain/turn.js) planifica comienzo, espera por oferta,
+  rotación y última ronda. Conserva el plazo inicial compartido existente y
+  devuelve una señal de cierre sin calcular resultados.
+- La fachada aplica esos planes, traduce dos errores de túnel y comparte
+  `awardRoute` entre construcción normal, túnel pagado y construcción automática.
+  Mantiene mensajes, orden de registros, reciclado y representación persistida.
+  La actualización de guardados antiguos sigue en `ensureTiming`, antes de
+  entregar las decisiones al dominio.
+
+Se reprodujo y corrigió un fallo previo del suplemento automático: con dos
+cartas rojas reservadas como base y una locomotora restante, el motor calculaba
+el extra sobre la mano completa, gastaba las rojas y fallaba con «Descuadre de
+mano». Ahora calcula y gasta exactamente el extra disponible tras reservar la
+base. Un pago explícito imposible se rechaza sin mutación. Es una corrección
+de la regla de pago conjunto, no una nueva regla ni cambio del protocolo.
+
+### Evidencia del segundo corte
+
+- [Pruebas directas](../../tests/domain-transitions.test.js): plazos inyectados,
+  última ronda completa, espera de billetes, revelaciones cortas/vacías,
+  límites exactos, ticks tardíos, pagos automáticos/explícitos y no mutación.
+- [Túneles compartidos](../../tests/shared-tunnel.test.js): regresión del pago
+  automático y rechazo íntegro seguido de desistimiento con un solo avance y
+  los registros correspondientes. Se mantienen las pruebas de recuperación,
+  privacidad, resultados y ofertas congeladas.
+- Se extendió la prueba de frontera ambiental para ejecutar las políticas de
+  túnel/turno con reloj, azar global, red e importaciones externas prohibidos.
+- Suite enfocada de siete archivos: **68/68** correctas.
+
+Ejecución del 2026-11-02 (Lima), Node `v25.6.1`, sobre la base indicada y el diff
+de este corte:
+
+- `node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js`:
+  **408/408**, sin fallos ni omisiones. [Resultado y huellas del código](../qa/modular-domain-tunnels/node-tests-result.json)
+  y [salida TAP](../qa/modular-domain-tunnels/node-tests.tap).
+- `QA_PORT=0 npm run test:board3d`: **aprobado**, Chrome `156.0.8078.74`.
+  [Resultado](../qa/modular-domain-tunnels/browser-tests-result.json) y
+  [reporte](../qa/modular-domain-tunnels/browser/threejs-report.json): ocho
+  recorridos, nueve combinaciones de viewport/zoom y partida de cuatro jugadores
+  completa con 251 acciones, reconexión y cero errores. Incluye 63 intentos de
+  construcción, dos pagos y cuatro desistimientos de túnel, destinos y estaciones.
+  Se inspeccionaron [resultado final](../qa/modular-domain-tunnels/browser/threejs-finished.png)
+  y [móvil emulado](../qa/modular-domain-tunnels/browser/threejs-mobile.png).
+- `node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
+  Se revisaron las referencias a motor en las fichas históricas de contratos y
+  bots; conservan su evidencia original y no cambian las estrategias.
+
+Estado de archivo y puertos locales aislados, sin autenticación externa. SQL y
+backend remoto se verifican con simuladores; no acredita Render, Supabase real
+ni dispositivos físicos. La evidencia previa `docs/qa/threejs-*` quedó restaurada.
+Entrega local, sin integración de otros worktrees ni publicación.
+
+### Límites pendientes
+
+La fachada aún crea/baraja mazos, coordina vencimientos generales, destinos,
+estaciones, cierre/puntuación y consultas. `newGame` y `finish(force)` todavía
+usan azar global; no se declara determinista todo el motor. Se mantiene el
+formato de guardados y las referencias que esperan consumidores existentes.
+Frontend, tablero, vagones y datos de Europa no cambian en este corte.
+
 ## Siguiente corte
 
-Extraer las transiciones de túnel empezando por el cálculo de suplemento y los
-resultados de pagar/desistir, usando la misma composición/reserva. Mantener
-`reveal → decision → result`, pausa/reanudación de ofertas y avance único de turno.
-Después integrar el reloj explícito y retirar duplicación de adjudicación entre
-acción y vencimiento. No mover todavía `app.js`, `board-3d.js` ni los modelos de
-vagones. Crear un nuevo hito con entrega propia solo si lo exige el alcance real.
+Extraer creación/reparto y destinos con azar suministrado: partir de las pruebas
+de selección inicial simultánea, conservación de cartas/billetes, ofertas fuera
+de turno, retorno al puesto con oferta pendiente y cierre. Conservar los
+guardados sin `timing` y separar la compatibilidad de las políticas nuevas.
+Después abordar estaciones/puntuación y consultas sin mutación. La fase 2 sigue
+activa; no mover todavía frontend ni integrar Sudamérica.

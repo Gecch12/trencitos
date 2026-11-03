@@ -47,6 +47,7 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | HTTP, WebSocket, salas, credenciales, despachar y confirmar acciones | [server.js](../server.js): `dispatch`, `persist`, `sendRoom` |
 | Fachada de reglas, fases, efectos, cierre y privacidad | [engine.js](../engine.js): `newRandomGame`, `action`, `expire`, `finish`, `view` |
 | Políticas de pago y decisión de construcción | [payment.js](../game/domain/payment.js): `planPayment`, `reservePayment`; [route-claim.js](../game/domain/route-claim.js): `decideRouteClaim`, `blocksParallelRoute` |
+| Transiciones de túnel y comienzo/avance de turno | [tunnel.js](../game/domain/tunnel.js): `beginTunnel`, `decideTunnel`, `advanceTunnel`; [turn.js](../game/domain/turn.js): `planTurnStart`, `planNextTurn` |
 | Ciudades, rutas, billetes y paleta | [data.js](../data.js) |
 | Valores permitidos de relojes y defaults compartidos | [game-timing.js](../game-timing.js): `valid`, `normalize` |
 | Relojes, desconexiones y recuperación | [game-clock.js](../game-clock.js), [multiplayer.js](../multiplayer.js) |
@@ -63,7 +64,7 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Proyección ortográfica compartida con objetivos SVG | [board-camera.js](../board-camera.js): `view` |
 | Geometría visual, curvas y etiquetas | [map-layout.js](../map-layout.js): `createNetwork`, `pointAt`, `placeLabels` |
 
-## Primera extracción del dominio
+## Extracción gradual del dominio
 
 `engine.js` conserva las firmas públicas de `pay` y `block`, pero delega sus
 políticas al dominio. Al construir, proyecta las vías como definiciones sin dueño
@@ -71,16 +72,24 @@ y pasa la propiedad separada por ID; `decideRouteClaim` devuelve un plan o un
 rechazo estructurado. La paleta, puntuación y umbral de dobles son dependencias
 explícitas. El núcleo admite IDs opacos y no importa constantes de Europa.
 
-La fachada aún comprueba fase/turno y vencimientos, aplica el pago y el avance,
-emite historial/eventos y conserva la representación de guardados actual.
+Las políticas de túnel reciben las cartas reveladas, el tiempo y duraciones
+explícitos. Calculan suplemento, pago conjunto, etapas y reanudación de ofertas.
+Las de turno planifican el reloj, espera por billetes, rotación y última ronda.
+Devuelven cambios sin modificar el estado ni consultar reloj o azar globales.
+
+La fachada aún comprueba fase/puesto, despacha vencimientos, obtiene cartas y
+aplica los planes; emite historial/eventos y conserva el formato de guardados.
+`awardRoute` comparte la adjudicación entre construcción, túnel pagado y túnel
+sin suplemento. La adaptación de guardados en `ensureTiming` sigue en la fachada.
 [legacy-errors.js](../game/compat/legacy-errors.js) convierte los errores extraídos
-a los mensajes existentes. La reserva de base para pagar un túnel utiliza una
-copia de la mano; nunca gasta cartas durante la comprobación.
+a los mensajes existentes. El suplemento se calcula sobre una copia de la mano
+tras reservar la base, antes de gastar cualquier carta.
 
 No hay registro de mapas activo ni conversión de IDs de Europa todavía. Los
 otros consumidores siguen utilizando el formato legado. Las políticas extraídas
-no convierten en puro todo el motor: creación, túneles, reloj, cierre y consultas
-siguen su recorrido anterior. Alcance y pruebas en
+no convierten en puro todo el motor: creación, mazos, destinos, estaciones,
+vencimientos fuera del túnel, cierre y consultas aún residen en la fachada.
+Alcance y pruebas en
 [la fase de dominio](work/modular-platform-domain.md).
 
 ## Límites que deben conservarse

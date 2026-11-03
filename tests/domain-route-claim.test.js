@@ -94,7 +94,7 @@ test("domain modules run without ambient clock, randomness, transport or externa
   const math=Object.create(Math);math.random=forbidden;
   const cache={};
   function load(name) {
-    if(!["payment","route-claim"].includes(name)) return forbidden();
+    if(!["payment","route-claim","tunnel","turn"].includes(name)) return forbidden();
     if(cache[name]) return cache[name];
     const module={exports:{}};
     const source=fs.readFileSync(path.join(__dirname,"../game/domain",`${name}.js`),"utf8");
@@ -105,4 +105,15 @@ test("domain modules run without ambient clock, randomness, transport or externa
   const f=fixture();
   const result=load("route-claim").decideRouteClaim(f.state,{routeId:"SA010",color:"copper"},f.context);
   assert.equal(result.ok,true);assert.equal(result.plan.points,9);
+  const rules={colors:["copper"],cardMs:10,resultMs:30,initialMs:100,turnMs:200,finalTrainThreshold:2};
+  const tunnel=load("tunnel"),turn=load("turn"),context={now:10,rules};
+  const pending=tunnel.beginTunnel({routeId:"SA001",base:{color:"copper",regular:1,wild:0},revealed:["copper"],
+    turnDeadline:100,offerDeadlines:[null]},context);
+  const reveal=tunnel.advanceTunnel({tunnel:pending,turnDeadline:null},{now:30,rules});
+  assert.equal(reveal.kind,"decision");
+  const paid=tunnel.decideTunnel({tunnel:{...pending,...reveal.pendingChanges},hand:["copper","wild"]},{type:"pay"},{now:40,rules});
+  assert.equal(paid.ok,true);
+  const state={phase:"play",current:0,players:[{trains:2},{trains:4}],finalRemaining:null};
+  assert.equal(turn.planTurnStart(state,context).changes.turnDeadline,210);
+  assert.equal(turn.planNextTurn(state,context).finalRoundStarted,true);
 });

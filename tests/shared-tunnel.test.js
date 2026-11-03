@@ -98,3 +98,25 @@ test('zero-surcharge receipt has an explicit zero extra and never charges twice'
   const hand=[...g.players[0].hand];assert.equal(hand.length,1);
   E.expire(g,g.pending.until);assert.deepEqual(g.players[0].hand,hand);
 });
+
+test('automatic supplement reserves the base before selecting and spending locomotives',()=>{
+  const g=setup();g.players[0].hand=['red','red','wild'];
+  E.expire(g,g.pending.until);
+  E.action(g,0,{type:'pay_tunnel'},{now:18000});
+  assert.deepEqual(g.players[0].hand,[]);assert.equal(g.routes[0].owner,0);
+  assert.deepEqual(g.pending.extra,{color:'red',regular:0,wild:1});
+  assert.equal(g.players[0].trains,43);assert.equal(g.players[0].score,2);
+  assert.equal(g.events.filter(e=>e.type==='build').length,1);
+});
+
+test('a rejected supplement preserves the whole game and a following decline advances once',()=>{
+  const g=setup();g.players[0].hand=['red','red','wild'];E.expire(g,g.pending.until);
+  const before=structuredClone(g), records=[];E.observe(g,entry=>records.push(entry));
+  assert.throws(()=>E.action(g,0,{type:'pay_tunnel',extraWild:0},{now:18000}),/suficientes cartas/);
+  assert.deepEqual(g,before);assert.deepEqual(records,[]);
+  E.action(g,0,{type:'decline_tunnel'},{now:19000});const serial=g.turnSerial,until=g.pending.until;
+  assert.equal(E.expire(g,until),true);assert.equal(E.expire(g,until),false);
+  assert.equal(g.turnSerial,serial+1);assert.equal(g.current,1);
+  assert.deepEqual(records.map(r=>[r.action.type,r.automatic]),[['decline_tunnel',false],['tunnel_closed',true]]);
+  assert.deepEqual(g.players[0].hand,before.players[0].hand);
+});

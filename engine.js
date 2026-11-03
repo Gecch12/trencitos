@@ -4,6 +4,8 @@ const GameTiming = require('./game-timing');
 const crypto=require('node:crypto');
 const Payment=require('./game/domain/payment');
 const RouteClaim=require('./game/domain/route-claim');
+const Turn=require('./game/domain/turn');
+const Tunnel=require('./game/domain/tunnel');
 const {legacyError}=require('./game/compat/legacy-errors');
 // Per-action randomness stays outside serialized state. Simulations can supply
 // an isolated stream for all draws/recycles without patching global crypto.
@@ -16,6 +18,8 @@ const SCORE={1:1,2:2,3:4,4:7,6:15,8:21};
 const CLAIM_RULES={colors:COLORS,routePoints:SCORE,doubleRoutesMinPlayers:4};
 const TURN_MS=60000, INITIAL_MS=60000, OFFER_MS=60000;
 const TUNNEL_CARD_MS=700, TUNNEL_RESULT_MS=3000;
+const TUNNEL_RULES={colors:COLORS,cardMs:TUNNEL_CARD_MS,resultMs:TUNNEL_RESULT_MS};
+const turnRules=g=>({initialMs:g.timing?.initialSeconds*1000||INITIAL_MS,turnMs:g.timing?.turnSeconds*1000||TURN_MS,finalTrainThreshold:2});
 const tunnelBusy = g => g.phase==='tunnel' && g.pending?.stage && g.pending.stage!=='decision';
 function deadlines(g) {
  if(g.phase==='tunnel'&&g.pending?.stage)return [g.pending.stage==='decision'?g.turnDeadline:g.pending.until].filter(Number.isFinite);
@@ -23,11 +27,8 @@ function deadlines(g) {
 }
 function event(g,type,seat,details={}){g.eventSerial=(g.eventSerial||0)+1;(g.events??=[]).push({id:g.eventSerial,type,seat,...details});g.events=g.events.slice(-64)}
 function startTurn(g,now=Date.now()){
- g.turnSerial=(g.turnSerial||0)+1;g.turnSeat=g.current;g.turnClockPhase=g.phase==='initial'?'initial':'play';
- g.turnWaiting=!!(g.phase==='play'&&g.players[g.current].offer);
- if(g.phase==='initial')g.initialDeadline??=Number.isFinite(g.turnDeadline)?g.turnDeadline:now+(g.timing?.initialSeconds*1000||INITIAL_MS);
- g.turnDeadline=g.phase==='initial'?g.initialDeadline:g.turnWaiting?null:now+(g.timing?.turnSeconds*1000||TURN_MS);
- if(!g.turnWaiting&&g.phase!=='initial')event(g,'turn',g.current);
+ const plan=Turn.planTurnStart(g,{now,rules:turnRules(g)});Object.assign(g,plan.changes);
+ if(plan.emitTurn)event(g,'turn',g.current);
 }
 function ensureTiming(g,now=Date.now()){
  if(g.phase==='tunnel'&&g.pending&&!g.pending.stage){
@@ -105,14 +106,17 @@ function note(g,msg,seat=null,details={}){
  g.history=[{id:g.logSerial,text:msg,seat,...(message?{message}:{}),...details},...history].slice(0,25);
 }
 function assertTurn(g,seat){if(!Number.isInteger(seat)||seat!==g.current)fail('No es tu turno.')}
-function next(g,now=Date.now()){g.drawCount=0;g.pending=null;
- if(g.finalRemaining!==null){g.finalRemaining--;if(g.finalRemaining===0){finish(g);return}}
- else if(g.players[g.current].trains<=2){g.lastTrigger=g.current;g.finalRemaining=g.players.length;note(g,'¡Última ronda! Todos tienen un turno final, incluido quien la activó.')}
- g.current=(g.current+1)%g.players.length;startTurn(g,now)}
+function next(g,now=Date.now()){
+ const plan=Turn.planNextTurn(g,{now,rules:turnRules(g)});Object.assign(g,plan.changes);
+ if(plan.finalRoundStarted)note(g,'¡Última ronda! Todos tienen un turno final, incluido quien la activó.');
+ if(plan.finish){finish(g);return}
+ if(plan.emitTurn)event(g,'turn',g.current);
+}
 function canDrawMore(g){return Boolean(g.deck.length||g.discard.length||g.face.some((c)=>!(g.drawCount===1&&c==='wild')))}
 function pay(hand,color,quantity,wildNeeded=0,wildCount){return Payment.planPayment(hand,{color,quantity,wildNeeded,wildCount},CLAIM_RULES)}
 function spend(g,p,comp){for(let k=0;k<comp.regular;k++){const i=p.hand.indexOf(comp.color);if(i<0)throw Error('Descuadre de mano');g.discard.push(...p.hand.splice(i,1))}
  for(let k=0;k<comp.wild;k++){const i=p.hand.indexOf('wild');if(i<0)throw Error('Descuadre de comodines');g.discard.push(...p.hand.splice(i,1))}}
+function awardRoute(g,seat,r,length=r.n,points=SCORE[length]){r.owner=seat;g.players[seat].trains-=length;g.players[seat].score+=points;event(g,'build',seat,{routeId:r.id})}
 function block(g,r,seat){return g.routes.some(x=>RouteClaim.blocksParallelRoute(r,x,{owner:x.owner,seat,playerCount:g.players.length},CLAIM_RULES))}
 // Temporary projection: keep persisted Europe rows/IDs and callers unchanged.
 // Domain definitions contain no owners; ownership is passed separately by ID.
@@ -154,19 +158,17 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
  assertTurn(g,seat);
  if(g.turnWaiting)fail('Elige primero tus billetes pendientes. Después tendrás un turno completo.');
  if(g.phase==='tunnel'){
-  if(!['pay_tunnel','decline_tunnel'].includes(msg.type))fail('Resuelve el túnel antes de continuar.');
-  const t=g.pending;let base=t.base;
-  if(msg.type==='pay_tunnel'){
-   const extra=pay(p.hand,t.color,t.surcharge,0,msg.extraWild);
-   // The payment for base and extra must be collectively affordable.
-   const remaining=extra&&Payment.reservePayment(p.hand,base);
-   if(!extra || !remaining || !pay(remaining,t.color,t.surcharge,0,msg.extraWild))fail('No tienes suficientes cartas para pagar el túnel.');
-   spend(g,p,base);spend(g,p,extra);t.extra={...extra};
-   const r=g.routes[t.routeId];r.owner=seat;p.trains-=r.n;p.score+=SCORE[r.n];event(g,'build',seat,{routeId:r.id});note(g,I18n.message`${p.name} completó el túnel ${CITIES[r.a][2]} — ${CITIES[r.b][2]}.`,seat);
+  const t=g.pending,decision=Tunnel.decideTunnel({tunnel:t,hand:p.hand},
+   {type:msg.type==='pay_tunnel'?'pay':msg.type==='decline_tunnel'?'decline':null,wildCount:msg.extraWild,timeout:expiring.has(g)},
+   {now,rules:TUNNEL_RULES});
+  if(!decision.ok)throw legacyError(decision.error);
+  const plan=decision.plan;
+  if(plan.build){
+   for(const payment of plan.payments)spend(g,p,payment);
+   const r=g.routes[t.routeId];awardRoute(g,seat,r);note(g,I18n.message`${p.name} completó el túnel ${CITIES[r.a][2]} — ${CITIES[r.b][2]}.`,seat);
   }else note(g,I18n.message`${p.name} desistió del túnel.`,seat);
   g.discard.push(...t.revealed);
-  if(t.stage){if(!expiring.has(g))p.missedTurns=0;t.stage='result';t.outcome=msg.type==='pay_tunnel'?'built':'declined';t.reason=t.outcome==='declined'&&expiring.has(g)?'timeout':null;t.resultStartedAt=now;t.until=now+TUNNEL_RESULT_MS;g.turnDeadline=null;}
-  else {g.phase='play';next(g,now)}
+  if(!expiring.has(g))p.missedTurns=0;Object.assign(t,plan.pendingChanges);g.turnDeadline=null;
   return;
  }
  if(g.phase!=='play')fail('Estado de partida incorrecto.');
@@ -187,14 +189,12 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
   const r=g.routes[msg.routeId],decision=decideClaim(g,seat,msg,r);
   if(!decision.ok)throw legacyError(decision.error);
   const {payment:base,length,points,kind}=decision.plan,color=base.color;
-  if(kind==='build'){spend(g,p,base);r.owner=seat;p.trains-=length;p.score+=points;event(g,'build',seat,{routeId:r.id});note(g,I18n.message`${p.name} tomó ${CITIES[r.a][2]} — ${CITIES[r.b][2]} (+${points}).`,seat);next(g,now);return}
+  if(kind==='build'){spend(g,p,base);awardRoute(g,seat,r,length,points);note(g,I18n.message`${p.name} tomó ${CITIES[r.a][2]} — ${CITIES[r.b][2]} (+${points}).`,seat);next(g,now);return}
   const revealed=[];for(let i=0;i<3;i++){const c=draw(g);if(c)revealed.push(c)}
-  const surcharge=revealed.filter(c=>c==='wild'||(color!=='wild'&&c===color)).length;
-  g.phase='tunnel';g.pending={routeId:r.id,color,base,surcharge,revealed,stage:'reveal',startedAt:now,
-   until:now+(revealed.length+1)*TUNNEL_CARD_MS,turnRemaining:Math.max(0,g.turnDeadline-now),
-   offerRemaining:g.players.map(player=>player.offer?Math.max(0,player.offer.deadline-now):null)};
+  g.phase='tunnel';g.pending=Tunnel.beginTunnel({routeId:r.id,base,revealed,turnDeadline:g.turnDeadline,
+   offerDeadlines:g.players.map(player=>player.offer?player.offer.deadline:null)},{now,rules:TUNNEL_RULES});
   g.turnDeadline=null;
-  event(g,'tunnel_reveal',seat,{routeId:r.id,paymentColor:color,base:{...base},surcharge,revealed:[...revealed]});
+  event(g,'tunnel_reveal',seat,{routeId:r.id,paymentColor:color,base:{...base},surcharge:g.pending.surcharge,revealed:[...revealed]});
   g.pending.revealId=g.eventSerial;
   // The room clock advances the shared reveal, including zero-surcharge tunnels.
   return;
@@ -226,22 +226,22 @@ function expire(g,now=Date.now(),random=randomFor(g)){const previous=actionRando
 function expireImpl(g,now=Date.now(),random=crypto.randomInt){
  ensureTiming(g,now);let changed=false;
  if(g.phase==='tunnel'&&g.pending?.stage){
-  const t=g.pending,seat=g.current,p=g.players[seat];
-  if(t.stage==='reveal'&&now>=t.until){
-   if(t.surcharge){t.stage='decision';t.until=null;g.turnDeadline=now+t.turnRemaining;}
+  const t=g.pending,seat=g.current,p=g.players[seat],plan=Tunnel.advanceTunnel({tunnel:t,turnDeadline:g.turnDeadline},{now,rules:TUNNEL_RULES});
+  if(plan.kind==='decision'||plan.kind==='build'){
+   if(plan.kind==='decision'){Object.assign(t,plan.pendingChanges);g.turnDeadline=plan.turnDeadline;}
    else {
-    const r=g.routes[t.routeId];spend(g,p,t.base);g.discard.push(...t.revealed);recycleDiscards(g);
-    r.owner=seat;p.trains-=r.n;p.score+=SCORE[r.n];p.missedTurns=0;event(g,'build',seat,{routeId:r.id});
+    const r=g.routes[t.routeId];for(const payment of plan.payments)spend(g,p,payment);g.discard.push(...t.revealed);recycleDiscards(g);
+    p.missedTurns=0;awardRoute(g,seat,r);
     note(g,I18n.message`${p.name} tomó túnel ${CITIES[r.a][2]} — ${CITIES[r.b][2]} (+${SCORE[r.n]}).`,seat);
-    t.extra={color:t.color,regular:0,wild:0};t.stage='result';t.outcome='built';t.resultStartedAt=now;t.until=now+TUNNEL_RESULT_MS;
+    Object.assign(t,plan.pendingChanges);
    }
    recorded(g,seat,{type:'tunnel_revealed'},true);return true;
   }
-  if(t.stage==='result'&&now>=t.until){
-   for(const [i,remaining] of t.offerRemaining.entries())if(remaining!==null&&g.players[i].offer)g.players[i].offer.deadline=now+remaining;
+  if(plan.kind==='close'){
+   for(const [i,deadline] of plan.offerDeadlines.entries())if(deadline!==null&&g.players[i].offer)g.players[i].offer.deadline=deadline;
    g.phase='play';next(g,now);recorded(g,seat,{type:'tunnel_closed'},true);return true;
   }
-  if(t.stage==='decision'&&now>=g.turnDeadline){
+  if(plan.kind==='timeout'){
    p.missedTurns=(p.missedTurns||0)+1;applyAction(g,seat,{type:'decline_tunnel'},now);recycleDiscards(g);return true;
   }
   // Other clocks and private choices remain frozen while the public modal owns focus.

@@ -84,16 +84,11 @@ por separado. El cierre de esta ficha no implica publicación.
 
 El [modelo de fase 1](../decisions/match-domain-contracts.md) define los contratos
 y el puente. La [ficha de dominio](modular-platform-domain.md) conserva avance,
-evidencia y alcance pendiente. La secuencia de extracción comienza así:
-
-1. Extraer composición/reserva y restricciones de vía, dobles, vagones y ferris
-   a políticas independientes de textos, datos globales y efectos externos.
-2. Conservar `engine.js` como fachada; aplica el plan mediante el gasto, reciclado,
-   registro y avance existentes. Un túnel sigue su secuencia actual.
-3. Añadir pruebas directas con contexto inyectado e IDs opacos y comparar con los
-   contratos de comportamiento establecidos sobre Europa.
-4. Registrar evidencia de esa entrega antes de continuar con transiciones de
-   túnel/turno, creación, destinos, estaciones, puntuación y consultas puras.
+evidencia y alcance pendiente. Pagos/construcción y transiciones de túnel/turno
+ya cuentan con políticas independientes de textos y efectos externos. `engine.js`
+conserva la fachada, el formato de guardado y la aplicación de sus planes.
+La ficha desarrolla el siguiente recorrido de creación/reparto y destinos antes
+de abordar estaciones, puntuación y consultas puras.
 
 No declarar terminada toda la fase 2 al extraer solo el primer recorrido. La
 separación de frontend espera a fase 3; antes de mover archivos visuales, integrar
@@ -108,6 +103,6 @@ siguen responsabilidades y dependencias verificables.
 La [fase 0](modular-platform-baseline.md) conserva la base y sus límites; la
 [fase 1](modular-platform-contracts.md) conserva el diseño contrastado y las
 pruebas de aceptación del primer recorrido. La
-[fase 2](modular-platform-domain.md) ya contiene la extracción de pagos y decisión
-de construcción; el resto del motor continúa en la fachada. Siguiente paso y
+[fase 2](modular-platform-domain.md) contiene las extracciones de pagos,
+construcción y transiciones de túnel/turno; quedan reglas en la fachada. Siguiente paso y
 validación de la entrega en esa ficha.

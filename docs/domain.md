@@ -7,7 +7,9 @@ comercial: conserva las variantes del proyecto.
 La composición/reserva de pagos y la decisión de construir están extraídas a
 [políticas de dominio](../game/domain/route-claim.js), con
 [pagos compartidos](../game/domain/payment.js). Reciben los datos de mapa y
-reglamento; devuelven un plan sin gastar cartas. El motor aplica sus efectos.
+reglamento; devuelven un plan sin gastar cartas. Las transiciones de
+[túnel](../game/domain/tunnel.js) y [turno](../game/domain/turn.js) también devuelven
+planes, con tiempo y duraciones explícitos. El motor aplica sus efectos.
 La extracción conserva las reglas descritas aquí; avance y límites en
 [fase 2](work/modular-platform-domain.md).
 
@@ -91,6 +93,9 @@ composición de la base comprometida y, solo al construir, el extra efectivament
 pagado. El resto de la mano y las opciones de pago son privados. El resultado
 conserva `resultStartedAt` y distingue desistimiento voluntario de tiempo agotado;
 al desistir, la base se recupera y el gasto total es cero.
+Si no se indica una composición de suplemento, se calcula con las cartas que
+quedan después de reservar la base; nunca reutiliza una carta comprometida.
+Una elección explícita insuficiente rechaza el pago completo sin gastar la base.
 La reconexión conserva la etapa y los plazos. Un túnel guardado con el formato
 anterior entra en decisión compartida sin reiniciar su reloj.
 

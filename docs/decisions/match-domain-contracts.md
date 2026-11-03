@@ -5,8 +5,8 @@ Diseño de fase 1, concretado el 2026-11-02 bajo la
 extraídos.** Estado, validación y siguiente entrega en
 [la ficha de fase 1](../work/modular-platform-contracts.md). La
 [arquitectura existente](../architecture.md) sigue describiendo el código actual.
-La [fase 2](../work/modular-platform-domain.md) materializa el primer corte de
-pagos/construcción; los demás contratos de este documento siguen siendo el
+La [fase 2](../work/modular-platform-domain.md) materializa pagos/construcción y
+transiciones de túnel/turno; los demás contratos de este documento siguen siendo el
 destino de la transición, no capacidades ya disponibles.
 
 ## Responsabilidades y vocabulario
@@ -250,8 +250,9 @@ engine.js                  fachada temporal; orquesta lo aún no extraído
 `decideRouteClaim(state, command, {map,rules})` devuelve un error o un plan
 `{kind:"build"|"tunnel", routeId, payment, length, points}` sin gastar ni sortear.
 La fachada aplica el plan mediante `spend`, eventos, registro y `next` existentes.
-Para túneles solo inicia la reserva/revelación actual; su resolución temporizada
-es el siguiente subhito, no una nueva implementación paralela.
+En el primer corte, para túneles solo inicia la reserva/revelación. El segundo
+extrae la resolución temporizada a `tunnel.js` y el avance a `turn.js`, usando
+el mismo estado persistido; detalle y evidencia en la ficha de fase 2.
 
 Antes de llamar a esa política, la fachada conserva los controles de fase/turno
 y el avance de vencimientos. La política verifica vía, corredor, vagones, color

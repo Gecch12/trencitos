@@ -204,7 +204,9 @@
     "tests/domain-payment.test.js",
     "tests/domain-route-claim.test.js",
     "tests/route-claim-contract.test.js",
-    "tests/browser-threejs.cjs"
+    "tests/browser-threejs.cjs",
+    "tests/domain-transitions.test.js",
+    "tests/shared-tunnel.test.js"
   ],
   "work/wagon-variants.md": [
     "data.js",
