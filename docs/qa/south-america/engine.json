@@ -1,0 +1,10 @@
+{
+  "date": "2026-11-03",
+  "command": "node --test tests/south-america.test.js tests/laboratory-map.test.js tests/match-presentation.test.js",
+  "passed": 12,
+  "failed": 0,
+  "sourceSha256": "0c91e466cfdd218386151bba13f9c1e54395755ba6a1d830ad21e3b4a44f9174",
+  "fourBots": {"seed":20261103,"steps":265,"turns":166,"naturalFinish":true,"restoredAtStep":50,"scores":[128,117,88,42]},
+  "geometry": {"cells":300,"overlaps":0,"minimumUnrelatedCityClearance":16},
+  "limits": "Engine and geometry checks; browser verification pending. Not a competitive balance study."
+}

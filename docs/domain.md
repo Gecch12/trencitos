@@ -44,7 +44,7 @@ Vistas y archivo ya declaran el mapa/reglamento y transportan su definición pú
 sin revelar el reparto real. El replay utiliza la definición grabada y conserva
 el formato de los pasos antiguos. El frontend consume esa definición mediante
 un contexto de lectura y separa el layout de las reglas. El bundle incluye
-Europa y Laboratorio, seleccionables antes de iniciar. La aceptación está en
+Europa, Laboratorio y Sudamérica beta, seleccionables antes de iniciar. La aceptación está en
 [fase 4](work/modular-platform-maps.md); detalles del puente en
 [arquitectura](architecture.md).
 
@@ -53,6 +53,12 @@ Laboratorio (`laboratory@1`) es un tablero ficticio para probar la plataforma:
 Sus puntos de billete parten de la distancia mínima de la red. Las pruebas de
 partidas completas acreditan el recorrido técnico, no el balance competitivo.
 La definición no contiene coordenadas; el layout no decide reglas.
+
+Sudamérica (`south-america@3.3-beta`) conserva el paquete entregado: 46 ciudades,
+90 corredores, 101 vías (300 casillas), 17 túneles, 5 ferris y 46 billetes
+(40 normales y 6 largos). Comparte `europe-classic@1`. Colores, puntos y reglas
+especiales son una beta para pruebas de juego; los datos fuente se conservan en
+`references/south-america-v3.3-source.json`. Su layout no cambia la conectividad.
 
 ## Conceptos e invariantes
 

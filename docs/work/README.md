@@ -11,7 +11,8 @@ Iniciativa acordada:
   [modelo y contratos](modular-platform-contracts.md). Continuación:
   [extracción del dominio](modular-platform-domain.md) y
   [aplicación e interfaz](modular-platform-application.md) y
-  [mapas versionados](modular-platform-maps.md).
+  [mapas versionados](modular-platform-maps.md) y
+  [Sudamérica y entrega conjunta](south-america-release.md).
 
 Orden de trabajo acordado:
 

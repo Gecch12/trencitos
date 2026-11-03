@@ -80,6 +80,11 @@ function restoreMatchState(source, context) {
     if (Object.hasOwn(event,"routeId")) routeId(event.routeId);
     if (Object.hasOwn(event,"city")) cityId(event.city);
   }
+  if(g.construction){
+    const c=g.construction;
+    if(!object(c)||!Number.isSafeInteger(c.id)||!seat(c.seat)||!Number.isFinite(c.startedAt)||!Number.isFinite(c.until)||c.until<c.startedAt)invalid("construction cue");
+    if(c.routeId!==undefined)routeId(c.routeId);else cityId(c.city);
+  }
   const station = value => { if(!object(value))invalid("station detail");cityId(value.city);stationRoute(value.routeId); };
   if (g.result != null) for (const row of array(g.result,"result")) {
     if (!object(row) || !seat(row.seat)) invalid("result seat");

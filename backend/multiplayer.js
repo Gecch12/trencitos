@@ -9,6 +9,7 @@ function shiftDeadlines(game, elapsed) {
   if (!game || elapsed <= 0) return;
   for (const key of ["turnDeadline", "initialDeadline"])
     if (Number.isFinite(game[key])) game[key] += elapsed;
+  if(game.construction){game.construction.startedAt+=elapsed;game.construction.until+=elapsed;}
   for (const player of game.players)
     if (player.offer) player.offer.deadline += elapsed;
   if (game.phase === "tunnel" && game.pending?.stage) {
@@ -21,7 +22,7 @@ function shiftDeadlines(game, elapsed) {
 // Room lifecycle is separate from rules. No timer or socket is persisted.
 function createMultiplayerController({ rooms, sendRoom, removeRoom,
   dispatch = job => job(), blocked = () => false, now = Date.now, setTimer = setTimeout, clearTimer = clearTimeout,
-  automaticPlay = createLegacyAutomaticPlay({ stageRoom: sendRoom, now }) }) {
+  runBot, automaticPlay = createLegacyAutomaticPlay({ stageRoom: sendRoom, now }) }) {
   const active = new Map();
   const live = room => !room.practice && rooms.get(room.code) === room;
   function cancel(room) {
@@ -101,10 +102,11 @@ function createMultiplayerController({ rooms, sendRoom, removeRoom,
     }
     if (!room.game || room.emptySince != null || !room.members[room.game.current]?.autopilot ||
       ["initial", "finished", "closing"].includes(room.game.phase) || room.game.turnWaiting || Engine.tunnelBusy(room.game)) return;
-    state.bot = setTimer(() => dispatch(() => {
+    state.bot = setTimer(() => {
       if (!live(room) || blocked() || room.emptySince != null) return;
-      automaticPlay.playReplacement(room);
-    }), 900);
+      const eligible=()=>live(room)&&!blocked()&&room.emptySince==null&&!!room.members[room.game.current]?.autopilot;
+      if(runBot)runBot(room,"playReplacement",eligible);else dispatch(()=>{if(eligible())automaticPlay.playReplacement(room);});
+    }, Math.max(250,(room.game.construction?.until||0)-now()));
     state.bot.unref?.();
   }
   function close() { for (const room of active.keys()) cancel(room); }

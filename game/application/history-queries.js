@@ -29,7 +29,7 @@ function createHistoryQueries({ repository }) {
       return { ...projectSummary(record, true), ownSeat, rank: placement(record, ownSeat) };
     });
   }
-  async function replay(identity, id, audit = false) {
+  async function replay(identity, id, audit = false, includeAnalysis = false) {
     const { matches, claims } = await repository.records(identity, id), record = matches[0];
     if (!record) throw fail(404, "Esta repetición no está disponible.");
     const full = participant(record, identity, claims);
@@ -39,7 +39,7 @@ function createHistoryQueries({ repository }) {
     if (audit && !full) throw fail(403, "Solo los participantes pueden descargar la auditoría.");
     hasDefinitionHeader(record);
     const frames = record.frames || await repository.frames(id, record.steps);
-    return projectReplay({ ...record, frames }, { full, audit });
+    return projectReplay({ ...record, frames }, { full, audit, includeAnalysis });
   }
   return { list, replay };
 }

@@ -6,6 +6,7 @@ const MatchPresentation = (() => {
   const geometry = commonJS ? require("./map-layout") : RailMap;
   const europeLayout = commonJS ? require("./layouts/europe-v1") : EuropeLayoutV1;
   const laboratoryLayout = commonJS ? require("./layouts/laboratory-v1") : LaboratoryLayoutV1;
+  const southAmericaLayout = commonJS ? require("./layouts/south-america-v3.3-beta") : SouthAmericaLayoutV33;
   const legacyData = () => commonJS ? require("../shared/data") : { CITIES, ROUTES, TICKETS, COLORS };
   const legacyRules = Object.freeze({ colors: Object.freeze([...legacyData().COLORS]),
     routePoints: Object.freeze({1:1,2:2,3:4,4:7,6:15,8:21}), doubleRoutesMinPlayers:4,
@@ -29,10 +30,13 @@ const MatchPresentation = (() => {
     return { schemaVersion:1, mapRef:{id:"europe",version:"1"}, rulesRef:{id:"europe-classic",version:"1"},
       map:{cities:Object.entries(data.CITIES).map(([id,row]) => ({id,name:row[2]})), routes:data.ROUTES, tickets:data.TICKETS}, rules:legacyRules };
   }
-  function create({ layouts = [europeLayout,laboratoryLayout] } = {}) {
+  function create({ layouts = [europeLayout,laboratoryLayout,southAmericaLayout] } = {}) {
     const catalog = layouts.map(layout => freeze(structuredClone(layout)));
     let previous = null;
     function resolve(view, definition, { replay = false } = {}) {
+      // A negotiated compact stream may omit an unchanged definition. The refs
+      // must still match the last validated definition; reconnects start in full.
+      if (definition === undefined && !replay && previous && same(view.mapRef,previous.definition.mapRef) && same(view.rulesRef,previous.definition.rulesRef)) definition = previous.definition;
       const header = ["definitionVersion","mapRef","rulesRef"].some(key => Object.hasOwn(view,key));
       const legacy = !header && definition === undefined && replay;
       if (!legacy && (!header || view.definitionVersion !== 1 || !definition || definition.schemaVersion !== 1 ||
@@ -56,7 +60,7 @@ const MatchPresentation = (() => {
         if (map.routes.some(r => !cities.has(r.a) || !cities.has(r.b) || !Number.isInteger(r.n) || r.n < 1 ||
             !Number.isFinite(rules.routePoints[r.n])) || map.tickets.some(t => !cities.has(t.a) || !cities.has(t.b))) fail();
         const board = geometry.createLayout(layout), network = board.createNetwork(map.routes), paths = new Map(network.map(path => [path.id,path]));
-        context = {key, legacy, rules, layout:board, network, geometryFor:id => paths.get(id),
+        context = {key, legacy, definition:data, rules, layout:board, network, geometryFor:id => paths.get(id),
           cityIds:map.cities.map(city => city.id), cityName:id => cities.get(id)?.name || id,
           routeIdFromDom:routes.fromDom, ticketIdFromDom:tickets.fromDom, route:routes.get};
       }

@@ -14,6 +14,7 @@ function createPracticeController({
   setTimer = setTimeout,
   clearTimer = clearTimeout,
   random = randomInt,
+  runBot,
   automaticPlay = createLegacyAutomaticPlay({ stageRoom: sendRoom, botRandom: random }),
 }) {
   // Timers never belong to the serializable game state.
@@ -70,11 +71,12 @@ function createPracticeController({
       return;
     }
     if (state.bot !== null) return;
-    state.bot = setTimer(() => dispatch(() => {
+    state.bot = setTimer(() => {
       state.bot = null;
       if (!live(room) || blocked() || !connected(room)) return;
-      automaticPlay.playPracticeBots(room);
-    }), 800 + random(201));
+      if(runBot)runBot(room,"playPracticeBots",()=>live(room)&&!blocked()&&connected(room));
+      else dispatch(()=>{if(live(room)&&!blocked()&&connected(room))automaticPlay.playPracticeBots(room);});
+    }, Math.max(250 + random(101),(room.game.construction?.until||0)-now()));
     state.bot.unref?.();
   }
   function finish(room) {

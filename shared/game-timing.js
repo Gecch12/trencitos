@@ -7,6 +7,7 @@ const GameTiming = (() => {
     Object.keys(options).every(key => options[key].includes(value[key]));
   const normalize = value => Object.fromEntries(Object.entries(options).map(([key, values]) =>
     [key, values.includes(value?.[key]) ? value[key] : defaults[key]]));
-  return { options, defaults, valid, normalize };
+  const construction = Object.freeze({focusMs:180,flightMs:500,holdMs:150});
+  return { options, defaults, valid, normalize, construction };
 })();
 if (typeof module !== "undefined" && module.exports) module.exports = GameTiming;

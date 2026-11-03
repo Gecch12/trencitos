@@ -159,6 +159,8 @@ let retainedVisible = new Set();
 const effectTimers = new Set();
 const cardFlights = new Set();
 const constructionFlights = new Map();
+let constructionFocus=null,constructionFocusTimer=null,constructionWasBusy=false;
+const constructionBusy=()=>!replayMode&&!!game?.construction&&Date.now()+serverOffset<game.construction.until;
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 let uiDialog = null, dialogReturnFocus = null, buildTarget = null, buildSubmitting = false;
 let tunnelReveal = null;
@@ -302,7 +304,7 @@ function connect() {
     lastDrawId = null; // The reconnect snapshot is not a new draw.
     lastEffectId = null;
     status(I18n.t("● Conectado"));
-    send({type:'list_rooms'});
+    send({type:'list_rooms',compactMessages:1});
     if (desiredWatch) send({type:'spectate',code:desiredWatch});
     else if (attempted && desiredRoom) {
       let t = incomingRecovery || localStorage.getItem(identityKey(desiredRoom));
@@ -332,7 +334,7 @@ function connect() {
         flushRoomColor();
       } else cancelRoomColor();
       homeBusy = false; syncHomeAvailability();
-      pendingAction = null;
+      pendingAction = null;document.body.classList.remove("is-confirming-action");
       if (desiredWatch && !room) { desiredWatch=''; shell.watchUnavailable(); return; }
       if (!room && ["CODE_TAKEN", "INVALID_CODE", "ROOM_NOT_FOUND"].includes(m.code)) {
         attempted = false;
@@ -377,7 +379,8 @@ function connect() {
     if (m.type === "ack") {
       if (pendingAction?.id === m.id) {
         if (["choose_initial", "keep_tickets"].includes(pendingAction.action.type)) playSound("pen-sign");
-        pendingAction = null;
+        pendingAction = null;document.body.classList.remove("is-confirming-action");
+        if(game)renderMarket();
       }
       return;
     }
@@ -667,6 +670,7 @@ $("leaveRoom").onclick = () => {
   if (spectating || !game || game.phase === "finished" || confirm(I18n.t("¿Salir de la partida? Un bot tomará tu puesto. Si todos salen, la partida se abandonará tras 60 segundos sin conexiones."))) send({ type: "leave" });
 };
 function act(type, other = {}) {
+  if(constructionBusy())return;
   if (type === "draw_train" && marketRefresh) return;
   if(replayMode)return;
   if (spectating) return;
@@ -677,13 +681,15 @@ function act(type, other = {}) {
   if (!sessionSupported) { send({ type: "action", action: { type, ...other } }); return; }
   const id = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join("");
   pendingAction = { type: "action", id, revision: game.revision, action: { type, ...other } };
+  document.body.classList.add("is-confirming-action");
+  renderMarket();
   send(pendingAction);
 }
 function amIUp() {
-  return !sessionReplaced && !storagePaused && sock?.readyState === WebSocket.OPEN && !members[seat]?.autopilot && game && game.current === seat && game.phase === "play" && !game.turnWaiting;
+  return !constructionBusy() && !sessionReplaced && !storagePaused && sock?.readyState === WebSocket.OPEN && !members[seat]?.autopilot && game && game.current === seat && game.phase === "play" && !game.turnWaiting;
 }
 function drawAllowed() {
-  return !marketRefresh && amIUp() && game.drawCount < gameRules.trainCards.drawsPerTurn;
+  return !pendingAction && !marketRefresh && amIUp() && game.drawCount < gameRules.trainCards.drawsPerTurn;
 }
 function colorCard(c, count, click, disabled) {
   const b = document.createElement(click ? "button" : "div");
@@ -798,6 +804,9 @@ function render() {
 }
 function updateClocks() {
   if (!game) return;
+  const busy=constructionBusy();
+  if(constructionWasBusy&&!busy){constructionWasBusy=false;render();return;}
+  constructionWasBusy=busy;
   const now = replayAt ?? Date.now() + serverOffset;
   const deadlines = { initial: game.initialDeadline, turn: game.turnDeadline, offer: game.ticketOffer?.deadline, waiting: game.waitingDeadline, closing: game.closingDeadline };
   for (const node of document.querySelectorAll("[data-clock]")) {
@@ -841,6 +850,7 @@ function renderMarket() {
     !drawAllowed() || game.deckCount + game.discardCount === 0;
 }
 function renderHistory() {
+  if (replayMode) return;
   const logs = game.logs, list = $("history"), entries = $("historyEntries");
   const history = game.history || logs.map(text => ({ text, seat: null }));
   const historyKey = JSON.stringify(history);
@@ -956,7 +966,7 @@ function playEffects(events) {
         playSound("card");
         if (!reducedMotion.matches && event.source?.width) animateCardFlight(event);
       }, drawDelay);
-      effectTimers.add(timer); drawDelay += 180;
+      effectTimers.add(timer); drawDelay += 120;
     } else if (event.type === "market_refresh") {
       // The renewal is public even when the compact market panel is closed.
       playSound("shuffle");
@@ -964,7 +974,10 @@ function playEffects(events) {
     }
     else if (event.type === "tickets") playSound("card");
     else if (event.type === "build" && !event.deferredForTunnel) animateConstruction(event);
-    else if (event.type === "turn" && event.seat === seat) playSound("bell");
+    else if (event.type === "turn" && event.seat === seat) {
+      const timer=setTimeout(()=>{effectTimers.delete(timer);if(!document.hidden)playSound("bell");},Math.max(0,(game.construction?.until||0)-(Date.now()+serverOffset)));
+      effectTimers.add(timer);
+    }
   }
 }
 // Small original synthesized effects: no external audio, tracking or downloads.
@@ -1124,7 +1137,7 @@ function animateMarketRefresh() {
   const layer = document.createElement("div"); layer.className = "market-refresh-layer";
   layer.setAttribute("role", "status"); layer.setAttribute("aria-label", I18n.t("Renovando las cartas de la mesa"));
   current.layer = layer; market.appendChild(layer);
-  const duration = reducedMotion.matches ? 180 : 940;
+  const duration = reducedMotion.matches ? 120 : 420;
   const card = (color, i) => {
     const rect = slots[i], image = document.createElement("img");
     image.src = `assets/cards/${color}.svg`; image.alt = ""; image.draggable = false;
@@ -1194,12 +1207,12 @@ function animateCardFlight(event) {
     { transform: "translate(0,0) scale(1)", opacity: 1 },
     { transform: `translate(${dx * .52}px,${dy * .52 - 32}px) scale(1.04)`, offset: .5, opacity: 1 },
     { transform: `translate(${dx}px,${dy}px) scale(${scale})`, opacity: own ? 1 : .2 },
-  ], { duration: 750, easing: "cubic-bezier(.22,.65,.28,1)", fill: "forwards" });
+  ], { duration: 420, easing: "cubic-bezier(.22,.65,.28,1)", fill: "forwards" });
   const animations = [motion];
   if (reveal) animations.push(face.animate([
     { transform: "rotateY(0deg)" }, { transform: "rotateY(0deg)", offset: .18 },
     { transform: "rotateY(180deg)", offset: .65 }, { transform: "rotateY(180deg)" },
-  ], { duration: 750, fill: "forwards" }));
+  ], { duration: 420, fill: "forwards" }));
   const flight = { node, animations }; cardFlights.add(flight);
   motion.onfinish = () => {
     node.remove(); cardFlights.delete(flight);
@@ -1213,9 +1226,17 @@ function animateCardFlight(event) {
 function constructionTarget(event) {
   return event.routeId !== undefined ? $("board").querySelector(`[data-route-id="${CSS.escape(String(event.routeId))}"]`) : $("board").querySelector(`[data-city="${CSS.escape(event.city)}"]`);
 }
-function animateConstruction(event) {
+function animateConstruction(event, speed=1) {
   if (board3D) {
-    if (reducedMotion.matches || document.hidden || !board3D.animateConstruction(event, () => { if (!document.hidden) playSound("build"); })) playSound("build");
+    clearTimeout(constructionFocusTimer);constructionFocus=event;syncBoard3D();
+    const timing=GameTiming.construction,delay=reducedMotion.matches?0:timing.focusMs/speed,duration=reducedMotion.matches?0:timing.flightMs/speed;
+    const total=(timing.focusMs+timing.flightMs+timing.holdMs)/speed;
+    if(reducedMotion.matches||document.hidden||!board3D.animateConstruction(event,()=>{if(!document.hidden)playSound("build");},{delay,duration}))playSound("build");
+    const target=constructionTarget(event)?.getBoundingClientRect(),area=$("mapscroll").getBoundingClientRect();
+    if(target&&(target.right<area.left||target.left>area.right||target.bottom<area.top||target.top>area.bottom)){
+      const notice=document.createElement('div');notice.className='construction-notice';notice.textContent=I18n.t('Construcción fuera de vista')+' · '+game.players[event.seat].name;$("mapscroll").append(notice);
+    }
+    constructionFocusTimer=setTimeout(()=>{constructionFocus=null;document.querySelectorAll('.construction-notice').forEach(n=>n.remove());syncBoard3D();},total);
     return;
   }
   if (reducedMotion.matches || document.hidden || !constructionTarget(event)) { playSound("build"); return; }
@@ -1251,6 +1272,7 @@ function bindConstruction(flight) {
   }
 }
 function cancelConstruction() {
+  clearTimeout(constructionFocusTimer);constructionFocus=null;document.querySelectorAll(".construction-notice").forEach(n=>n.remove());
   board3D?.cancelAnimations();
   for (const flight of constructionFlights.values()) {
     clearTimeout(flight.timer); flight.animations.forEach(a => a.cancel()); flight.band?.style.removeProperty("opacity");
@@ -1366,7 +1388,10 @@ function syncBoard3D() {
   const cityFocus = document.activeElement.closest?.("#board [data-city]");
   board3D.update({ routes: game.routes.map(({ id, owner, color, tunnel, ferry, a, b }) => ({ id, owner, color, tunnel, ferry, a, b })),
     players: game.players.map(p => ({ color: GameUI.playerColor(p.color), placed: [...p.placed] })),
-    visualSeed: wagonSeed, hiddenRoute: null, highlight, spotlight: boardSpotlight,
+    visualSeed: wagonSeed, hiddenRoute: null, highlight, spotlight: constructionFocus ? {
+      ...(boardSpotlight||{}),routes:[...new Set([...(boardSpotlight?.routes||[]),...(constructionFocus.routeId===undefined?[]:[constructionFocus.routeId])])],
+      endpoints:[...(boardSpotlight?.endpoints||[]),...(constructionFocus.city?[constructionFocus.city]:[])]
+    } : boardSpotlight,
     selectedRoute: selected ?? (focus ? routeIdFromDom(focus.dataset.routeId) : null), selectedCity: stationCity ?? cityFocus?.dataset.city ?? null,
     routeColors: C });
 }
@@ -2123,7 +2148,7 @@ function renderDialog() {
   if (game.sharedTunnel) { showSharedTunnel(); return; }
   const myTurn = game.current === seat;
   if (myTurn && game.turnWaiting && game.ticketOffer) { uiDialog = "tickets"; showTicketDialog(game.ticketOffer.tickets, Math.min(game.ticketOffer.tickets.length, gameRules.destinations.offerMinimum)); return; }
-  if (game.phase === "finished" && (!resultsSeen || uiDialog === "results")) { showResults(); return; }
+  if (game.phase === "finished" && !constructionBusy() && (!resultsSeen || uiDialog === "results")) { showResults(); return; }
   const mandatory = (game.phase === "initial" && game.initial?.length) || (myTurn && game.phase === "tunnel");
   if (mandatory && uiDialog) { uiDialog = null; pendingChoiceKey = null; }
   if (uiDialog === "routes") { showTicketDialog(game.tickets, 0, true); return; }
@@ -3037,12 +3062,16 @@ shell = AppShell.create({
 if(replayMode){
   document.body.classList.add('is-replaying');
   HistoryUI.replay(new URLSearchParams(location.search).get('id')||'',(view,recordedMembers,context)=>{
+    cancelCardFlights();cancelConstruction();if(!context.animate)stopSounds();
     useMatchDefinition(view, context.definition, {replay:true});
+    selected=!context.animate?context.builds?.[0]?.routeId??null:null;stationCity=!context.animate?context.builds?.[0]?.city??null:null;
     game=view;members=recordedMembers;seat=context.seat;sessionSupported=true;replayAt=context.at;spectating=seat===-1;resultsSeen=true;uiDialog=null;
     wagonSeed=context.match.code || context.match.id || '';
     displayedHistoryKey=null;document.body.classList.toggle('is-spectating',spectating);
     $('privateSession').hidden=true;$('leaveRoom').hidden=true;$('leaveWatch').hidden=true;$('connection').classList.add('hidden');
     render();
+    if(context.animate)for(const build of context.builds||[])animateConstruction(build,context.speed);
+    else if(context.builds?.length){const build=context.builds[0];selected=build.routeId??null;stationCity=build.city??null;syncBoard3D();}
   });
 }else connect();
 

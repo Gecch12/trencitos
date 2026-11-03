@@ -1,4 +1,5 @@
 "use strict";
+const { createReplayAnalysis } = require("./replay-analysis");
 const Replay = require("../../shared/replay-state");
 const { historyEntryView } = require("./match-view");
 const { checkRecordedDefinition, requireRecordedDefinition } = require("../compat/replay-definition");
@@ -14,14 +15,16 @@ function projectSummary(record, full) {
 
 // Access is decided before frames are loaded. Replay uses stored projections;
 // it never invokes current rules, normalizes historical state or rewrites hashes.
-function projectReplay(record, { full, audit }) {
+function projectReplay(record, { full, audit, includeAnalysis = false }) {
   let state = null, previous = null, seenDefinition = false;
+  const analyze=createReplayAnalysis({full}),analysis=[];
   const frames = record.frames.map(frame => {
     state = frame.snapshot ? structuredClone(frame.snapshot) : Replay.apply(state, frame.changes);
     const defined = checkRecordedDefinition(record, state);
     if (seenDefinition && !defined) throw Object.assign(Error("La definición de la repetición está incompleta."), { status: 409 });
     seenDefinition ||= defined;
     if (audit) return structuredClone(frame);
+    if(includeAnalysis)analysis.push(analyze(state));
     const projected = { members: state.members, views: full ? state.views : [state.views[0]],
       ...(defined ? { definition: state.definition } : {}) };
     const data = frame.seq % 32 === 0 || !previous ? { snapshot: projected } : { changes: Replay.diff(previous, projected) };
@@ -33,7 +36,7 @@ function projectReplay(record, { full, audit }) {
   });
   requireRecordedDefinition(record, seenDefinition);
   if (audit) return { match: projectSummary(record, true), frames };
-  return { match: projectSummary(record, full), full, frames };
+  return { match: projectSummary(record, full), full, frames, ...(includeAnalysis?{analysis}:{}) };
 }
 
 module.exports = { projectSummary, projectReplay };

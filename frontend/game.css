@@ -607,3 +607,10 @@ button:focus-visible, summary:focus-visible, [tabindex="0"]:focus-visible { outl
 @media (prefers-reduced-motion: reduce) {
   .turn-banner::after { transition: none; }
 }
+
+.is-confirming-action #drawstats::after { content:"…"; display:inline-block; margin-left:5px; font-weight:bold; animation:command-pending 700ms ease-in-out infinite; }
+.is-confirming-action .market button { cursor:progress; }
+@keyframes command-pending { 50%{opacity:.35;} }
+@media(prefers-reduced-motion:reduce){.is-confirming-action #drawstats::after{animation:none;}}
+
+.construction-notice{position:absolute;left:50%;top:20%;transform:translateX(-50%);z-index:25;padding:10px 15px;border-radius:8px;background:#fff1cd;color:#34525a;box-shadow:0 3px 15px #2345;pointer-events:none;}

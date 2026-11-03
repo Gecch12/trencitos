@@ -58,7 +58,7 @@ la composición del tablero europeo.
 
 El navegador recibe `/maps/europe-v1.js` y `/maps/europe-legacy-v1.js` antes de
 `/data.js`. El validador, el registro, los contextos y el reglamento del backend
-son privados. El catálogo incorpora Europa y Laboratorio; la sala permite elegir
+son privados. El catálogo incorpora Europa, Laboratorio y Sudamérica beta; la sala permite elegir
 mapa antes de empezar. Alcance y aceptación en [fase 4](work/modular-platform-maps.md).
 
 ### Selección de mapa en la sala
@@ -112,7 +112,7 @@ filas legadas con topología, dueños y billetes, usadas por scoring y consultas
 Los exports `ROUTES`, `TICKETS`, `CITIES`, `COLORS`, `SCORE`, duraciones y `pay`
 siguen siendo compatibilidad europea para consumidores pendientes de migrar.
 Bots, vistas y grabaciones ya usan el contexto de partida. El contrato público
-incluye referencias y definiciones; sala y frontend ofrecen Europa y Laboratorio.
+incluye referencias y definiciones; sala y frontend ofrecen Europa, Laboratorio y Sudamérica beta.
 Cada partida mantiene su contexto en bots, guardado, reconexión y replay.
 
 ### Definición pública de la partida
@@ -163,6 +163,9 @@ como sustituto. La compatibilidad no modifica frames ni hashes históricos.
 curvas, geografía, rótulos y tamaños, vinculados a `europe@1`.
 [layouts/laboratory-v1.js](../frontend/layouts/laboratory-v1.js) declara el diseño
 del tablero de laboratorio, vinculado a `laboratory@1`.
+[layouts/south-america-v3.3-beta.js](../frontend/layouts/south-america-v3.3-beta.js)
+separa la cartografía de Sudamérica de sus reglas. La textura base de Three.js
+limita su lado mayor a 2048 píxeles; los vagones y marcas siguen siendo geometría.
 [map-layout.js](../frontend/map-layout.js) genera geometría y coloca etiquetas
 con ese layout; conserva una fachada europea para consumidores de compatibilidad.
 Los carriles dobles tienen orden estable por ID y la geometría europea conserva
@@ -808,3 +811,32 @@ y libera conexiones cuya entrada no pudo guardarse.
 de navegador y puesto; OAuth reclama el historial con el perfil verificado.
 `i18n.js` y `translations.js` traducen la app sin modificar datos interpolados.
 Contrato y detalles de seguridad en [historial/replay](history-replay.md).
+
+
+## Ejecución y presentación de la entrega Sudamérica
+
+`backend/peer-output.js` agrupa frames consecutivos en una escritura. El servidor
+activa TCP_NODELAY; la negociación `compactMessages:1` en `list_rooms` omite lobby,
+estado de almacenamiento y directorio idénticos, y definiciones ya transmitidas.
+La caché avanza después de confirmar persistencia. `MatchPresentation` solo acepta
+una definición omitida si ya validó referencias exactamente iguales. El primer
+estado de cada conexión es completo y los clientes antiguos conservan el contrato.
+
+`bot-planner.js` mantiene un worker para las decisiones costosas. `bot-runner.js`
+conserva una huella del estado previo, verifica que la sala siga siendo elegible y
+aplica la propuesta dentro de `dispatch`, mediante los mismos casos de uso y motor.
+Una jugada/entrada/salida concurrente puede invalidar el plan sin bloquear sockets.
+Los temporizadores esperan 250 ms (práctica: 250–350); una construcción extiende
+esa espera hasta su fin. Se cierran worker y temporizadores durante shutdown.
+
+`game/application/construction-pause.js` aplica una señal pública a construcciones
+aceptadas antes de grabar/publicar. Se guardan inicio/fin y objetivo, se conservan
+los presupuestos de turno/oferta y el motor rechaza acciones durante la señal.
+Los túneles ya tienen pausa de resultado y no suman otra. Three.js consume la
+señal visual sin decidir propiedad ni pagos. La recuperación desplaza señal y
+plazos juntos. Foco temporal y spotlight de destinos se combinan y restauran.
+
+`frontend/replay-ui.js` controla exclusivamente carga, perspectivas, navegación,
+velocidad e historial de la grabación. `history-ui.js` conserva listado/perfil.
+La consulta opcional de análisis deriva longitudes del dominio y lee completitud
+histórica de los destinos; no vuelve a ejecutar la partida.

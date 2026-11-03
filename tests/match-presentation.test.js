@@ -83,8 +83,16 @@ test("extracted Europe geometry preserves the frozen layout and stable double la
 
 test("browser classic scripts load the client read model without backend imports",()=>{
   const sandbox={structuredClone}; vm.createContext(sandbox);
-  for(const file of ["shared/maps/europe-v1.js","shared/maps/europe-legacy-v1.js","shared/data.js","frontend/layouts/europe-v1.js","frontend/layouts/laboratory-v1.js","frontend/map-layout.js","frontend/match-presentation.js"])
+  for(const file of ["shared/maps/europe-v1.js","shared/maps/europe-legacy-v1.js","shared/data.js","frontend/layouts/europe-v1.js","frontend/layouts/laboratory-v1.js","frontend/layouts/south-america-v3.3-beta.js","frontend/map-layout.js","frontend/match-presentation.js"])
     vm.runInContext(fs.readFileSync(require.resolve("../"+file),"utf8"),sandbox);
   const game=E.newGame(["A","B"]); sandbox.view=E.view(game,0); sandbox.definition=E.definition(game);
   assert.equal(vm.runInContext('MatchPresentation.create().resolve(view,definition).cityName("PAR")',sandbox),"Paris");
+});
+
+test('compact live messages reuse only a definition with identical version references',()=>{
+ const r=Presentation.create(),g=E.newGame(['A','B']),v=E.view(g,0),d=E.definition(g);
+ assert.throws(()=>r.resolve(v),/compatible/);const context=r.resolve(v,d);assert.equal(r.resolve(v),context);
+ assert.throws(()=>r.resolve({...v,mapRef:{id:'south-america',version:'3.3-beta'}}),/compatible/);
+ assert.throws(()=>r.resolve({...v,rulesRef:{id:'other',version:'1'}}),/compatible/);
+ assert.throws(()=>r.resolve(v,undefined,{replay:true}),/compatible/);
 });

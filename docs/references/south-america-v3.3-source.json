@@ -1,0 +1,1979 @@
+{
+  "mapId": "south-america-v3.3-beta",
+  "name": "Sudamérica · La ruta de los Andes",
+  "status": "beta",
+  "source": "Trencitos Sudamérica V3.3 mathematical graph + V2 original art templates",
+  "cities": {
+    "CTG": [
+      618.1,
+      148.4,
+      "Cartagena"
+    ],
+    "MDE": [
+      619.6,
+      223.4,
+      "Medellín"
+    ],
+    "BOG": [
+      676.3,
+      276.9,
+      "Bogotá"
+    ],
+    "CAL": [
+      592.1,
+      289.2,
+      "Cali"
+    ],
+    "PAS": [
+      592.1,
+      350.4,
+      "Pasto"
+    ],
+    "UIO": [
+      518.7,
+      365.7,
+      "Quito"
+    ],
+    "GYE": [
+      455.9,
+      411.6,
+      "Guayaquil"
+    ],
+    "CUE": [
+      567.6,
+      425.3,
+      "Cuenca"
+    ],
+    "PIU": [
+      434.5,
+      497.2,
+      "Piura"
+    ],
+    "TRU": [
+      504.9,
+      549.3,
+      "Trujillo"
+    ],
+    "LIM": [
+      576.8,
+      618.1,
+      "Lima"
+    ],
+    "CUZ": [
+      728.3,
+      621.2,
+      "Cusco"
+    ],
+    "PUN": [
+      783.4,
+      674.7,
+      "Puno"
+    ],
+    "AQP": [
+      725.2,
+      714.5,
+      "Arequipa"
+    ],
+    "ARI": [
+      781.8,
+      768.1,
+      "Arica"
+    ],
+    "PCL": [
+      645.7,
+      534.0,
+      "Pucallpa"
+    ],
+    "IQT": [
+      694.6,
+      433.0,
+      "Iquitos"
+    ],
+    "LPB": [
+      847.6,
+      700.7,
+      "La Paz"
+    ],
+    "CBB": [
+      924.1,
+      700.7,
+      "Cochabamba"
+    ],
+    "SRZ": [
+      1011.3,
+      722.2,
+      "Santa Cruz"
+    ],
+    "UYU": [
+      885.9,
+      788.0,
+      "Uyuni"
+    ],
+    "SPA": [
+      841.5,
+      862.9,
+      "San Pedro de Atacama"
+    ],
+    "SLA": [
+      921.1,
+      910.4,
+      "Salta"
+    ],
+    "ANF": [
+      769.6,
+      850.7,
+      "Antofagasta"
+    ],
+    "SCL": [
+      752.8,
+      1051.1,
+      "Santiago"
+    ],
+    "CCP": [
+      696.1,
+      1115.4,
+      "Concepción"
+    ],
+    "PMC": [
+      687.0,
+      1213.3,
+      "Puerto Montt"
+    ],
+    "COY": [
+      713.0,
+      1283.7,
+      "Coyhaique"
+    ],
+    "PNT": [
+      700.7,
+      1416.8,
+      "Puerto Natales"
+    ],
+    "PUQ": [
+      765.0,
+      1456.6,
+      "Punta Arenas"
+    ],
+    "USH": [
+      847.6,
+      1490.2,
+      "Ushuaia"
+    ],
+    "BRC": [
+      758.9,
+      1210.2,
+      "Bariloche"
+    ],
+    "MDZ": [
+      841.5,
+      1037.3,
+      "Mendoza"
+    ],
+    "COR": [
+      968.5,
+      1009.8,
+      "Córdoba"
+    ],
+    "BUE": [
+      1144.4,
+      1074.1,
+      "Buenos Aires"
+    ],
+    "CRV": [
+      948.6,
+      1266.8,
+      "Comodoro Rivadavia"
+    ],
+    "MVD": [
+      1222.5,
+      1081.7,
+      "Montevideo"
+    ],
+    "ASU": [
+      1172.0,
+      885.9,
+      "Asunción"
+    ],
+    "IGU": [
+      1259.2,
+      887.4,
+      "Puerto Iguazú"
+    ],
+    "SAO": [
+      1510.1,
+      847.6,
+      "São Paulo"
+    ],
+    "RIO": [
+      1617.2,
+      832.3,
+      "Rio de Janeiro"
+    ],
+    "BSB": [
+      1474.9,
+      688.5,
+      "Brasília"
+    ],
+    "MAO": [
+      1098.5,
+      429.9,
+      "Manaos"
+    ],
+    "PVH": [
+      977.7,
+      543.1,
+      "Porto Velho"
+    ],
+    "CUI": [
+      1175.0,
+      636.5,
+      "Cuiabá"
+    ],
+    "LET": [
+      855.3,
+      460.5,
+      "Leticia"
+    ]
+  },
+  "routes": [
+    {
+      "id": "SA001",
+      "a": "CTG",
+      "b": "MDE",
+      "n": 2,
+      "color": "blue",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA002",
+      "a": "CTG",
+      "b": "BOG",
+      "n": 3,
+      "color": "green",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA003",
+      "a": "MDE",
+      "b": "BOG",
+      "n": 1,
+      "color": "yellow",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 1,
+      "double": true,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA004",
+      "a": "MDE",
+      "b": "BOG",
+      "n": 1,
+      "color": "orange",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 2,
+      "double": true,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA005",
+      "a": "MDE",
+      "b": "CAL",
+      "n": 2,
+      "color": "black",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA006",
+      "a": "BOG",
+      "b": "CAL",
+      "n": 2,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA007",
+      "a": "BOG",
+      "b": "PAS",
+      "n": 3,
+      "color": "purple",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA008",
+      "a": "BOG",
+      "b": "LET",
+      "n": 3,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA009",
+      "a": "CAL",
+      "b": "PAS",
+      "n": 2,
+      "color": "white",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA010",
+      "a": "PAS",
+      "b": "UIO",
+      "n": 2,
+      "color": "red",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA011",
+      "a": "UIO",
+      "b": "GYE",
+      "n": 2,
+      "color": "yellow",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA012",
+      "a": "UIO",
+      "b": "CUE",
+      "n": 3,
+      "color": "black",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA013",
+      "a": "GYE",
+      "b": "CUE",
+      "n": 3,
+      "color": "orange",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA014",
+      "a": "GYE",
+      "b": "PIU",
+      "n": 2,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA015",
+      "a": "CUE",
+      "b": "PIU",
+      "n": 3,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA016",
+      "a": "CUE",
+      "b": "IQT",
+      "n": 4,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA017",
+      "a": "PIU",
+      "b": "TRU",
+      "n": 2,
+      "color": "red",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA018",
+      "a": "TRU",
+      "b": "LIM",
+      "n": 2,
+      "color": "yellow",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA019",
+      "a": "TRU",
+      "b": "PCL",
+      "n": 3,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA020",
+      "a": "LIM",
+      "b": "CUZ",
+      "n": 4,
+      "color": "purple",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 1,
+      "double": true,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA021",
+      "a": "LIM",
+      "b": "CUZ",
+      "n": 4,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 2,
+      "double": true,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA022",
+      "a": "LIM",
+      "b": "AQP",
+      "n": 3,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA023",
+      "a": "LIM",
+      "b": "PCL",
+      "n": 4,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA024",
+      "a": "CUZ",
+      "b": "PUN",
+      "n": 2,
+      "color": "yellow",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA025",
+      "a": "CUZ",
+      "b": "AQP",
+      "n": 2,
+      "color": "green",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA026",
+      "a": "CUZ",
+      "b": "PCL",
+      "n": 2,
+      "color": "orange",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA027",
+      "a": "PUN",
+      "b": "LPB",
+      "n": 2,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA028",
+      "a": "PUN",
+      "b": "AQP",
+      "n": 2,
+      "color": "black",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA029",
+      "a": "PUN",
+      "b": "ARI",
+      "n": 2,
+      "color": "red",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA030",
+      "a": "AQP",
+      "b": "ARI",
+      "n": 2,
+      "color": "blue",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA031",
+      "a": "ARI",
+      "b": "LPB",
+      "n": 3,
+      "color": "green",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA032",
+      "a": "ARI",
+      "b": "ANF",
+      "n": 2,
+      "color": "orange",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA033",
+      "a": "ANF",
+      "b": "SCL",
+      "n": 3,
+      "color": "blue",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA034",
+      "a": "LPB",
+      "b": "CBB",
+      "n": 2,
+      "color": "white",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA035",
+      "a": "LPB",
+      "b": "UYU",
+      "n": 3,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA036",
+      "a": "CBB",
+      "b": "SRZ",
+      "n": 2,
+      "color": "orange",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA037",
+      "a": "CBB",
+      "b": "UYU",
+      "n": 3,
+      "color": "blue",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA038",
+      "a": "SRZ",
+      "b": "UYU",
+      "n": 2,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 1,
+      "double": true,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA039",
+      "a": "SRZ",
+      "b": "UYU",
+      "n": 2,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 2,
+      "double": true,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA040",
+      "a": "SRZ",
+      "b": "ASU",
+      "n": 4,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 1,
+      "double": true,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA041",
+      "a": "SRZ",
+      "b": "ASU",
+      "n": 4,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 2,
+      "double": true,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA042",
+      "a": "SRZ",
+      "b": "PVH",
+      "n": 3,
+      "color": "green",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA043",
+      "a": "SRZ",
+      "b": "CUI",
+      "n": 4,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA044",
+      "a": "UYU",
+      "b": "SPA",
+      "n": 3,
+      "color": "purple",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA045",
+      "a": "UYU",
+      "b": "ANF",
+      "n": 2,
+      "color": "black",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA046",
+      "a": "SPA",
+      "b": "SLA",
+      "n": 3,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA047",
+      "a": "SPA",
+      "b": "ANF",
+      "n": 1,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA048",
+      "a": "SLA",
+      "b": "ASU",
+      "n": 4,
+      "color": "purple",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA049",
+      "a": "SLA",
+      "b": "COR",
+      "n": 3,
+      "color": "orange",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 1,
+      "double": true,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA050",
+      "a": "SLA",
+      "b": "COR",
+      "n": 3,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 2,
+      "double": true,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA051",
+      "a": "SLA",
+      "b": "MDZ",
+      "n": 4,
+      "color": "black",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA052",
+      "a": "SCL",
+      "b": "CCP",
+      "n": 2,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA053",
+      "a": "CCP",
+      "b": "PMC",
+      "n": 3,
+      "color": "green",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA054",
+      "a": "SCL",
+      "b": "MDZ",
+      "n": 2,
+      "color": "blue",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 1,
+      "double": true,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA055",
+      "a": "SCL",
+      "b": "MDZ",
+      "n": 2,
+      "color": "red",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 2,
+      "double": true,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA056",
+      "a": "ARI",
+      "b": "UYU",
+      "n": 4,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA057",
+      "a": "SCL",
+      "b": "BRC",
+      "n": 2,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA058",
+      "a": "PMC",
+      "b": "BRC",
+      "n": 2,
+      "color": "green",
+      "tunnel": true,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA059",
+      "a": "PMC",
+      "b": "COY",
+      "n": 2,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA060",
+      "a": "COY",
+      "b": "PNT",
+      "n": 4,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA061",
+      "a": "COY",
+      "b": "CRV",
+      "n": 4,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA062",
+      "a": "PNT",
+      "b": "PUQ",
+      "n": 1,
+      "color": "white",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA063",
+      "a": "PNT",
+      "b": "CRV",
+      "n": 3,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA064",
+      "a": "PUQ",
+      "b": "USH",
+      "n": 2,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 1,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA065",
+      "a": "PNT",
+      "b": "USH",
+      "n": 4,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 1,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA066",
+      "a": "BRC",
+      "b": "CRV",
+      "n": 3,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA067",
+      "a": "BRC",
+      "b": "MDZ",
+      "n": 4,
+      "color": "black",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA068",
+      "a": "CRV",
+      "b": "BUE",
+      "n": 6,
+      "color": "white",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA069",
+      "a": "MDZ",
+      "b": "COR",
+      "n": 2,
+      "color": "orange",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA070",
+      "a": "MDZ",
+      "b": "BUE",
+      "n": 4,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA071",
+      "a": "COR",
+      "b": "BUE",
+      "n": 4,
+      "color": "yellow",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA072",
+      "a": "COR",
+      "b": "ASU",
+      "n": 4,
+      "color": "blue",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA073",
+      "a": "BUE",
+      "b": "MVD",
+      "n": 2,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 1,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA074",
+      "a": "BUE",
+      "b": "IGU",
+      "n": 4,
+      "color": "blue",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA075",
+      "a": "MVD",
+      "b": "IGU",
+      "n": 4,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA076",
+      "a": "MVD",
+      "b": "SAO",
+      "n": 4,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA077",
+      "a": "ASU",
+      "b": "IGU",
+      "n": 2,
+      "color": "purple",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA078",
+      "a": "ASU",
+      "b": "CUI",
+      "n": 4,
+      "color": "white",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA079",
+      "a": "IGU",
+      "b": "SAO",
+      "n": 4,
+      "color": "black",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA080",
+      "a": "IGU",
+      "b": "BSB",
+      "n": 4,
+      "color": "red",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA081",
+      "a": "SAO",
+      "b": "RIO",
+      "n": 3,
+      "color": "red",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 1,
+      "double": true,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA082",
+      "a": "SAO",
+      "b": "RIO",
+      "n": 3,
+      "color": "white",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 2,
+      "double": true,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA083",
+      "a": "SAO",
+      "b": "BSB",
+      "n": 4,
+      "color": "purple",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 1,
+      "double": true,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA084",
+      "a": "SAO",
+      "b": "BSB",
+      "n": 4,
+      "color": "yellow",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 2,
+      "double": true,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA085",
+      "a": "RIO",
+      "b": "BSB",
+      "n": 4,
+      "color": "red",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA086",
+      "a": "BSB",
+      "b": "MAO",
+      "n": 8,
+      "color": "green",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA087",
+      "a": "BSB",
+      "b": "CUI",
+      "n": 3,
+      "color": "white",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA088",
+      "a": "CUI",
+      "b": "PVH",
+      "n": 3,
+      "color": "purple",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 1,
+      "double": true,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA089",
+      "a": "CUI",
+      "b": "PVH",
+      "n": 3,
+      "color": "red",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 2,
+      "double": true,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA090",
+      "a": "MAO",
+      "b": "PVH",
+      "n": 4,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 1,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA091",
+      "a": "MAO",
+      "b": "LET",
+      "n": 4,
+      "color": "blue",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA092",
+      "a": "LET",
+      "b": "IQT",
+      "n": 2,
+      "color": "green",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA093",
+      "a": "IQT",
+      "b": "PCL",
+      "n": 3,
+      "color": "gray",
+      "tunnel": false,
+      "ferry": 2,
+      "lane": 0,
+      "double": false,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA094",
+      "a": "PCL",
+      "b": "PVH",
+      "n": 3,
+      "color": "yellow",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 1,
+      "double": true,
+      "color_status": "inherited_V2",
+      "special_rules_status": "from_V2_reference"
+    },
+    {
+      "id": "SA095",
+      "a": "PCL",
+      "b": "PVH",
+      "n": 3,
+      "color": "yellow",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 2,
+      "double": true,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA096",
+      "a": "LET",
+      "b": "PVH",
+      "n": 2,
+      "color": "black",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA097",
+      "a": "COY",
+      "b": "BRC",
+      "n": 2,
+      "color": "white",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA098",
+      "a": "UIO",
+      "b": "IQT",
+      "n": 3,
+      "color": "orange",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 1,
+      "double": true,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA099",
+      "a": "UIO",
+      "b": "IQT",
+      "n": 3,
+      "color": "purple",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 2,
+      "double": true,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA100",
+      "a": "MAO",
+      "b": "CUI",
+      "n": 6,
+      "color": "red",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    },
+    {
+      "id": "SA101",
+      "a": "CCP",
+      "b": "BRC",
+      "n": 4,
+      "color": "blue",
+      "tunnel": false,
+      "ferry": 0,
+      "lane": 0,
+      "double": false,
+      "color_status": "draft_new",
+      "special_rules_status": "pending_review"
+    }
+  ],
+  "tickets": [
+    {
+      "id": "D01",
+      "a": "CTG",
+      "b": "UIO",
+      "p": 8,
+      "long": false,
+      "shortest_path_trains": 8,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D02",
+      "a": "CTG",
+      "b": "PIU",
+      "p": 12,
+      "long": false,
+      "shortest_path_trains": 12,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D03",
+      "a": "MDE",
+      "b": "GYE",
+      "p": 8,
+      "long": false,
+      "shortest_path_trains": 8,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D04",
+      "a": "MDE",
+      "b": "CUI",
+      "p": 9,
+      "long": false,
+      "shortest_path_trains": 9,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D05",
+      "a": "BOG",
+      "b": "GYE",
+      "p": 7,
+      "long": false,
+      "shortest_path_trains": 7,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D06",
+      "a": "CAL",
+      "b": "PIU",
+      "p": 8,
+      "long": false,
+      "shortest_path_trains": 8,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D07",
+      "a": "PAS",
+      "b": "LET",
+      "p": 6,
+      "long": false,
+      "shortest_path_trains": 6,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D08",
+      "a": "UIO",
+      "b": "LIM",
+      "p": 8,
+      "long": false,
+      "shortest_path_trains": 8,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D09",
+      "a": "GYE",
+      "b": "LET",
+      "p": 7,
+      "long": false,
+      "shortest_path_trains": 7,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D10",
+      "a": "CUE",
+      "b": "PCL",
+      "p": 7,
+      "long": false,
+      "shortest_path_trains": 7,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D11",
+      "a": "LET",
+      "b": "LIM",
+      "p": 9,
+      "long": false,
+      "shortest_path_trains": 9,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D12",
+      "a": "PIU",
+      "b": "CUI",
+      "p": 11,
+      "long": false,
+      "shortest_path_trains": 11,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D13",
+      "a": "TRU",
+      "b": "CUZ",
+      "p": 5,
+      "long": false,
+      "shortest_path_trains": 5,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D14",
+      "a": "LIM",
+      "b": "CUI",
+      "p": 10,
+      "long": false,
+      "shortest_path_trains": 10,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D15",
+      "a": "LIM",
+      "b": "PUN",
+      "p": 5,
+      "long": false,
+      "shortest_path_trains": 5,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D16",
+      "a": "COY",
+      "b": "COR",
+      "p": 8,
+      "long": false,
+      "shortest_path_trains": 8,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D17",
+      "a": "IQT",
+      "b": "CUI",
+      "p": 7,
+      "long": false,
+      "shortest_path_trains": 7,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D18",
+      "a": "PCL",
+      "b": "CUI",
+      "p": 6,
+      "long": false,
+      "shortest_path_trains": 6,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D19",
+      "a": "AQP",
+      "b": "UYU",
+      "p": 6,
+      "long": false,
+      "shortest_path_trains": 6,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D20",
+      "a": "PUN",
+      "b": "UYU",
+      "p": 5,
+      "long": false,
+      "shortest_path_trains": 5,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D21",
+      "a": "LPB",
+      "b": "COY",
+      "p": 12,
+      "long": false,
+      "shortest_path_trains": 12,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D22",
+      "a": "LPB",
+      "b": "ANF",
+      "p": 5,
+      "long": false,
+      "shortest_path_trains": 5,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D23",
+      "a": "SRZ",
+      "b": "BSB",
+      "p": 7,
+      "long": false,
+      "shortest_path_trains": 7,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D24",
+      "a": "SPA",
+      "b": "COY",
+      "p": 8,
+      "long": false,
+      "shortest_path_trains": 8,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D25",
+      "a": "SPA",
+      "b": "CUZ",
+      "p": 7,
+      "long": false,
+      "shortest_path_trains": 7,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D26",
+      "a": "ARI",
+      "b": "SCL",
+      "p": 5,
+      "long": false,
+      "shortest_path_trains": 5,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D27",
+      "a": "ANF",
+      "b": "MDZ",
+      "p": 5,
+      "long": false,
+      "shortest_path_trains": 5,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D28",
+      "a": "SCL",
+      "b": "CRV",
+      "p": 5,
+      "long": false,
+      "shortest_path_trains": 5,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D29",
+      "a": "CCP",
+      "b": "COR",
+      "p": 6,
+      "long": false,
+      "shortest_path_trains": 6,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D30",
+      "a": "PMC",
+      "b": "USH",
+      "p": 9,
+      "long": false,
+      "shortest_path_trains": 9,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D31",
+      "a": "CRV",
+      "b": "COR",
+      "p": 9,
+      "long": false,
+      "shortest_path_trains": 9,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D32",
+      "a": "SLA",
+      "b": "BUE",
+      "p": 7,
+      "long": false,
+      "shortest_path_trains": 7,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D33",
+      "a": "MDZ",
+      "b": "PNT",
+      "p": 10,
+      "long": false,
+      "shortest_path_trains": 10,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D34",
+      "a": "PUQ",
+      "b": "SCL",
+      "p": 9,
+      "long": false,
+      "shortest_path_trains": 9,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D35",
+      "a": "IGU",
+      "b": "CUI",
+      "p": 6,
+      "long": false,
+      "shortest_path_trains": 6,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D36",
+      "a": "SAO",
+      "b": "CRV",
+      "p": 12,
+      "long": false,
+      "shortest_path_trains": 12,
+      "state": "replacement_v3"
+    },
+    {
+      "id": "D37",
+      "a": "BSB",
+      "b": "MAO",
+      "p": 8,
+      "long": false,
+      "shortest_path_trains": 8,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D38",
+      "a": "MVD",
+      "b": "BRC",
+      "p": 10,
+      "long": false,
+      "shortest_path_trains": 10,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D39",
+      "a": "RIO",
+      "b": "ASU",
+      "p": 9,
+      "long": false,
+      "shortest_path_trains": 9,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D40",
+      "a": "BRC",
+      "b": "USH",
+      "p": 9,
+      "long": false,
+      "shortest_path_trains": 9,
+      "state": "retained_V2_with_recalculated_points"
+    },
+    {
+      "id": "D41",
+      "a": "CTG",
+      "b": "BUE",
+      "p": 21,
+      "long": true,
+      "shortest_path_trains": 21,
+      "state": "new_long_benchmark"
+    },
+    {
+      "id": "D42",
+      "a": "BOG",
+      "b": "CRV",
+      "p": 20,
+      "long": true,
+      "shortest_path_trains": 20,
+      "state": "new_long_benchmark"
+    },
+    {
+      "id": "D43",
+      "a": "UIO",
+      "b": "COY",
+      "p": 21,
+      "long": true,
+      "shortest_path_trains": 21,
+      "state": "new_long_benchmark"
+    },
+    {
+      "id": "D44",
+      "a": "LET",
+      "b": "PUQ",
+      "p": 21,
+      "long": true,
+      "shortest_path_trains": 21,
+      "state": "new_long_benchmark"
+    },
+    {
+      "id": "D45",
+      "a": "CUZ",
+      "b": "USH",
+      "p": 20,
+      "long": true,
+      "shortest_path_trains": 20,
+      "state": "new_long_benchmark"
+    },
+    {
+      "id": "D46",
+      "a": "BSB",
+      "b": "USH",
+      "p": 20,
+      "long": true,
+      "shortest_path_trains": 20,
+      "state": "new_long_benchmark"
+    }
+  ],
+  "layout": {
+    "source": "v3.3 schematic_coordinates",
+    "x_scale": 1.53,
+    "y_scale": 1.53
+  },
+  "warnings": [
+    "Colors and special rules are provisional V2 inheritances / draft for new connections",
+    "V3 graph geometry and styles need visual QA at 2-5 players",
+    "Ticket values optimized for shortest trains only; no balance simulation"
+  ]
+}

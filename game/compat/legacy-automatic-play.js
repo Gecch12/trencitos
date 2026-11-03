@@ -7,8 +7,8 @@ const { createAutomaticPlay } = require("../application/automatic-play");
 
 // Composition for the existing runtime. Policy randomness stays independent of
 // engine randomness; practice also uses its policy source for scheduling jitter.
-function createLegacyAutomaticPlay({ stageRoom, now = Date.now, random = randomInt, botRandom = randomInt, engine = defaultEngine }) {
-  const { chooseBotAction, chooseReplacementAction } = createBots({ engine });
+function createLegacyAutomaticPlay({ stageRoom, now = Date.now, random = randomInt, botRandom = randomInt, engine = defaultEngine, policies }) {
+  const { chooseBotAction, chooseReplacementAction } = policies || createBots({ engine });
   return createAutomaticPlay({ engine, chooseBotAction, chooseReplacementAction,
     stageRoom, now, random, botRandom,
     messages: {

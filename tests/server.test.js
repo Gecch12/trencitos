@@ -73,6 +73,7 @@ test("WebSocket practice flow: create, choose tickets, bots, finish, leave and c
   const botsReturnMs = 30000;
   peer.send({ type: "action", action: { type: "choose_initial", indexes: [0, 1] } });
   const playing = (await peer.next("state", (message) => message.game.phase === "play" && message.game.current === 0, botsReturnMs)).game;
+  if(playing.construction)await new Promise(resolve=>setTimeout(resolve,Math.max(0,playing.construction.until-Date.now())+5));
   assert.equal(playing.current, 0);
   assert.equal(playing.players[0].ticketsCount, 2);
   // Practice bots may keep additional compatible tickets; the human kept two.
@@ -84,6 +85,7 @@ test("WebSocket practice flow: create, choose tickets, bots, finish, leave and c
   assert.equal(offer.tickets.length, 3);
   peer.send({ type: "action", action: { type: "keep_tickets", offerId: offer.id, indexes: [1] } });
   const resumed = (await peer.next("state", (message) => message.game.phase === "play" && message.game.current === 0, botsReturnMs)).game;
+  if(resumed.construction)await new Promise(resolve=>setTimeout(resolve,Math.max(0,resumed.construction.until-Date.now())+5));
   assert.equal(resumed.tickets.at(-1).id, offer.tickets[1].id);
   assert.equal(resumed.tickets.length, 3);
 

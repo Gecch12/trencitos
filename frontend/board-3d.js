@@ -15,9 +15,10 @@ export function createBoard3D({ container, map, network, onFailure }) {
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 5000);
   const textureCanvas = document.createElement('canvas');
-  textureCanvas.width = Math.ceil(map.bounds.width * 2); textureCanvas.height = Math.ceil(map.bounds.height * 2);
+  const textureScale = Math.min(2, 2048 / Math.max(map.bounds.width, map.bounds.height));
+  textureCanvas.width = Math.ceil(map.bounds.width * textureScale); textureCanvas.height = Math.ceil(map.bounds.height * textureScale);
   const ctx = textureCanvas.getContext('2d');
-  ctx.scale(2, 2); ctx.translate(-map.bounds.x, -map.bounds.y);
+  ctx.scale(textureScale, textureScale); ctx.translate(-map.bounds.x, -map.bounds.y);
   ctx.fillStyle = '#bbd6d9'; ctx.fillRect(map.bounds.x, map.bounds.y, map.bounds.width, map.bounds.height);
   for (const d of map.land) {
     const p = new Path2D(d);
@@ -224,27 +225,27 @@ export function createBoard3D({ container, map, network, onFailure }) {
     for (const animation of animations.values()) bindAnimation(animation);
     invalidate();
   }
-  function animateConstruction(event, onComplete) {
+  function animateConstruction(event, onComplete, {delay=0,duration=500}={}) {
     const key = event.routeId !== undefined ? `route:${event.routeId}` : `city:${event.city}`;
     if (disposed || !targets.has(key)) return false;
-    const animation = {key,started:performance.now(),onComplete,maxLift:0};
+    const animation = {key,started:performance.now(),onComplete,maxLift:0,delay,duration};
     bindAnimation(animation); animations.set(key,animation); invalidate(); return true;
   }
   const animatedMatrix = new THREE.Matrix4();
   function advanceAnimations(now) {
     const callbacks = [];
     for (const animation of animations.values()) {
-      const elapsed = now - animation.started, stagger = Math.min(80,animation.lastCell * 18);
+      const elapsed = now - animation.started - animation.delay, stagger = Math.min(animation.duration * .16,animation.lastCell * animation.duration * .036);
       animation.maxLift = 0;
       for (const part of animation.parts) {
         const delay = animation.lastCell ? stagger * part.cell / animation.lastCell : 0;
-        const progress = THREE.MathUtils.clamp((elapsed-delay)/(500-stagger),0,1);
+        const progress = THREE.MathUtils.clamp((elapsed-delay)/(animation.duration-stagger),0,1);
         const lift = 18 * (1-progress) ** 3;
         animation.maxLift = Math.max(animation.maxLift,lift);
         animatedMatrix.copy(part.base); animatedMatrix.elements[14] += lift;
         part.mesh.setMatrixAt(part.index,animatedMatrix); part.mesh.instanceMatrix.needsUpdate = true;
       }
-      if (elapsed >= 500) { animations.delete(animation.key); if (animation.onComplete) callbacks.push(animation.onComplete); }
+      if (elapsed >= animation.duration) { animations.delete(animation.key); if (animation.onComplete) callbacks.push(animation.onComplete); }
     }
     return callbacks;
   }

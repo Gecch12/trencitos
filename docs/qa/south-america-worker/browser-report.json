@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-03T06:34:46.926Z",
+  "errors": [],
+  "tests": [
+    "map selection",
+    "host + four permanent bots",
+    "natural finish",
+    "rendered wagons match ownership",
+    "audit hash chain",
+    "replay seek",
+    "public privacy",
+    "desktop and mobile"
+  ],
+  "browser": "156.0.8078.80",
+  "turns": 175,
+  "game": {
+    "turns": 190,
+    "hostActions": 55,
+    "bots": 4,
+    "wagons": 189,
+    "scores": [
+      {
+        "name": "Bot 1",
+        "score": 110,
+        "winner": true
+      },
+      {
+        "name": "Bot 2",
+        "score": 106,
+        "winner": false
+      },
+      {
+        "name": "Bot 3",
+        "score": 99,
+        "winner": false
+      },
+      {
+        "name": "Jugador",
+        "score": 95,
+        "winner": false
+      },
+      {
+        "name": "Bot 4",
+        "score": 75,
+        "winner": false
+      }
+    ]
+  },
+  "passed": true
+}

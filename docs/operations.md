@@ -46,7 +46,7 @@ Los módulos de `shared/maps/` se incluyen con `shared/`; `index.html` carga
 definición y puente antes de `data.js`. El resolvedor privado valida la compatibilidad
 al resolver el mapa de una partida y rechaza referencias desconocidas. Los contextos
 y el reglamento incorporado viajan dentro de `backend/`, sin URLs públicas.
-El bundle publica los layouts de Europa/Laboratorio y sus etiquetas de selección;
+El bundle publica los layouts de Europa/Laboratorio/Sudamérica y sus etiquetas de selección;
 la topología del mapa elegido llega en cada estado autorizado. Una versión de
 mapa desconocida en una sala guardada impide arrancar sin reescribir el checkpoint.
 La lista de URLs públicas vive en `backend/public-assets.js`; mover un archivo no
@@ -177,3 +177,13 @@ Historial y repetición: [contrato y comandos de prueba](history-replay.md#verif
 La migración `003_match_archive.sql` debe preceder al despliegue. La suite amplia
 puede ejecutarse con `node --test --test-concurrency=1 tests/*.test.js` para evitar
 competencia entre simulaciones y servidores durante QA.
+
+
+### Medidas de comandos
+
+`/healthz?timings=1` añade `timingsMs` con hasta 256 muestras por fase (cola,
+mutación, commit, entrega, total, cálculo/espera de bots). Cada grupo ofrece
+cantidad, mediana, p95 y máximo en milisegundos. No contiene identidades,
+credenciales, comandos ni datos de partida. El health ordinario conserva su forma.
+La duración de entrega mide encolado local, no RTT del navegador. Para comparar
+latencia real se miden envío y recepción en el mismo reloj del cliente.

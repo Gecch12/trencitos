@@ -129,6 +129,7 @@ function decideClaim(g,seat,msg,r){
   owners:new Map(g.routes.map(x=>[x.id,x.owner]))},{routeId:r?.id,color:msg.color,wildCount:msg.wildCount},{map,rules:rulesFor(g).claim});
 }
 function action(g,seat,msg,{now=Date.now(),random=crypto.randomInt}={}){
+ if(now<g.construction?.until)fail('Espera a que termine la construcción.');
  const previous=actionRandom.get(g);actionRandom.set(g,random);
  try{expire(g,now,random);const serial=g.turnSerial;applyAction(g,seat,msg,now);if(g.turnSerial!==serial&&g.players[seat])g.players[seat].missedTurns=0;recycleDiscards(g);recorded(g,seat,msg)}
  finally{if(previous)actionRandom.set(g,previous);else actionRandom.delete(g)}
@@ -224,6 +225,7 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
 // a server restart never fast-forwards an entire absent game's turns.
 function expire(g,now=Date.now(),random=randomFor(g)){const previous=actionRandom.get(g);actionRandom.set(g,random);expiring.add(g);try{return expireImpl(g,now,random)}finally{expiring.delete(g);if(previous)actionRandom.set(g,previous);else actionRandom.delete(g)}}
 function expireImpl(g,now=Date.now(),random=crypto.randomInt){
+ if(now<g.construction?.until)return false;
  normalize(g,now);let changed=false;
  if(g.phase==='tunnel'&&g.pending?.stage){
   const t=g.pending,seat=g.current,p=g.players[seat],plan=Tunnel.advanceTunnel({tunnel:t,turnDeadline:g.turnDeadline},{now,rules:rulesFor(g).tunnel});

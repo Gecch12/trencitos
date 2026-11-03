@@ -97,7 +97,7 @@ Las nuevas vistas añaden `definitionVersion:1`, `mapRef` y `rulesRef`. El snaps
 guarda una sola `definition` pública junto a `game`, `views` y `members`; forma
 parte del hash. Su esquema y campos están en [arquitectura](architecture.md).
 Los metadatos guardan esa misma versión y referencias, sin copiar todo el catálogo
-en cada fila del listado. `map` es una etiqueta (`Europa`, `Laboratorio` o el ID de un mapa sin etiqueta) y
+en cada fila del listado. `map` es una etiqueta (`Europa`, `Laboratorio`, `Sudamérica · beta` o el ID de un mapa sin etiqueta) y
 `rulesVersion` conserva el formato informativo anterior; las referencias exactas
 son la identidad normativa. El archivo y el formato de diferencias siguen en v1.
 
@@ -156,7 +156,7 @@ archivo no sustituye backups ni recuperación punto en el tiempo.
 
 Al arrancar, los archivos activos sin una sala recuperable se cierran como
 abandonados. Un archivo conserva `schemaVersion:1` y los estados ya proyectados:
-el replay no ejecuta reglas nuevas sobre partidas antiguas. Europa y Laboratorio
+el replay no ejecuta reglas nuevas sobre partidas antiguas. Europa, Laboratorio y Sudamérica beta
 son seleccionables y renderizables. Cualquier mapa/modo
 futuro debe pasar por esta misma autoridad, privacidad y grabación.
 
@@ -208,7 +208,7 @@ antiguo completo usa el contexto europeo legado; un paso actual sin definición
 o sin layout compatible detiene la reproducción y muestra el error. Los controles
 se cierran de forma segura si la pestaña cambia de visibilidad tras ese error.
 El layout no está en los frames: se resuelve por referencia exacta en el bundle,
-que incluye Europa y Laboratorio. Contrato del cliente en
+que incluye Europa, Laboratorio y Sudamérica beta. Contrato del cliente en
 [arquitectura](architecture.md#contexto-y-layout-del-cliente).
 
 `i18n.js` y `translations.js` localizan HTML, accesibilidad, mensajes y registros.
@@ -234,3 +234,25 @@ El helper crea dos partidas completas y una abandonada en datos temporales, arra
 localhost:3143 y ofrece `/__qa/setup` para una identidad de invitado de prueba.
 Nunca cargar ese helper en producción. La ruta de fixture solo existe en el helper,
 no en `server.js`. Las pruebas SQL usan PGlite y las de OAuth un proveedor simulado.
+
+
+## Análisis por paso y controles compactos
+
+`GET /api/history/:id?analysis=1` añade una lista `analysis`, alineada con los
+frames. La respuesta ordinaria y la auditoría conservan sus cuerpos anteriores.
+Cada paso contiene recursos públicos, rutas construidas, longitud del camino más
+largo y líderes empatados. Solo participantes reciben cantidades/puntos de destinos
+completados y pendientes y una proyección «Puntuación si terminara ahora».
+Los destinos se leen de `ticketProgress` grabado, que ya incluye la asignación de
+estaciones histórica; la longitud usa `longestTrail` sobre las rutas de ese paso.
+Las longitudes se cachean por red propia. La proyección requiere parámetros de
+puntuación grabados; en un registro antiguo incompleto se muestra dato no disponible.
+No se confunden bonificaciones provisionales con puntos concedidos en vivo.
+
+La interfaz muestra un modal de carga con tren y reintento, conserva la perspectiva
+seleccionada al avanzar y distingue el actor del paso. El historial acumula todos
+los eventos grabados: pasado, paso actual y futuro navegable. Los controles viven
+junto al historial en escritorio y en un panel plegable en móvil. Hay saltos a
+construcción e hito (destinos, liderazgo/empate, estaciones, túnel desistido, última
+ronda y final). Buscar un paso es instantáneo y cancela sonidos/efectos pendientes;
+la reproducción usa la velocidad elegida y conserva la cámara.

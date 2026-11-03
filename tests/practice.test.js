@@ -47,12 +47,12 @@ function setup(random = () => 0, options = {}) {
   return { clock, room, rooms, human, messages, updates, controller, disconnect };
 }
 
-test("initial bots choose together after 800–1000 ms without waiting for the human", () => {
+test("initial bots choose together after 250–350 ms without waiting for the human", () => {
   for (const upper of [false, true]) {
     const { clock, room, controller, updates } = setup((max) => upper ? max - 1 : 0);
     controller.sync(room);
     controller.sync(room); // A broadcast cannot queue a second action.
-    const delay = upper ? 1000 : 800;
+    const delay = upper ? 350 : 250;
     clock.tick(delay - 1);
     assert.equal(room.game.initialDone, 0);
     clock.tick(1);
@@ -75,14 +75,14 @@ test("each of the two train draws is a separate delayed action", () => {
   room.game.current = 1;
   room.game.routes = [];
   controller.sync(room);
-  clock.tick(800);
+  clock.tick(250);
   assert.equal(room.game.current, 1);
   assert.equal(room.game.drawCount, 1);
-  clock.tick(799);
+  clock.tick(249);
   assert.equal(updates.length, 1);
   clock.tick(1);
   assert.equal(room.game.current, 2);
-  assert.deepEqual(updates, [800, 1600]);
+  assert.deepEqual(updates, [250, 500]);
 });
 
 test("practice controller actually saves for a destination instead of building a cheap unrelated route", () => {
@@ -98,7 +98,7 @@ test("practice controller actually saves for a destination instead of building a
   g.face = ["red", "red", "blue", "green", "black"];
   g.deck = ["yellow", "purple", "white"];
   controller.sync(room);
-  clock.tick(1600);
+  clock.tick(500);
   assert.equal(g.current, 2);
   assert.equal(g.players[1].hand.filter(c => c === "red").length, 4);
   assert.equal(g.players[1].trains, 45);
@@ -170,7 +170,7 @@ test("reconnection before expiry preserves the game and restarts automatic turns
   clock.tick(1);
   assert.ok(rooms.has(room.code));
   assert.equal(room.game.initialDone, 0);
-  clock.tick(799);
+  clock.tick(249);
   assert.equal(room.game.initialDone, 3);
   disconnect();
   clock.tick(29999);
@@ -214,7 +214,7 @@ test("bots yield when remaining destination draws and stations have no strategic
   room.game.deck = room.game.discard = room.game.face = room.game.routes = [];
   const tickets = room.game.shortDeck.length;
   controller.sync(room);
-  clock.tick(800);
+  clock.tick(250);
   assert.equal(room.game.current, 2);
   assert.equal(room.game.shortDeck.length, tickets);
   assert.equal(room.game.players[1].stations, 3);
@@ -230,13 +230,13 @@ test("a bot settles its ticket offer during the human turn without resetting the
   ] };
   Engine.ensureTiming(g, Date.now());
   const deadline = g.turnDeadline, serial = g.turnSerial;
-  controller.sync(room); clock.tick(799);
+  controller.sync(room); clock.tick(249);
   assert.ok(g.players[1].offer);
   clock.tick(1);
   assert.equal(g.players[1].offer, null);
   assert.deepEqual(g.players[1].tickets.map(t => t.id), [100]);
   assert.equal(g.current, 0); assert.equal(g.turnDeadline, deadline); assert.equal(g.turnSerial, serial);
-  assert.deepEqual(updates, [800]);
+  assert.deepEqual(updates, [250]);
   assert.equal(clock.timers.size, 0);
 });
 
@@ -247,7 +247,7 @@ test("closing schedules outstanding bot choices and finishes without waiting for
   g.players.forEach(p => { p.pending = []; });
   g.routes = [{ id: 0, a: "PAR", b: "BRU", n: 2, color: "red", owner: 1, ferry: 0, tunnel: false }];
   g.players[1].offer = { id: 9, deadline: Date.now() + 60000, tickets: [{ id: 100, a: "PAR", b: "BRU", p: 8 }] };
-  controller.sync(room); clock.tick(800);
+  controller.sync(room); clock.tick(250);
   assert.equal(g.phase, "finished");
   assert.equal(g.result.find(r => r.seat === 1).destination, 8);
   assert.equal(clock.timers.size, 0);
@@ -261,7 +261,7 @@ test("disconnect pauses pending bot ticket choices and reconnect resumes them", 
   controller.sync(room); disconnect(); clock.tick(1000);
   assert.ok(g.players[1].offer);
   room.members[0].ws = human;
-  controller.sync(room); clock.tick(800);
+  controller.sync(room); clock.tick(250);
   assert.equal(g.players[1].offer, null);
   controller.close();
 });
@@ -284,5 +284,5 @@ test('practice bots cannot advance while durable history is unavailable',()=>{
  let blocked=false;const {clock,room,controller}=setup(()=>0,{blocked:()=>blocked});
  controller.sync(room);blocked=true;clock.tick(1000);assert.equal(room.game.initialDone,0);
  controller.sync(room);clock.tick(1000);assert.equal(room.game.initialDone,0);
- blocked=false;controller.sync(room);clock.tick(800);assert.equal(room.game.initialDone,3);controller.close();
+ blocked=false;controller.sync(room);clock.tick(250);assert.equal(room.game.initialDone,3);controller.close();
 });

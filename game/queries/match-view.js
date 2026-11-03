@@ -35,6 +35,7 @@ function projectMatch(game, seat, { now, tunnelCardMs, destinationDetails, refer
       return { ...safe, ...(event.type === "tunnel_reveal" ? { base } : {}),
         ...(event.type === "draw" && (event.index >= 0 || event.seat === seat) ? { color } : {}) };
     }),
+    ...(game.construction ? {construction:game.construction} : {}),
     drawEvent: drawEvent(game, seat), phase: game.phase, current: game.current, seat,
     players: game.players.map(p => ({ name: p.name, color: p.color, trains: p.trains, stations: p.stations,
       score: p.score, placed: p.placed, handCount: p.hand.length, ticketsCount: p.tickets.length, initialReady: !p.pending.length })),

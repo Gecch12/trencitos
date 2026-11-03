@@ -126,7 +126,7 @@ const AppShell = (() => {
     function renderMap(ref, locked) {
       const index = MapOptions.options.findIndex(option=>option.id===ref?.id && option.version===ref?.version);
       $('roomMapChoice').value = String(index); $('roomMapChoice').disabled = locked;
-      const layout = [EuropeLayoutV1,LaboratoryLayoutV1].find(layout=>layout.mapRef.id===ref?.id && layout.mapRef.version===ref?.version);
+      const layout = [EuropeLayoutV1,LaboratoryLayoutV1,SouthAmericaLayoutV33].find(layout=>layout.mapRef.id===ref?.id && layout.mapRef.version===ref?.version);
       if (!layout) { $('roomMapPreview').innerHTML=''; return; }
       const {x,y,width,height} = layout.bounds;
       $('roomMapPreview').setAttribute('viewBox',`${x} ${y} ${width} ${height}`);

@@ -13,8 +13,10 @@ viven en la [decisión de arquitectura](../decisions/modular-game-platform.md).
 
 El usuario aprobó el enfoque y autorizó comenzar con documentación y fase 0 el
 2026-11-02. Esta ficha describe trabajo previsto y avance; la arquitectura
-implementada sigue descrita en [arquitectura](../architecture.md). No se ha
-autorizado publicar esta iniciativa en Render automáticamente.
+implementada sigue descrita en [arquitectura](../architecture.md). El 2026-11-03
+el usuario autorizó completar Sudamérica, probar cuatro bots, resolver los
+problemas de los chats de rendimiento/interfaz e integrar y publicar en producción.
+La ejecución conjunta se registra en [Sudamérica y entrega](south-america-release.md).
 
 ## Carpeta de trabajo y base
 

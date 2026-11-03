@@ -67,7 +67,7 @@ La sala de espera distribuye jugadores/amigos, configuración y chat en tres
 columnas; en pantallas pequeñas se usan pestañas. Amigos y chat son componentes
 preparados para una integración posterior. Modo Clásico, selector y miniatura de mapa,
 visibilidad pública/privada y número destacado de jugadores aparecen en una fila.
-El anfitrión puede elegir **Europa** o **Laboratorio** antes de iniciar;
+El anfitrión puede elegir **Europa**, **Sudamérica · beta** o **Laboratorio** antes de iniciar;
 Laboratorio es un tablero ficticio de prueba con las mismas reglas. La selección
 se guarda y se conserva en la revancha.
 La sección **Tiempos** agrupa turno (30/60/90 s), extra para nuevos billetes

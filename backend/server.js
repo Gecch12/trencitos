@@ -3,6 +3,8 @@ const http = require("node:http"),
   path = require("node:path"),
   crypto = require("node:crypto");
 const Engine = require("./engine");
+const { createPeerOutput } = require("./peer-output");
+const metrics = require("./runtime-metrics").createRuntimeMetrics();
 const { servePublicAsset } = require("./public-assets");
 const { createPlayerActionHandler } = require("../game/application/player-action");
 const { fingerprintAction } = require("../game/infrastructure/command-fingerprint");
@@ -98,7 +100,7 @@ const checkpoint = createCheckpointHandler({ repository: rooms,
 });
 const persist = checkpoint.persist;
 const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, restore: restoreRuntime,
-  commit: checkpoint.commit,
+  commit: checkpoint.commit, measure: metrics.record,
   onFailure: error => {
     console.error("Remote storage paused:", error.code || "INTERNAL");
     storageFailureAt ??= Date.now();
@@ -124,10 +126,14 @@ const sendRoom = createRoomStager({ repository: rooms, engine: Engine, history: 
 const submitPlayerAction = createPlayerActionHandler({ engine: Engine, stageRoom: sendRoom,
   storagePaused: () => storageFailureAt !== null, now: () => Date.now(), random: max => crypto.randomInt(max), fingerprintAction });
 const automaticPlay = createLegacyAutomaticPlay({ stageRoom: sendRoom });
-const practice = createPracticeController({ rooms, sendRoom, automaticPlay, dispatch, blocked:()=>storageFailureAt!==null, onRemove: room => { clocks.cancel(room); archive.capture(room,"Práctica cerrada."); return persist(); } });
-const clocks = createGameClock({ rooms, sendRoom, automaticPlay, dispatch, canTick: r => storageFailureAt === null && (r.practice || r.emptySince == null) });
-const multiplayer = createMultiplayerController({ rooms, sendRoom, automaticPlay, removeRoom, dispatch, blocked: () => storageFailureAt !== null });
-const roomBots = createRoomBots({ rooms, sendRoom, automaticPlay, dispatch, blocked: () => storageFailureAt !== null });
+const botPlanner = require("./bot-planner").createBotPlanner({measure:metrics.record});
+const runBot = require("./bot-runner").createBotRunner({planner:botPlanner,dispatch,automaticPlay,active:()=>!stopping,stageRoom:sendRoom,engine:Engine,
+  schedule:room=>{if(room.practice)practice.sync(room);else{roomBots.sync(room);multiplayer.sync(room);}},
+  onError:()=>console.error("Bot planning deferred; room will retry.")});
+const practice = createPracticeController({ rooms, sendRoom, automaticPlay, runBot, dispatch, blocked:()=>storageFailureAt!==null, onRemove: room => { clocks.cancel(room); archive.capture(room,"Práctica cerrada."); return persist(); } });
+const clocks = createGameClock({ rooms, sendRoom, automaticPlay, runBot, dispatch, canTick: r => storageFailureAt === null && (r.practice || r.emptySince == null) });
+const multiplayer = createMultiplayerController({ rooms, sendRoom, automaticPlay, runBot, removeRoom, dispatch, blocked: () => storageFailureAt !== null });
+const roomBots = createRoomBots({ rooms, sendRoom, automaticPlay, runBot, dispatch, blocked: () => storageFailureAt !== null });
 function snapshot(r) {
   return { archiveHash:r.archiveHash,matchId:r.matchId,archiveSeq:r.archiveSeq,archiveFull:r.archiveFull,archiveStartedAt:r.archiveStartedAt,archiveClosedAt:r.archiveClosedAt,_archiveState:r._archiveState, game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
     hostSeat: r.hostSeat, visibility: r.visibility, maxPlayers: r.maxPlayers, mapRef: r.mapRef ? {...r.mapRef} : undefined, timing: r.timing ? {...r.timing} : undefined,
@@ -209,7 +215,7 @@ const server = http.createServer(async (req, res) => {
       const id=path[0], audit=path[1]==="audit";
       if(path.length>2||path[1]&&!audit)throw Object.assign(Error("Esta repetición no está disponible."),{status:404});
       if(id&&!/^[a-f0-9-]{36}$/.test(id)) throw Object.assign(Error("Esta repetición no está disponible."),{status:404});
-      const data=id?await archive.replay(identity,id,audit):{matches:await archive.list(identity)};
+      const data=id?await archive.replay(identity,id,audit,url.searchParams.get("analysis")==="1"):{matches:await archive.list(identity)};
       if(audit)res.setHeader("Content-Disposition",`attachment; filename="trencitos-${id}.json"`);
       res.end(JSON.stringify(data));
     } catch(error){res.statusCode=error.status||503;res.end(JSON.stringify({message:error.status?error.message:"El historial no está disponible ahora."}));}
@@ -223,7 +229,7 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === "/healthz") {
     const ok = storageReady && storageFailureAt === null && !stopping;
     res.writeHead(ok ? 200 : 503, { "Content-Type": "application/json" });
-    return res.end(JSON.stringify({ ok, storage: backend, rooms: rooms.size }));
+    return res.end(JSON.stringify({ ok, storage: backend, rooms: rooms.size, ...(url.searchParams.get("timings")==="1"?{timingsMs:metrics.summary()}:{}) }));
   }
   servePublicAsset(url.pathname, res);
 });
@@ -258,12 +264,13 @@ function createPeer(socket) {
     lastSeen: Date.now(),
     send(obj) {
       const data = JSON.stringify(obj);
-      const deliver = () => { if (!this.closed && this.socket.writable) this.socket.write(wsFrame(1, data)); };
+      const deliver = () => output.send(data, this.compactMessages);
       if (durable) durable.defer(deliver); else deliver();
     },
     close(disconnectedAt = Date.now()) {
       if (durable?.mutating) { durable.defer(() => this.close(disconnectedAt)); return; }
       if (!this.closed) {
+        output.flush();
         this.closed = true;
         peers.delete(this);
         dispatch(() => detachPeer(this, disconnectedAt));
@@ -273,6 +280,8 @@ function createPeer(socket) {
       }
     },
   };
+  socket.setNoDelay(true);
+  const output = createPeerOutput({ write: data => socket.write(data), frame: wsFrame, live: () => !peer.closed && socket.writable });
   peers.add(peer);
   socket.on("data", (chunk) => {
     peer.buffer = Buffer.concat([peer.buffer, chunk]);
@@ -341,7 +350,14 @@ function detachPeer(peer, disconnectedAt = Date.now()) {
   sendRoom(r);
 }
 function watchRecording(r) {
-  if(r.game) Engine.observe(r.game,event=>{r.archiveAction={...event,actor:r.members[event.seat]?.bot?"bot":r.members[event.seat]?.autopilot?"replacement":event.automatic?"timer":"player"};archive.capture(r);});
+  if(r.game) {
+    let seen=r.game.eventSerial||0;
+    Engine.observe(r.game,event=>{
+      const build=r.game.events?.findLast(e=>e.id>seen&&e.type==='build');seen=r.game.eventSerial||seen;
+      require('../game/application/construction-pause').pauseForConstruction(r.game,build,Date.now());
+      r.archiveAction={...event,actor:r.members[event.seat]?.bot?"bot":r.members[event.seat]?.autopilot?"replacement":event.automatic?"timer":"player"};archive.capture(r);
+    });
+  }
 }
 function queueRoomViews(r) {
   r.members.forEach((m, i) => {
@@ -377,7 +393,7 @@ function onMessage(peer, msg) {
     peer.send({ type: "pong" });
     return;
   }
-  if (msg.type === "list_rooms") { peer.directory = true; sendDirectory(); return; }
+  if (msg.type === "list_rooms") { peer.compactMessages = msg.compactMessages === 1; peer.directory = true; sendDirectory(); return; }
   if (msg.type === "spectate") {
     if (peer.room) return deny(peer, "Sal de tu sala antes de observar otra partida.");
     const code = String(msg.code || "").trim().toUpperCase(), r = rooms.get(code);
@@ -706,7 +722,7 @@ server.on("close", () => {
   practice.close();
   clocks.close();
   multiplayer.close();
-  roomBots.close();
+  roomBots.close(); botPlanner.close();
 });
 const cleanup = setInterval(
   () => dispatch(() => {
@@ -733,6 +749,7 @@ async function shutdown() {
   // Finish an in-flight durable commit, then disconnect without recording a
   // voluntary abandonment. The next process restores the saved clock budget.
   await durable?.idle();
+  await botPlanner.close();
   for (const peer of peers) peer.close();
   if (server.listening) await new Promise(resolve => server.close(resolve));
 }
