@@ -60,9 +60,11 @@ de casillas y etiquetas se valida aparte. Una longitud sin puntuación no obtien
 un valor inventado por el renderizador o el bot.
 
 El primer corte de [fase 4](../work/modular-platform-maps.md) ya implementa
-`MapDefinition`, su catálogo validado y la tabla europea congelada. `RuleSet`,
-`MatchState` versionado y `MapLayout` por definición siguen siendo contratos
-objetivo. El puente conserva temporalmente los números del runtime anterior.
+`MapDefinition`, su catálogo validado y la tabla europea congelada. El segundo
+corte incorpora un reglamento fijo `europe-classic@1` y resolución de contexto
+por partida en el motor. La carga/validación genérica de `RuleSet`, `MatchState`
+versionado y `MapLayout` por definición siguen siendo contratos objetivo.
+El puente conserva temporalmente los números del runtime europeo anterior.
 
 ### Identidades y versiones
 
@@ -232,9 +234,9 @@ forma síncrona; remoto confirma una vez al final del trabajo en la cola global.
 `stageRoom=true` sigue significando preparado, no confirmación remota. El outbox
 permanece en transporte/cola. Detalle en [arquitectura](../architecture.md).
 
-El registro de mapas versionados y la búsqueda por identidad de partida
-continúan pendientes; este puerto mínimo no los da por implementados. Las
-lecturas autorizadas se centralizan en el cuarto corte, descrito arriba.
+El registro de mapas y su resolución en el motor se incorporan en fase 4;
+la búsqueda del repositorio por identidad de partida continúa pendiente.
+Las lecturas autorizadas se centralizan en el cuarto corte, descrito arriba.
 
 Orden para una petición válida: autenticar y validar sobre → comprobar duplicado
 → resolver vencimientos → comprobar control/revisión → decidir jugada → preparar
@@ -277,6 +279,15 @@ En archivo, conservar el manifiesto que confirma el prefijo de replay y su `.bak
 | Archivo local v2, formatos antiguos array / `{rooms,archive}`, esquema RPC de checkpoint y archivo `schemaVersion:1`. | Son envoltorios diferentes. Adaptadores leen cada formato conocido; no incrementar todos los números al cambiar solo `MatchState`. |
 | Partidas activas y archivos anteriores no tienen `mapRef`. | Identificar únicamente esos formatos legados conocidos como Europa/reglas históricas. Adaptar en memoria y guardar mediante el commit habitual; preservar original/backups. Formato nuevo sin referencia es inválido. |
 | Replay conserva vistas, estados, diferencias y hashes. | No reescribir frames históricos ni sus hashes. Seleccionar lector/renderizador por versión; nuevos campos de mapa se incorporan en formato compatible o con lector versionado. |
+
+En el segundo corte de fase 4, construcción y resolución de túneles ya buscan
+vías por identidad en la fachada; su igualdad es estricta, sin convertir cadenas
+numéricas en posiciones. `createEngine({maps})` y las opciones `mapRef/rulesRef`
+permiten probar otros mapas mediante el mismo motor y reglamento. Las llamadas
+predeterminadas y estados sin ambas referencias mantienen el formato europeo
+anterior; una referencia parcial/desconocida falla. Esta transición no sustituye
+la migración validada de los envoltorios persistidos ni habilita el segundo mapa
+en sala, bots o replay. Contrato implementado en [arquitectura](../architecture.md).
 
 El tercer corte de fase 2 permite inyectar azar en reparto/mercado inicial y
 elecciones de cierre forzado. Conserva el parámetro legado del sorteo de primer

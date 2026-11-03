@@ -28,8 +28,15 @@ La extracción conserva las reglas descritas aquí; avance y límites en
 La red y los billetes de Europa tienen una definición inmutable versionada.
 La correspondencia entre IDs nuevos y números anteriores está congelada; los
 mensajes y guardados aún conservan estos números. El registro rechaza versiones
-inexistentes y redes inválidas. La selección y referencias por partida pertenecen
-al trabajo pendiente de [fase 4](work/modular-platform-maps.md).
+inexistentes y redes inválidas. El motor ya resuelve mapa y reglamento por partida
+y construye vías por igualdad de ID, sin usar su posición en un array. Sus
+opciones explícitas conservan ambas referencias después de serializar; las
+partidas legadas sin referencias siguen siendo Europa. El único reglamento
+incorporado es `europe-classic@1`, con los valores existentes; al iniciar se
+comprueba además que el mapa pueda repartir todos los billetes iniciales.
+La migración de guardados y la selección por sala siguen pendientes en
+[fase 4](work/modular-platform-maps.md); detalles del puente en
+[arquitectura](architecture.md).
 
 ## Conceptos e invariantes
 

@@ -17,31 +17,31 @@ const LegacyTiming=require('../game/compat/legacy-timing');
 const MatchView=require('../game/queries/match-view');
 const {historyEntries,historyEntryView}=MatchView;
 const {legacyError}=require('../game/compat/legacy-errors');
+const {COLORS,CITIES,ROUTES,TICKETS}=require('../shared/data');
+const {maps:registeredMaps}=require('./maps');
+const {createMatchContexts,validateSetupTickets}=require('./match-context');
+const defaultRules=require('./rules/europe-classic-v1');
+// Legacy exports remain Europe-only until bots and presentation migrate.
+const SCORE=defaultRules.routePoints;
+const TURN_MS=defaultRules.turn.turnMs,INITIAL_MS=defaultRules.turn.initialMs,OFFER_MS=defaultRules.offerMs;
+const TUNNEL_CARD_MS=defaultRules.tunnel.cardMs,TUNNEL_RESULT_MS=defaultRules.tunnel.resultMs;
+
+function createEngine({maps=registeredMaps}={}){
+const contexts=createMatchContexts(maps),contextFor=g=>contexts.forGame(g),rulesFor=g=>contextFor(g).rules;
+const cityName=(g,id)=>contextFor(g).cityName(id);
+const routeById=(g,id)=>g.routes.find(route=>route.id===id);
+const requireRoute=(g,id)=>{const route=routeById(g,id);if(!route)throw legacyError({code:'ROUTE_UNAVAILABLE'});return route;};
+const stationContext=g=>({map:contextFor(g).map,rules:rulesFor(g).stations});
 // Per-action randomness stays outside serialized state. Simulations can supply
 // an isolated stream for all draws/recycles without patching global crypto.
 const actionRandom=new WeakMap(), observers=new WeakMap(), expiring=new WeakSet();
 function observe(g,callback){observers.set(g,callback)}
 function recorded(g,seat,action,automatic=false){observers.get(g)?.({seat,action:structuredClone(action),automatic})}
 const randomFor=g=>actionRandom.get(g)||crypto.randomInt;
-const {COLORS,PLAYER_COLORS,CITIES,ROUTES,TICKETS}=require('../shared/data');
-const SCORE={1:1,2:2,3:4,4:7,6:15,8:21};
-const {maps,EUROPE_REFERENCE,validateMapForRules}=require('./maps');
-validateMapForRules(maps.get(EUROPE_REFERENCE),{colors:COLORS,routePoints:SCORE,capabilities:{tunnels:true,ferries:true}});
-const CLAIM_RULES={colors:COLORS,routePoints:SCORE,doubleRoutesMinPlayers:4};
-const TURN_MS=60000, INITIAL_MS=60000, OFFER_MS=60000;
-const TUNNEL_CARD_MS=700, TUNNEL_RESULT_MS=3000;
-const TUNNEL_RULES={colors:COLORS,cardMs:TUNNEL_CARD_MS,resultMs:TUNNEL_RESULT_MS};
-const SETUP_RULES={minPlayers:2,maxPlayers:5,maxNameLength:24,playerColors:PLAYER_COLORS,
- trainCards:[...COLORS.map(color=>({color,count:12})),{color:'wild',count:14}],
- initialHand:4,initialLongTickets:1,initialShortTickets:3,trains:45,stations:3};
-const TRAIN_CARD_RULES={marketSize:5,refreshWildCount:3,drawsPerTurn:2};
-const cardContext=g=>({rules:TRAIN_CARD_RULES,random:randomFor(g)});
-const DESTINATION_RULES={initialMinimum:2,offerMinimum:1,offerCount:3};
-const STATION_CONTEXT={map:{cities:Object.keys(CITIES).map(id=>({id}))},rules:{colors:COLORS,stationCosts:[1,2,3]}};
-const SCORING_RULES={routePoints:SCORE,unusedStationPoints:4,expressPoints:10,tieBreakers:['score','completed','stations','express']};
-const destinationRules=g=>({...DESTINATION_RULES,offerClock:g.timing?
- {kind:'remaining-turn',extraMs:g.timing.ticketExtraSeconds*1000}:{kind:'fixed',durationMs:OFFER_MS}});
-const turnRules=g=>({initialMs:g.timing?.initialSeconds*1000||INITIAL_MS,turnMs:g.timing?.turnSeconds*1000||TURN_MS,finalTrainThreshold:2});
+const cardContext=g=>({rules:rulesFor(g).trainCards,random:randomFor(g)});
+const destinationRules=g=>({...rulesFor(g).destinations,offerClock:g.timing?
+ {kind:'remaining-turn',extraMs:g.timing.ticketExtraSeconds*1000}:{kind:'fixed',durationMs:rulesFor(g).offerMs}});
+const turnRules=g=>({...rulesFor(g).turn,initialMs:g.timing?.initialSeconds*1000||rulesFor(g).turn.initialMs,turnMs:g.timing?.turnSeconds*1000||rulesFor(g).turn.turnMs});
 const tunnelBusy = g => g.phase==='tunnel' && g.pending?.stage && g.pending.stage!=='decision';
 function deadlines(g) {
  if(g.phase==='tunnel'&&g.pending?.stage)return [g.pending.stage==='decision'?g.turnDeadline:g.pending.until].filter(Number.isFinite);
@@ -53,7 +53,7 @@ function startTurn(g,now=Date.now()){
  if(plan.emitTurn)event(g,'turn',g.current);
 }
 function ensureTiming(g,now=Date.now()){
- const plan=LegacyTiming.planTiming(g,{now,rules:turnRules(g),offerMs:OFFER_MS});
+ const plan=LegacyTiming.planTiming(g,{now,rules:turnRules(g),offerMs:rulesFor(g).offerMs});
  if(plan.pendingChanges)Object.assign(g.pending,plan.pendingChanges);
  if(plan.offer)g.players[plan.offer.seat].offer=plan.offer.value;
  Object.assign(g,plan.changes);
@@ -61,7 +61,7 @@ function ensureTiming(g,now=Date.now()){
  if(plan.finish)finish(g);else if(plan.emitTurn)event(g,'turn',g.current);
 }
 function normalize(g,now=Date.now()){
- ensureTiming(g,now);LegacyScoring.completeResults(g,SCORING_RULES);return g;
+ ensureTiming(g,now);LegacyScoring.completeResults(g,rulesFor(g).scoring);return g;
 }
 function fail(message){throw new Error(message)}
 // Preserve legacy pile containers between draws; recycling/renewal replaces them.
@@ -75,10 +75,12 @@ function applyCardPiles(g,plan){
 function draw(g){const plan=TrainCards.drawCard(g,cardContext(g));applyCardPiles(g,plan);return plan.card}
 function recycleDiscards(g){if(g.discard.length)applyCardPiles(g,TrainCards.recycleDiscards(g,cardContext(g)))}
 function refill(g){applyCardPiles(g,TrainCards.refillMarket(g,cardContext(g)))}
-function newGame(names,first=0,now=Date.now(),timing=null,{random=crypto.randomInt}={}){
- const decision=Setup.prepareGame({names,first},{map:{tickets:TICKETS},rules:SETUP_RULES,random});
+function newGame(names,first=0,now=Date.now(),timing=null,options={}){
+ const {random=crypto.randomInt}=options,{context,references}=contexts.forSetup(options);
+ if(Array.isArray(names)&&names.length>=context.rules.setup.minPlayers&&names.length<=context.rules.setup.maxPlayers)validateSetupTickets(context,names.length);
+ const decision=Setup.prepareGame({names,first},{map:{tickets:context.tickets.map(t=>({...t}))},rules:context.rules.setup,random});
  if(!decision.ok)throw legacyError(decision.error);
- const g={phase:'initial',current:first,first,initialDone:0,...decision.plan,routes:ROUTES.map(r=>({...r,owner:null})),
+ const g={...references,phase:'initial',current:first,first,initialDone:0,...decision.plan,routes:context.routes.map(r=>({...r,owner:null})),
  discard:[],face:[],finalRemaining:null,lastTrigger:null,drawCount:0,pending:null,logs:[],result:null};
  if(timing)g.timing=GameTiming.normalize(timing);
  actionRandom.set(g,random);
@@ -86,8 +88,10 @@ function newGame(names,first=0,now=Date.now(),timing=null,{random=crypto.randomI
 }
 // Production starts are chosen once on the server; explicit first seats remain
 // available for deterministic fixtures and rule tests.
-function newRandomGame(names,now=Date.now(),random=crypto.randomInt,timing=null,options){
- if(!Array.isArray(names)||names.length<2||names.length>5)fail('Se requieren 2–5 jugadores.');
+function newRandomGame(names,now=Date.now(),random=crypto.randomInt,timing=null,options={}){
+ const {context}=contexts.forSetup(options),{minPlayers,maxPlayers}=context.rules.setup;
+ if(!Array.isArray(names)||names.length<minPlayers||names.length>maxPlayers)fail('Se requieren 2–5 jugadores.');
+ validateSetupTickets(context,names.length);
  // The third argument still draws only the starting seat. Optional fifth-argument
  // randomness controls the deal/market without changing that existing contract.
  const g=newGame(names,random(names.length),now,timing,options);
@@ -107,18 +111,18 @@ function next(g,now=Date.now()){
  if(plan.emitTurn)event(g,'turn',g.current);
 }
 function canDrawMore(g){return TrainCards.canDrawMore(g)}
-function pay(hand,color,quantity,wildNeeded=0,wildCount){return Payment.planPayment(hand,{color,quantity,wildNeeded,wildCount},CLAIM_RULES)}
+function pay(hand,color,quantity,wildNeeded=0,wildCount){return Payment.planPayment(hand,{color,quantity,wildNeeded,wildCount},defaultRules.claim)}
 function spend(g,p,comp){for(let k=0;k<comp.regular;k++){const i=p.hand.indexOf(comp.color);if(i<0)throw Error('Descuadre de mano');g.discard.push(...p.hand.splice(i,1))}
  for(let k=0;k<comp.wild;k++){const i=p.hand.indexOf('wild');if(i<0)throw Error('Descuadre de comodines');g.discard.push(...p.hand.splice(i,1))}}
-function awardRoute(g,seat,r,length=r.n,points=SCORE[length]){r.owner=seat;g.players[seat].trains-=length;g.players[seat].score+=points;event(g,'build',seat,{routeId:r.id})}
-function block(g,r,seat){return g.routes.some(x=>RouteClaim.blocksParallelRoute(r,x,{owner:x.owner,seat,playerCount:g.players.length},CLAIM_RULES))}
+function awardRoute(g,seat,r,length=r.n,points=rulesFor(g).routePoints[length]){r.owner=seat;g.players[seat].trains-=length;g.players[seat].score+=points;event(g,'build',seat,{routeId:r.id})}
+function block(g,r,seat){const rules=rulesFor(g).claim;return g.routes.some(x=>RouteClaim.blocksParallelRoute(r,x,{owner:x.owner,seat,playerCount:g.players.length},rules))}
 // Temporary projection: keep persisted Europe rows/IDs and callers unchanged.
 // Domain definitions contain no owners; ownership is passed separately by ID.
 function decideClaim(g,seat,msg,r){
  const p=g.players[seat];
- const map={routes:g.routes.map(x=>({id:x.id,a:x.a,b:x.b,length:x.n,color:x.color,tunnel:x.tunnel,ferry:x.ferry}))};
+ const map={routes:g.routes.map(x=>({id:x.id,corridorId:x.corridorId,a:x.a,b:x.b,length:x.n,color:x.color,tunnel:x.tunnel,ferry:x.ferry}))};
  return RouteClaim.decideRouteClaim({seat,playerCount:g.players.length,hand:p.hand,trains:p.trains,
-  owners:new Map(g.routes.map(x=>[x.id,x.owner]))},{routeId:r?.id,color:msg.color,wildCount:msg.wildCount},{map,rules:CLAIM_RULES});
+  owners:new Map(g.routes.map(x=>[x.id,x.owner]))},{routeId:r?.id,color:msg.color,wildCount:msg.wildCount},{map,rules:rulesFor(g).claim});
 }
 function action(g,seat,msg,{now=Date.now(),random=crypto.randomInt}={}){
  const previous=actionRandom.get(g);actionRandom.set(g,random);
@@ -126,7 +130,7 @@ function action(g,seat,msg,{now=Date.now(),random=crypto.randomInt}={}){
  finally{if(previous)actionRandom.set(g,previous);else actionRandom.delete(g)}
 }
 function settleOffer(g,seat,selection,finalize=true,now=Date.now()){
- const p=g.players[seat],decision=Destinations.decideOfferChoice(p,selection,{rules:DESTINATION_RULES});
+ const p=g.players[seat],decision=Destinations.decideOfferChoice(p,selection,{rules:rulesFor(g).destinations});
  if(!decision.ok)throw legacyError(decision.error);
  const {kept,returned}=decision.plan;p.tickets.push(...kept);g.shortDeck.push(...returned);p.offer=null;
  note(g,I18n.message`${p.name} conservó ${kept.length} billete(s) de destino.`,seat);
@@ -143,7 +147,7 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
  if(g.phase==='closing')fail('Esperando las últimas elecciones de billetes.');
  if(g.phase==='initial'){
   if(msg.type!=='choose_initial')fail('Selecciona primero los billetes iniciales.');
-  const decision=Destinations.decideInitialChoice(g,{seat,indexes:msg.indexes},{rules:DESTINATION_RULES});
+  const decision=Destinations.decideInitialChoice(g,{seat,indexes:msg.indexes},{rules:rulesFor(g).destinations});
   if(!decision.ok)throw legacyError(decision.error);
   p.tickets.push(...decision.plan.kept);p.pending=[];g.initialDone=decision.plan.initialDone;
   if(decision.plan.startPlay){g.phase='play';g.current=g.first;note(g,'¡Partida iniciada!');startTurn(g,now)}
@@ -154,12 +158,13 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
  if(g.phase==='tunnel'){
   const t=g.pending,decision=Tunnel.decideTunnel({tunnel:t,hand:p.hand},
    {type:msg.type==='pay_tunnel'?'pay':msg.type==='decline_tunnel'?'decline':null,wildCount:msg.extraWild,timeout:expiring.has(g)},
-   {now,rules:TUNNEL_RULES});
+   {now,rules:rulesFor(g).tunnel});
   if(!decision.ok)throw legacyError(decision.error);
   const plan=decision.plan;
   if(plan.build){
+   const r=requireRoute(g,t.routeId);
    for(const payment of plan.payments)spend(g,p,payment);
-   const r=g.routes[t.routeId];awardRoute(g,seat,r);note(g,I18n.message`${p.name} completó el túnel ${CITIES[r.a][2]} — ${CITIES[r.b][2]}.`,seat);
+   awardRoute(g,seat,r);note(g,I18n.message`${p.name} completó el túnel ${cityName(g,r.a)} — ${cityName(g,r.b)}.`,seat);
   }else note(g,I18n.message`${p.name} desistió del túnel.`,seat);
   g.discard.push(...t.revealed);
   if(!expiring.has(g))p.missedTurns=0;Object.assign(t,plan.pendingChanges);g.turnDeadline=null;
@@ -179,13 +184,13 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
  }
  if(g.drawCount>0)fail('Debes terminar de robar cartas.');
  if(msg.type==='claim'){
-  const r=g.routes[msg.routeId],decision=decideClaim(g,seat,msg,r);
+  const r=routeById(g,msg.routeId),decision=decideClaim(g,seat,msg,r);
   if(!decision.ok)throw legacyError(decision.error);
   const {payment:base,length,points,kind}=decision.plan,color=base.color;
-  if(kind==='build'){spend(g,p,base);awardRoute(g,seat,r,length,points);note(g,I18n.message`${p.name} tomó ${CITIES[r.a][2]} — ${CITIES[r.b][2]} (+${points}).`,seat);next(g,now);return}
+  if(kind==='build'){spend(g,p,base);awardRoute(g,seat,r,length,points);note(g,I18n.message`${p.name} tomó ${cityName(g,r.a)} — ${cityName(g,r.b)} (+${points}).`,seat);next(g,now);return}
   const revealed=[];for(let i=0;i<3;i++){const c=draw(g);if(c)revealed.push(c)}
   g.phase='tunnel';g.pending=Tunnel.beginTunnel({routeId:r.id,base,revealed,turnDeadline:g.turnDeadline,
-   offerDeadlines:g.players.map(player=>player.offer?player.offer.deadline:null)},{now,rules:TUNNEL_RULES});
+   offerDeadlines:g.players.map(player=>player.offer?player.offer.deadline:null)},{now,rules:rulesFor(g).tunnel});
   g.turnDeadline=null;
   event(g,'tunnel_reveal',seat,{routeId:r.id,paymentColor:color,base:{...base},surcharge:g.pending.surcharge,revealed:[...revealed]});
   g.pending.revealId=g.eventSerial;
@@ -199,10 +204,10 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
   event(g,'tickets',seat);note(g,I18n.message`${p.name} está eligiendo nuevos billetes.`,seat);next(g,now);return;
  }
  if(msg.type==='station'){
-  const decision=Stations.decideStation(stationState(g,seat),{cityId:msg.city,color:msg.color,wildCount:msg.wildCount},STATION_CONTEXT);
+  const decision=Stations.decideStation(stationState(g,seat),{cityId:msg.city,color:msg.color,wildCount:msg.wildCount},stationContext(g));
   if(!decision.ok)throw legacyError(decision.error);
   const {cityId,payment}=decision.plan;
-  spend(g,p,payment);p.stations--;p.placed.push(cityId);event(g,'build',seat,{city:cityId});note(g,I18n.message`${p.name} construyó una estación en ${CITIES[cityId][2]}.`,seat);next(g,now);return;
+  spend(g,p,payment);p.stations--;p.placed.push(cityId);event(g,'build',seat,{city:cityId});note(g,I18n.message`${p.name} construyó una estación en ${cityName(g,cityId)}.`,seat);next(g,now);return;
  }
  if(msg.type==='pass'){
   // Passing is only permitted when no other move is possible.
@@ -217,13 +222,13 @@ function expire(g,now=Date.now(),random=randomFor(g)){const previous=actionRando
 function expireImpl(g,now=Date.now(),random=crypto.randomInt){
  normalize(g,now);let changed=false;
  if(g.phase==='tunnel'&&g.pending?.stage){
-  const t=g.pending,seat=g.current,p=g.players[seat],plan=Tunnel.advanceTunnel({tunnel:t,turnDeadline:g.turnDeadline},{now,rules:TUNNEL_RULES});
+  const t=g.pending,seat=g.current,p=g.players[seat],plan=Tunnel.advanceTunnel({tunnel:t,turnDeadline:g.turnDeadline},{now,rules:rulesFor(g).tunnel});
   if(plan.kind==='decision'||plan.kind==='build'){
    if(plan.kind==='decision'){Object.assign(t,plan.pendingChanges);g.turnDeadline=plan.turnDeadline;}
    else {
-    const r=g.routes[t.routeId];for(const payment of plan.payments)spend(g,p,payment);g.discard.push(...t.revealed);recycleDiscards(g);
+    const r=requireRoute(g,t.routeId);for(const payment of plan.payments)spend(g,p,payment);g.discard.push(...t.revealed);recycleDiscards(g);
     p.missedTurns=0;awardRoute(g,seat,r);
-    note(g,I18n.message`${p.name} tomó túnel ${CITIES[r.a][2]} — ${CITIES[r.b][2]} (+${SCORE[r.n]}).`,seat);
+    note(g,I18n.message`${p.name} tomó túnel ${cityName(g,r.a)} — ${cityName(g,r.b)} (+${rulesFor(g).routePoints[r.n]}).`,seat);
     Object.assign(t,plan.pendingChanges);
    }
    recorded(g,seat,{type:'tunnel_revealed'},true);return true;
@@ -238,13 +243,13 @@ function expireImpl(g,now=Date.now(),random=crypto.randomInt){
   // Other clocks and private choices remain frozen while the public modal owns focus.
   return false;
  }
- for(let seat=0;seat<g.players.length;seat++){const offer=g.players[seat].offer;if(offer&&now>=offer.deadline){const indexes=Destinations.randomSelection(offer.tickets,DESTINATION_RULES.offerMinimum,{random});settleOffer(g,seat,{offerId:offer.id,indexes},true,now);recorded(g,seat,{type:"keep_tickets",offerId:offer.id,indexes},true);changed=true}}
+ for(let seat=0;seat<g.players.length;seat++){const offer=g.players[seat].offer;if(offer&&now>=offer.deadline){const indexes=Destinations.randomSelection(offer.tickets,rulesFor(g).destinations.offerMinimum,{random});settleOffer(g,seat,{offerId:offer.id,indexes},true,now);recorded(g,seat,{type:"keep_tickets",offerId:offer.id,indexes},true);changed=true}}
  if(['finished','closing'].includes(g.phase)||!Number.isFinite(g.turnDeadline)||now<g.turnDeadline)return changed;
  const seat=g.current,serial=g.turnSerial;
  if(g.phase==='initial'){
   for(let i=0;i<g.players.length;i++){
    if(!g.players[i].pending.length)continue;
-   const picked=Destinations.randomSelection(g.players[i].pending,DESTINATION_RULES.initialMinimum,{random});
+   const picked=Destinations.randomSelection(g.players[i].pending,rulesFor(g).destinations.initialMinimum,{random});
    note(g,I18n.message`${g.players[i].name}: tiempo agotado; conservó 2 billetes al azar.`,i);
    applyAction(g,i,{type:'choose_initial',indexes:picked},now);
   }
@@ -254,7 +259,7 @@ function expireImpl(g,now=Date.now(),random=crypto.randomInt){
  g.players[seat].missedTurns=(g.players[seat].missedTurns||0)+1;
  if(g.phase==='tunnel')applyAction(g,seat,{type:'decline_tunnel'},now);
  else{
-  const remaining=TRAIN_CARD_RULES.drawsPerTurn-g.drawCount;
+  const remaining=rulesFor(g).trainCards.drawsPerTurn-g.drawCount;
   for(let i=0;i<remaining&&g.turnSerial===serial&&g.phase==='play';i++){
    if(!g.deck.length&&!g.discard.length)break;
    applyAction(g,seat,{type:'draw_train',index:-1},now);
@@ -263,22 +268,30 @@ function expireImpl(g,now=Date.now(),random=crypto.randomInt){
  }
  recycleDiscards(g);return true;
 }
-function possibleClaim(g,seat){const p=g.players[seat];return g.routes.some(r=>r.owner===null&&!block(g,r,seat)&&r.n<=p.trains&&[...COLORS,'wild'].some(c=>pay(p.hand,c,r.n,r.ferry))&&(r.color==='gray'||[r.color,'wild'].some(c=>pay(p.hand,c,r.n,r.ferry))))}
+function possibleClaim(g,seat){
+ const p=g.players[seat],rules=rulesFor(g).claim;
+ return g.routes.some(r=>r.owner===null&&!block(g,r,seat)&&r.n<=p.trains&&
+  (r.color==='gray'?[...rules.colors,'wild']:[r.color,'wild']).some(color=>
+   Payment.planPayment(p.hand,{color,quantity:r.n,wildNeeded:r.ferry},rules)));
+}
 function stationState(g,seat){return {hand:g.players[seat].hand,remainingStations:g.players[seat].stations,occupiedCities:new Set(g.players.flatMap(p=>p.placed))}}
-function possibleStation(g,seat){return Stations.canBuildStation(stationState(g,seat),STATION_CONTEXT)}
+function possibleStation(g,seat){return Stations.canBuildStation(stationState(g,seat),stationContext(g))}
 const connected=Network.connected,connectionPath=Network.connectionPath;
 function stationAssignments(g,seat){const {map,owners}=LegacyScoring.projectBoard(g);return Stations.assignStations({...LegacyScoring.projectPlayer(g.players[seat]),seat,owners},{map})}
 function longestTrail(g,seat){return Network.longestTrail(g.routes.filter(r=>r.owner===seat).map(r=>({id:r.id,a:r.a,b:r.b,length:r.n})))}
 function longest(g,seat){return longestTrail(g,seat).length}
 function finish(g,force=false,{random=randomFor(g)}={}){
- if(force)for(let seat=0;seat<g.players.length;seat++){const offer=g.players[seat].offer;if(offer)settleOffer(g,seat,{offerId:offer.id,indexes:Destinations.randomSelection(offer.tickets,DESTINATION_RULES.offerMinimum,{random})},false)}
+ contextFor(g);
+ if(force)for(let seat=0;seat<g.players.length;seat++){const offer=g.players[seat].offer;if(offer)settleOffer(g,seat,{offerId:offer.id,indexes:Destinations.randomSelection(offer.tickets,rulesFor(g).destinations.offerMinimum,{random})},false)}
  g.turnDeadline=null;g.turnWaiting=false;
  if(g.players.some(p=>p.offer)){g.phase='closing';return}
  g.phase='finished';const {map,owners}=LegacyScoring.projectBoard(g),state={owners,players:g.players.map(LegacyScoring.projectPlayer)};
- g.result=Scoring.scoreMatch(state,{map,rules:SCORING_RULES}).map(result=>LegacyScoring.legacyResult(result,g.players[result.seat]));
+ g.result=Scoring.scoreMatch(state,{map,rules:rulesFor(g).scoring}).map(result=>LegacyScoring.legacyResult(result,g.players[result.seat]));
  note(g,'Partida finalizada. ¡Resultados calculados!')}
 function destinationDetails(g,seat,assignment){const {map,owners}=LegacyScoring.projectBoard(g);return Scoring.destinationDetails({...LegacyScoring.projectPlayer(g.players[seat]),seat,owners},{map},assignment)}
 function view(g,seat,{now=Date.now()}={}){
- return MatchView.projectMatch(g,seat,{now,tunnelCardMs:TUNNEL_CARD_MS,destinationDetails});
+ return MatchView.projectMatch(g,seat,{now,tunnelCardMs:rulesFor(g).tunnel.cardMs,destinationDetails});
 }
-module.exports={observe,newGame,newRandomGame,note,historyEntryView,action,view,connected,connectionPath,longest,stationAssignments,finish,pay,block,draw,refill,recycleDiscards,next,ensureTiming,normalize,expire,deadlines,tunnelBusy,TURN_MS,INITIAL_MS,OFFER_MS,TUNNEL_CARD_MS,TUNNEL_RESULT_MS,SCORE,ROUTES,TICKETS,CITIES,COLORS,possibleClaim,possibleStation};
+return {contextFor,routeById,observe,newGame,newRandomGame,note,historyEntryView,action,view,connected,connectionPath,longest,stationAssignments,finish,pay,block,draw,refill,recycleDiscards,next,ensureTiming,normalize,expire,deadlines,tunnelBusy,TURN_MS,INITIAL_MS,OFFER_MS,TUNNEL_CARD_MS,TUNNEL_RESULT_MS,SCORE,ROUTES,TICKETS,CITIES,COLORS,possibleClaim,possibleStation};
+}
+module.exports={...createEngine(),createEngine};

@@ -1,0 +1,102 @@
+TAP version 13
+# Could not persist rooms: EISDIR: illegal operation on a directory, open '/tmp/command-receipts-DKokKL/state.json.tmp'
+# Subtest: file receipts survive reconnection/restart and roll back atomically without changing legacy IDs or replay
+ok 1 - file receipts survive reconnection/restart and roll back atomically without changing legacy IDs or replay
+  ---
+  duration_ms: 255.454333
+  type: 'test'
+  ...
+# Subtest: runtime assets load through HTML, JavaScript imports and CSS references
+ok 2 - runtime assets load through HTML, JavaScript imports and CSS references
+  ---
+  duration_ms: 184.951667
+  type: 'test'
+  ...
+# Loaded 47 runtime resources: /, /privacy.html, /assets/cards/red.svg, /assets/cards/blue.svg, /assets/cards/green.svg, /assets/cards/yellow.svg, /assets/cards/black.svg, /assets/cards/white.svg, /assets/cards/orange.svg, /assets/cards/purple.svg, /assets/cards/wild.svg, /assets/cards/back.svg, /assets/ticket.svg, /style.css, /game.css, /responsive.css, /lobby.css, /assets/favicon.svg, /board-3d.css, /shell.css, /translations.js, /i18n.js, /maps/europe-v1.js, /maps/europe-legacy-v1.js, /data.js, /map-layout.js, /game-timing.js, /game-ui.js, /lobby-ui.js, /board-camera.js, /account-ui.js, /shell-icons.js, /replay-state.js, /history-ui.js, /shell.js, /app.js, /privacy.css, /board-3d.js, /wagon-preview.js, /vendor/three.module.js, /wagon-renderer.js, /wagon-models.mjs, /vendor/three.core.js, /hippie-model.mjs, /hippie-geometry.mjs, /wagon-people.mjs, /hippie-hair.mjs
+# Subtest: static SVG is served safely with right MIME and traversal returns 404
+ok 3 - static SVG is served safely with right MIME and traversal returns 404
+  ---
+  duration_ms: 44.940375
+  type: 'test'
+  ...
+# Subtest: one engine resolves simultaneous Europe and two exact map versions without global selection
+ok 4 - one engine resolves simultaneous Europe and two exact map versions without global selection
+  ---
+  duration_ms: 11.23525
+  type: 'test'
+  ...
+# Subtest: Europe route IDs keep their meaning after rows move; string IDs are not numeric positions
+ok 5 - Europe route IDs keep their meaning after rows move; string IDs are not numeric positions
+  ---
+  duration_ms: 4.310125
+  type: 'test'
+  ...
+# Subtest: serialized opaque-ID tunnel resolves by identity: zero surcharge
+ok 6 - serialized opaque-ID tunnel resolves by identity: zero surcharge
+  ---
+  duration_ms: 5.541334
+  type: 'test'
+  ...
+# Subtest: serialized opaque-ID tunnel resolves by identity: paid surcharge
+ok 7 - serialized opaque-ID tunnel resolves by identity: paid surcharge
+  ---
+  duration_ms: 5.341791
+  type: 'test'
+  ...
+# Subtest: ferries and parallel restrictions use opaque IDs and corridors for every player count
+ok 8 - ferries and parallel restrictions use opaque IDs and corridors for every player count
+  ---
+  duration_ms: 4.08425
+  type: 'test'
+  ...
+# Subtest: stations, borrowed paths, final scores and private queries use the match's own cities and tickets
+ok 9 - stations, borrowed paths, final scores and private queries use the match's own cities and tickets
+  ---
+  duration_ms: 3.83325
+  type: 'test'
+  ...
+# Subtest: unknown or incomplete references reject commands, queries and closure before changing a game
+ok 10 - unknown or incomplete references reject commands, queries and closure before changing a game
+  ---
+  duration_ms: 6.043416
+  type: 'test'
+  ...
+# Subtest: unusable definitions and insufficient destinations fail before consuming setup randomness
+ok 11 - unusable definitions and insufficient destinations fail before consuming setup randomness
+  ---
+  duration_ms: 1.940583
+  type: 'test'
+  ...
+# Subtest: explicit Europe references preserve its legacy route/ticket representation and cloned lookup
+ok 12 - explicit Europe references preserve its legacy route/ticket representation and cloned lookup
+  ---
+  duration_ms: 0.620958
+  type: 'test'
+  ...
+# Subtest: versioned Europe and its frozen numeric bridge preserve every legacy city, route and ticket
+ok 13 - versioned Europe and its frozen numeric bridge preserve every legacy city, route and ticket
+  ---
+  duration_ms: 2.274167
+  type: 'test'
+  ...
+# Subtest: complete seeded setups retain their pre-extraction fingerprints for two through five players
+ok 14 - complete seeded setups retain their pre-extraction fingerprints for two through five players
+  ---
+  duration_ms: 3.545959
+  type: 'test'
+  ...
+# Subtest: WebSocket practice flow: create, choose tickets, bots, finish, leave and create again
+ok 15 - WebSocket practice flow: create, choose tickets, bots, finish, leave and create again
+  ---
+  duration_ms: 6979.86317
+  type: 'test'
+  ...
+1..15
+# tests 15
+# suites 0
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7972.01717

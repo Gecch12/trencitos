@@ -1,0 +1,33 @@
+{
+  "checked_at": "2026-11-03T04:35:32.470640+00:00",
+  "base_commit": "9ee033a068d1e17b26f646d6088e7f255860bb61",
+  "results": {
+    "node-tests-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "4e311b3ccfce8259fb5a5ead7baf72932c2e8f43e623c6703e9ff9aefd15aa7a",
+      "log_hash_matches": true
+    },
+    "browser-tests-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "a2c7c42de5ea7230b1627edcbe4358041b35d8676785840d6c02c92a3bebb1ed",
+      "log_hash_matches": true
+    },
+    "docker-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "046fac4d7d02a39cb0d4bd24102929a8f7108bdc9fbdfc0b502f898aa5fe4c6b"
+    }
+  },
+  "historical_qa_unchanged": true,
+  "diff_check": "passed",
+  "docs_check": "passed (49 documents, 23 work items)",
+  "artifact_sha256": {
+    "backend/engine.js": "385850de8d2411ef4995871b200bb67d3ac4277797affd7f756d2c5a64d93748",
+    "backend/match-context.js": "dedf3629eb75ea76a65ba81ba9a927737db2808bcf5421d932669bc5807a4885",
+    "backend/rules/europe-classic-v1.js": "7f807e2887aaf57f99f362c17c46039276d58a0642fa72893f55aeba93299280",
+    "tests/engine-map-context.test.js": "28087db7b1941d6af00e93bca3ccd338cc42644946a5f845e565f6e91a6dd914",
+    "tests/fixtures/europe-legacy-v1.json": "ff924b0cb2c0a33aabedd356fc5d90f02210118b88ab3f0d722b8f91a68d836c"
+  }
+}

@@ -1,0 +1,12 @@
+REVISAR docs/architecture.md: backend/engine.js, backend/maps.js, backend/match-context.js, backend/rules/europe-classic-v1.js (documento también modificado)
+REVISAR docs/domain.md: backend/engine.js, backend/maps.js, backend/match-context.js, backend/rules/europe-classic-v1.js (documento también modificado)
+REVISAR docs/operations.md: backend/maps.js, tests/deployment.test.js (documento también modificado)
+REVISAR docs/work/practice-ai.md: backend/engine.js
+REVISAR docs/work/modular-game-platform.md: backend/engine.js (documento también modificado)
+REVISAR docs/work/modular-platform-contracts.md: backend/engine.js
+REVISAR docs/decisions/match-domain-contracts.md: backend/engine.js, backend/maps.js, backend/match-context.js, backend/rules/europe-classic-v1.js (documento también modificado)
+REVISAR docs/work/modular-platform-domain.md: backend/engine.js, tests/deployment.test.js
+REVISAR docs/work/modular-platform-application.md: backend/engine.js, backend/maps.js, tests/deployment.test.js, backend/match-context.js, backend/rules/europe-classic-v1.js
+REVISAR docs/work/modular-platform-maps.md: backend/engine.js, backend/maps.js, backend/match-context.js, backend/rules/europe-classic-v1.js, tests/engine-map-context.test.js (documento también modificado)
+REVISAR solicita contraste semántico; no demuestra drift ni exige editar texto correcto.
+OK: 49 documentos, 23 fichas. No se validan URLs externas ni anclas.

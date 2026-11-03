@@ -48,7 +48,7 @@ colores, puntos por longitud y capacidades de túnel/ferri. Esta porción de reg
 no sustituye todavía el reglamento completo ni valida el reparto inicial.
 
 [backend/maps.js](../backend/maps.js) registra Europa; el motor comprueba al
-cargar que sus reglas soportan esa definición. La [fachada de datos](../shared/data.js)
+resolver un contexto que sus reglas soportan esa definición. La [fachada de datos](../shared/data.js)
 obtiene red y billetes del mismo módulo mediante [un puente fijo](../shared/maps/europe-legacy-v1.js):
 `eu-route-051` mantiene el número 51 sin depender de la posición del registro.
 La tabla conserva también el orden anterior de billetes y ciudades, necesario
@@ -57,10 +57,48 @@ las de `CITIES` legado; [map-layout.js](../frontend/map-layout.js) aún contiene
 la composición del tablero europeo.
 
 El navegador recibe `/maps/europe-v1.js` y `/maps/europe-legacy-v1.js` antes de
-`/data.js`. El validador y el registro del backend son privados. Los formatos de
-partida, protocolo, guardado y replay siguen siendo los anteriores; todavía no
-hay selección de mapa por sala ni ejecución multimap. Los próximos límites y
-su aceptación están en [fase 4](work/modular-platform-maps.md).
+`/data.js`. El validador, el registro, los contextos y el reglamento del backend
+son privados. El lobby sigue creando Europa con su formato anterior; no hay
+selección de mapa por sala. Alcance y aceptación en [fase 4](work/modular-platform-maps.md).
+
+### Contexto por partida en la fachada
+
+`createEngine({maps})` permite componer un motor con un catálogo explícito; la
+exportación habitual de [engine.js](../backend/engine.js) conserva la API anterior
+y usa el catálogo registrado. [match-context.js](../backend/match-context.js)
+resuelve cada partida por `mapRef` y `rulesRef`, parejas exactas `{id,version}`.
+Comparte definiciones/proyecciones inmutables y crea copias separadas para las
+vías, mazos y manos de cada partida. El contexto no depende de identidad de
+objeto: sigue resolviéndose después de JSON y en otra instancia del motor.
+
+[europe-classic-v1.js](../backend/rules/europe-classic-v1.js) reúne los valores
+existentes de reparto, pagos, dobles, túneles, estaciones, destinos, cartas,
+relojes y puntuación bajo `europe-classic@1`. Es el único reglamento soportado;
+no hay cargador genérico de reglas externas. Cualquier mapa registrado puede
+usarlo si satisface colores, longitudes y mecánicas. Antes de sortear, la creación
+comprueba que alcance la cantidad de billetes largos/cortos para los participantes.
+
+`newGame(..., {random,mapRef,rulesRef})` y las opciones finales de `newRandomGame`
+admiten esas referencias. Al pedir una explícita, la otra toma su valor inicial
+conocido y ambas se copian al estado. Al leer un estado, deben estar ambas o
+ninguna: referencias incompletas, inválidas o desconocidas producen error, sin
+recurrir a Europa. La ausencia de ambas conserva el puente legado europeo;
+la creación predeterminada todavía no añade campos, preservando los repartos
+congelados. Es una transición interna, no el esquema definitivo de `MatchState`.
+La migración validada de guardados y sus versiones sigue pendiente.
+
+Construcción y ambas resoluciones de túnel buscan con `routeById`, por igualdad
+estricta: reordenar vías no cambia el objetivo; el número `0` y la cadena `"0"`
+son distintos. Europa mantiene números mediante su tabla fija; otros mapas
+conservan IDs opacos y corredores. Estaciones/textos usan las ciudades del
+contexto; las políticas reciben sus reglas. El estado mutable aún conserva las
+filas legadas con topología, dueños y billetes, usadas por scoring y consultas.
+
+Los exports `ROUTES`, `TICKETS`, `CITIES`, `COLORS`, `SCORE`, duraciones y `pay`
+siguen siendo compatibilidad europea para consumidores pendientes de migrar.
+Las vistas públicas aún no incluyen referencias de mapa. Bots, sala, archivo,
+replay y frontend no están habilitados para un segundo mapa: las pruebas de
+contexto ejercitan el motor directamente y no certifican ese recorrido completo.
 
 ## Recorrido de una jugada
 
@@ -368,8 +406,8 @@ Los llamadores que cargan partidas antiguas directamente deben ejecutar
 `normalize(game, now)` antes de consultar. No se normalizan frames históricos.
 `safePublic` sigue siendo el filtro adicional de destinos finales para espectadores.
 
-No hay registro de mapas activo ni conversión de IDs de Europa todavía. Los
-otros consumidores siguen utilizando el formato legado. Las políticas extraídas
+El registro y los contextos descritos arriba ya resuelven mapas en el motor;
+los otros consumidores siguen utilizando el formato legado europeo. Las políticas extraídas
 no convierten en puro todo el motor: el ensamblado de la partida, aplicación de
 efectos y coordinación de vencimientos/cierre aún residen en la fachada.
 Alcance y pruebas en

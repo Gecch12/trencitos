@@ -100,9 +100,11 @@ los límites y las evidencias; no implica publicación ni sincronización autom�
 con otros worktrees.
 
 La [fase 4](modular-platform-maps.md) introduce definiciones versionadas e IDs
-estables. El primer corte separa Europa y congela el puente numérico; el runtime
-sigue usando una sola red. La independencia se aceptará cuando Europa y un mapa
-pequeño funcionen simultáneamente en partidas completas.
+estables. El primer corte separa Europa y congela el puente numérico; el segundo
+resuelve el contexto de cada partida y busca vías por identidad en el motor.
+El producto sigue ofreciendo Europa. La independencia se aceptará cuando Europa
+y un mapa pequeño funcionen simultáneamente en partidas completas con sus
+guardados, bots, consultas y presentación.
 
 No mover archivos por tamaño ni convertir cada función en un módulo. Los límites
 siguen responsabilidades y dependencias verificables.

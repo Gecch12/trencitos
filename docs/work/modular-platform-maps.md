@@ -19,9 +19,9 @@ la rama aislada; no se sincronizan automáticamente otros worktrees ni se public
 
 - [x] Definición inmutable de Europa y catálogo con versiones explícitas y validación estructural.
 - [x] Congelar correspondencias de IDs y comprobar equivalencia con los datos y repartos anteriores.
-- [ ] Resolver mapa/reglas por partida y sustituir accesos por posición en el motor y sus consumidores.
+- [x] Resolver mapa/reglas por partida y sustituir accesos por posición en construcción y túneles del motor.
 - [ ] Versionar referencias de estado/guardado y preservar compatibilidad de archivos y replay anteriores.
-- [ ] Adaptar bots, consultas y transporte a la definición de cada partida.
+- [ ] Adaptar bots, consultas y transporte a la definición de cada partida, incluidos los demás supuestos sobre IDs.
 - [ ] Separar composición visual por mapa, habilitar selección y conservar Three.js y cosméticos.
 - [ ] Aceptación conjunta: Europa y mapa pequeño jugables simultáneamente, con guardado/reconexión/replay.
 
@@ -97,10 +97,78 @@ aún: se comprobó coexistencia de definiciones y políticas, con Europa como ú
 mapa del runtime. Supabase/SQL se validan mediante simuladores y móvil por
 emulación. Sin push, integración a `main` ni despliegue.
 
+## Segundo corte: contexto por partida e identidad de vías
+
+Base: `9ee033a`. [El motor](../../backend/engine.js) admite un catálogo inyectado
+mediante `createEngine({maps})` y opciones exactas de mapa/reglamento al crear.
+[El resolvedor](../../backend/match-context.js) conserva contextos inmutables,
+usa las referencias del estado después de serializar y rechaza referencias
+parciales/desconocidas antes de ejecutar acciones. El único reglamento es
+[europe-classic@1](../../backend/rules/europe-classic-v1.js), con los mismos
+valores del motor anterior. Al iniciar comprueba que alcance el reparto de
+billetes; no añade una plataforma de reglas externas.
+
+Construcción, túnel pagado y túnel sin suplemento buscan la vía por igualdad
+estricta de ID; reordenar filas ya no cambia la adjudicación. Europa conserva
+números y los demás mapas mantienen sus cadenas/corredores. Estaciones y textos
+usan las ciudades de cada mapa. Reparto, cartas, turnos, destinos y puntuación
+obtienen reglas del contexto. Contrato y límites canónicos en
+[arquitectura](../architecture.md).
+
+La creación predeterminada conserva el estado anterior sin nuevas referencias;
+solo opciones explícitas incorporan ambas. Esto permite comprobar el motor sin
+adelantar una migración incompleta de guardados o replay. Las vistas todavía no
+transportan esas referencias; lobby, bots, composición visual y archivos siguen
+siendo europeos. No se habilita el mapa pequeño en salas ni se integra Sudamérica.
+
+[Las pruebas del contexto](../../tests/engine-map-context.test.js) ejecutan
+Europa y dos versiones de un mapa pequeño en un mismo motor; verifican separación
+de estado/definición, IDs numéricos/cadenas distintos, túneles restaurados en otra
+instancia, conservación de cartas, dobles/ferris, estaciones y recorridos prestados,
+puntuación y privacidad. Los rechazos de referencias no cambian la partida y los
+mapas sin billetes suficientes o con longitudes incompatibles fallan antes del azar.
+Los repartos europeos conservan las huellas anteriores, sin modificar la fixture.
+
+## Evidencia del segundo corte
+
+Validación local del 2026-11-02 (Lima), sobre `9ee033a` más los cambios de esta
+entrega. Estado de archivo aislado, sin credenciales ni servicios de producción:
+
+- Node `v25.6.1`: **552/552**, sin fallos ni omisiones, incluidas nueve pruebas
+  nuevas del contexto. `node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js`.
+  [Resultado y huellas](../qa/modular-map-context/node-tests-result.json),
+  [TAP](../qa/modular-map-context/node-tests.tap).
+- `QA_PORT=0 npm run test:board3d`, Chrome `156.0.8078.80`: ocho recorridos,
+  nueve combinaciones de viewport/zoom y partida de cuatro jugadores terminada
+  con **249 acciones**, reconexión y cero errores. Construcciones, suplemento y
+  desistimiento de túnel, destinos y prueba de estación por teclado correctos.
+  Capturas final y móvil inspeccionadas.
+  [Resultado](../qa/modular-map-context/browser-tests-result.json),
+  [informe](../qa/modular-map-context/browser/threejs-report.json).
+- Docker `linux/arm64`, Node `v22.23.4`: **15/15** sobre el código empaquetado.
+  Incluye contextos, restauración JSON de túneles, equivalencia europea, recursos
+  públicos/privados, bots y recibos/reinicio/rollback. `healthz`, usuario `node`
+  (UID 1000), estado temporal escribible y ausencia de dependencias de desarrollo
+  comprobados con raíz de solo lectura y sin red externa.
+  [Construcción](../qa/modular-map-context/docker-build.txt),
+  [resultado](../qa/modular-map-context/docker-result.json),
+  [TAP](../qa/modular-map-context/docker-tests.tap).
+- Documentación y `git diff --check` correctos; huellas de fuentes y logs
+  comprobadas y QA anteriores intactos.
+  [Comprobación final](../qa/modular-map-context/final-checks.json).
+
+Segundo corte aceptado localmente. Las fichas cerradas de fases anteriores
+conservan sus evidencias históricas; el avance actual vive aquí. Supabase/SQL
+siguen cubiertos por simuladores y móvil por emulación. No certifica dos mapas
+en el producto, Render ni una migración durable. Sin push, merge o despliegue.
+
 ## Siguiente corte
 
-Introducir un contexto explícito de mapa/reglas para cada partida, comenzando por
-la fachada del motor y las búsquedas de vía por identidad. Mantener el puente de
-Europa para guardados existentes y definir cómo viajan las referencias exactas
-sin alterar ni reinterpretar replays antiguos. Los hitos siguientes requieren
-validación propia; el catálogo por sí solo no demuestra dos mapas jugables.
+Definir y aplicar el esquema de estado con referencias exactas desde la creación
+de sala y la carga durable. Distinguir formatos legados conocidos de estados
+nuevos incompletos; validar mapa/reglamento e IDs de vías, túneles y billetes antes
+de reanudar. Cubrir archivo, restauración/rollback y envoltorio remoto. Conservar
+los frames y hashes de replay antiguos, y decidir explícitamente el contrato de
+los nuevos pasos antes de añadir referencias a vistas. Después migrar bots,
+transporte y composición visual. La fase requiere aún una aceptación conjunta
+de dos mapas jugables en el producto.

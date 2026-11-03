@@ -43,7 +43,9 @@
     "backend/public-assets.js",
     "game/maps/",
     "backend/maps.js",
-    "shared/maps/"
+    "shared/maps/",
+    "backend/match-context.js",
+    "backend/rules/"
   ],
   "domain.md": [
     "game/application/automatic-play.js",
@@ -63,7 +65,9 @@
     "backend/room-store.js",
     "game/maps/",
     "backend/maps.js",
-    "shared/maps/"
+    "shared/maps/",
+    "backend/match-context.js",
+    "backend/rules/"
   ],
   "operations.md": [
     "package.json",
@@ -237,7 +241,9 @@
     "tests/command-receipts-server.test.js",
     "game/maps/",
     "backend/maps.js",
-    "shared/maps/"
+    "shared/maps/",
+    "backend/match-context.js",
+    "backend/rules/"
   ],
   "work/modular-platform-domain.md": [
     "game/queries/",
@@ -348,6 +354,9 @@
     "backend/public-assets.js",
     "tests/map-catalog.test.js",
     "tests/europe-map-compat.test.js",
-    "tests/fixtures/europe-legacy-v1.json"
+    "tests/fixtures/europe-legacy-v1.json",
+    "backend/match-context.js",
+    "backend/rules/",
+    "tests/engine-map-context.test.js"
   ]
 }

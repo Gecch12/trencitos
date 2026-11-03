@@ -43,8 +43,9 @@ los conjuntos usados para ajuste/evaluación están en [la ficha](work/practice-
 el arranque raíz `server.js` y las carpetas `backend/`, `frontend/`, `shared/` y `game/`.
 No copia el repositorio entero; incluir el dominio en la imagen no lo hace público.
 Los módulos de `shared/maps/` se incluyen con `shared/`; `index.html` carga
-definición y puente antes de `data.js`. El registro privado de mapas valida Europa
-al cargar el motor y rechaza una definición incompatible con sus reglas.
+definición y puente antes de `data.js`. El resolvedor privado valida la compatibilidad
+al resolver el mapa de una partida y rechaza referencias desconocidas. Los contextos
+y el reglamento incorporado viajan dentro de `backend/`, sin URLs públicas.
 La lista de URLs públicas vive en `backend/public-assets.js`; mover un archivo no
 lo expone automáticamente. El arranque y las variables de Render no cambian.
 `.dockerignore` excluye credenciales, estado/archivo local, QA, docs y worktrees.
