@@ -51,6 +51,7 @@ const replayMode = location.pathname === "/replay";
 let replayAt = null;
 let wagonSeed = '';
 let spectating = false, roomCapacity = 5, roomVisibility = 'private', roomTiming = GameTiming.normalize();
+let roomMapRef = MapOptions.reference(MapOptions.options[0]);
 let desiredWatch = new URLSearchParams(location.search).get('watch') || '';
 if (!LobbyUI.isColor(preferredColor)) preferredColor = LobbyUI.PALETTE[0].color;
 const presentationResolver = MatchPresentation.create();
@@ -390,6 +391,7 @@ function connect() {
       spectating = !!m.spectator;
       desiredWatch = spectating ? room : '';
       roomCapacity = m.maxPlayers || 5; roomVisibility = m.visibility || 'private'; roomTiming = GameTiming.normalize(m.timing);
+      roomMapRef = m.mapRef || MapOptions.reference(MapOptions.options[0]);
       desiredRoom = room;
       seat = m.seat;
       token = m.token;
@@ -3022,7 +3024,7 @@ account = AccountUI.create({
   },
 });
 shell = AppShell.create({
-  state:()=>({room,game,members,host,seat,spectator:spectating,maxPlayers:roomCapacity,visibility:roomVisibility,timing:roomTiming,started:lobbyStarted,
+  state:()=>({room,game,members,host,seat,spectator:spectating,maxPlayers:roomCapacity,visibility:roomVisibility,mapRef:roomMapRef,timing:roomTiming,started:lobbyStarted,
     busy:homeBusy || sock?.readyState !== WebSocket.OPEN || sessionReplaced || storagePaused}),
   send, saveProfile:name=>account.updateNickname(name),
   joinRoom(code) { $('code').value=code; $('homeJoin').requestSubmit(); },

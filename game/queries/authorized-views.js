@@ -26,11 +26,13 @@ function createAuthorizedViews({ engine, now, isPublic, capacity, normalizeTimin
     assertSeat(room, seat);
     if (seat === -1) return structuredClone({
       type: "lobby", code: room.code, seat: -1, spectator: true, host: false, started: true,
+      mapRef: room.game?.mapRef || room.mapRef,
       sessionVersion: 1, visibility: "public", maxPlayers: capacity(room), timing: normalizeTiming(room.timing),
       members: room.members.map(m => ({ name: m.name, color: m.color, bot: !!m.bot, connected: connected(m), autopilot: !!m.autopilot })),
     });
     return structuredClone({
       type: "lobby", matchId: room.matchId, code: room.code, seat, token,
+      mapRef: room.game?.mapRef || room.mapRef,
       host: seat === (room.hostSeat ?? 0), started: !!room.game, practice: !!room.practice,
       visibility: isPublic(room) ? "public" : "private", maxPlayers: capacity(room),
       timing: normalizeTiming(room.timing), sessionVersion: 1,

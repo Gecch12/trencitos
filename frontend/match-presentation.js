@@ -5,6 +5,7 @@ const MatchPresentation = (() => {
   const commonJS = typeof module !== "undefined" && module.exports;
   const geometry = commonJS ? require("./map-layout") : RailMap;
   const europeLayout = commonJS ? require("./layouts/europe-v1") : EuropeLayoutV1;
+  const laboratoryLayout = commonJS ? require("./layouts/laboratory-v1") : LaboratoryLayoutV1;
   const legacyData = () => commonJS ? require("../shared/data") : { CITIES, ROUTES, TICKETS, COLORS };
   const legacyRules = Object.freeze({ colors: Object.freeze([...legacyData().COLORS]),
     routePoints: Object.freeze({1:1,2:2,3:4,4:7,6:15,8:21}), doubleRoutesMinPlayers:4,
@@ -28,7 +29,7 @@ const MatchPresentation = (() => {
     return { schemaVersion:1, mapRef:{id:"europe",version:"1"}, rulesRef:{id:"europe-classic",version:"1"},
       map:{cities:Object.entries(data.CITIES).map(([id,row]) => ({id,name:row[2]})), routes:data.ROUTES, tickets:data.TICKETS}, rules:legacyRules };
   }
-  function create({ layouts = [europeLayout] } = {}) {
+  function create({ layouts = [europeLayout,laboratoryLayout] } = {}) {
     const catalog = layouts.map(layout => freeze(structuredClone(layout)));
     let previous = null;
     function resolve(view, definition, { replay = false } = {}) {

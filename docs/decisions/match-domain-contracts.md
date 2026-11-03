@@ -329,6 +329,15 @@ incompleto. Un mapa sin diseño disponible falla explícitamente. Los controles
 reciben reglas para orientar al jugador; no se duplica la autoridad del servidor
 ni se incorpora un framework de CQRS o un editor de reglas.
 
+El séptimo corte registra `laboratory@1` y su layout junto a Europa. La sala guarda
+su referencia de mapa antes de iniciar, permite al anfitrión cambiarla y la conserva
+en la revancha. Clientes antiguos que omiten la selección mantienen Europa al crear
+y la selección vigente al configurar. La restauración rechaza versiones desconocidas
+o discrepancias sala/partida antes de instalar el checkpoint. Los nombres del menú
+son metadatos de producto separados del dominio. Se conserva un único reglamento,
+un monorepo y el despliegue existente. La aceptación conjunta está en la
+[ficha de fase 4](../work/modular-platform-maps.md).
+
 El tercer corte de fase 2 permite inyectar azar en reparto/mercado inicial y
 elecciones de cierre forzado. Conserva el parámetro legado del sorteo de primer
 puesto y añade opciones para el reparto. Firmas implementadas y límites actuales

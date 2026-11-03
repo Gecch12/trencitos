@@ -1,4 +1,5 @@
 "use strict";
+const MapOptions = require("../shared/map-options");
 const {randomUUID,createHash}=require('node:crypto');
 const canonical=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
 const frameHash=frame=>createHash('sha256').update(canonical(frame)).digest('hex');
@@ -45,7 +46,7 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null,engine=Eng
     const players=room.members.map(m=>({name:m.name,color:m.color,bot:!!m.bot,accountId:m.accountId||null,guestId:m.guestId||null}));
     old.match={id:room.matchId,code:room.code,schemaVersion:1,definitionVersion:definition.schemaVersion,
       mapRef:structuredClone(definition.mapRef),rulesRef:structuredClone(definition.rulesRef),
-      rulesVersion:`${definition.rulesRef.id}-${definition.rulesRef.version}`,map:definition.mapRef.id==='europe'?'Europa':definition.mapRef.id,
+      rulesVersion:`${definition.rulesRef.id}-${definition.rulesRef.version}`,map:MapOptions.name(definition.mapRef),
       mode:room.practice?'Práctica':'Clásico',visibility:room.visibility||'private',startedAt:room.archiveStartedAt,updatedAt:now,closedAt:status==='active'?null:room.archiveClosedAt||now,status,endReason:status==='abandoned'?endReason||'Práctica terminada anticipadamente.':null,complete:!!room.archiveFull,steps:seq+1,digest:room.archiveHash,players,
       scores:g.players.map((p,seat)=>({seat,route:p.score,...(status==='completed'?structuredClone(g.result.find(r=>r.seat===seat)):{score:p.score,partial:true})}))};
     if(status!=='active') room.archiveClosedAt ||= now;

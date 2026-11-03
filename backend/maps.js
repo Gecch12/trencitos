@@ -1,10 +1,9 @@
 "use strict";
 const { createMapCatalog, validateMapForRules } = require("../game/maps/catalog");
 const europe = require("../shared/maps/europe-v1");
+const laboratory = require("../shared/maps/laboratory-v1");
 
-// Registration does not enable a lobby selector. Live matches still use the
-// European legacy bridge. Additional maps can be injected into an isolated
-// engine; rooms, bots, persistence envelopes and presentation migrate separately.
-const maps = createMapCatalog([europe]);
+// Built-in live maps. Only Europe uses the historical numeric wire bridge.
+const maps = createMapCatalog([europe,laboratory]);
 const EUROPE_REFERENCE = Object.freeze({ id: "europe", version: "1" });
 module.exports = { maps, EUROPE_REFERENCE, validateMapForRules };

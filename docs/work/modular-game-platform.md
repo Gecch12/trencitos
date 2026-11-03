@@ -53,7 +53,7 @@ bloquea la fase 4 ni Sudamérica. Mantener un solo repositorio está acordado.
 - [x] Fase 1 completada según [modelo y contratos](modular-platform-contracts.md).
 - [x] Fase 2 aceptada según [dominio y Europa](modular-platform-domain.md).
 - [x] Fase 3 aceptada según [aplicación e interfaz](modular-platform-application.md).
-- [ ] Fase 4: independencia del mapa demostrada.
+- [x] Fase 4: independencia del mapa demostrada.
 - [ ] Fase 5: Sudamérica disponible para pruebas del usuario.
 - [ ] Resultado conjunto revisado: código, documentación, compatibilidad y evidencia.
 
@@ -80,7 +80,7 @@ por separado. El cierre de esta ficha no implica publicación.
 - Mantener Three.js, las familias de vagones, cartas y estaciones existentes.
   El SVG provisional y el visor de referencia no sustituyen el tablero principal.
 
-## Hito en curso: fase 4
+## Hito siguiente: fase 5
 
 El [modelo de fase 1](../decisions/match-domain-contracts.md) define los contratos
 y el puente. La [ficha de dominio](modular-platform-domain.md) conserva la aceptación
@@ -110,9 +110,10 @@ El quinto añade referencias y definiciones públicas a vistas, transporte y arc
 la API de replay lee el mapa grabado y conserva respuestas y hashes históricos.
 El sexto conecta el cliente a esas definiciones, separa el layout europeo y
 conserva IDs opacos en controles y Three.js; otro layout se verifica por inyección.
-El producto sigue ofreciendo Europa. La independencia se aceptará cuando Europa
-y un mapa pequeño funcionen simultáneamente en partidas completas con sus
-guardados, bots, consultas y presentación.
+El séptimo registra Laboratorio y habilita la selección por sala. La fase 4 está
+aceptada: partidas simultáneas de ambos mapas con guardado, bots, reconexión,
+replay y cosméticos, verificadas en navegador y Docker. La evidencia y los límites
+están en su ficha; el siguiente hito incorpora Sudamérica.
 
 No mover archivos por tamaño ni convertir cada función en un módulo. Los límites
 siguen responsabilidades y dependencias verificables.
@@ -125,4 +126,4 @@ pruebas de aceptación del primer recorrido. La
 [fase 2](modular-platform-domain.md) contiene las extracciones de pagos,
 construcción, transiciones de túnel/turno, reparto, destinos, estaciones,
 puntuación, cartas/mercado y consultas, más la aceptación conjunta. La [fase 3](modular-platform-application.md) conserva su aceptación conjunta.
-El siguiente paso y la evidencia de mapas están en la [fase 4](modular-platform-maps.md).
+El cierre de mapas y el alcance siguiente de Sudamérica están en la [fase 4](modular-platform-maps.md).

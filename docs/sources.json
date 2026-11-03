@@ -59,7 +59,13 @@
     "tests/helpers/client-map.js",
     "tests/fixtures/europe-layout-v1.json",
     "tests/browser-client-map.cjs",
-    "tests/fixtures/europe-geometry-v1.json"
+    "tests/fixtures/europe-geometry-v1.json",
+    "backend/room-map.js",
+    "shared/map-options.js",
+    "frontend/layouts/laboratory-v1.js",
+    "tests/laboratory-map.test.js",
+    "tests/map-selection-server.test.js",
+    "tests/browser-map-selection.cjs"
   ],
   "domain.md": [
     "game/application/automatic-play.js",
@@ -87,7 +93,13 @@
     "backend/practice-bot.js",
     "backend/practice-planner.js",
     "backend/practice-search.js",
-    "backend/practice-tactics.js"
+    "backend/practice-tactics.js",
+    "backend/room-map.js",
+    "shared/map-options.js",
+    "frontend/layouts/laboratory-v1.js",
+    "tests/laboratory-map.test.js",
+    "tests/map-selection-server.test.js",
+    "tests/browser-map-selection.cjs"
   ],
   "operations.md": [
     "package.json",
@@ -298,7 +310,13 @@
     "tests/helpers/client-map.js",
     "tests/fixtures/europe-layout-v1.json",
     "tests/browser-client-map.cjs",
-    "tests/fixtures/europe-geometry-v1.json"
+    "tests/fixtures/europe-geometry-v1.json",
+    "backend/room-map.js",
+    "shared/map-options.js",
+    "frontend/layouts/laboratory-v1.js",
+    "tests/laboratory-map.test.js",
+    "tests/map-selection-server.test.js",
+    "tests/browser-map-selection.cjs"
   ],
   "work/modular-platform-domain.md": [
     "game/queries/",
@@ -442,6 +460,12 @@
     "tests/helpers/client-map.js",
     "tests/fixtures/europe-layout-v1.json",
     "tests/browser-client-map.cjs",
-    "tests/fixtures/europe-geometry-v1.json"
+    "tests/fixtures/europe-geometry-v1.json",
+    "backend/room-map.js",
+    "shared/map-options.js",
+    "frontend/layouts/laboratory-v1.js",
+    "tests/laboratory-map.test.js",
+    "tests/map-selection-server.test.js",
+    "tests/browser-map-selection.cjs"
   ]
 }

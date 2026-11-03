@@ -1,0 +1,5 @@
+Two maps: 75 accepted actions
+Two maps: 150 accepted actions
+Two maps: 225 accepted actions
+Two maps: 300 accepted actions
+{"date":"2026-11-03T06:04:18.442Z","tests":[{"name":"server restart restores both live matches and reconnects all four seats","passed":true}],"errors":[],"games":[{"id":"europe","actions":120,"counts":{"choose_initial":2,"draw_train":84,"claim":31,"pay_tunnel":1,"draw_tickets":1,"keep_tickets":1},"phase":"finished","replay":true,"privacy":true,"audit":true,"cosmetics":{"models":{"tanker":42,"passenger":45},"passengerInstances":45},"wagons":87},{"id":"laboratory","actions":208,"counts":{"choose_initial":2,"draw_train":130,"claim":21,"draw_tickets":24,"keep_tickets":24,"station":4,"decline_tunnel":1,"pay_tunnel":2},"phase":"finished","replay":true,"privacy":true,"audit":true,"cosmetics":{"models":{"tanker":40,"passenger":45},"passengerInstances":45},"wagons":85}],"browser":"156.0.8078.80","passed":true}

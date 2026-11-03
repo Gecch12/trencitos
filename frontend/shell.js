@@ -103,7 +103,7 @@ const AppShell = (() => {
     const configure = patch => {
       const s = state();
       if (!s.host || s.busy || s.started) return;
-      send({ type:'room_settings', visibility:s.visibility, maxPlayers:s.maxPlayers, timing:GameTiming.normalize(s.timing), ...patch });
+      send({ type:'room_settings', visibility:s.visibility, maxPlayers:s.maxPlayers, mapRef:s.mapRef, timing:GameTiming.normalize(s.timing), ...patch });
     };
     for (const [id, spec] of Object.entries(settings)) {
       const group = document.querySelector(`[data-setting="${id}"]`);
@@ -121,7 +121,17 @@ const AppShell = (() => {
       };
     }
     $('roomVisibility').onclick=()=>configure({visibility:state().visibility==='public'?'private':'public'});
-    $('roomMapPreview').innerHTML = `<rect x="-60" y="-10" width="980" height="660" fill="#bbd6d9"/>${RailMap.land.map(d=>`<path d="${d}" fill="#f3ead3" stroke="#b8b49f" stroke-width="2"/>`).join('')}`;
+    $('roomMapChoice').innerHTML = MapOptions.options.map((option,i)=>`<option value="${i}">${escape(I18n.t(option.name))}</option>`).join('');
+    $('roomMapChoice').onchange = () => configure({mapRef:MapOptions.reference(MapOptions.options[+$('roomMapChoice').value])});
+    function renderMap(ref, locked) {
+      const index = MapOptions.options.findIndex(option=>option.id===ref?.id && option.version===ref?.version);
+      $('roomMapChoice').value = String(index); $('roomMapChoice').disabled = locked;
+      const layout = [EuropeLayoutV1,LaboratoryLayoutV1].find(layout=>layout.mapRef.id===ref?.id && layout.mapRef.version===ref?.version);
+      if (!layout) { $('roomMapPreview').innerHTML=''; return; }
+      const {x,y,width,height} = layout.bounds;
+      $('roomMapPreview').setAttribute('viewBox',`${x} ${y} ${width} ${height}`);
+      $('roomMapPreview').innerHTML = `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="#bbd6d9"/>${layout.land.map(d=>`<path d="${d}" fill="#f3ead3" stroke="#b8b49f" stroke-width="2"/>`).join('')}${Object.values(layout.cities).map(([cx,cy])=>`<circle cx="${cx}" cy="${cy}" r="5" fill="#4b6973"/>`).join('')}`;
+    }
 
     function renderDirectory() {
       const rows = directory.filter(r => r.started === (directoryTab === 'spectate'));
@@ -146,6 +156,7 @@ const AppShell = (() => {
       $('roomInviteLink').value = location.origin+'/?room='+s.room;
       $('roomVisibility').value = s.visibility;
       const locked = !s.host || s.busy || s.started;
+      renderMap(s.mapRef,locked);
       $('roomVisibility').disabled = locked;
       $('roomVisibility').querySelector('[data-visibility-icon]').innerHTML = ShellIcons.svg(s.visibility === 'public' ? 'globe' : 'lock');
       $('roomVisibility').querySelector('strong').textContent = I18n.t(s.visibility === 'public' ? 'Pública' : 'Privada');

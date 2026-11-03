@@ -46,6 +46,9 @@ Los módulos de `shared/maps/` se incluyen con `shared/`; `index.html` carga
 definición y puente antes de `data.js`. El resolvedor privado valida la compatibilidad
 al resolver el mapa de una partida y rechaza referencias desconocidas. Los contextos
 y el reglamento incorporado viajan dentro de `backend/`, sin URLs públicas.
+El bundle publica los layouts de Europa/Laboratorio y sus etiquetas de selección;
+la topología del mapa elegido llega en cada estado autorizado. Una versión de
+mapa desconocida en una sala guardada impide arrancar sin reescribir el checkpoint.
 La lista de URLs públicas vive en `backend/public-assets.js`; mover un archivo no
 lo expone automáticamente. El arranque y las variables de Render no cambian.
 `.dockerignore` excluye credenciales, estado/archivo local, QA, docs y worktrees.

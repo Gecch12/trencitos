@@ -97,7 +97,7 @@ Las nuevas vistas añaden `definitionVersion:1`, `mapRef` y `rulesRef`. El snaps
 guarda una sola `definition` pública junto a `game`, `views` y `members`; forma
 parte del hash. Su esquema y campos están en [arquitectura](architecture.md).
 Los metadatos guardan esa misma versión y referencias, sin copiar todo el catálogo
-en cada fila del listado. `map` es una etiqueta (`Europa` o el ID del otro mapa) y
+en cada fila del listado. `map` es una etiqueta (`Europa`, `Laboratorio` o el ID de un mapa sin etiqueta) y
 `rulesVersion` conserva el formato informativo anterior; las referencias exactas
 son la identidad normativa. El archivo y el formato de diferencias siguen en v1.
 
@@ -156,9 +156,8 @@ archivo no sustituye backups ni recuperación punto en el tiempo.
 
 Al arrancar, los archivos activos sin una sala recuperable se cierran como
 abandonados. Un archivo conserva `schemaVersion:1` y los estados ya proyectados:
-el replay no ejecuta reglas nuevas sobre partidas antiguas. Europa es el único
-mapa seleccionable y renderizable hoy. La API ya transporta definiciones de otros
-mapas; adaptar su visualización y selector sigue pendiente. Cualquier mapa/modo
+el replay no ejecuta reglas nuevas sobre partidas antiguas. Europa y Laboratorio
+son seleccionables y renderizables. Cualquier mapa/modo
 futuro debe pasar por esta misma autoridad, privacidad y grabación.
 
 API HTTP sin caché:
@@ -209,7 +208,7 @@ antiguo completo usa el contexto europeo legado; un paso actual sin definición
 o sin layout compatible detiene la reproducción y muestra el error. Los controles
 se cierran de forma segura si la pestaña cambia de visibilidad tras ese error.
 El layout no está en los frames: se resuelve por referencia exacta en el bundle,
-que todavía incluye solo Europa. Contrato del cliente en
+que incluye Europa y Laboratorio. Contrato del cliente en
 [arquitectura](architecture.md#contexto-y-layout-del-cliente).
 
 `i18n.js` y `translations.js` localizan HTML, accesibilidad, mensajes y registros.

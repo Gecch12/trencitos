@@ -25,6 +25,7 @@ const { createDurableQueue } = require("./durable-queue");
 const { createAccountAuth } = require("./account-auth");
 const { createAccountSeats } = require("./account-seats");
 const Directory = require("./room-directory");
+const {selectMap,roomMapReference} = require("./room-map");
 const { createRoomBots } = require("./room-bots");
 const PORT = Number(process.env.PORT || 3000),
   ROOT = path.resolve(__dirname, "..");
@@ -44,7 +45,7 @@ function restoreLoaded(data) {
   const restored = data.map(r => {
     const game=r.game!=null?Engine.restoreState(r.game):r.game;
     if(game&&game.players.length!==r.members.length)throw Object.assign(Error("Invalid saved match: room seats"),{code:"INVALID_MATCH_STATE"});
-    return {...r,members:r.members.map(m=>({...m})),game};
+    return {...r,members:r.members.map(m=>({...m})),game,mapRef:roomMapReference({...r,game})};
   }), live=[];
   for (const r of restored) {
     if (!r.practice && Date.now() - r.updated < TTL) {
@@ -129,7 +130,7 @@ const multiplayer = createMultiplayerController({ rooms, sendRoom, automaticPlay
 const roomBots = createRoomBots({ rooms, sendRoom, automaticPlay, dispatch, blocked: () => storageFailureAt !== null });
 function snapshot(r) {
   return { archiveHash:r.archiveHash,matchId:r.matchId,archiveSeq:r.archiveSeq,archiveFull:r.archiveFull,archiveStartedAt:r.archiveStartedAt,archiveClosedAt:r.archiveClosedAt,_archiveState:r._archiveState, game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
-    hostSeat: r.hostSeat, visibility: r.visibility, maxPlayers: r.maxPlayers, timing: r.timing ? {...r.timing} : undefined,
+    hostSeat: r.hostSeat, visibility: r.visibility, maxPlayers: r.maxPlayers, mapRef: r.mapRef ? {...r.mapRef} : undefined, timing: r.timing ? {...r.timing} : undefined,
     members: r.members.map(m => ({ member: m, data: { token: m.token || m.ws?.token, tokenHash: m.tokenHash,
       name: m.name, bot: m.bot, color: m.color, accountId: m.accountId, guestId:m.guestId, actionIds: [...(m.actionIds || [])], actionReceipts: structuredClone(m.actionReceipts || []), autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
 }
@@ -142,7 +143,7 @@ function restoreLocalCheckpoint(e) {
       r.game = structuredClone(saved.game); r.revision = saved.revision;
       for(const key of ["archiveHash","matchId","archiveSeq","archiveFull","archiveStartedAt","archiveClosedAt","_archiveState"])r[key]=saved[key];
       watchRecording(r);
-      r.hostSeat = saved.hostSeat; r.visibility = saved.visibility; r.maxPlayers = saved.maxPlayers; r.timing = saved.timing;
+      r.hostSeat = saved.hostSeat; r.visibility = saved.visibility; r.maxPlayers = saved.maxPlayers; r.mapRef = saved.mapRef; r.timing = saved.timing;
       for (const member of r.members) if (!saved.members.some(entry => entry.member === member) && member.ws) {
         const peer = member.ws;
         peer.room = null; peer.seat = -1; member.ws = null;
@@ -413,6 +414,9 @@ function onMessage(peer, msg) {
   if (storageFailureAt !== null && !["join", "leave"].includes(msg.type))
     return deny(peer, "Partida pausada: no se pudo guardar. Reintenta el guardado.", "STORAGE_FAILED");
   if (["create", "create_test"].includes(msg.type) && !peer.room) {
+    let mapRef;
+    try { mapRef = selectMap(msg.mapRef); }
+    catch { return deny(peer, "El mapa o su versión no están disponibles.", "INVALID_ROOM_MAP"); }
     if (msg.visibility !== undefined && !["public", "private"].includes(msg.visibility)) return deny(peer, "Visibilidad inválida.");
     if (msg.maxPlayers !== undefined && (!Number.isInteger(msg.maxPlayers) || msg.maxPlayers < 2 || msg.maxPlayers > 5)) return deny(peer, "Elige entre 2 y 5 jugadores.");
     if (msg.timing !== undefined && !GameTiming.valid(msg.timing)) return deny(peer, "Configuración de tiempos inválida.");
@@ -422,7 +426,7 @@ function onMessage(peer, msg) {
       if (!LobbyUI.isNewCode(code)) return deny(peer, "El código debe tener entre 6 y 10 números.", "INVALID_CODE");
       if (rooms.has(code)) return deny(peer, "Ese código ya está en uso. Elige otro o genera uno nuevo.", "CODE_TAKEN");
     } else do { code = LobbyUI.randomCode(crypto.randomInt); } while (rooms.has(code));
-    const r = { code, hostSeat: 0, updated: Date.now(), game: null, members: [], revision: 0,
+    const r = { code, hostSeat: 0, updated: Date.now(), game: null, mapRef, members: [], revision: 0,
       visibility: msg.type === "create_test" ? "private" : msg.visibility || "public", maxPlayers: msg.maxPlayers || 5, timing: GameTiming.normalize(msg.timing) };
     rooms.set(code, r);
     const human = {
@@ -505,6 +509,10 @@ function onMessage(peer, msg) {
         return deny(peer, "Elige una visibilidad y una capacidad de 2 a 5 jugadores.");
       if (msg.maxPlayers < r.members.length) return deny(peer, "Retira participantes antes de reducir las plazas.");
       if (msg.timing !== undefined && !GameTiming.valid(msg.timing)) return deny(peer, "Configuración de tiempos inválida.");
+      let mapRef;
+      try { mapRef = selectMap(msg.mapRef === undefined ? r.mapRef : msg.mapRef); }
+      catch { return deny(peer, "El mapa o su versión no están disponibles.", "INVALID_ROOM_MAP"); }
+      r.mapRef = mapRef;
       r.visibility = msg.visibility; r.maxPlayers = msg.maxPlayers;
       r.timing = GameTiming.normalize(msg.timing || r.timing);
     }
@@ -554,7 +562,7 @@ function onMessage(peer, msg) {
     if (!rooms.has(r.rematchCode)) {
       let code; do { code = LobbyUI.randomCode(crypto.randomInt); } while (rooms.has(code));
       r.rematchCode = code;
-      rooms.set(code, { code, updated: Date.now(), hostSeat: 0, members: [], game: null, revision: 0,
+      rooms.set(code, { code, updated: Date.now(), hostSeat: 0, members: [], game: null, mapRef:roomMapReference(r), revision: 0,
         visibility: r.visibility || "private", maxPlayers: Directory.capacity(r), timing: GameTiming.normalize(r.game?.timing || r.timing) });
     }
     const next = rooms.get(r.rematchCode), member = r.members[peer.seat];
@@ -609,7 +617,7 @@ function attach(peer, r, m) {
   }
 }
 function startRoomGame(r) {
-  const game = Engine.newRandomGame(r.members.map(m => m.name), Date.now(), crypto.randomInt, GameTiming.normalize(r.timing));
+  const game = Engine.newRandomGame(r.members.map(m => m.name), Date.now(), crypto.randomInt, GameTiming.normalize(r.timing), {mapRef:roomMapReference(r)});
   game.players.forEach((player, i) => { player.color = r.members[i].color; });
   return game;
 }

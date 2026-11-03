@@ -1,5 +1,5 @@
 ---
-{"id":"modular-platform-maps","status":"active","parent":"modular-game-platform","depends_on":["modular-platform-application"],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-03"}
+{"id":"modular-platform-maps","status":"done","parent":"modular-game-platform","depends_on":["modular-platform-application"],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-03"}
 ---
 # Fase 4: mapas versionados
 
@@ -24,8 +24,8 @@ la rama aislada; no se sincronizan automáticamente otros worktrees ni se public
 - [x] Adaptar bots y simulaciones a la definición de cada partida, conservando estrategia y privacidad.
 - [x] Adaptar consultas, transporte y archivo a la definición de cada partida, con compatibilidad histórica.
 - [x] Consumir definiciones por partida en el cliente, separar layout y conservar identidades en Three.js y controles.
-- [ ] Registrar el mapa/layout de prueba en el producto, habilitar selección y conservar cosméticos.
-- [ ] Aceptación conjunta: Europa y mapa pequeño jugables simultáneamente, con guardado/reconexión/replay.
+- [x] Registrar el mapa/layout de prueba en el producto, habilitar selección y conservar cosméticos.
+- [x] Aceptación conjunta: Europa y mapa pequeño jugables simultáneamente, con guardado/reconexión/replay.
 
 ## Primer corte: definición y puente de Europa
 
@@ -435,8 +435,70 @@ Sexto corte aceptado localmente. El mapa sintético usa inyección de layout y u
 replay preparado; no certifica todavía salas simultáneas de dos mapas. Móvil por
 emulación y servicios remotos simulados. Sin push, merge ni despliegue.
 
-## Siguiente corte
+## Séptimo corte y aceptación conjunta: mapas seleccionables
 
-Registrar el mapa pequeño de prueba y su layout, habilitar su selección por sala
-y comprobar partidas de ambos mapas simultáneas. Completar la aceptación de
-fase 4 con bots, guardado, reconexión, replay y cosméticos antes de Sudamérica.
+Base `8e534a5`; entrega local en el mismo worktree. Se registran
+[Laboratorio v1](../../shared/maps/laboratory-v1.js) y su
+[layout](../../frontend/layouts/laboratory-v1.js). El servidor valida la selección
+antes de modificar la sala, la conserva en checkpoint y revancha, y rechaza
+referencias inexistentes o inconsistentes al restaurar. Las salas antiguas
+mantienen su comportamiento europeo. El selector del anfitrión y el directorio
+anuncian el mapa confirmado. Los cambios no requieren otro repositorio, servicio,
+reglamento o migración SQL.
+
+El tablero ficticio usa ciudades y IDs de texto propios, corredores dobles,
+túneles, ferri y billetes. Una primera simulación con tres bots se quedó sin
+trayectos útiles antes de la ronda final; se añadieron enlaces periféricos y
+longitudes cortas, recalculando los puntos de los billetes. La versión registrada
+pasa partidas completas de dos a cinco jugadores. Esto no acredita balance
+competitivo; sirve para comprobar la independencia técnica.
+
+Evidencia del 2026-11-03 sobre la base indicada y los cambios locales:
+
+- Node `v25.6.1`: **601/601** pruebas. Incluye cinco partidas intercaladas de
+  Europa/Laboratorio, restauración, identidades, layouts completos, bots permanentes,
+  práctica, permisos, selección antes del inicio y rollback ante fallo de guardado.
+  Archivo local y contrato remoto simulado conservan lobby, partida y revancha.
+  [Resultado y huellas](../qa/modular-map-select/node-tests-result.json),
+  [TAP](../qa/modular-map-select/node-tests.tap).
+- Chrome `156.0.8078.80`: dos salas reales simultáneas, cada una con un cliente
+  renderizado y otro cliente WebSocket conducidos por la política de bots.
+  Final natural en Europa (**120 jugadas**) y Laboratorio (**208**), con **328**
+  comandos aceptados. Reinicio del servidor tras 50 jugadas y recuperación de
+  los cuatro puestos. Replays públicos/propios, cambio de paso, auditoría íntegra
+  y mismos modelos, composiciones de pasajeros y cantidades de vagones (87/85)
+  entre juego y replay. Cero errores de navegador. Capturas de lobby, final y
+  replay móvil revisadas.
+  [Informe](../qa/modular-map-select/selection/selection-report.json),
+  [ejecución](../qa/modular-map-select/selection-tests-result.json).
+- Cuatro recorridos de replay europeo legado/actual y tres casos del mapa sintético
+  con IDs especiales y diseño inyectado: todos correctos, incluido el rechazo
+  explícito cuando falta layout. [Europa](../qa/modular-map-select/replay/replay-report.json),
+  [sintético](../qa/modular-map-select/client/client-report.json).
+- Docker `linux/arm64`, Node `v22.23.4`: **55/55** pruebas sobre la imagen, salud,
+  UID 1000 y escritura temporal correctos; raíz de solo lectura y sin red externa.
+  Incluye los recursos públicos y el flujo de selección de ambos mapas.
+  [Construcción](../qa/modular-map-select/docker-build.txt),
+  [resultado](../qa/modular-map-select/docker-result.json),
+  [TAP](../qa/modular-map-select/docker-tests.tap).
+- Después de estas ejecuciones solo se ajustó CSS para evitar el recorte del texto
+  del selector y alinear su título, y se añadieron dos etiquetas inglesas al diccionario.
+  Revisión posterior en Chrome, 1460×940 y 390×844, español/inglés, selección de
+  ambos mapas y teclado; capturas finales revisadas. Tres pruebas de idiomas
+  correctas en [la comprobación final de traducción](../qa/modular-map-select/i18n-final.tap).
+  [Informe y huellas CSS/traducciones](../qa/modular-map-select/menu/report.json).
+- Documentación, diff y huellas de fuentes/logs verificados; fixtures y QA
+  históricos intactos. [Comprobación final](../qa/modular-map-select/final-checks.json).
+
+Fase 4 aceptada localmente. Emulación móvil y almacenamiento remoto simulado;
+no se probó contra Supabase real. Sin push, merge ni despliegue. La aceptación
+no certifica todavía los datos ni la cartografía de Sudamérica.
+
+## Siguiente paso
+
+Iniciar fase 5: contrastar el paquete Sudamérica v3.3 con los contratos actuales,
+importar su definición versionada y preparar su layout, aplicando la referencia
+visual de cruces del usuario. Verificar rutas, billetes, ferris, dobles y selección
+antes de las pruebas de balance que realizará el usuario. Conservar Europa y
+Laboratorio como regresiones; integrar con el trabajo de vagones mediante un
+cambio revisado cuando corresponda.

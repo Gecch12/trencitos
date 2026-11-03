@@ -83,7 +83,7 @@ test("extracted Europe geometry preserves the frozen layout and stable double la
 
 test("browser classic scripts load the client read model without backend imports",()=>{
   const sandbox={structuredClone}; vm.createContext(sandbox);
-  for(const file of ["shared/maps/europe-v1.js","shared/maps/europe-legacy-v1.js","shared/data.js","frontend/layouts/europe-v1.js","frontend/map-layout.js","frontend/match-presentation.js"])
+  for(const file of ["shared/maps/europe-v1.js","shared/maps/europe-legacy-v1.js","shared/data.js","frontend/layouts/europe-v1.js","frontend/layouts/laboratory-v1.js","frontend/map-layout.js","frontend/match-presentation.js"])
     vm.runInContext(fs.readFileSync(require.resolve("../"+file),"utf8"),sandbox);
   const game=E.newGame(["A","B"]); sandbox.view=E.view(game,0); sandbox.definition=E.definition(game);
   assert.equal(vm.runInContext('MatchPresentation.create().resolve(view,definition).cityName("PAR")',sandbox),"Paris");

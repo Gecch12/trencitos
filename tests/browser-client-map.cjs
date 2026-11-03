@@ -1,5 +1,5 @@
 // Real app/replay/Three.js with an injected test layout catalog. The live map
-// catalog/selector still offers Europe only; this is not two-map room acceptance.
+// catalog is intentionally unsupported; this is not live room acceptance.
 const assert=require('node:assert/strict'), fs=require('node:fs'), path=require('node:path'), os=require('node:os');
 const {once}=require('node:events'), {chromium}=require('playwright');
 const {engine,layout,reference}=require('./helpers/client-map'), {identity,cookie}=require('./helpers/map-recording');

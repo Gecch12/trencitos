@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-03T06:05:44.198Z",
+  "scope": "Replay HTTP and actual app with injected test layout catalog; no second-map live lobby",
+  "tests": [
+    {
+      "mode": "unsupported",
+      "rejectedWithoutEuropeFallback": true
+    },
+    {
+      "mode": "desktop",
+      "opaqueRoutes": [
+        "rail\"[odd]",
+        "__proto__",
+        "0",
+        "last"
+      ],
+      "quotedTicketSelection": true,
+      "seek": true,
+      "privacy": true,
+      "wagons": 3
+    },
+    {
+      "mode": "mobile",
+      "opaqueRoutes": [
+        "rail\"[odd]",
+        "__proto__",
+        "0",
+        "last"
+      ],
+      "quotedTicketSelection": true,
+      "seek": true,
+      "privacy": true,
+      "wagons": 3
+    }
+  ],
+  "errors": [],
+  "browser": "156.0.8078.80",
+  "passed": true
+}

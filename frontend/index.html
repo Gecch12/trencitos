@@ -104,7 +104,7 @@
             <section class="room-invitation"><h2>Invitar amigos</h2><div><input id="roomInviteLink" readonly aria-label="Enlace de invitación" /><button id="copyLink" class="shell-primary" type="button">Copiar</button></div></section>
             <div class="room-game-options">
               <section class="room-setting-group"><h2>Modo de juego</h2><div class="setting-cards"><div class="setting-card selected" data-icon="play"><strong>Clásico</strong></div></div></section>
-              <section class="room-setting-group"><h2>Mapa</h2><div class="setting-cards"><div class="setting-card selected map-setting"><svg id="roomMapPreview" viewBox="-60 -10 980 660" aria-hidden="true"></svg><strong>Europa</strong></div></div></section>
+              <section class="room-setting-group"><h2><label for="roomMapChoice">Mapa</label></h2><div class="setting-cards"><div class="setting-card selected map-setting"><svg id="roomMapPreview" aria-hidden="true"></svg><select id="roomMapChoice" aria-label="Mapa"></select></div></div></section>
               <section class="room-setting-group"><h2>Visibilidad</h2><button id="roomVisibility" class="setting-card visibility-setting" type="button" value="public" aria-label="Cambiar visibilidad" aria-describedby="roomVisibilityHint"><span data-visibility-icon></span><strong>Pública</strong></button></section>
               <section class="room-setting-group capacity-setting"><h2><label for="roomCapacity">Jugadores</label></h2><div class="setting-card selected"><div class="room-stepper" data-setting="roomCapacity"></div></div></section>
             </div>
@@ -146,7 +146,7 @@
       <main class="game-stage" aria-label="Mesa de juego">
           <div class="mapscroll is-3d" id="mapscroll">
             <svg id="board" viewBox="-60 -10 980 660"
-              aria-label="Mapa interactivo de las rutas ferroviarias de Europa"
+              aria-label="Mapa interactivo de las rutas ferroviarias"
               aria-describedby="maphint"></svg>
             <div id="boardStatus" class="board-status" role="status"><p id="boardStatusText">Preparando el tablero…</p><button id="retryBoard" type="button" hidden>Reintentar</button></div>
           </div>
@@ -269,6 +269,8 @@
 
     <script src="maps/europe-v1.js"></script><script src="maps/europe-legacy-v1.js"></script><script src="data.js"></script>
     <script src="layouts/europe-v1.js"></script>
+    <script src="layouts/laboratory-v1.js"></script>
+    <script src="map-options.js"></script>
     <script src="map-layout.js"></script>
     <script src="match-presentation.js"></script>
     <script src="game-timing.js"></script>

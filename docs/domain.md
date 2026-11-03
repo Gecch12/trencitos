@@ -43,10 +43,16 @@ y solo infieren secretos desde cantidades públicas. La estrategia no cambia.
 Vistas y archivo ya declaran el mapa/reglamento y transportan su definición pública,
 sin revelar el reparto real. El replay utiliza la definición grabada y conserva
 el formato de los pasos antiguos. El frontend consume esa definición mediante
-un contexto de lectura y separa el layout de las reglas; el bundle aún incluye
-solo el diseño europeo. La selección por sala y aceptación conjunta siguen pendientes en
+un contexto de lectura y separa el layout de las reglas. El bundle incluye
+Europa y Laboratorio, seleccionables antes de iniciar. La aceptación está en
 [fase 4](work/modular-platform-maps.md); detalles del puente en
 [arquitectura](architecture.md).
+
+Laboratorio (`laboratory@1`) es un tablero ficticio para probar la plataforma:
+12 ciudades, 27 corredores dobles (54 vías) y 36 billetes; usa `europe-classic@1`.
+Sus puntos de billete parten de la distancia mínima de la red. Las pruebas de
+partidas completas acreditan el recorrido técnico, no el balance competitivo.
+La definición no contiene coordenadas; el layout no decide reglas.
 
 ## Conceptos e invariantes
 
@@ -54,7 +60,8 @@ solo el diseño europeo. La selección por sala y aceptación conjunta siguen pe
   privada recupera un puesto; el código público no autentica a su propietario.
   Las nuevas salas son públicas por defecto, con opción privada; las antiguas sin
   este campo siguen privadas. El anfitrión fija capacidad 2–5 y añade/retira bots
-  antes de empezar. La capacidad incluye humanos y bots. Configura además turno
+  antes de empezar, y elige una versión de mapa registrada. La capacidad incluye
+  humanos y bots. Configura además turno
   e iniciales de 30/60/90 s y extra de billetes de 15/30 s (defaults 60/60/+30).
   La configuración se guarda en sala y partida, solo cambia antes del inicio y
   se conserva en la revancha. El directorio anuncia el turno real de la sala.

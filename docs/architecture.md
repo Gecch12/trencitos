@@ -58,8 +58,24 @@ la composición del tablero europeo.
 
 El navegador recibe `/maps/europe-v1.js` y `/maps/europe-legacy-v1.js` antes de
 `/data.js`. El validador, el registro, los contextos y el reglamento del backend
-son privados. El lobby sigue creando Europa con su formato anterior; no hay
-selección de mapa por sala. Alcance y aceptación en [fase 4](work/modular-platform-maps.md).
+son privados. El catálogo incorpora Europa y Laboratorio; la sala permite elegir
+mapa antes de empezar. Alcance y aceptación en [fase 4](work/modular-platform-maps.md).
+
+### Selección de mapa en la sala
+
+[room-map.js](../backend/room-map.js) valida referencias exactas contra el catálogo.
+`create` y `create_test` aceptan `mapRef`; al omitirlo se elige Europa. El anfitrión
+puede cambiarlo mediante `room_settings` antes de empezar; un cliente anterior
+que omite el campo conserva la elección actual. La validación precede a cualquier
+mutación. El lobby y el directorio anuncian la referencia; las etiquetas públicas
+viven en [map-options.js](../shared/map-options.js), sin copiar reglas ni topología.
+
+La selección se guarda incluso en salas sin partida. Restauración, rollback local
+/remoto, arranque y revancha conservan esa referencia. Una sala anterior sin campo
+hereda el mapa de su partida o Europa si todavía no comenzó; una referencia
+inexistente o distinta del juego guardado impide instalar el checkpoint. El
+selector y la miniatura de `shell.js` usan la selección confirmada por el servidor.
+No hay editor de mapas ni cargador de paquetes externos.
 
 ### Contexto por partida en la fachada
 
@@ -96,9 +112,8 @@ filas legadas con topología, dueños y billetes, usadas por scoring y consultas
 Los exports `ROUTES`, `TICKETS`, `CITIES`, `COLORS`, `SCORE`, duraciones y `pay`
 siguen siendo compatibilidad europea para consumidores pendientes de migrar.
 Bots, vistas y grabaciones ya usan el contexto de partida. El contrato público
-incluye referencias y definiciones; selección de sala y frontend aún ofrecen
-Europa. Las pruebas intercalan partidas completas en motor/controlador y leen
-otro mapa por HTTP, sin certificar todavía su presentación en el producto.
+incluye referencias y definiciones; sala y frontend ofrecen Europa y Laboratorio.
+Cada partida mantiene su contexto en bots, guardado, reconexión y replay.
 
 ### Definición pública de la partida
 
@@ -146,6 +161,8 @@ como sustituto. La compatibilidad no modifica frames ni hashes históricos.
 
 [layouts/europe-v1.js](../frontend/layouts/europe-v1.js) contiene coordenadas,
 curvas, geografía, rótulos y tamaños, vinculados a `europe@1`.
+[layouts/laboratory-v1.js](../frontend/layouts/laboratory-v1.js) declara el diseño
+del tablero de laboratorio, vinculado a `laboratory@1`.
 [map-layout.js](../frontend/map-layout.js) genera geometría y coloca etiquetas
 con ese layout; conserva una fachada europea para consumidores de compatibilidad.
 Los carriles dobles tienen orden estable por ID y la geometría europea conserva

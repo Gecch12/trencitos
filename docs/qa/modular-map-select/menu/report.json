@@ -1,0 +1,70 @@
+{
+  "date": "2026-11-03T06:11:38.828Z",
+  "tests": [
+    {
+      "language": "es",
+      "viewport": {
+        "width": 1460,
+        "height": 940
+      },
+      "metrics": {
+        "height": 30,
+        "padding": 8,
+        "fontSize": 13,
+        "value": "1",
+        "disabled": false
+      },
+      "keyboard": true
+    },
+    {
+      "language": "es",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "height": 30,
+        "padding": 8,
+        "fontSize": 12,
+        "value": "1",
+        "disabled": false
+      },
+      "keyboard": true
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 1460,
+        "height": 940
+      },
+      "metrics": {
+        "height": 30,
+        "padding": 8,
+        "fontSize": 13,
+        "value": "1",
+        "disabled": false
+      },
+      "keyboard": true
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "height": 30,
+        "padding": 8,
+        "fontSize": 12,
+        "value": "1",
+        "disabled": false
+      },
+      "keyboard": true
+    }
+  ],
+  "errors": [],
+  "browser": "156.0.8078.80",
+  "passed": true,
+  "translations_sha256": "61fb7c817c34a6d0aaeaea8014354ef9bf9474f5c4501b9a4dafc87b55ba93c9",
+  "css_sha256": "e48293f3471abbffb6b687881a00bd48f43c6352cb59f33aee90c9a5c7c48fa8"
+}
