@@ -1,5 +1,5 @@
 ---
-{"id":"modular-platform-contracts","status":"done","parent":"modular-game-platform","depends_on":["modular-platform-baseline"],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-02"}
+{"id":"modular-platform-contracts","status":"done","parent":"modular-game-platform","depends_on":["modular-platform-baseline"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Fase 1: modelo y contratos
 
@@ -84,3 +84,9 @@ su propio subhito; este primer corte no cierra toda la fase 2.
 La descomposición del frontend y la integración del trabajo visual corresponden
 a fase 3. Integrar un checkpoint revisado de aquel trabajo antes de mover sus
 archivos. No publicar en Render como parte de esta entrega.
+
+## Entrega conjunta
+
+Integrada y publicada con Sudamérica. Los resultados anteriores describen cada
+corte aislado; la aceptación conjunta y el despliegue están en
+[la entrega final](south-america-release.md) y [producción](../production.md).

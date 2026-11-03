@@ -1,5 +1,5 @@
 ---
-{"id":"modular-platform-domain","status":"done","parent":"modular-game-platform","depends_on":["modular-platform-contracts"],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-02"}
+{"id":"modular-platform-domain","status":"done","parent":"modular-game-platform","depends_on":["modular-platform-contracts"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Fase 2: extracción del dominio
 
@@ -564,3 +564,9 @@ entrada. Antes de mover archivos visuales, integrar un checkpoint revisado del
 trabajo de vagones. La separación frontend/backend será en código dentro del
 mismo repositorio; no exige dividir ahora los despliegues.
 El avance posterior se registra en [aplicación e interfaz](modular-platform-application.md).
+
+## Entrega conjunta
+
+Integrada y publicada con Sudamérica. Los resultados anteriores describen cada
+corte aislado; la aceptación conjunta y el despliegue están en
+[la entrega final](south-america-release.md) y [producción](../production.md).

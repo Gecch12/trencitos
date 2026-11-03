@@ -1,6 +1,50 @@
 # Producción
 
-## Versión actual · 2026-11-02, 06:38 (Lima)
+## Versión actual · 2026-11-03, 02:26 (Lima)
+
+- Código: `33b42802759255b285dc6b24c54a85ad4ad91eb8`, publicado en `main`.
+  Arquitectura modular, mapas versionados, Sudamérica 3.3 beta, replay de análisis,
+  construcción sincronizada, bots en worker y menor trabajo de persistencia.
+  Se preservaron e integraron los diseños de vagones del checkout original.
+  Alcance y aceptación en [la entrega conjunta](work/south-america-release.md).
+- [Despliegue Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbkop4h5efls73f7sqj0):
+  revisión exacta, **Live** a las 02:26:52, Node 26.13.0. Auto-Deploy sigue
+  desactivado. La migración aditiva `005_checkpoint_delta.sql` se aplicó antes
+  de publicar; mantiene el escritor exclusivo, commit atómico y compatibilidad
+  con el protocolo previo. Sin contratación, cambio de plan ni credenciales.
+- [633/633 pruebas](qa/south-america-release/stream-node-result.json) con la revisión
+  final; ocho prueban streaming, compatibilidad y cancelación del replay.
+  Las verificaciones anteriores de Docker y navegador están en la ficha; no se
+  presentan como una nueva ejecución de todos los navegadores en producción.
+- [Partida natural local](qa/south-america-worker/browser-report.json): anfitrión
+  y cuatro bots, **190 turnos**, 189 vagones, cierre y puntuación correctos;
+  auditoría, replay, privacidad y escritorio/móvil comprobados.
+- [Verificación HTTP publicada](qa/south-america-release/production-http-stream.json):
+  43 recursos públicos idénticos y siete rutas privadas con 404; salud HTTP 200,
+  `ok: true`, `storage: supabase`, sin salas abiertas al comprobar.
+- [Medición remota final](qa/latency-update/production-final.json): ocho robos en
+  salas privadas de QA, mediana de confirmación **393 ms**, frente a **537 ms**
+  [antes](qa/latency-update/production-before.json), aproximadamente 27% menos.
+  Estado y confirmación llegan en un mismo frame negociado. Es una muestra pequeña,
+  no una prueba de carga; el RTT continúa cerca de 237 ms.
+- Replay antiguo de cinco jugadores: recuperados sus **330 pasos** y navegado hasta
+  `330/330` en Chrome tras publicar. Sus 50 MB almacenados se procesan por páginas
+  de 16 frames; la API sigue respondiendo durante la lectura. La comprobación anterior
+  coincidió con un reinicio de proceso sin causa registrada; no se afirma un OOM.
+  Captura local `.qa/production-south-america/legacy-replay-final.png`.
+- [Chrome en producción](qa/south-america-release/production-browser-final.json): anfitrión y cuatro bots en práctica privada, selección
+  de billetes, robo y construcciones; después del reinicio se recuperaron **147/147**
+  pasos y el mismo mapa. Esta comprobación remota se cerró como abandonada; la
+  partida natural completa de 190 turnos es la ejecución local enlazada arriba.
+  Chrome no registró errores de consola. Capturas ignoradas por Git en
+  `.qa/production-south-america/`.
+
+El balance competitivo y la revisión visual personal de Sudamérica permanecen
+como evaluación beta acordada. No se separaron repositorios ni servicios: el
+monorepo tiene límites frontend/backend/dominio y conserva un solo despliegue.
+Los commits documentales posteriores registran evidencia sin reiniciar Render.
+
+## Entrega anterior · 2026-11-02, 06:38 (Lima)
 
 - Código: `f4584c9a3b17ed0b69f2e720e809b5dfc20c953e`, publicado en `main`.
   Incluye pagos base/extra/total y desenlace animado del túnel para toda la mesa,

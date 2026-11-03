@@ -1,5 +1,5 @@
 ---
-{"id":"modular-platform-maps","status":"done","parent":"modular-game-platform","depends_on":["modular-platform-application"],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-03"}
+{"id":"modular-platform-maps","status":"done","parent":"modular-game-platform","depends_on":["modular-platform-application"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Fase 4: mapas versionados
 
@@ -502,3 +502,9 @@ visual de cruces del usuario. Verificar rutas, billetes, ferris, dobles y selecc
 antes de las pruebas de balance que realizará el usuario. Conservar Europa y
 Laboratorio como regresiones; integrar con el trabajo de vagones mediante un
 cambio revisado cuando corresponda.
+
+## Entrega conjunta
+
+Integrada y publicada con Sudamérica. Los resultados anteriores describen cada
+corte aislado; la aceptación conjunta y el despliegue están en
+[la entrega final](south-america-release.md) y [producción](../production.md).

@@ -1,5 +1,5 @@
 ---
-{"id":"modular-platform-baseline","status":"done","parent":"modular-game-platform","depends_on":[],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-02"}
+{"id":"modular-platform-baseline","status":"done","parent":"modular-game-platform","depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Fase 0: base reproducible de la reorganización
 
@@ -128,3 +128,9 @@ Desarrollar la fase 1 indicada en la ficha principal desde este worktree:
 vocabulario, límites, contratos y puente compatible con `engine.js`. Empezar por
 el recorrido de construcción; usar esta referencia para comparar las extracciones.
 No se requiere otra decisión del usuario para iniciar ese alcance ya acordado.
+
+## Entrega conjunta
+
+Integrada y publicada con Sudamérica. Los resultados anteriores describen cada
+corte aislado; la aceptación conjunta y el despliegue están en
+[la entrega final](south-america-release.md) y [producción](../production.md).

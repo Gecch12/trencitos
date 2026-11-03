@@ -1,5 +1,5 @@
 ---
-{"id":"modular-platform-application","status":"done","parent":"modular-game-platform","depends_on":["modular-platform-domain"],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-02"}
+{"id":"modular-platform-application","status":"done","parent":"modular-game-platform","depends_on":["modular-platform-domain"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Fase 3: aplicación e interfaz
 
@@ -520,3 +520,9 @@ Iniciar la fase 4 con definiciones versionadas y una correspondencia congelada
 entre identidades de Europa y sus números anteriores. Después adaptar el motor,
 bots, guardado, consultas y presentación para demostrar Europa y un mapa pequeño
 simultáneos. Mantener la rama aislada y un único despliegue; sin push ni publicación.
+
+## Entrega conjunta
+
+Integrada y publicada con Sudamérica. Los resultados anteriores describen cada
+corte aislado; la aceptación conjunta y el despliegue están en
+[la entrega final](south-america-release.md) y [producción](../production.md).

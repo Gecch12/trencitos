@@ -1,5 +1,5 @@
 ---
-{"id":"south-america-release","status":"active","parent":"modular-game-platform","depends_on":["modular-platform-maps"],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-03"}
+{"id":"south-america-release","status":"done","parent":"modular-game-platform","depends_on":["modular-platform-maps"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Sudamérica y entrega conjunta
 
@@ -21,7 +21,7 @@ contratan planes de pago. Se preserva el trabajo de vagones del checkout origina
   trabajo repetido, conservar confirmación durable y recuperación.
 - [x] Interfaz: carga de replay, controles compactos, perspectiva, historial completo,
   estadísticas y navegación por hitos; construcción visible y reloj justo.
-- [ ] Integración: reconciliar cambios de main, ejecutar pruebas de regresión,
+- [x] Integración: reconciliar cambios de main, ejecutar pruebas de regresión,
   publicar revisión exacta y comprobar servicio real.
 
 ## Fuentes y decisiones
@@ -150,3 +150,18 @@ El ajuste de lectura incremental pasó **633/633 pruebas**, incluyendo equivalen
 exacta del contrato y cancelación del flujo: [informe](../qa/south-america-release/stream-node-result.json).
 El recorrido de replay de 264 pasos sigue correcto como participante y público,
 en escritorio y móvil: [navegador](../qa/south-america-release/stream-replay/report.json).
+
+## Cierre y entrega
+
+Las fases y los cambios de los dos chats quedaron integrados en `main`. Render
+publicó `33b4280` a las 02:26:52 Lima del 2026-11-03; migración SQL 005 aplicada.
+El replay antiguo de 330 pasos y la práctica remota de Sudamérica de 147 pasos
+se recuperaron y llegaron a su último paso en Chrome. La práctica remota parcial
+no se confunde con la partida natural local de cuatro bots (190 turnos).
+El estado y la confirmación llegaron juntos en los ocho robos de la medición
+remota final: mediana 393 ms frente a 537 ms iniciales, con RTT ~237 ms.
+
+[Producción](../production.md) es el registro canónico del despliegue y sus límites.
+No quedan implementaciones pendientes dentro de esta entrega; la evaluación beta
+de balance y ajustes visuales posteriores corresponde a las pruebas acordadas
+con Ángel. El monorepo continúa con frontend, backend y dominio separados.

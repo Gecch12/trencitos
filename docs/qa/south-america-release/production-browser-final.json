@@ -1,0 +1,26 @@
+{
+  "at": "2026-11-03T07:30:24.996758+00:00",
+  "commit": "33b42802759255b285dc6b24c54a85ad4ad91eb8",
+  "renderDeploy": "dep-dbkop4h5efls73f7sqj0",
+  "liveAtLima": "2026-11-03T02:26:52-05:00",
+  "largeHistoricalReplay": {
+    "storedFrames": 330,
+    "storedJsonBytes": 50003274,
+    "lastVisibleStep": "330/330",
+    "serverHealthDuringLoad": 200
+  },
+  "southAmericaProductionSmoke": {
+    "bots": 4,
+    "status": "abandoned",
+    "restoredAfterDeploy": true,
+    "lastVisibleStep": "147/147",
+    "consoleErrors": []
+  },
+  "completeLocalFourBotGame": {
+    "turns": 190,
+    "wagons": 189,
+    "evidence": "../south-america-worker/browser-report.json"
+  },
+  "screenshotDirectory": ".qa/production-south-america/",
+  "passed": true
+}

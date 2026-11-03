@@ -1,5 +1,5 @@
 ---
-{"id":"modular-game-platform","status":"validated","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
+{"id":"modular-game-platform","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Plataforma modular y mapas de Trencitos
 
@@ -133,3 +133,7 @@ puntuación, cartas/mercado y consultas, más la aceptación conjunta. La [fase 
 El cierre de mapas está en la [fase 4](modular-platform-maps.md). Sudamérica,
 rendimiento, replay y la integración están en [la entrega conjunta](south-america-release.md).
 La siguiente evaluación es el balance y la revisión visual de Ángel jugando la beta.
+
+La entrega conjunta está publicada: [producción y evidencia](../production.md).
+Todas las fases de este alcance están aceptadas. Se mantienen los puentes de
+compatibilidad documentados; retirarlos no es requisito para añadir más mapas.
