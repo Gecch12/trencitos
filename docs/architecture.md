@@ -448,12 +448,13 @@ forma anterior. Todos los objetos devueltos quedan separados del estado fuente.
 
 `recording` usa el mismo filtro por puesto y elimina `serverNow` antes de grabar.
 `match-archive.js` conserva captura, diferencias, hashes y almacenamiento, y
-expone `list`/`replay` como puentes a `createHistoryQueries`. Este caso de consulta
-recibe la identidad verificada y un repositorio de lectura con dos operaciones:
-`records(identity, id)` aporta metadatos/reclamaciones; `frames(id, steps)` carga
-los pasos remotos solo después de comprobar propiedad, visibilidad, cierre,
-versión y permiso de auditoría. Los frames locales ya cargados se reutilizan como
-entrada, sin modificarlos.
+expone `list`/`replay`/`replayStream` como puentes a `createHistoryQueries`. Este caso
+de consulta recibe la identidad verificada: `records(identity, id)` aporta
+metadatos/reclamaciones y `iterateFrames(id, steps)` entrega páginas secuenciales
+de 16 pasos, después de comprobar propiedad, visibilidad, cierre, versión y permiso
+de auditoría. HTTP proyecta y serializa por partes con contrapresión; no retiene
+la grabación remota completa. `frames` conserva el adaptador de compatibilidad
+para consultas internas. Los frames locales se reutilizan sin modificarlos.
 
 `replay-view.js` proyecta resúmenes y reconstruye las vistas guardadas; no ejecuta
 el motor ni adapta frames antiguos. Listado, eventos, acciones y auditoría son

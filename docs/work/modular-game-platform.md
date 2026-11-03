@@ -1,5 +1,5 @@
 ---
-{"id":"modular-game-platform","status":"active","parent":null,"depends_on":[],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-03"}
+{"id":"modular-game-platform","status":"validated","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
 ---
 # Plataforma modular y mapas de Trencitos
 
@@ -26,8 +26,9 @@ La ejecución conjunta se registra en [Sudamérica y entrega](south-america-rele
 - Snapshot de esos cambios: `7003904f264dac1e740cefc66fa7dd0c1c58617c`.
 - Base, inventario y validación: [fase 0](modular-platform-baseline.md).
 
-Trabajar desde este worktree. El checkout original y otros frentes conservan sus
-archivos. Una referencia a otra rama no certifica integración ni despliegue.
+El trabajo se ejecutó desde este worktree. El checkout original se preservó en
+`2ba28ac`, se fusionó en `2e53f46` y main avanzó a `03e6e29`. Otros worktrees
+no se modificaron. La publicación se acredita únicamente en [producción](../production.md).
 
 ## Fases y aceptación
 
@@ -56,8 +57,8 @@ bloquea la fase 4 ni Sudamérica. Mantener un solo repositorio está acordado.
 - [x] Fase 2 aceptada según [dominio y Europa](modular-platform-domain.md).
 - [x] Fase 3 aceptada según [aplicación e interfaz](modular-platform-application.md).
 - [x] Fase 4: independencia del mapa demostrada.
-- [ ] Fase 5: Sudamérica disponible para pruebas del usuario.
-- [ ] Resultado conjunto revisado: código, documentación, compatibilidad y evidencia.
+- [x] Fase 5: Sudamérica disponible para pruebas del usuario.
+- [x] Resultado conjunto revisado: código, documentación, compatibilidad y evidencia.
 
 La validación técnica de la beta y la revisión manual del usuario se registran
 por separado. El cierre de esta ficha no implica publicación.
@@ -82,7 +83,7 @@ por separado. El cierre de esta ficha no implica publicación.
 - Mantener Three.js, las familias de vagones, cartas y estaciones existentes.
   El SVG provisional y el visor de referencia no sustituyen el tablero principal.
 
-## Hito siguiente: fase 5
+## Aceptación conjunta
 
 El [modelo de fase 1](../decisions/match-domain-contracts.md) define los contratos
 y el puente. La [ficha de dominio](modular-platform-domain.md) conserva la aceptación
@@ -115,12 +116,13 @@ conserva IDs opacos en controles y Three.js; otro layout se verifica por inyecci
 El séptimo registra Laboratorio y habilita la selección por sala. La fase 4 está
 aceptada: partidas simultáneas de ambos mapas con guardado, bots, reconexión,
 replay y cosméticos, verificadas en navegador y Docker. La evidencia y los límites
-están en su ficha; el siguiente hito incorpora Sudamérica.
+están en su ficha. La fase 5 registra Sudamérica como beta en la
+[ficha de entrega](south-america-release.md), con cuatro bots y regresión conjunta.
 
 No mover archivos por tamaño ni convertir cada función en un módulo. Los límites
 siguen responsabilidades y dependencias verificables.
 
-## Evidencia y próximo paso
+## Evidencia y evaluación posterior
 
 La [fase 0](modular-platform-baseline.md) conserva la base y sus límites; la
 [fase 1](modular-platform-contracts.md) conserva el diseño contrastado y las
@@ -128,4 +130,6 @@ pruebas de aceptación del primer recorrido. La
 [fase 2](modular-platform-domain.md) contiene las extracciones de pagos,
 construcción, transiciones de túnel/turno, reparto, destinos, estaciones,
 puntuación, cartas/mercado y consultas, más la aceptación conjunta. La [fase 3](modular-platform-application.md) conserva su aceptación conjunta.
-El cierre de mapas y el alcance siguiente de Sudamérica están en la [fase 4](modular-platform-maps.md).
+El cierre de mapas está en la [fase 4](modular-platform-maps.md). Sudamérica,
+rendimiento, replay y la integración están en [la entrega conjunta](south-america-release.md).
+La siguiente evaluación es el balance y la revisión visual de Ángel jugando la beta.

@@ -1,0 +1,287 @@
+{
+  "at": "2026-11-03T07:12:51.907Z",
+  "commit": "03e6e29fdd75eb38c7042eec729c38de0189e5df",
+  "checks": [
+    {
+      "url": "/privacy.css",
+      "sha256": "18ec0a1416f764be1826e29915ec5979ecf9d904e1b46abf5c6f18fd208c1829",
+      "match": true
+    },
+    {
+      "url": "/index.html",
+      "sha256": "8b5e33ef8f00548cf2667a97d64e78e0db428ddc421fc45de3eec4d152b2aafc",
+      "match": true
+    },
+    {
+      "url": "/board-3d.js",
+      "sha256": "0d258bbf3154e3d276e0c0aa4a800b0484d661712b0ff32481a4a46c759d2d8a",
+      "match": true
+    },
+    {
+      "url": "/",
+      "sha256": "8b5e33ef8f00548cf2667a97d64e78e0db428ddc421fc45de3eec4d152b2aafc",
+      "match": true
+    },
+    {
+      "url": "/privacy.html",
+      "sha256": "b5893ff3e726baa1d91ed9c949c728c8680b4e15fd1656b217c26bf9cf25b788",
+      "match": true
+    },
+    {
+      "url": "/wagon-renderer.js",
+      "sha256": "5fa2d71ffcf3e6c6a4a50b840b7cd682c321c49f162d2a8ae9c5dbfd17cc6961",
+      "match": true
+    },
+    {
+      "url": "/board-3d.css",
+      "sha256": "3eb8561981dbe1d2b93b2dff7f2f809518e53e9bf509b1903f831b9d1412ac36",
+      "match": true
+    },
+    {
+      "url": "/board-camera.js",
+      "sha256": "f97b8a79a1687529857b71d182dbe24c3dfac74ec24f8848c3b3c6cfa73ed583",
+      "match": true
+    },
+    {
+      "url": "/wagon-preview.js",
+      "sha256": "6d31491b917f453e0059921c862cd3abdcd96101b1711c8e65b7b7fcdf340e9d",
+      "match": true
+    },
+    {
+      "url": "/wagon-models.mjs",
+      "sha256": "1605948fb56c407beba67356f54731e994f0b40a9284b802e78b02f7a8b52725",
+      "match": true
+    },
+    {
+      "url": "/vendor/three.module.js",
+      "sha256": "104f56145899722094556490d787aae0617cc2fc3382f31df02d724ea1aee341",
+      "match": true
+    },
+    {
+      "url": "/vendor/three.core.js",
+      "sha256": "613e370f76638fdef83926642bf256dc9615684922de1ce1f63a8583e5d78578",
+      "match": true
+    },
+    {
+      "url": "/data.js",
+      "sha256": "ff9fed5598798f15f069ed89420d56ed28fe10138352ec61f84822cddb5aead9",
+      "match": true
+    },
+    {
+      "url": "/layouts/europe-v1.js",
+      "sha256": "78651811510606cdafae1fea86996fe849f18bfc27c53c50f117f41ade71d997",
+      "match": true
+    },
+    {
+      "url": "/maps/europe-legacy-v1.js",
+      "sha256": "a98444a488518e1793cc411fc37e7a11e219eba800a740768b5b623063e11f89",
+      "match": true
+    },
+    {
+      "url": "/maps/europe-v1.js",
+      "sha256": "e6a0157567de5aa336bf6f3f7211e2a5adb323dbb160a71f34841f5d6a9778df",
+      "match": true
+    },
+    {
+      "url": "/style.css",
+      "sha256": "8627d34921f9e1eeac0305dfc42e29d8c2a02821266ad95ee7c8c0d1ef889dee",
+      "match": true
+    },
+    {
+      "url": "/app.js",
+      "sha256": "fbec78cc26170c3ff9b64d10abac25c80d92640d237ff065574c1c25c76b6fdc",
+      "match": true
+    },
+    {
+      "url": "/match-presentation.js",
+      "sha256": "48ff60cab576c6956787538811a3a2a17f1433e595dbdd1990463c95034493ca",
+      "match": true
+    },
+    {
+      "url": "/layouts/south-america-v3.3-beta.js",
+      "sha256": "90372d35a05868ae0fcde1b5b5d228d72029196ad7874465ed26017d7481d7f8",
+      "match": true
+    },
+    {
+      "url": "/layouts/laboratory-v1.js",
+      "sha256": "0f56fcb9f7b4d6b3c55e20c356e7cf40c85e2a0a920c20fb4299440c3db01636",
+      "match": true
+    },
+    {
+      "url": "/game-timing.js",
+      "sha256": "8506a76452e33b2aadb6ec5bdd84793ab93fd5cd9b783530b47274c644505a71",
+      "match": true
+    },
+    {
+      "url": "/map-options.js",
+      "sha256": "966f36fdd24011396df367a592f8d35ff61de80809f17981d4652ab1d14ccb15",
+      "match": true
+    },
+    {
+      "url": "/map-layout.js",
+      "sha256": "94ee21cc52b8fdbeaf5fe1f0f3970671fdc6d164d2e1d7d50e189ef79bf35a48",
+      "match": true
+    },
+    {
+      "url": "/lobby-ui.js",
+      "sha256": "24566ab3662428fabfd11dda2b52eadb2bd22dcb6203f9085a2b5175c6e71135",
+      "match": true
+    },
+    {
+      "url": "/game-ui.js",
+      "sha256": "3453664a0d45b64dd6af64275aa6763f224ecc3001b6694a827d540db689e52c",
+      "match": true
+    },
+    {
+      "url": "/account-ui.js",
+      "sha256": "74b6500240aad5b9d8f878c6360c63ad4e034678bd3181e8daeec20824e65448",
+      "match": true
+    },
+    {
+      "url": "/lobby.css",
+      "sha256": "8b227a0b93d86e98b98b9340bd5bf1f2738951c8c4586b113850a86a48c52ae1",
+      "match": true
+    },
+    {
+      "url": "/responsive.css",
+      "sha256": "7d33d4a3d1fb27305997ef43f708e5790d40b27495433c78197dd640991aaad8",
+      "match": true
+    },
+    {
+      "url": "/game.css",
+      "sha256": "b8b0905bcaf115a03ba40553723b960af9878feaa6eaa87c9dcf2fb0688465dd",
+      "match": true
+    },
+    {
+      "url": "/replay.css",
+      "sha256": "b77a56e86edd6272947406a35ad3dd5edce4ba6dab3652c203f3b0b77a9c2404",
+      "match": true
+    },
+    {
+      "url": "/replay-ui.js",
+      "sha256": "063cc1eaaa5509155fc118dbf6c5eb169ca6cbbd2b27e912936d18360436176f",
+      "match": true
+    },
+    {
+      "url": "/history-ui.js",
+      "sha256": "1082c8bc3699a40a1f3dc00cc006d7481aca1767c25a247b4d5d08e6288a4d4d",
+      "match": true
+    },
+    {
+      "url": "/i18n.js",
+      "sha256": "d604f99da1639a1083f6a643f9cba91398620a67dceed90394133b198eb74a56",
+      "match": true
+    },
+    {
+      "url": "/replay-state.js",
+      "sha256": "3008e9a8fda81dc7c73219b93bbdf9934e67b2b8dda3882d631070f59f3ec0ea",
+      "match": true
+    },
+    {
+      "url": "/translations.js",
+      "sha256": "677ce36398cadaf2655e9458fbd971ccc82ca96059f0cd8dbc2eced02c7039c6",
+      "match": true
+    },
+    {
+      "url": "/hippie-geometry.mjs",
+      "sha256": "0550703ad988bc90f1d9cc5bff6076bcf880842166bab62b1bf18f3fa265fdb5",
+      "match": true
+    },
+    {
+      "url": "/hippie-hair.mjs",
+      "sha256": "7fe426991c2c8046a26ef38395bebfc6a130259bc1a1384b34c2edfbf5e8b5c3",
+      "match": true
+    },
+    {
+      "url": "/shell-icons.js",
+      "sha256": "6714b34bfee82bf1dd81c7da3a09bbf47f363fb830914082c99fd5cc6f832f9e",
+      "match": true
+    },
+    {
+      "url": "/shell.js",
+      "sha256": "11daaacea75266a5dcea621ab8d4b98e51d56c8031b27db4ac0197f6f5e1c890",
+      "match": true
+    },
+    {
+      "url": "/shell.css",
+      "sha256": "e48293f3471abbffb6b687881a00bd48f43c6352cb59f33aee90c9a5c7c48fa8",
+      "match": true
+    },
+    {
+      "url": "/hippie-model.mjs",
+      "sha256": "16fa84f6f75b1116e201fff88aa57b4f547276e57f0bec6c0d39e6746cc3047f",
+      "match": true
+    },
+    {
+      "url": "/wagon-people.mjs",
+      "sha256": "24ea91ca163ec1fd5ae6af32379a117f2ee7e5dac6dab799f843e8cb006da189",
+      "match": true
+    },
+    {
+      "url": "/backend/server.js",
+      "status": 404
+    },
+    {
+      "url": "/game/domain/scoring.js",
+      "status": 404
+    },
+    {
+      "url": "/supabase/005_checkpoint_delta.sql",
+      "status": 404
+    },
+    {
+      "url": "/tests/south-america.test.js",
+      "status": 404
+    },
+    {
+      "url": "/.env",
+      "status": 404
+    },
+    {
+      "url": "/room-state.json",
+      "status": 404
+    },
+    {
+      "url": "/docs/references/south-america-v3.3-source.json",
+      "status": 404
+    }
+  ],
+  "health": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 2,
+    "timingsMs": {
+      "queue": {
+        "count": 13,
+        "p50": 0.04,
+        "p95": 0.12,
+        "max": 0.16
+      },
+      "mutation": {
+        "count": 13,
+        "p50": 0.83,
+        "p95": 25.56,
+        "max": 114.76
+      },
+      "commit": {
+        "count": 4,
+        "p50": 308.9,
+        "p95": 396.97,
+        "max": 549.52
+      },
+      "delivery": {
+        "count": 12,
+        "p50": 0.03,
+        "p95": 0.15,
+        "max": 0.87
+      },
+      "total": {
+        "count": 12,
+        "p50": 0.82,
+        "p95": 423.85,
+        "max": 551.71
+      }
+    }
+  },
+  "passed": true
+}

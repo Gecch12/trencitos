@@ -242,7 +242,8 @@
     "frontend/replay.css",
     "game/queries/replay-analysis.js",
     "tests/replay-analysis.test.js",
-    "tests/browser-replay-analysis.cjs"
+    "tests/browser-replay-analysis.cjs",
+    "tests/replay-stream.test.js"
   ],
   "work/table-controls.md": [
     "shared/game-timing.js",

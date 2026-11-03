@@ -60,26 +60,19 @@ function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000 })
       throw error;
     }
   }
+  async function* iterateFrames(id,steps){
+    if(!Number.isSafeInteger(steps)||steps<1)throw failure("STORE_UNAVAILABLE");
+    for(let from=0;from<steps;from+=16){
+      const count=Math.min(16,steps-from),page=await rpc("trencitos_read_frames",{p_match:id,p_from:from,p_count:count},Math.max(timeout,15000));
+      if(!Array.isArray(page)||page.length!==count||page.some((frame,i)=>frame.seq!==from+i))throw failure("STORE_UNAVAILABLE");
+      for(const frame of page)yield frame;
+    }
+  }
   return {
     closeMissing(ids) { return rpc("trencitos_close_missing", {p_writer:writer,p_live:ids}); },
     readArchive(identity,id) { return rpc("trencitos_read_archive_summary", {p_guest:identity.guestId||null,p_account:identity.accountId||null,p_match:id||null}); },
-    async readFrames(id, steps) {
-      if (!Number.isSafeInteger(steps) || steps < 1) throw failure("STORE_UNAVAILABLE");
-      const frames = [];
-      // A complete game can exceed 10 MB. Bound each transfer and authorize
-      // before loading it; reading never acquires the checkpoint writer lease.
-      for (let from = 0; from < steps; from += 48) {
-        const pages = await Promise.all([0, 16, 32].filter(offset => from + offset < steps).map(offset => {
-          const start = from + offset, count = Math.min(16, steps - start);
-          return rpc("trencitos_read_frames", {p_match:id,p_from:start,p_count:count},Math.max(timeout,15000)).then(page => {
-            if (!Array.isArray(page) || page.length !== count || page.some((frame,i) => frame.seq !== start+i)) throw failure("STORE_UNAVAILABLE");
-            return page;
-          });
-        }));
-        frames.push(...pages.flat());
-      }
-      return frames;
-    },
+    iterateFrames,
+    async readFrames(id,steps){const frames=[];for await(const frame of iterateFrames(id,steps))frames.push(frame);return frames;},
     claimGuest(guestId,accountId) { return rpc("trencitos_claim_guest", {p_guest:guestId,p_account:accountId}); },
     async load() {
       const checkpoint = await rpc("ferrovia_claim_checkpoint", { p_writer: writer });

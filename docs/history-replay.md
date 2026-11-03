@@ -256,3 +256,16 @@ junto al historial en escritorio y en un panel plegable en móvil. Hay saltos a
 construcción e hito (destinos, liderazgo/empate, estaciones, túnel desistido, última
 ronda y final). Buscar un paso es instantáneo y cancela sonidos/efectos pendientes;
 la reproducción usa la velocidad elegida y conserva la cámara.
+
+## Entrega con memoria acotada
+
+HTTP autoriza el registro antes de leer frames y entrega el mismo JSON mediante
+un flujo con backpressure. Supabase se consulta en páginas secuenciales de 16
+frames; solo se retienen la página actual, dos estados reconstruidos y el análisis
+compacto. La auditoría también se entrega por partes. Cancelar la descarga cierra
+el iterador; un error posterior al inicio interrumpe la respuesta en vez de
+publicar una grabación parcial válida. Los hashes y snapshots almacenados no cambian.
+
+Esto evita cargar y volver a copiar de golpe grabaciones antiguas de decenas de MB.
+El navegador mantiene el historial completo recibido; no se modificó el formato
+ni se ejecutan jugadas para reconstruirlo.

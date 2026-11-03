@@ -82,7 +82,7 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null,engine=Eng
       record.status='abandoned';record.closedAt=Date.now();record.endReason='La sala caducó sin reconexión.';
     }
   }
-  const queries=createHistoryQueries({repository:{records,frames:(id,steps)=>remote.readFrames(id,steps)}});
-  return {bootstrap,capture,claim,list:queries.list,replay:queries.replay,snapshot,rollback,get pending(){return [...pending.values()]},get state(){return state},prepare:()=>applyPending(state),commit(next){if(next)state=next;pending.clear();},restore(next){state=next;pending.clear();}};
+  const queries=createHistoryQueries({repository:{records,frames:(id,steps)=>remote.readFrames(id,steps),iterateFrames:(id,steps)=>remote.iterateFrames(id,steps)}});
+  return {bootstrap,capture,claim,list:queries.list,replay:queries.replay,replayStream:queries.replayStream,snapshot,rollback,get pending(){return [...pending.values()]},get state(){return state},prepare:()=>applyPending(state),commit(next){if(next)state=next;pending.clear();},restore(next){state=next;pending.clear();}};
 }
 module.exports={createMatchArchive,safePublic,participant,frameHash};

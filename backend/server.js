@@ -215,10 +215,16 @@ const server = http.createServer(async (req, res) => {
       const id=path[0], audit=path[1]==="audit";
       if(path.length>2||path[1]&&!audit)throw Object.assign(Error("Esta repetición no está disponible."),{status:404});
       if(id&&!/^[a-f0-9-]{36}$/.test(id)) throw Object.assign(Error("Esta repetición no está disponible."),{status:404});
-      const data=id?await archive.replay(identity,id,audit,url.searchParams.get("analysis")==="1"):{matches:await archive.list(identity)};
-      if(audit)res.setHeader("Content-Disposition",`attachment; filename="trencitos-${id}.json"`);
-      res.end(JSON.stringify(data));
-    } catch(error){res.statusCode=error.status||503;res.end(JSON.stringify({message:error.status?error.message:"El historial no está disponible ahora."}));}
+      if(id){
+        const source=await archive.replayStream(identity,id,audit,url.searchParams.get("analysis")==="1");
+        // Validate the first frame before committing HTTP headers. A later
+        // corrupt page closes the response; it can never become a partial replay.
+        const first=await source.next();
+        if(audit)res.setHeader("Content-Disposition",`attachment; filename="trencitos-${id}.json"`);
+        async function* chunks(){try{if(!first.done)yield first.value;yield* source;}finally{await source.return();}}
+        await require('node:stream/promises').pipeline(require('node:stream').Readable.from(chunks()),res);
+      }else res.end(JSON.stringify({matches:await archive.list(identity)}));
+    } catch(error){if(res.headersSent||res.destroyed){res.destroy();return;}res.statusCode=error.status||503;res.end(JSON.stringify({message:error.status?error.message:"El historial no está disponible ahora."}));}
     return;
   }
   if (req.method !== "GET") {

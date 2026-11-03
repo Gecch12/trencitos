@@ -134,3 +134,19 @@ anteriores. Pasaron 44 pruebas dirigidas y [Chrome](../qa/south-america-release/
 con construcción real, desbloqueo de controles, privacidad y reconexión.
 
 La suite final del protocolo compacto 2 pasó **625/625**: [informe](../qa/south-america-release/final-node-result.json).
+
+## Grabaciones grandes
+
+La comprobación de un replay antiguo de cinco jugadores quedó pendiente y el
+proceso de Render reinició. La consulta de solo lectura en Supabase confirmó
+330 frames y 50.003.274 bytes de JSON. No se atribuye el reinicio a una causa
+no registrada; la ruta anterior sí retenía toda la grabación antes de proyectarla.
+Se sustituyó por páginas de 16 frames y respuesta HTTP con backpressure,
+sin modificar contenido, autorización ni auditoría. [Prueba de memoria](../qa/south-america-release/stream-memory.json):
+500 frames / 111,6 MB procesados con pico RSS de 104 MB bajo heap de 192 MB.
+Ocho pruebas nuevas comparan respuestas completas/antiguas, cancelación y errores.
+
+El ajuste de lectura incremental pasó **633/633 pruebas**, incluyendo equivalencia
+exacta del contrato y cancelación del flujo: [informe](../qa/south-america-release/stream-node-result.json).
+El recorrido de replay de 264 pasos sigue correcto como participante y público,
+en escritorio y móvil: [navegador](../qa/south-america-release/stream-replay/report.json).

@@ -1,5 +1,5 @@
 "use strict";
-const { projectSummary, projectReplay } = require("../queries/replay-view");
+const { projectSummary, projectReplay, streamReplay } = require("../queries/replay-view");
 const { hasDefinitionHeader } = require("../compat/replay-definition");
 
 function participantSeat(record, identity, claims) {
@@ -29,7 +29,7 @@ function createHistoryQueries({ repository }) {
       return { ...projectSummary(record, true), ownSeat, rank: placement(record, ownSeat) };
     });
   }
-  async function replay(identity, id, audit = false, includeAnalysis = false) {
+  async function authorizedRecord(identity, id, audit) {
     const { matches, claims } = await repository.records(identity, id), record = matches[0];
     if (!record) throw fail(404, "Esta repetición no está disponible.");
     const full = participant(record, identity, claims);
@@ -38,10 +38,19 @@ function createHistoryQueries({ repository }) {
     if (record.schemaVersion !== 1) throw fail(409, "Esta versión de repetición no está disponible.");
     if (audit && !full) throw fail(403, "Solo los participantes pueden descargar la auditoría.");
     hasDefinitionHeader(record);
-    const frames = record.frames || await repository.frames(id, record.steps);
-    return projectReplay({ ...record, frames }, { full, audit, includeAnalysis });
+    return {record,full};
   }
-  return { list, replay };
+  async function replay(identity,id,audit=false,includeAnalysis=false){
+    const {record,full}=await authorizedRecord(identity,id,audit);
+    const frames=record.frames||await repository.frames(id,record.steps);
+    return projectReplay({...record,frames},{full,audit,includeAnalysis});
+  }
+  async function replayStream(identity,id,audit=false,includeAnalysis=false){
+    const {record,full}=await authorizedRecord(identity,id,audit);
+    const source=record.frames||(repository.iterateFrames?repository.iterateFrames(id,record.steps):await repository.frames(id,record.steps));
+    return streamReplay(record,{full,audit,includeAnalysis},source);
+  }
+  return { list, replay, replayStream };
 }
 
 module.exports = { createHistoryQueries, participant };

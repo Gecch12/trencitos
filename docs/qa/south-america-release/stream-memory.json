@@ -1,0 +1,9 @@
+{
+  "runtime": "v25.6.1",
+  "frames": 500,
+  "rawBytes": 111550890,
+  "outputBytes": 769008,
+  "startRss": 47448064,
+  "peakRss": 103923712,
+  "retainedAllFrames": false
+}
