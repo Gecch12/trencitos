@@ -42,6 +42,13 @@ porcentajes de avance sumando tareas de tamaños diferentes.
 
 ## Ciclo y ramas
 
+Por decisión de Ángel (2026-11-03), el trabajo habitual se hace en
+`trains/trencitos`, rama `main`. Solo se crean ramas/worktrees adicionales cuando
+él lo pide explícitamente. Revisa cambios locales y actividad de otros chats
+antes de escribir; trabajar en una carpeta compartida requiere evitar editar
+simultáneamente los mismos archivos. Publicar en Git y desplegar siguen siendo
+entregas distintas y deben contar con autorización de la tarea.
+
 1. Comprueba rama/checkout y lee la ficha. Contrasta los hechos relevantes con
    código y evidencia; distingue decisiones de propuestas.
 2. Realiza el trabajo autorizado; actualiza documentos afectados junto al cambio.

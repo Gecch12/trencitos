@@ -3,6 +3,10 @@
 ---
 # Fase 2: extracción del dominio
 
+El desarrollo en worktree descrito aquí es histórico. El código está integrado
+en `main`; la carpeta vigente y el retiro de copias se registran en
+[Consolidación](workspace-consolidation.md).
+
 ## Objetivo y alcance
 
 Extraer las reglas de Europa en políticas y transiciones comprobables sin

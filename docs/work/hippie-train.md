@@ -1,7 +1,12 @@
 ---
-{"id":"hippie-train","status":"validated","parent":"board-3d","depends_on":[],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-02"}
+{"id":"hippie-train","status":"validated","parent":"board-3d","depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Midsommar Express
+
+Integrado en main y publicado con la entrega de Sudamérica; la revisión efectiva
+se registra en [Producción](../production.md). Las menciones posteriores a
+«esta rama» conservan evidencia histórica de su validación. El estudio anterior
+de 90 personas se preserva según [la consolidación](workspace-consolidation.md).
 
 Sustituye la temática Hippie Train, por petición del usuario y siguiendo la foto
 aportada de una celebración con trajes de referencia. La familia permanece en

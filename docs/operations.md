@@ -75,17 +75,24 @@ para conservar partidas fuera de pruebas, `/data` necesita almacenamiento persis
 Render sigue usando el runtime Node definido en `render.yaml`; construir esta
 imagen local no modifica ni verifica ese despliegue.
 
-## Worktrees y ramas
+## Carpeta de trabajo y ramas
 
-Cada worktree tiene sus archivos y estado local. Git comparte historial y
-referencias; los cambios no aparecen automáticamente en las otras carpetas.
-Cada frente usa una rama distinta y registra su avance en su ficha. Sincroniza
-desde una base revisada y resuelve documentos junto con código al integrar.
+La carpeta habitual es `trains/trencitos`, rama `main`. Desde el 2026-11-03,
+solo se crean ramas/worktrees adicionales cuando Ángel lo pide explícitamente.
+Revisa el estado Git y cambios de otros chats antes de escribir. Las ramas
+históricas conservadas no son copias activas ni trabajo pendiente.
+La [consolidación](work/workspace-consolidation.md) conserva procedencia y respaldos.
 
-Para ejecutar un servidor aislado, desde **su** checkout, con puerto libre:
+El estudio anterior de 90 pasajeros permanece aislado en
+`experiments/passenger-extreme/`. `npm run preview:extreme` abre un servidor
+estático de loopback en el puerto 3138 (`PORT` permite cambiarlo), sin cargar
+el juego ni almacenamiento. No forma parte del catálogo ni del servidor público.
+
+Para ejecutar un servidor de pruebas desde la carpeta principal, con puerto y
+estado propios (crea primero `.qa/`):
 
 ```sh
-STATE_BACKEND=file STATE_FILE="$PWD/room-state.json" PORT=3118 node server.js
+STATE_BACKEND=file STATE_FILE="$PWD/.qa/local-check.json" AUTH_ENABLED=false PORT=3118 node server.js
 ```
 
 Abrir `http://localhost:3118/`. El tablero principal usa solo 3D.
@@ -154,8 +161,8 @@ versiones o referencias para forzar una carga: conserva los originales y utiliza
 un lector compatible. El esquema RPC/SQL y los frames históricos no cambian.
 
 La app de Codex tiene registrado `trains`, cuyo repo está en `trencitos`.
-Un chat local bajo ese proyecto debe usar explícitamente la ruta de su worktree
-para herramientas y servidores. La configuración de chat no demuestra aislamiento.
+Un chat local bajo ese proyecto usa explícitamente `trains/trencitos` para
+herramientas y servidores. La configuración del chat no demuestra aislamiento.
 
 ## Verificar y entregar
 

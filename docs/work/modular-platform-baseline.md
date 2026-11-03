@@ -3,6 +3,10 @@
 ---
 # Fase 0: base reproducible de la reorganización
 
+El desarrollo en worktree descrito aquí es histórico. El código está integrado
+en `main`; la carpeta vigente y el retiro de copias se registran en
+[Consolidación](workspace-consolidation.md).
+
 Preparar la [iniciativa modular](modular-game-platform.md) con una referencia
 verificable, antes de modificar comportamiento o estructura del juego.
 

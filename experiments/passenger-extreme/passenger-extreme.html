@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hippie Train · Trencitos</title><link rel="stylesheet" href="/experiments/passenger-extreme.css"></head>
+<body>
+  <header><p class="eyebrow">TRENCITOS · ESTUDIO DE VAGÓN</p><h1>Hippie Train</h1><p class="intro">Blanco, pasteles y un viaje a rebosar.</p></header>
+  <main>
+    <section class="showroom" aria-label="Vista 3D del vagón"><div id="stage"></div><div id="hairLabels" hidden></div><span class="hint">Arrastra para girar</span></section>
+    <aside>
+      <span class="tag">MODELO PREMIUM · PROTOTIPO</span><h2>Todo el mundo a bordo</h2>
+      <p>90 viajeros por vagón. Lino blanco, melenas al viento y seis multitudes con su propia personalidad.</p>
+      <dl><div><dt>Techo</dt><dd>60</dd></div><div><dt>Ventanas</dt><dd>16</dd></div><div><dt>Colgados</dt><dd>8</dd></div><div><dt>Puertas</dt><dd>6</dd></div></dl>
+      <div class="variant-picker"><label for="variant">Variante</label><select id="variant"></select><p id="variantDescription"></p></div>
+      <fieldset><legend>Color de la carrocería</legend><div class="swatches"><button class="swatch white" data-color="#ffffff" aria-label="Blanco puro" aria-pressed="true"></button><button class="swatch petrol" data-color="#286a73" aria-label="Azul petróleo" aria-pressed="false"></button><button class="swatch coral" data-color="#d45748" aria-label="Coral" aria-pressed="false"></button><button class="swatch indigo" data-color="#6269c7" aria-label="Índigo" aria-pressed="false"></button><button class="swatch burgundy" data-color="#782f49" aria-label="Borgoña" aria-pressed="false"></button></div><span id="colorName">Blanco puro</span></fieldset>
+      <fieldset><legend>Composición</legend><div class="segmented"><button data-layout="single" aria-pressed="true">Un vagón</button><button data-layout="gallery" aria-pressed="false">Las seis</button><button data-layout="train" aria-pressed="false">Ruta de 8</button></div></fieldset>
+      <button class="reset hair-toggle" data-layout="hair" aria-pressed="false">Melenas y barbas</button>
+      <button class="reset hair-toggle" data-layout="wardrobe" aria-pressed="false">Ver los viajeros</button>
+      <label class="zoom" for="zoom">Acercar<input id="zoom" type="range" min="0.8" max="1.5" step="0.05" value="1"></label>
+      <button id="reset" class="reset">Restablecer vista</button>
+    </aside>
+  </main>
+  <p class="note">Estudio de diseño independiente. Todavía no aparece en el selector del juego ni está a la venta.</p>
+  <script type="module" src="/experiments/passenger-extreme.js"></script>
+</body></html>

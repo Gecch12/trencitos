@@ -6,6 +6,7 @@ El resultado de una ejecución nueva se registra en su ficha de trabajo.
 
 | Área | Evidencia existente |
 | --- | --- |
+| Consolidación en main, lobby y cartas | [Validación y respaldo de worktrees](work/workspace-consolidation.md) |
 | Base para arquitectura modular y mapas | [Fase 0 y límites de la referencia](work/modular-platform-baseline.md) |
 | Contratos de partida y construcción | [Fase 1 y pruebas de comportamiento](work/modular-platform-contracts.md) |
 | Dominio, consultas y aceptación de Europa | [Fase 2, pruebas y límites](work/modular-platform-domain.md) |

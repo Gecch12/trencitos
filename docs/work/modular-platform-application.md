@@ -3,6 +3,10 @@
 ---
 # Fase 3: aplicación e interfaz
 
+El desarrollo en worktree descrito aquí es histórico. El código está integrado
+en `main`; la carpeta vigente y el retiro de copias se registran en
+[Consolidación](workspace-consolidation.md).
+
 ## Objetivo y alcance
 
 Separar casos de uso, coordinación de guardado y proyecciones autorizadas del

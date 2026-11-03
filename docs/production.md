@@ -19,9 +19,10 @@
   [colección](qa/room-setup/production-collection.png).
 - El checkout local de `main` tenía cambios concurrentes de otro trabajo.
   Permanecen intactos: se publicó desde el worktree aislado a `origin/main`,
-  sin incorporar ni guardar cambios ajenos. Ese checkout local aún requiere
-  reconciliar sus ediciones antes de actualizarse. La revisión publicada es la
-  indicada arriba; los commits documentales posteriores no reinician el servicio.
+  sin incorporar ni guardar cambios ajenos. El checkout local se reconcilió
+  después en `e9cb403`: lobby y respuesta inmediata de cartas conviven en main.
+  La [consolidación](work/workspace-consolidation.md) no despliega esos cambios
+  adicionales. La revisión publicada sigue siendo la indicada arriba.
 
 ## Entrega anterior · 2026-11-03, 02:26 (Lima)
 

@@ -3,6 +3,10 @@
 ---
 # Fase 1: modelo y contratos
 
+El desarrollo en worktree descrito aquí es histórico. El código está integrado
+en `main`; la carpeta vigente y el retiro de copias se registran en
+[Consolidación](workspace-consolidation.md).
+
 ## Objetivo y alcance
 
 Concretar el diseño autorizado para extraer las reglas sin cambiar Europa ni

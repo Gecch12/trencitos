@@ -7,7 +7,7 @@ const api=fakeSupabase({roomDelta:true}),originalFetch=global.fetch;
 Object.assign(process.env,{STATE_BACKEND:'supabase',STATE_FILE:path.join(temp,'state.json'),
   SUPABASE_URL:'https://fixture.supabase.co',SUPABASE_SECRET_KEY:'sb_secret_test_only',AUTH_ENABLED:'false'});
 global.fetch=(url,options)=>String(url).startsWith('https://fixture.supabase.co')?api.fetch(url,options):originalFetch(url,options);
-const app=require('../backend/server'),out=path.resolve('.qa/draw-feedback');fs.mkdirSync(out,{recursive:true});
+const app=require('../backend/server'),out=path.resolve(process.env.QA_OUT||'.qa/draw-feedback');fs.mkdirSync(out,{recursive:true});
 const report={at:new Date().toISOString(),checks:[],timings:[],errors:[]};let browser,active,release;
 const peers=[];
 function fixture(code,{refresh=false,depleted=false}={}){

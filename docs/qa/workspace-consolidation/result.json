@@ -1,0 +1,61 @@
+{
+  "at": "2026-11-03T14:41:19.572078+00:00",
+  "base": "e9cb4038b195637b13ada0c6af2380af6c7ddb04",
+  "scope": "main integrado más consolidación y prototipo histórico, antes del commit final",
+  "node": {
+    "tests": 641,
+    "pass": 641,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "durationMs": 160842.118084,
+    "command": "node --test --test-concurrency=1 tests/*.test.js"
+  },
+  "lobby": {
+    "passed": true,
+    "clients": 2,
+    "browserErrors": []
+  },
+  "drawFeedback": {
+    "passed": true,
+    "cases": 10,
+    "storage": "local controlled fake Supabase",
+    "browserErrors": []
+  },
+  "prototype": {
+    "passed": true,
+    "variants": 6,
+    "peoplePerWagon": 90,
+    "maxWagons": 225,
+    "browserErrors": []
+  },
+  "worktreesRemoved": [
+    {
+      "name": "lobby-map-cards",
+      "base": "e2a50333a7fbd385cdd319fe2aeb1fb6b782481c",
+      "verifiedFiles": 6,
+      "archiveSha256": "2bec8c355f8dd622eeb337082f42cd25606b61798e46ededf4223175a66fd7f1"
+    },
+    {
+      "name": "modular-game-platform",
+      "base": "933a0fb50efbede9d154d2d45fdba6a6386364e6",
+      "verifiedFiles": 459,
+      "archiveSha256": "cc4956847bf9507958ba5b059e70bed52273cc98a76b052d5cef4702ecd49ee0"
+    },
+    {
+      "name": "passenger-extreme",
+      "base": "f41e033c496395094a352bd06117bd7474a76921",
+      "verifiedFiles": 99,
+      "archiveSha256": "95b1e8a83262de57f0ef51ebb1f9becc7baf8907266b9d2b76f23627534ef706"
+    },
+    {
+      "name": "threejs-board",
+      "base": "0177ab04899ccbdd2dd0781755956e8548e2380d",
+      "verifiedFiles": 9,
+      "archiveSha256": "c52f81aebbd634d23c4720b5ba4bc148f10e5caeb98a54cd97e6f13dce7772a3"
+    }
+  ],
+  "remainingCheckout": "/Users/angelaltarodri/Desktop/free/trains/trencitos",
+  "branch": "main",
+  "productionDeployment": false
+}

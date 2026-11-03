@@ -1,0 +1,233 @@
+{
+  "at": "2026-11-03T14:38:38.894Z",
+  "checks": [
+    "Blind double click: immediate backs, bounded queue, two durable draws, no duplicate flights/sounds or rival disclosure",
+    "Two visible equal-color cards retain their distinct original slots",
+    "Depleted deck rebases the queued card after the first slot is removed",
+    "Three locomotives renew the market and cancel the old queued choice",
+    "Stale action rejects both provisional cards, restores controls and never executes the queued choice",
+    "Disconnect after send: one persisted draw, same-ID retry, canceled queue and no replayed animation",
+    "390px mobile and reduced motion preserve pending/confirmed semantics without overflow",
+    "Resize cancels provisional geometry and unsent choice without replaying the confirmed flight",
+    "Server without feedback capability keeps the legacy single confirmed animation",
+    "Failed remote commit removes previews, rolls back hand and keeps play paused"
+  ],
+  "timings": [
+    {
+      "case": "QADR01",
+      "click": 0,
+      "feedbackMs": 2.399999976158142,
+      "frameMs": 32.39999997615814,
+      "confirmationMs": 636
+    },
+    {
+      "case": "QADR01",
+      "click": 1,
+      "feedbackMs": 0.8999999761581421,
+      "frameMs": 13.799999952316284,
+      "confirmationMs": 592.8999999761581
+    },
+    {
+      "case": "QADR02",
+      "click": 0,
+      "feedbackMs": 2.200000047683716,
+      "frameMs": 38.5,
+      "confirmationMs": 541.4000000953674
+    },
+    {
+      "case": "QADR02",
+      "click": 1,
+      "feedbackMs": 1,
+      "frameMs": 14.100000023841858,
+      "confirmationMs": 498.5
+    },
+    {
+      "case": "QADR03",
+      "click": 0,
+      "feedbackMs": 2.299999952316284,
+      "frameMs": 42.200000047683716,
+      "confirmationMs": 577.7999999523163
+    },
+    {
+      "case": "QADR03",
+      "click": 1,
+      "feedbackMs": 1.0999999046325684,
+      "frameMs": 14.599999904632568,
+      "confirmationMs": 523.2999999523163
+    },
+    {
+      "case": "QADR04",
+      "click": 0,
+      "feedbackMs": 2.1999999284744263,
+      "frameMs": 38.699999928474426,
+      "confirmationMs": 579.1999999284744
+    },
+    {
+      "case": "QADR04",
+      "click": 1,
+      "feedbackMs": 1,
+      "frameMs": 13.899999976158142
+    },
+    {
+      "case": "QADR05",
+      "click": 0,
+      "feedbackMs": 2.5,
+      "frameMs": 36.5
+    },
+    {
+      "case": "QADR05",
+      "click": 1,
+      "feedbackMs": 1.100000023841858,
+      "frameMs": 2.100000023841858
+    },
+    {
+      "case": "QADR06",
+      "click": 0,
+      "feedbackMs": 2.299999952316284,
+      "frameMs": 38.39999997615814
+    },
+    {
+      "case": "QADR06",
+      "click": 1,
+      "feedbackMs": 1,
+      "frameMs": 13.700000047683716
+    },
+    {
+      "case": "QADR07",
+      "click": 0,
+      "feedbackMs": 2.299999952316284,
+      "frameMs": 14.700000047683716,
+      "confirmationMs": 534.1000000238419
+    },
+    {
+      "case": "QADR07",
+      "click": 1,
+      "feedbackMs": 0.8000000715255737,
+      "frameMs": 14.200000047683716,
+      "confirmationMs": 523.6000000238419
+    },
+    {
+      "case": "QADR08",
+      "click": 0,
+      "feedbackMs": 2.100000023841858,
+      "frameMs": 38.39999997615814
+    },
+    {
+      "case": "QADR08",
+      "click": 1,
+      "feedbackMs": 0.7999999523162842,
+      "frameMs": 14.299999952316284
+    },
+    {
+      "case": "QADR09",
+      "click": 0,
+      "feedbackMs": 2.700000047683716,
+      "frameMs": 42.299999952316284
+    },
+    {
+      "case": "QADR09",
+      "click": 1,
+      "feedbackMs": 0.9000000953674316,
+      "frameMs": 13.100000023841858
+    }
+  ],
+  "errors": [],
+  "server": {
+    "ok": false,
+    "storage": "supabase",
+    "rooms": 10,
+    "timingsMs": {
+      "queue": {
+        "count": 90,
+        "p50": 0.02,
+        "p95": 0.09,
+        "max": 5.4
+      },
+      "other.queue": {
+        "count": 75,
+        "p50": 0.01,
+        "p95": 0.15,
+        "max": 5.4
+      },
+      "mutation": {
+        "count": 79,
+        "p50": 5.31,
+        "p95": 8.09,
+        "max": 10.97
+      },
+      "other.mutation": {
+        "count": 64,
+        "p50": 5.04,
+        "p95": 6.88,
+        "max": 10.97
+      },
+      "delivery": {
+        "count": 78,
+        "p50": 0,
+        "p95": 0.49,
+        "max": 0.78
+      },
+      "other.delivery": {
+        "count": 64,
+        "p50": 0,
+        "p95": 0.3,
+        "max": 0.49
+      },
+      "total": {
+        "count": 90,
+        "p50": 7.55,
+        "p95": 538.4,
+        "max": 616.85
+      },
+      "other.total": {
+        "count": 75,
+        "p50": 6.76,
+        "p95": 13.31,
+        "max": 15.55
+      },
+      "commit": {
+        "count": 54,
+        "p50": 2.1,
+        "p95": 533.94,
+        "max": 608.48
+      },
+      "other.commit": {
+        "count": 40,
+        "p50": 1.81,
+        "p95": 3.79,
+        "max": 10.19
+      },
+      "draw.queue": {
+        "count": 15,
+        "p50": 0.02,
+        "p95": 0.03,
+        "max": 0.07
+      },
+      "draw.mutation": {
+        "count": 15,
+        "p50": 7.09,
+        "p95": 8.09,
+        "max": 8.2
+      },
+      "draw.commit": {
+        "count": 14,
+        "p50": 498.13,
+        "p95": 539.89,
+        "max": 608.48
+      },
+      "draw.delivery": {
+        "count": 14,
+        "p50": 0.4,
+        "p95": 0.62,
+        "max": 0.78
+      },
+      "draw.total": {
+        "count": 15,
+        "p50": 517.66,
+        "p95": 547.8,
+        "max": 616.85
+      }
+    }
+  },
+  "passed": true
+}

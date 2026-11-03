@@ -103,7 +103,9 @@ test('static SVG is served safely with right MIME and traversal returns 404',asy
   response=await fetch(base+file);assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/javascript/);
   assert.ok((await response.text()).length>100);
  }
- for(const file of ['/node_modules/three/package.json','/vendor/three.cjs','/tests/helpers/threejs-preview.js']) {
+ for(const file of ['/node_modules/three/package.json','/vendor/three.cjs','/tests/helpers/threejs-preview.js',
+  '/experiments/passenger-extreme/passenger-extreme.html','/experiments/passenger-extreme/wagon-models.mjs',
+  '/experiments/passenger-extreme.js','/scripts/preview-passenger-extreme.cjs']) {
   response=await fetch(base+file);assert.equal(response.status,404);
  }
 });

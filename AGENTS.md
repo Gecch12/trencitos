@@ -13,8 +13,11 @@ locales antes de asumir que algo está integrado o publicado.
   de Codex pueda estar registrado en la carpeta superior `trains`.
 - El servidor decide las reglas y filtra secretos mediante `engine.view`.
   La presentación no decide jugadas ni recibe información privada rival.
-- Three.js es la única vista del tablero principal. Para nuevos experimentos
-  usa una rama/worktree propio. Para servidores locales usa puerto y
+- Trabaja por defecto en `trains/trencitos`, rama `main`. Crea ramas/worktrees
+  separados solo cuando Ángel lo pida explícitamente. Antes de editar, revisa
+  cambios de otros chats; conserva su trabajo y evita ediciones simultáneas del
+  mismo archivo. La consolidación está en `docs/work/workspace-consolidation.md`.
+- Three.js es la única vista del tablero principal. Para servidores locales usa puerto y
   `STATE_FILE` propios con `STATE_BACKEND=file`; no copies configuración de
   producción. Un segundo servidor Supabase puede invalidar al primero.
 - Verifica el cambio con las pruebas pertinentes y `node scripts/check-docs.js`.

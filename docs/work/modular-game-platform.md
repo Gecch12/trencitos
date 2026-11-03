@@ -3,6 +3,10 @@
 ---
 # Plataforma modular y mapas de Trencitos
 
+El desarrollo en worktree descrito aquí es histórico. El código está integrado
+en `main`; la carpeta vigente y el retiro de copias se registran en
+[Consolidación](workspace-consolidation.md).
+
 ## Objetivo y alcance aprobado
 
 Evolucionar el juego existente mediante DDD gradual, separar comandos y consultas,

@@ -12,6 +12,7 @@ Evidencia, integración y límites en [la ficha del tablero](work/board-3d.md).
 | `backend/` | Transporte HTTP/WebSocket, composición, fachada `Engine`, bots, identidad y almacenamiento. |
 | `shared/` | Datos públicos de Europa, paleta/lobby, tiempos permitidos, idiomas y formato de replay usados en ambos entornos. |
 | `game/` | Dominio, aplicación, consultas, validación de mapas y adaptadores extraídos. Dominio/aplicación siguen sin depender del navegador o del transporte. |
+| `experiments/` | Estudios históricos aislados del runtime; [prototipo de 90 pasajeros](../experiments/passenger-extreme/README.md) con dependencias visuales congeladas. No se sirve desde el juego ni se incluye en Docker. |
 | `scripts/`, `tests/`, `supabase/`, `docs/` | Herramientas, verificaciones, migraciones SQL y contexto documental. |
 
 El [arranque raíz](../server.js) delega en [backend/server.js](../backend/server.js).

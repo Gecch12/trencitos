@@ -503,5 +503,12 @@
     "game/queries/replay-analysis.js",
     "tests/browser-transport.cjs",
     "tests/peer-output.test.js"
+  ],
+  "work/workspace-consolidation.md": [
+    "AGENTS.md",
+    "experiments/passenger-extreme/",
+    "scripts/preview-passenger-extreme.cjs",
+    "tests/passenger-extreme.test.js",
+    "tests/browser-passenger-extreme.cjs"
   ]
 }

@@ -55,7 +55,8 @@ Código `8146ffa` en `origin/main`; Render Live el 2026-11-03 a las 09:23:30 Lim
 El checkout local de `main` recibió ediciones concurrentes de otro trabajo durante
 la validación. Se preservaron intactas y se publicó directamente desde esta rama
 a `origin/main` con avance normal, sin stash, reset ni incluir código ajeno.
-El checkout local de main debe reconciliar su trabajo antes de actualizarse;
+Ese checkout local se reconcilió en `e9cb403`, conservando las mejoras de cartas;
+la [consolidación](workspace-consolidation.md) registra el resultado y
 [producción](../production.md) conserva la revisión efectivamente publicada.
 
 La comprobación remota confirmó 45 recursos idénticos y siete rutas privadas

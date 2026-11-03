@@ -5,6 +5,8 @@ genera la lista de estados y relaciones; este índice no mantiene otra copia.
 
 Iniciativa acordada:
 
+- [Consolidación de carpeta y main](workspace-consolidation.md): ubicación de
+  trabajo, preservación de cambios y retiro de worktrees históricos.
 - [Plataforma modular y mapas](modular-game-platform.md): fases de reorganización,
   contratos y posterior integración de Sudamérica. Inicio en la
   [base reproducible](modular-platform-baseline.md) y desarrollo del
