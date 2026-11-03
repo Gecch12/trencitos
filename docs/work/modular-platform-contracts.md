@@ -34,12 +34,12 @@ los archivos de presentación y sus cambios posteriores no se copian a esta rama
 
 | Fuente revisada | Hallazgo que condiciona la extracción |
 | --- | --- |
-| [engine.js](../../engine.js): `action`, `expire`, `pay`, `block`, `next` | Las acciones pueden resolver vencimientos antes de fallar; pago, reciclado y avance son parte del contrato observable. |
-| [engine.js](../../engine.js): `newGame`, `newRandomGame`, `finish`, `view`, `ensureTiming` | Azar parcialmente inyectado; compatibilidad mezclada con reloj/consulta. No se puede declarar puro todo el motor actual. |
-| [data.js](../../data.js), [practice-planner.js](../../practice-planner.js) | IDs de vías/billetes generados por posición; constantes de Europa y comparación numérica también en planificación. |
-| [server.js](../../server.js): `dispatch`, `persist`, `watchRecording`, acciones | Dos recorridos de persistencia: archivo síncrono y cola remota; revisión, deduplicación, observación y ACK deben seguir coordinados. |
-| [durable-queue.js](../../durable-queue.js), [room-store.js](../../room-store.js), [supabase-store.js](../../supabase-store.js) | Conservar rollback, prefijo confirmado de replay, reintento del mismo commit y exclusión del escritor. |
-| [match-archive.js](../../match-archive.js): `capture`, `safePublic`, `replay` | Vistas grabadas/versionadas; el filtro espectador final vive fuera de `engine.view`. Los eventos internos no reemplazan el formato de replay. |
+| [engine.js](../../backend/engine.js): `action`, `expire`, `pay`, `block`, `next` | Las acciones pueden resolver vencimientos antes de fallar; pago, reciclado y avance son parte del contrato observable. |
+| [engine.js](../../backend/engine.js): `newGame`, `newRandomGame`, `finish`, `view`, `ensureTiming` | Azar parcialmente inyectado; compatibilidad mezclada con reloj/consulta. No se puede declarar puro todo el motor actual. |
+| [data.js](../../shared/data.js), [practice-planner.js](../../backend/practice-planner.js) | IDs de vías/billetes generados por posición; constantes de Europa y comparación numérica también en planificación. |
+| [server.js](../../backend/server.js): `dispatch`, `persist`, `watchRecording`, acciones | Dos recorridos de persistencia: archivo síncrono y cola remota; revisión, deduplicación, observación y ACK deben seguir coordinados. |
+| [durable-queue.js](../../backend/durable-queue.js), [room-store.js](../../backend/room-store.js), [supabase-store.js](../../backend/supabase-store.js) | Conservar rollback, prefijo confirmado de replay, reintento del mismo commit y exclusión del escritor. |
+| [match-archive.js](../../backend/match-archive.js): `capture`, `safePublic`, `replay` | Vistas grabadas/versionadas; el filtro espectador final vive fuera de `engine.view`. Los eventos internos no reemplazan el formato de replay. |
 
 ## Evidencia
 

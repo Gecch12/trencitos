@@ -1,7 +1,7 @@
 // Isolated real API/WebSocket/browser verification for history, controls and fantasy wagons.
 const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
-const {createHash}=require('node:crypto'),{chromium}=require('playwright'),E=require('../engine');
-const {createMatchArchive}=require('../match-archive'),{saveRooms,loadRooms}=require('../room-store');
+const {createHash}=require('node:crypto'),{chromium}=require('playwright'),E=require('../backend/engine');
+const {createMatchArchive}=require('../backend/match-archive'),{saveRooms,loadRooms}=require('../backend/room-store');
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'trencitos-refinements-')),out=path.resolve('.qa/refinements');
 Object.assign(process.env,{STATE_BACKEND:'file',STATE_FILE:path.join(temp,'state.json'),AUTH_ENABLED:'false'});
 const cookie='c'.repeat(64),identity=createHash('sha256').update(cookie).digest('hex'),archive=createMatchArchive();
@@ -14,7 +14,7 @@ for(let i=0;i<24;i++) {
   archive.capture(room,i%4===0?'Abandono':null);archive.commit(archive.prepare());
 }
 saveRooms(process.env.STATE_FILE,new Map(),archive.state);
-const app=require('../server'),report={date:new Date().toISOString(),checks:[],layouts:[],errors:[]};
+const app=require('../backend/server'),report={date:new Date().toISOString(),checks:[],layouts:[],errors:[]};
 fs.mkdirSync(out,{recursive:true});let browser,page;
 function liveRoom() {
   const game=E.newGame(['Angel','Rival'],0);

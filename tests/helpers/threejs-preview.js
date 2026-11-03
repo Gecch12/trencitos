@@ -6,10 +6,10 @@ const root = path.resolve(__dirname, '../..');
 process.env.STATE_BACKEND = 'file';
 fs.mkdirSync(path.join(root, '.qa'), { recursive: true });
 process.env.STATE_FILE = path.join(root, '.qa', `rooms-${process.pid}.json`);
-const E = require('../../engine');
+const E = require('../../backend/engine');
 const { ownershipRoom } = require('./ownership-preview');
 const { tunnelRoom } = require('./tunnel-preview');
-const { server, rooms, ready } = require('../../server');
+const { server, rooms, ready } = require('../../backend/server');
 const token = 'a'.repeat(48);
 async function start(port = 3119) {
   await ready;

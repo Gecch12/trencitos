@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test"), assert = require("node:assert/strict");
 const fs = require("node:fs"), path = require("node:path"), vm = require("node:vm");
-const Engine = require("../engine"), Directory = require("../room-directory"), Timing = require("../game-timing");
+const Engine = require("../backend/engine"), Directory = require("../backend/room-directory"), Timing = require("../shared/game-timing");
 const { createAuthorizedViews } = require("../game/queries/authorized-views");
 
 const ports = { engine: Engine, now: () => 1234, isPublic: Directory.isPublic, capacity: Directory.capacity, normalizeTiming: Timing.normalize };

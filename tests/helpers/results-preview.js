@@ -1,6 +1,6 @@
 "use strict";
 // Deterministic score audit for tests/local Chrome QA. Not served in production.
-const E = require("../../engine");
+const E = require("../../backend/engine");
 const qaToken = "a".repeat(48); // Disposable fixture identity.
 function resultsRoom(code = "QASCR1") {
   const game = E.newGame(["Angel", "Azul", "Verde", "Sin rutas"]);
@@ -36,7 +36,7 @@ if (require.main === module) {
   const fs = require("node:fs"), os = require("node:os"), path = require("node:path");
   process.env.STATE_BACKEND = "file";
   process.env.STATE_FILE = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "trencitos-results-")), "rooms.json");
-  const { server, rooms, ready } = require("../../server");
+  const { server, rooms, ready } = require("../../backend/server");
   ready.then(() => {
     const r = resultsRoom(); rooms.set(r.code, r);
     const port = Number(process.env.PORT || 3114);

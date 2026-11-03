@@ -70,8 +70,8 @@ El puente público `archive.list`/`archive.replay` y las rutas HTTP se conservan
 
 ## Grabación y almacenamiento
 
-[match-archive.js](../match-archive.js) recibe observaciones del motor y conserva
-estado completo, vistas autorizadas y miembros públicos. [replay-state.js](../replay-state.js)
+[match-archive.js](../backend/match-archive.js) recibe observaciones del motor y conserva
+estado completo, vistas autorizadas y miembros públicos. [replay-state.js](../shared/replay-state.js)
 guarda diferencias y un estado completo cada 32 pasos (y al recuperar un proceso).
 Cada paso incluye fecha, acción, eventos y una cadena SHA-256. La cadena detecta
 alteraciones accidentales; no equivale a una firma externa contra un administrador
@@ -142,7 +142,7 @@ vistas. El propietario conserva sus colores tras reconectar. Los registros
 anteriores sin metadatos siguen mostrando su texto, sin inventar cartas.
 Los avatares del historial comparten las proporciones del panel y resultados;
 la repetición no reproduce avisos de cuenta atrás de los plazos archivados.
-Las variaciones decorativas de Pasajeros se reconstruyen con el código de sala,
+Las variaciones decorativas de Pasajeros y Midsommar Express se reconstruyen con el código de sala,
 puesto, ruta y celda. Cada ruta recorre tandas barajadas de seis sin repeticiones
 internas ni entre el final e inicio de tandas; no se guardan variantes ni
 personajes en los pasos. El

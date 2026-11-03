@@ -1,8 +1,8 @@
 "use strict";
 const test=require('node:test'),assert=require('node:assert/strict');
-const Engine=require('../engine'),Replay=require('../replay-state');
-const {createMatchArchive,frameHash}=require('../match-archive');
-const {guestId,ensureGuest}=require('../guest-identity');
+const Engine=require('../backend/engine'),Replay=require('../shared/replay-state');
+const {createMatchArchive,frameHash}=require('../backend/match-archive');
+const {guestId,ensureGuest}=require('../backend/guest-identity');
 function fixture(visibility='private'){
  const archive=createMatchArchive(),room={code:'12345678',visibility,archiveFull:true,members:[{name:'Rooms',color:'#d45748',guestId:'a'.repeat(64)},{name:'B',color:'#4c8dcc',guestId:'b'.repeat(64)}],game:Engine.newGame(['Rooms','B'])};
  const save=()=>{archive.capture(room);archive.commit(archive.prepare());};

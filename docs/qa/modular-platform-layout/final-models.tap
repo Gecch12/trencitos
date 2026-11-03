@@ -1,0 +1,82 @@
+TAP version 13
+# Subtest: Midsommar replaces the white family with six comfortable, faceless compositions
+ok 1 - Midsommar replaces the white family with six comfortable, faceless compositions
+  ---
+  duration_ms: 68.474666
+  type: 'test'
+  ...
+# Subtest: routes exhaust six different variants before drawing another shuffled bag
+ok 2 - routes exhaust six different variants before drawing another shuffled bag
+  ---
+  duration_ms: 0.59225
+  type: 'test'
+  ...
+# Subtest: folk clothing, hats and uncovered heads retain their silhouettes in both LODs
+ok 3 - folk clothing, hats and uncovered heads retain their silhouettes in both LODs
+  ---
+  duration_ms: 16.69575
+  type: 'test'
+  ...
+# Subtest: benches support relaxed travellers; decoration preserves the white body and open windows
+ok 4 - benches support relaxed travellers; decoration preserves the white body and open windows
+  ---
+  duration_ms: 11.07725
+  type: 'test'
+  ...
+# Subtest: six festival stories retain their recognisable props in board detail and hands actually meet
+ok 5 - six festival stories retain their recognisable props in board detail and hands actually meet
+  ---
+  duration_ms: 10.895125
+  type: 'test'
+  ...
+# Subtest: every player color has a wagon, including legacy yellow, without changing paint ownership
+ok 6 - every player color has a wagon, including legacy yellow, without changing paint ownership
+  ---
+  duration_ms: 7.632834
+  type: 'test'
+  ...
+# Subtest: wagon primitives stay within their shared footprint and height budget
+ok 7 - wagon primitives stay within their shared footprint and height budget
+  ---
+  duration_ms: 69.427917
+  type: 'test'
+  ...
+# Subtest: all six carriages have distinct decoration without covering occupied windows
+ok 8 - all six carriages have distinct decoration without covering occupied windows
+  ---
+  duration_ms: 0.954125
+  type: 'test'
+  ...
+# Subtest: passengers lean out from inside the window and have bent supporting or waving arms
+ok 9 - passengers lean out from inside the window and have bent supporting or waving arms
+  ---
+  duration_ms: 0.51775
+  type: 'test'
+  ...
+# Subtest: retired cargo models disappear while old paints keep their ownership
+ok 10 - retired cargo models disappear while old paints keep their ownership
+  ---
+  duration_ms: 0.165541
+  type: 'test'
+  ...
+# Subtest: every route exhausts six distinct variants before reshuffling, including long future routes
+ok 11 - every route exhausts six distinct variants before reshuffling, including long future routes
+  ---
+  duration_ms: 24.294709
+  type: 'test'
+  ...
+# Subtest: passenger compositions have round faceless heads and independent varied clothes and hair
+ok 12 - passenger compositions have round faceless heads and independent varied clothes and hair
+  ---
+  duration_ms: 5.526125
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 206.749542

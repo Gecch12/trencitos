@@ -1,11 +1,11 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { PLAYER_PALETTE } = require('../data');
-const UI = require('../game-ui');
+const { PLAYER_PALETTE } = require('../shared/data');
+const UI = require('../frontend/game-ui');
 
 test('every player color has a wagon, including legacy yellow, without changing paint ownership', async () => {
-  const { WAGON_STYLES, wagonStyle } = await import('../wagon-models.mjs');
+  const { WAGON_STYLES, wagonStyle } = await import('../frontend/wagon-models.mjs');
   assert.equal(WAGON_STYLES.length, PLAYER_PALETTE.length);
   assert.equal(new Set(WAGON_STYLES.map(s => s.model)).size, PLAYER_PALETTE.length);
   for (const { color, finish = 'paint' } of PLAYER_PALETTE) {
@@ -22,12 +22,12 @@ test('every player color has a wagon, including legacy yellow, without changing 
 });
 
 test('wagon primitives stay within their shared footprint and height budget', async () => {
-  const { WAGON_STYLES, wagonParts } = await import('../wagon-models.mjs');
+  const { WAGON_STYLES, wagonParts } = await import('../frontend/wagon-models.mjs');
   const { Vector3, Quaternion } = await import('three');
   const shapes = new Set(['box', 'round', 'wheel', 'tank', 'disc', 'rock', 'mound', 'coil', 'coil-rings', 'coil-band', 'cradle', 'hopper', 'hopper-rib', 'quarry-block', 'stone-vein', 'envelope-flap', 'envelope-top', 'roof', 'car-body', 'canopy', 'boom', 'hook', 'barrel', 'barrel-staves', 'tire', 'silo-cone', 'pot', 'flower', 'boat-hull', 'boat-deck', 'windshield', 'barrel-hoop', 'crate']);
   for (const shape of ['person-head','person-torso','person-limb','window-frame','star',...['stripes','collar','vest','lapels'].flatMap(style=>['shirt-'+style,'shirt-'+style+'-back']),...['short','bob','curly','bun'].flatMap(style=>['hair-'+style,'hair-'+style+'-back'])]) shapes.add(shape);
   for (const shape of ['window-frames','end-panels','door-frames','handles','steps','belt','belt-double','roof-seams','vent','curtain-left','curtain-right','curtain-pair','curtain-blind']) shapes.add('coach-'+shape);
-  const { PASSENGER_VARIANTS, PASSENGER_CAST_COUNT } = await import('../wagon-models.mjs');
+  const { PASSENGER_VARIANTS, PASSENGER_CAST_COUNT } = await import('../frontend/wagon-models.mjs');
   const appearances = WAGON_STYLES.flatMap(({model}) => model === 'passenger'
     ? PASSENGER_VARIANTS.flatMap(variant=>Array.from({length:PASSENGER_CAST_COUNT},(_,cast)=>({model,variant,cast}))) : [{model}]);
   for (const { model, variant, cast } of appearances) {
@@ -51,7 +51,7 @@ test('wagon primitives stay within their shared footprint and height budget', as
 });
 
 test('all six carriages have distinct decoration without covering occupied windows', async () => {
-  const { wagonParts, PASSENGER_VARIANTS } = await import('../wagon-models.mjs');
+  const { wagonParts, PASSENGER_VARIANTS } = await import('../frontend/wagon-models.mjs');
   const decorations=new Set(),occupied={classic:[],solo:[0],duo:[-3.2,3.2],trio:[-6.4,0,6.4],lean:[-3.2,3.2],wave:[-3.2,3.2]};
   for(const variant of PASSENGER_VARIANTS) {
     const parts=wagonParts('passenger',{variant,cast:0});
@@ -69,7 +69,7 @@ test('all six carriages have distinct decoration without covering occupied windo
 });
 
 test('passengers lean out from inside the window and have bent supporting or waving arms', async () => {
-  const { wagonParts } = await import('../wagon-models.mjs');
+  const { wagonParts } = await import('../frontend/wagon-models.mjs');
   const { Vector3, Quaternion } = await import('three');
   for(const variant of ['solo','duo','trio','lean','wave']) {
     const parts=wagonParts('passenger',{variant,cast:22}),torsos=parts.filter(p=>p.shape==='person-torso');
@@ -94,8 +94,8 @@ test('passengers lean out from inside the window and have bent supporting or wav
 });
 
 test('retired cargo models disappear while old paints keep their ownership', async () => {
-  const { WAGON_STYLES, wagonStyle } = await import('../wagon-models.mjs');
-  assert.equal(WAGON_STYLES.length,20);
+  const { WAGON_STYLES, wagonStyle } = await import('../frontend/wagon-models.mjs');
+  assert.equal(WAGON_STYLES.length,21);
   assert.ok(WAGON_STYLES.every(s=>!['mushrooms','crystals','candy'].includes(s.model)));
   assert.equal(wagonStyle('#71bba0',{model:'mushrooms'}).model,'dwelling');
   assert.equal(wagonStyle('#6269c7',{model:'crystals'}).model,'circus');
@@ -103,7 +103,7 @@ test('retired cargo models disappear while old paints keep their ownership', asy
 });
 
 test('every route exhausts six distinct variants before reshuffling, including long future routes', async () => {
-  const { wagonRouteAppearances, PASSENGER_VARIANTS } = await import('../wagon-models.mjs');
+  const { wagonRouteAppearances, PASSENGER_VARIANTS } = await import('../frontend/wagon-models.mjs');
   for (let seed=0;seed<100;seed++) {
     const key=`room-${seed}:2:101`,whole=wagonRouteAppearances('passenger',key,120);
     for (const length of [0,1,4,6,8,12,13,120]) {
@@ -121,7 +121,7 @@ test('every route exhausts six distinct variants before reshuffling, including l
 });
 
 test('passenger compositions have round faceless heads and independent varied clothes and hair', async () => {
-  const { wagonParts, passengerPerson, PASSENGER_CAST_COUNT } = await import('../wagon-models.mjs');
+  const { wagonParts, passengerPerson, PASSENGER_CAST_COUNT } = await import('../frontend/wagon-models.mjs');
   const skin=new Set(),hair=new Set(),hairStyles=new Set(),outfits=new Set(),clothes=new Set(),perSkin=new Map();
   for (const [variant,count] of Object.entries({classic:0,solo:2,duo:4,trio:6,lean:4,wave:4})) {
     for(let cast=0;cast<PASSENGER_CAST_COUNT;cast++) {

@@ -1,9 +1,9 @@
 // Public card counts, shared avatars and urgent clock audio in an isolated browser.
 const assert = require('node:assert/strict'), fs = require('node:fs'), os = require('node:os'), path = require('node:path');
-const { chromium } = require('playwright'), E = require('../engine');
+const { chromium } = require('playwright'), E = require('../backend/engine');
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'trencitos-feedback-'));
 Object.assign(process.env, { STATE_BACKEND:'file', STATE_FILE:path.join(temp,'state.json'), AUTH_ENABLED:'false' });
-const app = require('../server'), out = path.resolve('.qa/player-feedback'); fs.mkdirSync(out,{recursive:true});
+const app = require('../backend/server'), out = path.resolve('.qa/player-feedback'); fs.mkdirSync(out,{recursive:true});
 const report = { layouts:[], checks:[], errors:[] }; let browser, page;
 (async()=>{
   await app.ready; await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));

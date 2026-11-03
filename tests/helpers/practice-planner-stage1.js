@@ -1,6 +1,6 @@
 // Frozen first-stage policy (2026-10-31); benchmark only.
 "use strict";
-const E = require("../../engine");
+const E = require("../../backend/engine");
 const suits = [...E.COLORS, "wild"];
 const countCards = hand => Object.fromEntries(suits.map(c => [c, hand.filter(x => x === c).length]));
 const points = r => E.SCORE[r.n] || r.n;

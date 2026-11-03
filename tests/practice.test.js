@@ -1,8 +1,8 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const Engine = require("../engine");
-const { createPracticeController } = require("../practice");
+const Engine = require("../backend/engine");
+const { createPracticeController } = require("../backend/practice");
 
 function setup(random = () => 0, options = {}) {
   let time = 0, id = 0;

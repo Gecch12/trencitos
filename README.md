@@ -80,9 +80,11 @@ lo necesita y un pie reservado para **Iniciar partida**. Los valores predetermin
 no se pueden reducir plazas ocupadas. El primer jugador sigue siendo al azar.
 Los ajustes se guardan y quedan bloqueados al comenzar; la revancha los conserva.
 
-En la sala de espera cada participante elige uno de veinte colores libres: rojo, azul, verde, ámbar, morado, marrón, amarillo, negro, gris, magenta, turquesa, azul noche, borgoña, verde oliva, marfil, coral, lavanda, azul hielo, jade e índigo. Jade lleva un vagón vivienda e índigo uno de circo. Rosa se conserva únicamente en partidas anteriores y se representa con Pasajeros; ya no se ofrece en el selector. Amarillo lleva deportivos y ámbar lleva grano; ambos usan pintura normal, sin presentación dorada. El servidor reserva el color incluso durante la ventana de reconexión, rechaza elecciones simultáneas duplicadas y lo guarda tanto en disco como en Supabase. Cambiar de puesto por la salida de otro participante no cambia tu color. Tras empezar, la elección queda bloqueada y se usa en trenes, estaciones, avatar e historial. El navegador recuerda nombre y color preferido (si está libre); al recargar una sala conocida recupera el puesto con su credencial local.
+En la sala de espera cada participante elige uno de veintiún colores libres: rojo, azul, verde, ámbar, morado, marrón, amarillo, negro, gris, magenta, turquesa, azul noche, borgoña, verde oliva, marfil, coral, lavanda, azul hielo, jade, índigo y blanco. Blanco lleva Midsommar Express; jade lleva un vagón vivienda e índigo uno de circo. Rosa se conserva únicamente en partidas anteriores y se representa con Pasajeros; ya no se ofrece en el selector. Amarillo lleva deportivos y ámbar lleva grano; ambos usan pintura normal, sin presentación dorada. El servidor reserva el color incluso durante la ventana de reconexión, rechaza elecciones simultáneas duplicadas y lo guarda tanto en disco como en Supabase. Cambiar de puesto por la salida de otro participante no cambia tu color. Tras empezar, la elección queda bloqueada y se usa en trenes, estaciones, avatar e historial. El navegador recuerda nombre y color preferido (si está libre); al recargar una sala conocida recupera el puesto con su credencial local.
 
 Los vagones de Pasajeros combinan seis composiciones: clásico sin personas, una persona asomada, dos personas, tres personas, alguien apoyado de medio cuerpo y alguien saludando. Los torsos se inclinan desde dentro de la ventana, con hombros redondeados y codos doblados al apoyarse o saludar. Las cabezas son esferas sin rasgos faciales; piel, color y forma del pelo y prendas se combinan por separado. Cada ruta baraja las seis variantes y las usa sin repetir hasta agotarlas; luego empieza otra tanda, evitando repetir justo entre tandas. Una ruta de ocho utiliza las seis y dos de una tanda nueva. La selección permanece estable al resaltar, reconectar y ver el replay, sin añadir datos decorativos al historial. Circo y Vivienda sustituyen a Hongos, Cristales y Confitería.
+
+Midsommar Express es la familia blanca: seis escenas de 22 viajeros cómodamente distribuidos, con camisas blancas, chalecos rojos o azules, faldas oscuras y pantalones mostaza. Cada terraza tiene su actividad: merienda con tarta, músicos con acordeón y violín, poste vegetal con dos coronas colgantes, una pareja de baile, taller de coronas florales o bienvenida bajo un arco de flores. Los vagones blancos llevan bancos, guirnaldas y cintas azules y amarillas. Conserva las tandas de seis diseños por ruta, sin guardar detalles de personajes en el historial. Se elige con el color **Blanco** en la sala y está disponible durante la beta.
 
 Cada composición de Pasajeros tiene además su propia decoración: cortinas crema,
 verdes, vino, mostaza, turquesa o azules; ventanas cerradas, entreabiertas o con
@@ -124,7 +126,7 @@ de las cartas pagadas. La mano, cartas, paneles y mapas de detalle siguen en 2D.
 El tablero principal solo usa 3D: si WebGL falla, ofrece **Reintentar** conservando
 la sala. Acercar permite ver los detalles; las etiquetas permanecen horizontales.
 Antes de comenzar, el selector de color en práctica y sala de espera muestra los
-diseños disponibles de esa familia: las seis composiciones de Pasajeros o un solo
+diseños disponibles de esa familia: las seis composiciones de Pasajeros y Midsommar Express, o un solo
 diseño en las demás. Son ejemplos con los mismos modelos del tablero; las
 variaciones se combinan automáticamente al construir rutas, sin elegir una fija.
 
@@ -249,18 +251,14 @@ Las cartas de tren gastadas o descartadas, incluidas locomotoras, vuelven al maz
 
 ### Componentes
 
-- `data.js`: 47 ciudades, 101 rutas, 40 billetes ordinarios y 6 largos.
-- `map-layout.js`: posiciones visuales, costas propias, curvas, casillas uniformes y colocación de etiquetas; compartido por el tablero y la miniatura de billetes, sin alterar las reglas.
-- `engine.js`: reglas deterministas y puntuación, ejecutadas exclusivamente por el servidor.
-- `game-clock.js`: una alarma por sala para su próximo plazo de turno u oferta privada; sus handles no se guardan en el estado persistido.
-- `multiplayer.js`: abandono, cambio de anfitrión, reserva de puestos y control de bots de reemplazo.
-- `room-store.js`: manifiesto local atómico, pasos de replay anexados por partida, copia de seguridad y credenciales de recuperación guardadas como hashes.
-- `bots.js`, `practice.js`: decisiones automáticas y ciclo de vida de las salas temporales de pruebas.
-- `server.js`: servidor HTTP + WebSocket sin dependencias; salas privadas, validación de turnos, tokens de reconexión, difusión de vistas específicas por jugador.
-- `index.html`, `style.css`, `game.css`, `app.js`: interfaz de escritorio con mapa SVG original; `game.css` concentra la composición de la mesa y sus paneles flotantes.
-- `game-ui.js`: cálculo de cámara y opciones de pago de la interfaz, probado contra el motor. El servidor sigue siendo la autoridad para validar y ejecutar acciones.
-- `assets/cards/*.svg`, `assets/ticket.svg`, `assets/favicon.svg`: ilustraciones vectoriales originales de las cartas, billetes y marca Trencitos. `python3 make_assets.py` permite regenerarlas; `python3 make_assets.py --check` comprueba que las cartas coincidan con el generador sin sobrescribirlas.
-- `tests/`: pruebas del reglamento y de red, además de simulaciones de partidas completas.
+El repositorio organiza la interfaz en `frontend/`, el servidor en `backend/`,
+los módulos públicos compartidos en `shared/` y las reglas/casos de uso en `game/`.
+La [arquitectura](docs/architecture.md) indica responsabilidades y puntos de entrada.
+Sigue habiendo una instalación npm, un proceso Node y el arranque `npm start`.
+
+Las ilustraciones originales están en `frontend/assets/`. `python3 scripts/make_assets.py`
+las regenera; `python3 scripts/make_assets.py --check` compara sin sobrescribirlas.
+Las URLs del navegador, como `/app.js` y `/assets/cards/red.svg`, se conservan.
 
 Las cartas del mazo y los billetes de los contrincantes **no** se envían a los navegadores. En local, las salas multijugador se guardan en un JSON configurable; por defecto `room-state.json`, junto a `room-state.json.archive/` para los pasos de replay; ambos quedan fuera del paquete de distribución. En Render, `STATE_BACKEND=supabase` guarda un checkpoint remoto privado antes de publicar cada cambio. Una sala multijugador inactiva caduca en 24 horas. Las salas de pruebas se mantienen solo en memoria.
 
@@ -285,7 +283,7 @@ Ejecuta `npm test` para revisar las reglas y la red. Ver `QC.md`.
 
 Los pagos del modal de túnel se contrastan con el motor y con WebSockets reales (color, pago mixto, solo locomotoras y desistir). Para reproducirlos visualmente de forma aislada, ejecuta `PORT=3002 node tests/helpers/tunnel-preview.js`. Escucha solo en este equipo y crea las salas temporales `QAPAY0`, `QAPAY1`, `QADECL` y `QAWILD`; en el almacenamiento local de ese origen, asigna `rr-room-CODIGO` a `preview-human` antes de abrir `/?room=CODIGO`. No modifica las salas del servidor habitual ni se sirve como recurso del juego.
 
-Para verificar colores y menús de propiedad, `PORT=3001 node tests/helpers/ownership-preview.js` prepara `QAMARK` con cinco rutas construidas mediante el motor. Usa el mismo token local `preview-human` en `rr-room-QAMARK`. Incluye un carril paralelo libre y cartas suficientes para construirlo; los tests de red verifican su transición a ruta propia. Los tests de recursos comprueban que los SVG personalizados coincidan con sus fuentes en `make_assets.py`.
+Para verificar colores y menús de propiedad, `PORT=3001 node tests/helpers/ownership-preview.js` prepara `QAMARK` con cinco rutas construidas mediante el motor. Usa el mismo token local `preview-human` en `rr-room-QAMARK`. Incluye un carril paralelo libre y cartas suficientes para construirlo; los tests de red verifican su transición a ruta propia. Los tests de recursos comprueban que los SVG personalizados coincidan con sus fuentes en `scripts/make_assets.py`.
 
 Las pruebas de cartografía verifican dimensiones y orientación de las casillas, ausencia de superposiciones, separación respecto a ciudades ajenas, límites del mapa y colocación de etiquetas en tamaños de escritorio. El servidor también verifica la entrega del nuevo recurso de cartografía: al actualizar desde una versión anterior, reinicia `npm start` y recarga el navegador.
 

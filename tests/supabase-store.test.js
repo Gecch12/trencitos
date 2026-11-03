@@ -1,9 +1,9 @@
 "use strict";
 const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path');
-const { createSupabaseStore } = require('../supabase-store');
+const { createSupabaseStore } = require('../backend/supabase-store');
 const { fakeSupabase } = require('./helpers/fake-supabase');
-const { hashToken } = require('../room-store');
+const { hashToken } = require('../backend/room-store');
 const options = { url: 'https://fixture.supabase.co', secret: 'sb_secret_test_only' };
 const rooms = () => new Map([['ABC123', { code: 'ABC123', updated: Date.now(), members: [{ name: 'A', token: 'private-token' }] }],
   ['PRACT', { code: 'PRACT', practice: true, members: [] }]]);

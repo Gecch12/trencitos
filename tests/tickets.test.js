@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const Engine = require("../engine");
+const Engine = require("../backend/engine");
 
 function playingGame() {
   const game = Engine.newGame(["Humano", "Bot 1", "Bot 2", "Bot 3"]);

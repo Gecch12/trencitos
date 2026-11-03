@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
-const Engine=require('../engine'),{createRoomBots}=require('../room-bots');
-const {serializableRoom}=require('../room-store');
+const Engine=require('../backend/engine'),{createRoomBots}=require('../backend/room-bots');
+const {serializableRoom}=require('../backend/room-store');
 test('permanent bots choose, play, pause without humans and resume from a persisted room',()=>{
  const room={code:'835001',visibility:'public',maxPlayers:2,members:[{name:'Human',ws:{closed:false}},{name:'Bot',bot:true}],game:Engine.newGame(['Human','Bot']),revision:0};
  const rooms=new Map([[room.code,room]]),timers=new Set();let blocked=false,commits=0;

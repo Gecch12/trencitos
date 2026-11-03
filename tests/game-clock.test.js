@@ -1,8 +1,8 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const E = require("../engine");
-const { createGameClock } = require("../game-clock");
+const E = require("../backend/engine");
+const { createGameClock } = require("../backend/game-clock");
 const zero = () => 0;
 function act(g, seat, message, now = 0) { E.action(g, seat, message, { now, random: zero }); }
 function playing(count = 2) {

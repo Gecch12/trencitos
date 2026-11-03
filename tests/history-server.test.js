@@ -1,9 +1,9 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
-const {once}=require('node:events'),{connect}=require('./helpers/ws-client'),Engine=require('../engine');
+const {once}=require('node:events'),{connect}=require('./helpers/ws-client'),Engine=require('../backend/engine');
 const directory=fs.mkdtempSync(path.join(os.tmpdir(),'history-server-'));
 Object.assign(process.env,{STATE_BACKEND:'file',STATE_FILE:path.join(directory,'state.json'),AUTH_ENABLED:'false'});
 let app,port;const peers=[];
-async function boot(){delete require.cache[require.resolve('../server')];app=require('../server');await app.ready;app.server.listen(0,'127.0.0.1');await once(app.server,'listening');port=app.server.address().port;}
+async function boot(){delete require.cache[require.resolve('../backend/server')];app=require('../backend/server');await app.ready;app.server.listen(0,'127.0.0.1');await once(app.server,'listening');port=app.server.address().port;}
 const http=(route,cookie='')=>fetch(`http://127.0.0.1:${port}${route}`,{headers:{cookie}});
 async function client(cookie){const c=await connect(port,{cookie});peers.push(c);return c;}
 test.before(boot);test.after(async()=>{for(const c of peers)c.close();await app.shutdown();fs.rmSync(directory,{recursive:true,force:true});});
@@ -30,7 +30,7 @@ test('guest history and replay survive reload/restart, duplicate actions stay si
  const replayAgain=await (await http('/api/history/'+matchId,cookie)).json();assert.ok(replayAgain.frames.length>=replay.frames.length);
 });
 test('public live state and closed replay share privacy rules while participants retain full replay access',async()=>{
- const Replay=require('../replay-state');
+ const Replay=require('../shared/replay-state');
  const response=await http('/rooms'),cookie=response.headers.getSetCookie()[0].split(';')[0];
  const a=await client(cookie),b=await client(''),watcher=await client('');
  a.send({type:'create',name:'Public A',visibility:'public'});const lobby=await a.next('lobby');

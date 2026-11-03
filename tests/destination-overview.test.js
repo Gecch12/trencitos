@@ -1,11 +1,11 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const UI = require("../game-ui");
-const E = require("../engine");
+const UI = require("../frontend/game-ui");
+const E = require("../backend/engine");
 const fs = require("node:fs");
 const vm = require("node:vm");
-const source = fs.readFileSync(require.resolve("../app.js"), "utf8");
+const source = fs.readFileSync(require.resolve("../frontend/app.js"), "utf8");
 
 test("ticket numbers survive completion, display sorting and appending newly kept tickets", () => {
   const game = { tickets: [8, 3, 42].map(id => ({ id })), ticketProgress: [{ id: 8, completed: true }] };
@@ -46,7 +46,7 @@ test("overview deduplicates actual completed routes/stations and excludes offers
 });
 
 test("endpoint badges wrap shared cities, retain double-digit numbers and differentiate completed tickets", () => {
-  const context = vm.createContext({ I18n: require("../i18n"), ticketColor: i => `color-${i}` });
+  const context = vm.createContext({ I18n: require("../shared/i18n"), ticketColor: i => `color-${i}` });
   vm.runInContext(source.slice(source.indexOf("function destinationBadgeSize("), source.indexOf("function updateDestinationSpotlight(")), context);
   const nodes = [], el = (tag, attrs, parent) => { const node = { tag, attrs, parent }; nodes.push(node); return node; };
   const entries = Array.from({ length: 6 }, (_, i) => ({ number: i + 9, completed: i === 0 }));
@@ -79,7 +79,7 @@ test("destination rows use CSP-safe styles without rerendering unchanged rows af
   const list = { scrollTop: 40, querySelectorAll: () => [row] };
   Object.defineProperty(list, "innerHTML", { get: () => `${html}<!-- DOM-only style changes -->`, set: value => { writes++; html = value; } });
   const game = { tickets: [{ id: 15, a: "MAD", b: "DIE", p: 8 }], ticketProgress: [{ id: 15, completed: false }] };
-  const context = vm.createContext({ I18n: require("../i18n"), game, GameUI: UI, CITIES: E.CITIES, escapeHTML: s => s, ticketColor: i => `color-${i}`,
+  const context = vm.createContext({ I18n: require("../shared/i18n"), game, GameUI: UI, CITIES: E.CITIES, escapeHTML: s => s, ticketColor: i => `color-${i}`,
     $: () => list, document: { activeElement: { closest: () => null } } });
   vm.runInContext(source.slice(source.indexOf("function renderDestinations("), source.indexOf("function playerMetric(")), context);
   context.renderDestinations(); context.renderDestinations();
@@ -94,7 +94,7 @@ test("destination rows use CSP-safe styles without rerendering unchanged rows af
 });
 
 test("practice controls remain accessible from history, never from the turn banner", () => {
-  const html = fs.readFileSync(require.resolve("../index.html"), "utf8");
+  const html = fs.readFileSync(require.resolve("../frontend/index.html"), "utf8");
   const turn = html.slice(html.indexOf('<section id="turnBanner"'), html.indexOf('<div id="toast"'));
   const history = html.slice(html.indexOf('<section class="history-panel"'), html.indexOf('<section class="sidepanel"'));
   assert.doesNotMatch(turn, /compactPractice|Prueba/);

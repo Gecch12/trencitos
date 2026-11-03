@@ -337,3 +337,13 @@ Las pruebas de fase 1 caracterizaron el motor de esa base. La implementación y
 evidencia de las políticas/consultas posteriores viven en la [fase de dominio](../work/modular-platform-domain.md).
 Los contratos pendientes de aplicación y mapas se verificarán contra código real
 en sus fases, sin tests de frases de documentos ni mocks que solo reproduzcan el diseño.
+
+## Organización física en fase 3
+
+Se mantienen un repositorio, una instalación npm y un despliegue. `frontend/`
+contiene presentación; `backend/`, transporte/composición y adaptadores legados;
+`shared/`, módulos públicos realmente usados por ambos. `game/` conserva los
+límites de dominio, aplicación y consultas. El arranque raíz y las URLs se
+preservan mediante delegación y una lista explícita de assets. Separar servicios
+o paquetes queda condicionado a una necesidad operativa; no es requisito de DDD
+ni de CQRS. La compatibilidad de mapas/IDs sigue siendo trabajo de fase 4.

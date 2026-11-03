@@ -1,7 +1,7 @@
 // Frozen first-stage policy (2026-10-31); benchmark only.
 "use strict";
 const { randomInt } = require("node:crypto");
-const Engine = require("../../engine");
+const Engine = require("../../backend/engine");
 const { choosePracticeAction } = require("./practice-bot-stage1");
 
 function pick(items, random = randomInt) {

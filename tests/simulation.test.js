@@ -1,4 +1,4 @@
-const test=require('node:test'),assert=require('node:assert/strict'),E=require('../engine');
+const test=require('node:test'),assert=require('node:assert/strict'),E=require('../backend/engine');
 function play(n){let g=E.newGame(Array.from({length:n},(_,i)=>'J'+i));for(let i=0;i<n;i++)E.action(g,i,{type:'choose_initial',indexes:[0,1]});let turns=0;
  while(g.phase!=='finished'&&turns++<1500){let seat=g.current,p=g.players[seat];
  if(E.tunnelBusy(g)){E.expire(g,g.pending.until);continue}

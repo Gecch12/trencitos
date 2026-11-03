@@ -1,5 +1,5 @@
 "use strict";
-const { serializableRoom, saveCheckpoint } = require("../../room-store");
+const { serializableRoom, saveCheckpoint } = require("../../backend/room-store");
 
 // Detach the durable room DTOs from mutable runtime objects before committing.
 // Practice rooms are temporary, but their history participates in the checkpoint.

@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test"), assert = require("node:assert/strict");
 const fs = require("node:fs"), path = require("node:path"), vm = require("node:vm");
-const Engine = require("../engine");
+const Engine = require("../backend/engine");
 const { createPlayerActionHandler } = require("../game/application/player-action");
 const { actionReply } = require("../game/compat/legacy-action-reply");
 const { fingerprintAction } = require("../game/infrastructure/command-fingerprint");

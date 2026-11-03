@@ -1,9 +1,9 @@
 // Isolated HTTP/WebSocket + Chrome regression for visual card interactions.
 const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
-const {chromium}=require('playwright'),E=require('../engine'),{resultsRoom}=require('./helpers/results-preview');
+const {chromium}=require('playwright'),E=require('../backend/engine'),{resultsRoom}=require('./helpers/results-preview');
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'trencitos-card-ui-'));
 Object.assign(process.env,{STATE_BACKEND:'file',STATE_FILE:path.join(temp,'state.json'),AUTH_ENABLED:'false'});
-const app=require('../server'),out=path.resolve('.qa/card-ui');fs.mkdirSync(out,{recursive:true});
+const app=require('../backend/server'),out=path.resolve('.qa/card-ui');fs.mkdirSync(out,{recursive:true});
 const report={checks:[],errors:[],date:new Date().toISOString()};let browser;
 function room(code,refresh) {
  const game=E.newGame(['Angel','Rival']);

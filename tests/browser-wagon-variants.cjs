@@ -1,6 +1,6 @@
 // Real lobby, persisted legacy color, Three.js previews and reconstruction in Chrome.
 const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
-const {chromium}=require('playwright'),E=require('../engine'),{saveRooms,loadRooms}=require('../room-store');
+const {chromium}=require('playwright'),E=require('../backend/engine'),{saveRooms,loadRooms}=require('../backend/room-store');
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'trencitos-variants-')),out=path.resolve(process.env.QA_OUT || '.qa/passenger-personality');
 Object.assign(process.env,{STATE_BACKEND:'file',STATE_FILE:path.join(temp,'rooms.json'),AUTH_ENABLED:'false'});
 const game=E.newGame(['Rojo','Vivienda','Circo','Rosa legado','Azul'],0);
@@ -13,7 +13,7 @@ const saved={code:'83456789',game,updated:Date.now(),visibility:'public',hostSea
 const savedLobby={code:'83456780',game:null,updated:Date.now(),visibility:'private',hostSeat:0,maxPlayers:5,
   members:[{name:'Rosa anterior',color:'#edadd0',token:'f'.repeat(48)}]};
 saveRooms(process.env.STATE_FILE,new Map([[saved.code,saved],[savedLobby.code,savedLobby]]));
-const app=require('../server'),report={checks:[],errors:[]};let browser,page;
+const app=require('../backend/server'),report={checks:[],errors:[]};let browser,page;
 fs.mkdirSync(out,{recursive:true});
 (async()=>{
   await app.ready;await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
@@ -32,7 +32,7 @@ fs.mkdirSync(out,{recursive:true});
   await page.evaluate(()=>send({type:'leave'}));await page.waitForFunction(()=>!room);
   await page.locator('#create').click();await page.waitForFunction(()=>!!room&&!!wagonPreview);
   assert.notEqual(await page.evaluate(()=>members[seat].color),'#edadd0');
-  assert.equal(await page.locator('#roomColors [data-color]').count(),20);
+  assert.equal(await page.locator('#roomColors [data-color]').count(),21);
   assert.equal(await page.locator('#roomColors [data-color="#edadd0"]').count(),0);
   for(const [color,model,label] of [['#71bba0','dwelling','Vivienda'],['#6269c7','circus','Circo']]){
     await page.locator(`#roomColors [data-color="${color}"]`).click();
@@ -49,7 +49,7 @@ fs.mkdirSync(out,{recursive:true});
   await page.locator('#wagonPreview').scrollIntoViewIfNeeded();
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await page.screenshot({path:path.join(out,'lobby-mobile.png')});await page.close();
-  report.checks.push('20 selectable colors; no pink selection; replacement models persist through server, reload and English; mobile has no overflow');
+  report.checks.push('21 selectable colors; no pink selection; replacement models persist through server, reload and English; mobile has no overflow');
 
   page=await newPage();await page.goto(base+'/?room=83456789#recover='+'3'.repeat(48));await page.waitForFunction(()=>game&&board3D);
   assert.equal(await page.evaluate(()=>game.players[3].color),'#edadd0');

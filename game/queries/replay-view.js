@@ -1,5 +1,5 @@
 "use strict";
-const Replay = require("../../replay-state");
+const Replay = require("../../shared/replay-state");
 const { historyEntryView } = require("./match-view");
 
 function projectSummary(record, full) {

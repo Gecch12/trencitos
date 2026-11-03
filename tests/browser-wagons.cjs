@@ -16,7 +16,7 @@ const out = path.resolve(__dirname, '../docs/qa');
   try {
     await page.goto(base);
     await page.locator('#create').click(); await page.waitForFunction(()=>!!room && !!wagonPreview);
-    const { WAGON_STYLES } = await import('../wagon-models.mjs');
+    const { WAGON_STYLES } = await import('../frontend/wagon-models.mjs');
     const refinedModels = ['coal', 'stone', 'steel', 'mail', 'goods'];
     for (const style of WAGON_STYLES) {
       await page.locator(`#roomColors [data-color="${style.color}"]`).click();

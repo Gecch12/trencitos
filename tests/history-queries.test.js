@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test"), assert = require("node:assert/strict");
-const Engine = require("../engine"), Replay = require("../replay-state");
-const { createMatchArchive } = require("../match-archive");
+const Engine = require("../backend/engine"), Replay = require("../shared/replay-state");
+const { createMatchArchive } = require("../backend/match-archive");
 const { createHistoryQueries } = require("../game/application/history-queries");
 const { verifyAudit } = require("../scripts/verify-match-audit");
 

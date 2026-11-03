@@ -9,7 +9,7 @@ const { connect } = require("./helpers/ws-client");
 
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), "rail-practice-test-"));
 process.env.STATE_FILE = path.join(directory, "rooms.json");
-const { server, rooms } = require("../server");
+const { server, rooms } = require("../backend/server");
 const clients = [];
 let port;
 test.before(async () => {
@@ -68,8 +68,11 @@ test("WebSocket practice flow: create, choose tickets, bots, finish, leave and c
   outsider.send({ type: "join", code: lobby.code, name: "Invitado" });
   assert.match((await outsider.next("error")).message, /solo para su creador/);
 
+  // Three bots may each claim a tunnel: up to two 1 s scheduling delays,
+  // four 700 ms reveal steps and a 3 s result per bot (23.4 s), plus CI slack.
+  const botsReturnMs = 30000;
   peer.send({ type: "action", action: { type: "choose_initial", indexes: [0, 1] } });
-  const playing = (await peer.next("state", (message) => message.game.phase === "play" && message.game.current === 0, 10000)).game;
+  const playing = (await peer.next("state", (message) => message.game.phase === "play" && message.game.current === 0, botsReturnMs)).game;
   assert.equal(playing.current, 0);
   assert.equal(playing.players[0].ticketsCount, 2);
   // Practice bots may keep additional compatible tickets; the human kept two.
@@ -80,8 +83,7 @@ test("WebSocket practice flow: create, choose tickets, bots, finish, leave and c
   const offer = (await peer.next("state", message => !!message.game.ticketOffer)).game.ticketOffer;
   assert.equal(offer.tickets.length, 3);
   peer.send({ type: "action", action: { type: "keep_tickets", offerId: offer.id, indexes: [1] } });
-  // Three bots can each draw twice: six delays of up to 1000 ms, plus CI slack.
-  const resumed = (await peer.next("state", (message) => message.game.phase === "play" && message.game.current === 0, 10000)).game;
+  const resumed = (await peer.next("state", (message) => message.game.phase === "play" && message.game.current === 0, botsReturnMs)).game;
   assert.equal(resumed.tickets.at(-1).id, offer.tickets[1].id);
   assert.equal(resumed.tickets.length, 3);
 
@@ -158,7 +160,7 @@ test("only the original human token reconnects and a stale connection cannot act
 });
 
 test("WebSocket construction returns payment to deck and sends private completed-ticket progress", async () => {
-  const E = require("../engine");
+  const E = require("../backend/engine");
   const peer = await client();
   peer.send({ type: "create_test", name: "Reciclaje" });
   const lobby = await peer.next("lobby");
@@ -230,7 +232,7 @@ test("WebSocket server expires a silent turn and reconnect does not extend its d
 });
 
 test("WebSocket offers are private, do not block the next seat, and timeout independently", async () => {
-  const E = require("../engine");
+  const E = require("../backend/engine");
   const a = await client(), b = await client();
   a.send({ type: "create", name: "A" });
   const lobby = await a.next("lobby");
@@ -262,7 +264,7 @@ test("WebSocket offers are private, do not block the next seat, and timeout inde
 });
 
 test("WebSocket turn return waits for the private offer; confirmation and timeout each start a full minute", async () => {
-  const E = require("../engine"), a = await client(), b = await client();
+  const E = require("../backend/engine"), a = await client(), b = await client();
   a.send({ type: "create", name: "A" });
   const lobby = await a.next("lobby");
   b.send({ type: "join", code: lobby.code, name: "B" }); await b.next("lobby");
@@ -291,7 +293,7 @@ test("WebSocket turn return waits for the private offer; confirmation and timeou
 
 test("WebSocket tunnel payments accept color, mixed and wild options and preserve cards on decline", async () => {
   const { tunnelRoom } = require("./helpers/tunnel-preview");
-  const UI = require("../game-ui");
+  const UI = require("../frontend/game-ui");
   const cases = [
     { kind: "color", extraWild: 0, remaining: ["wild", "wild"], returned: 7 },
     { kind: "color", extraWild: 1, remaining: ["white", "wild"], returned: 7 },
@@ -326,7 +328,7 @@ test("WebSocket tunnel payments accept color, mixed and wild options and preserv
 
 test("authoritative ownership identifies players by color and preserves the free parallel track", async () => {
   const { ownershipRoom } = require("./helpers/ownership-preview");
-  const UI = require("../game-ui");
+  const UI = require("../frontend/game-ui");
   const room = ownershipRoom("MARKS1");
   rooms.set(room.code, room);
   const peer = await client();

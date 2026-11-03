@@ -1,7 +1,7 @@
 # Dominio y reglas existentes
 
-Describe el comportamiento de Trencitos contrastado con [engine.js](../engine.js),
-[data.js](../data.js) y pruebas. No equivale a una transcripción del reglamento
+Describe el comportamiento de Trencitos contrastado con [engine.js](../backend/engine.js),
+[data.js](../shared/data.js) y pruebas. No equivale a una transcripción del reglamento
 comercial: conserva las variantes del proyecto.
 
 La composición/reserva de pagos y la decisión de construir están extraídas a
@@ -36,11 +36,13 @@ La extracción conserva las reglas descritas aquí; avance y límites en
   La configuración se guarda en sala y partida, solo cambia antes del inicio y
   se conserva en la revancha. El directorio anuncia el turno real de la sala.
 - **Jugador:** puesto, nombre, color, mano privada, destinos y piezas. Empieza con
-  45 vagones, 3 estaciones y 4 cartas. Veinte colores seleccionables de jugador no equivalen a
+  45 vagones, 3 estaciones y 4 cartas. Veintiún colores seleccionables de jugador no equivalen a
   los ocho colores de cartas/rutas. El lobby reserva colores únicos; iniciada la
-  partida quedan fijos. Ver [lobby-ui.js](../lobby-ui.js) y [pruebas](../tests/lobby-server.test.js).
+  partida quedan fijos. Ver [lobby-ui.js](../shared/lobby-ui.js) y [pruebas](../tests/lobby-server.test.js).
   La clave persistida de color es estable; cambiar su pintura visible no cambia
   el propietario, la reserva del lobby ni los colores de cartas/pagos.
+  Blanco (`#ffffff`) incorpora la familia Midsommar Express; se reserva como cualquier
+  otro color, también para bots. No añade reglas ni cartas nuevas.
   Rosa (`#edadd0`) solo se conserva al restaurar puestos anteriores; no se acepta
   para nuevos jugadores ni selecciones. Su presentación pasa a Pasajeros.
   Al añadir un bot, el servidor sortea uniformemente entre los colores libres,
@@ -140,8 +142,8 @@ no se sustituye el total histórico por uno recalculado.
 
 ## Ausencia y práctica
 
-Las políticas viven en [multiplayer.js](../multiplayer.js),
-[game-clock.js](../game-clock.js) y [practice.js](../practice.js), con coordinación
+Las políticas viven en [multiplayer.js](../backend/multiplayer.js),
+[game-clock.js](../backend/game-clock.js) y [practice.js](../backend/practice.js), con coordinación
 de vencimientos y jugadas en [automatic-play.js](../game/application/automatic-play.js):
 
 - Sala previa: desconexión reserva puesto humano 60 s; salida explícita lo libera.

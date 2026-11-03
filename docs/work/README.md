@@ -35,6 +35,7 @@ Mejoras solicitadas del juego:
 
 - [Controles de mesa y sala](table-controls.md).
 - [Circo, Vivienda y variantes de Pasajeros](wagon-variants.md).
+- [Midsommar Express](hippie-train.md): familia blanca y checkpoint visual revisado.
 
 - [Inteligencia de bots de práctica](practice-ai.md).
 - [Billetes, túneles compartidos y resultados](game-flow-ui.md).

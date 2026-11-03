@@ -3,9 +3,9 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const vm = require("node:vm");
-const UI = require("../game-ui");
-const E = require("../engine");
-const source = fs.readFileSync(require.resolve("../app.js"), "utf8");
+const UI = require("../frontend/game-ui");
+const E = require("../backend/engine");
+const source = fs.readFileSync(require.resolve("../frontend/app.js"), "utf8");
 const key = o => `${o.color}/${o.regular}/${o.wild}`;
 
 test("65 legal payments become eight color choices without losing any combination", () => {
@@ -46,7 +46,7 @@ function dialog(hand, route = { id: 0, a: "PAR", b: "BRU", color: "gray", n: 2, 
   const game = { current: 0, phase: "play", drawCount: 0, hand, routes: [route], players: [{ trains: 45, stations: 3, placed: [] }] };
   const node = () => ({ textContent: "", disabled: false, dataset: {}, setAttribute() {}, animate() {}, children: [], style: { setProperty() {} }, classList: { add() {} }, replaceChildren() { this.children = []; }, appendChild(child) { this.children.push(child); } });
   let html, inputs = [];
-  const context = vm.createContext({ I18n: require("../i18n"),
+  const context = vm.createContext({ I18n: require("../shared/i18n"),
     game, seat: 0, buildTarget: { routeId: 0 }, GameUI: UI, buildSubmitting: false, reducedMotion: {matches: false},
     N: Object.fromEntries([...E.COLORS, "wild"].map(c => [c, c])), C: UI.ROUTE_COLORS,
     $: id => nodes[id], escapeHTML: s => s, routeName: r => `${r.a} — ${r.b}`, cityName: s => s,

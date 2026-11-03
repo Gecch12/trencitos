@@ -1,8 +1,8 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const UI = require("../game-ui");
-const E = require("../engine");
+const UI = require("../frontend/game-ui");
+const E = require("../backend/engine");
 
 test("history anchors survive prepends, repeated messages and the 25-event cap", () => {
   assert.equal(UI.historyPrependCount([], ["Inicio"]), 1);

@@ -1,8 +1,8 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const E = require("../engine");
-const UI = require("../game-ui");
+const E = require("../backend/engine");
+const UI = require("../frontend/game-ui");
 
 test("server starter uses one bounded uniform draw, preserves seats and cycles from every result", () => {
   for (let count = 2; count <= 5; count++) for (let first = 0; first < count; first++) {

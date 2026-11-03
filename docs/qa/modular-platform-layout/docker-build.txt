@@ -1,0 +1,65 @@
+#1 [internal] load build definition from Dockerfile
+#1 sha256:632919b58ea249ed40330a34e51bfd8862960a4cff887ef49f8f3d49ea6f303a
+#1 transferring dockerfile: 74B done
+#1 DONE 0.0s
+
+#2 [internal] load .dockerignore
+#2 sha256:5d890e531d448d52567c02f50112205482780a9198cb0696b04f05d05b895265
+#2 transferring context: 72B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:22-alpine
+#3 sha256:ea040a8ae8d48010beeae405e35e2010b014bb438d42def3e578fd4426535172
+#3 DONE 1.3s
+
+#4 [ 1/10] FROM docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914
+#4 sha256:76e893960c7e132a8e4d8391f236b95d5b4eb1e14793410b466179771adda06e
+#4 DONE 0.0s
+
+#6 [internal] load build context
+#6 sha256:7c9f713992942e43a0553f423c19ee5f7a6966e27c856a74ffdd6f83b1f2cf8c
+#6 transferring context: 9.69kB 0.0s done
+#6 DONE 0.0s
+
+#7 [ 3/10] COPY package.json package-lock.json ./
+#7 sha256:ac00eab8bf760b32fd27efd4b1252fab5075b64b269a5e3a728b21d33a01a9b2
+#7 CACHED
+
+#8 [ 4/10] RUN npm ci --omit=dev --ignore-scripts
+#8 sha256:b9462d63e4e0f9f4fb1e86ce71229d6333de5e52ccb0b59b16a7856c22c7a24f
+#8 CACHED
+
+#5 [ 2/10] WORKDIR /app
+#5 sha256:fd19c84f89e7a8fbaff4b9f028749d46a1a4c1d9b42eb3a401b0949cd6cbad19
+#5 CACHED
+
+#9 [ 5/10] COPY --chown=node:node server.js ./
+#9 sha256:9fac4219885bd1883857f6173ed25909c0be7d9ebc0e33b49f9919818a696882
+#9 CACHED
+
+#10 [ 6/10] COPY --chown=node:node backend ./backend
+#10 sha256:c55657dda6d4a3ed630f69033011435eeaeb831999cf2cd78ff75ed5b5857061
+#10 CACHED
+
+#11 [ 7/10] COPY --chown=node:node frontend ./frontend
+#11 sha256:8fd964b0d1864f13b5fa039d24f90f306738a236b887da1c1fa7499d6e1b384f
+#11 DONE 0.0s
+
+#12 [ 8/10] COPY --chown=node:node shared ./shared
+#12 sha256:b7897d1ff544d9ac408f2d33933a8d7240cf2ce64e86a778641da9ce476a2c0e
+#12 DONE 0.0s
+
+#13 [ 9/10] COPY --chown=node:node game ./game
+#13 sha256:c9388a4c9919ad038494f5c60dc169c5d5697299793a4a011832adc0e75ae4a5
+#13 DONE 0.0s
+
+#14 [10/10] RUN mkdir -p /data && chown node:node /data
+#14 sha256:f8c483fe9081625e0e3486edda8dbb90cd03c5f5f329b96d3393e193f11e1c03
+#14 DONE 0.2s
+
+#15 exporting to image
+#15 sha256:e8c613e07b0b7ff33893b694f7759a10d42e180f2b4dc349fb57dc6b71dcab00
+#15 exporting layers 0.0s done
+#15 writing image sha256:da578667c1592775cc3f612d3fe75bb26ec039ca5704c890f77f19fc75d1d29a done
+#15 naming to docker.io/library/trencitos-platform-layout done
+#15 DONE 0.0s

@@ -23,8 +23,8 @@ otros worktrees ni se publica en Render.
 - [x] Separar preparación/confirmación/publicación y definir puertos de repositorio/commit conjuntos con historial.
 - [x] Centralizar vistas autorizadas de jugador/espectador, conservando privacidad de replay.
 - [x] Introducir recibos con huella de comando y compatibilidad de los 128 IDs legados.
-- [ ] Integrar un checkpoint revisado de vagones antes de mover archivos visuales.
-- [ ] Separar responsabilidades de frontend/backend en código y verificar empaquetado.
+- [x] Integrar un checkpoint revisado de vagones antes de mover archivos visuales.
+- [x] Separar responsabilidades de frontend/backend en código y verificar empaquetado.
 - [ ] Aceptación conjunta de Europa tras todos los cortes de esta fase.
 
 ## Primer corte: jugada humana
@@ -35,7 +35,7 @@ otros worktrees ni se publica en Render.
 - [legacy-action-reply.js](../../game/compat/legacy-action-reply.js) convierte ese
   resultado al ACK/error existente, con los mismos mensajes y códigos públicos.
   Las excepciones del motor conservan su mensaje legado durante la transición.
-- [server.js](../../server.js) resuelve sesión/sala, entrega únicamente ID,
+- [server.js](../../backend/server.js) resuelve sesión/sala, entrega únicamente ID,
   revisión y acción del mensaje, y envía la respuesta mediante `peer.send`.
   El cliente no selecciona el puesto efectivo, reloj ni generador de azar.
 
@@ -403,10 +403,97 @@ Quinto corte aceptado localmente; fase 3 sigue activa. Supabase/SQL se prueban
 con simuladores, Docker sin red externa y móvil mediante emulación; no se acredita
 producción ni dispositivos físicos. Entrega en esta rama, sin push ni despliegue.
 
+## Sexto corte: checkpoint visual y organización del monorepo
+
+Base `f9bbdaf` más los cambios de este corte, en el mismo worktree aislado.
+Se tomó una copia fija de Midsommar Express desde los cambios locales validados
+sobre `f41e033` del checkout principal. No se modificó ese checkout ni se importó
+el prototipo antiguo de `passenger-extreme`. La [procedencia y huellas](../qa/modular-platform-layout/visual-checkpoint.json)
+distinguen ese snapshot de una revisión Git: todavía no tenía commit en origen.
+Se integraron código, pruebas y documentación visual; las ediciones posteriores
+de otras ramas no entran automáticamente aquí.
+
+- `frontend/`: presentación, Three.js y assets. `shared/`: datos públicos,
+  tiempos, lobby, idiomas y formato de replay realmente usados por ambos entornos.
+- `backend/`: transporte, composición, fachada `Engine`, bots y almacenamiento.
+  `game/` conserva dominio, aplicación, consultas y adaptadores extraídos.
+- El [arranque raíz](../../server.js) delega en [backend/server.js](../../backend/server.js).
+  `npm start`, Render y Docker conservan un proceso; `STATE_FILE` y su ubicación
+  predeterminada permanecen estables, incluso desde otro directorio de trabajo.
+- [public-assets.js](../../backend/public-assets.js) mantiene una lista explícita
+  de URLs y sus ubicaciones físicas. No cambian HTML, imports del navegador,
+  `/assets/...`, HTTP/WebSocket ni sus protecciones. Las carpetas internas no
+  se exponen; las nuevas piezas visuales sí se sirven con MIME JavaScript.
+- Docker copia los cuatro límites de ejecución y el arranque; scripts Python,
+  pruebas y documentación apuntan a los archivos trasladados. El [mapa de movimientos](../qa/modular-platform-layout/path-map.json)
+  conserva la correspondencia para futuras integraciones.
+
+No se añaden paquetes npm, servicios independientes, buses ni repositorios
+abstractos. `app.js` sigue siendo un coordinador amplio y `Engine` conserva la
+adaptación legada: la separación física no equivale a cerrar el trabajo de mapas.
+Detalles canónicos en [arquitectura](../architecture.md), [operación](../operations.md)
+y [decisión](../decisions/match-domain-contracts.md).
+
+## Evidencia del sexto corte
+
+Ejecución del 2026-11-02 (Lima), con almacenamiento local aislado y autenticación
+externa desactivada. La validación del snapshot de origen permanece histórica;
+los siguientes resultados pertenecen a esta rama:
+
+- Suite enfocada de modelos, idiomas, tablero y recursos: **26/26**.
+  Suite completa con Node `v25.6.1`: **529/529**, sin fallos ni omisiones,
+  `node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js`.
+  [Resultado y huellas](../qa/modular-platform-layout/node-tests-result.json),
+  [TAP](../qa/modular-platform-layout/node-tests.tap).
+- `QA_PORT=0 npm run test:board3d`: Chrome `156.0.8078.80`, ocho recorridos,
+  nueve combinaciones de viewport/zoom y partida completa de cuatro jugadores
+  con **238 acciones** y reconexión; cero errores. Incluye construcción, túneles,
+  destinos y estaciones. [Informe](../qa/modular-platform-layout/browser/threejs-report.json).
+  Se inspeccionaron el resultado final y la captura móvil emulada.
+- `node tests/browser-hippie.cjs` y `node tests/browser-wagon-gallery.cjs`:
+  correctos en Chrome sin interfaz. Seis escenas, selección/guardado/recarga,
+  construcción de ocho vagones, animación, resaltado, reconexión, espectador y
+  replay. Galería de 21 familias en ocho tamaños con recuperación WebGL.
+  [Resultados](../qa/modular-platform-layout/visual-tests-result.json),
+  [galería](../qa/modular-platform-layout/gallery/report.json),
+  [Midsommar](../qa/modular-platform-layout/midsommar/report.json).
+  Se inspeccionaron las seis escenas y los encuadres de escritorio/móvil.
+- [Probe de entrada](../qa/modular-platform-layout/entrypoint-check.cjs): arranque
+  CLI desde otro directorio, creación y guardado de sala en la raíz de una copia
+  temporal y entrega de `/app.js` correctos. [Resultado](../qa/modular-platform-layout/entrypoint-result.json).
+  `python3 scripts/make_assets.py --check`: las diez cartas coinciden.
+
+La primera prueba Docker agotó la espera de bots de 10 s; el recorrido real puede
+incluir tres túneles con hasta 23,4 s de pausas programadas. La espera de esa prueba
+ahora contempla 30 s; no cambian los tiempos del juego ni las condiciones de éxito.
+Se conserva [el intento inicial](../qa/modular-platform-layout/docker-tests-attempt1.tap).
+La comprobación de navegador precede a ese ajuste exclusivo de la prueba de red;
+su árbol de ejecución coincide con el final.
+
+Docker final, `linux/arm64` y Node `v22.23.4`: **4/4** pruebas aprobadas sobre
+el código empaquetado (45 recursos y navegación, privacidad HTTP, bots por
+WebSocket y recibos con reinicio/rollback). Arranque predeterminado, `healthz`,
+UID 1000, raíz de solo lectura y escritura del estado en `/data` correctos;
+sin credenciales, tests, docs ni dependencias de desarrollo en la imagen.
+[Construcción](../qa/modular-platform-layout/docker-build.txt),
+[resultado](../qa/modular-platform-layout/docker-result.json),
+[TAP](../qa/modular-platform-layout/docker-tests.tap).
+
+`node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
+Revisados contratos, arquitectura, operación, referencias y documentación visual.
+Los QA anteriores permanecen intactos. Solo se normalizó una línea vacía al final
+de `wagon-people.mjs` después de las pruebas de navegador; las fuentes ejecutables
+no cambiaron. Las huellas de ejecución y el árbol final quedan diferenciados en
+[la comprobación final](../qa/modular-platform-layout/final-checks.json).
+
+Sexto corte aceptado localmente; fase 3 sigue activa. SQL/Supabase se comprueban
+con simuladores, Docker no usa red externa y móvil es emulado. No se acredita
+producción ni dispositivos físicos. Todo queda en esta rama, sin push ni despliegue.
+
 ## Siguiente corte
 
-Revisar un checkpoint del trabajo de vagones y sus cambios de código/documentación
-antes de mover archivos visuales. Después, organizar frontend y backend dentro
-del mismo repositorio, manteniendo rutas de assets, contratos HTTP/WebSocket,
-arranque y empaquetado. La fase 3 requiere aún esa organización y la aceptación
-conjunta de Europa antes de avanzar a mapas versionados.
+Comprobar la aceptación conjunta de Europa en fase 3: jugada humana, entradas
+automáticas, checkpoint/rollback, recibos, privacidad de vistas/replay y arranque
+empaquetado. Registrar los límites restantes y cerrar la fase antes de iniciar
+mapas versionados e IDs opacos de la fase 4. Mantener el trabajo en esta rama;
+no se ha solicitado integración a `main`, push ni despliegue.

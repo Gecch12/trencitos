@@ -1,8 +1,8 @@
 "use strict";
 const test = require("node:test"), assert = require("node:assert/strict");
-const E = require("../engine");
-const { createMultiplayerController, shiftDeadlines, GRACE_MS } = require("../multiplayer");
-const { chooseReplacementAction } = require("../bots");
+const E = require("../backend/engine");
+const { createMultiplayerController, shiftDeadlines, GRACE_MS } = require("../backend/multiplayer");
+const { chooseReplacementAction } = require("../backend/bots");
 
 function fixture(started = true) {
   let time = 0, serial = 0;

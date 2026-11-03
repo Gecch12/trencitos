@@ -1,7 +1,7 @@
 // Frozen pre-upgrade practice policy for reproducible comparisons (2026-10-31).
 "use strict";
 const { randomInt } = require("node:crypto");
-const Engine = require("../../engine");
+const Engine = require("../../backend/engine");
 const { choosePracticeAction } = require("./practice-bot-baseline");
 
 function pick(items, random = randomInt) {

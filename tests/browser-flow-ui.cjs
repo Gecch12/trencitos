@@ -1,10 +1,10 @@
 // Real HTTP/WebSocket + Chrome, isolated from the developer's running game.
 const assert = require('node:assert/strict'), fs = require('node:fs'), os = require('node:os'), path = require('node:path');
 const {chromium} = require('playwright');
-const E = require('../engine'), {tunnelRoom} = require('./helpers/tunnel-preview'), {resultsRoom} = require('./helpers/results-preview');
+const E = require('../backend/engine'), {tunnelRoom} = require('./helpers/tunnel-preview'), {resultsRoom} = require('./helpers/results-preview');
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'trencitos-flow-'));
 Object.assign(process.env, {STATE_BACKEND:'file', STATE_FILE:path.join(temp,'state.json'), AUTH_ENABLED:'false'});
-const app = require('../server'), out = path.resolve('.qa/flow-ui');fs.mkdirSync(out,{recursive:true});
+const app = require('../backend/server'), out = path.resolve('.qa/flow-ui');fs.mkdirSync(out,{recursive:true});
 const report = {checks:[],errors:[],date:new Date().toISOString()};
 let browser;
 (async()=>{

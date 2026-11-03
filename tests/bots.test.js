@@ -1,8 +1,8 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const Engine = require("../engine");
-const { chooseBotAction } = require("../bots");
+const Engine = require("../backend/engine");
+const { chooseBotAction } = require("../backend/bots");
 
 const first = () => 0;
 function random(seed = 42) {

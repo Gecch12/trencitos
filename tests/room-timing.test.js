@@ -1,9 +1,9 @@
 "use strict";
 const test = require('node:test'), assert = require('node:assert/strict');
-const E = require('../engine'), Timing = require('../game-timing');
-const {shiftDeadlines} = require('../multiplayer');
-const {listRooms} = require('../room-directory');
-const {serializableRoom} = require('../room-store');
+const E = require('../backend/engine'), Timing = require('../shared/game-timing');
+const {shiftDeadlines} = require('../backend/multiplayer');
+const {listRooms} = require('../backend/room-directory');
+const {serializableRoom} = require('../backend/room-store');
 function start(timing) {
   const g=E.newGame(['A','B'],0,1000,timing);
   E.action(g,0,{type:'choose_initial',indexes:[0,1]},{now:2000});

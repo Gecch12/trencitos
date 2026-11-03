@@ -5,7 +5,7 @@ const { chromium } = require('playwright');
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'trencitos-gallery-'));
 const out = path.resolve('.qa/wagon-mobile-three-quarter');
 Object.assign(process.env, { STATE_BACKEND: 'file', STATE_FILE: path.join(temp, 'rooms.json'), AUTH_ENABLED: 'false' });
-const app = require('../server');
+const app = require('../backend/server');
 const report = { checks: [], layouts: [], errors: [] };
 let browser;
 
@@ -134,10 +134,10 @@ let browser;
     report.checks.push('Six connected wagons from the side on desktop/tablet; one in 3/4 view on mobile portrait/landscape, including live breakpoint changes; no clipping or scrolling');
 
     await page.setViewportSize({ width: 1440, height: 900 });
-    const { WAGON_STYLES } = await import('../wagon-models.mjs');
+    const { WAGON_STYLES } = await import('../frontend/wagon-models.mjs');
     for (const style of WAGON_STYLES) {
       await choose(style.color);
-      const count = style.model === 'passenger' ? 6 : 1;
+      const count = ['passenger','hippie'].includes(style.model) ? 6 : 1;
       assert.equal(await page.locator('.wagon-preview-item').count(), count, style.model);
       assert.equal(await page.locator('.wagon-preview-item:not([hidden])').count(), count, style.model);
       assert.ok((await page.locator('#wagonPreviewStage').getAttribute('aria-label')).startsWith(style.label + ','));
@@ -155,7 +155,7 @@ let browser;
     await choose('#458ad4'); await choose('#d45748');
     await page.locator('#wagonPreview').scrollIntoViewIfNeeded(); await frames();
     assert.deepEqual(await page.locator('#wagonPreview').screenshot(), before, 'returning to a color preserves its example appearances');
-    report.checks.push('All 20 families use their actual variant count, reuse the canvas, stay stable on return and do not redraw continuously');
+    report.checks.push('All 21 families use their actual variant count, reuse the canvas, stay stable on return and do not redraw continuously');
 
     await page.evaluate(() => I18n.select('en')); await page.reload();
     await page.waitForFunction(() => !!wagonPreview);

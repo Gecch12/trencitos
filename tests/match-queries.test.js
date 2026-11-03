@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test"), assert = require("node:assert/strict");
 const fs = require("node:fs"), path = require("node:path"), vm = require("node:vm");
-const E = require("../engine"), Queries = require("../game/queries/match-view"), { planTiming } = require("../game/compat/legacy-timing");
+const E = require("../backend/engine"), Queries = require("../game/queries/match-view"), { planTiming } = require("../game/compat/legacy-timing");
 const timing = { initialMs: 60000, turnMs: 60000, finalTrainThreshold: 2 };
 function ready() {
   const g = E.newGame(["A", "B"], 0, 0, { initialSeconds: 60, turnSeconds: 60, ticketExtraSeconds: 30 }, { random: () => 0 });

@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test"), assert = require("node:assert/strict");
 const fs = require("node:fs"), os = require("node:os"), path = require("node:path"), { once } = require("node:events");
-const E = require("../engine"), { hashToken, loadState } = require("../room-store");
+const E = require("../backend/engine"), { hashToken, loadState } = require("../backend/room-store");
 const { connect } = require("./helpers/ws-client"), { fakeSupabase } = require("./helpers/fake-supabase");
 
 for (const backend of ["file", "supabase"]) test(`${backend} load normalizes old results and clocks before publishing and commits compatible state`, async () => {
@@ -25,7 +25,7 @@ for (const backend of ["file", "supabase"]) test(`${backend} load normalizes old
   }
   let app, peer;
   try {
-    delete require.cache[require.resolve("../server")];app = require("../server");await app.ready;
+    delete require.cache[require.resolve("../backend/server")];app = require("../backend/server");await app.ready;
     const g = app.rooms.get(saved[0].code).game, clock = app.rooms.get(saved[1].code);
     assert.deepEqual(g.result.map(r => r.score), totals);assert.ok(g.result.every(r => r.details));
     assert.equal(g.result[0].details.routeAdjustment, 7);

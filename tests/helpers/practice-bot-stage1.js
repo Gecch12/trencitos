@@ -1,6 +1,6 @@
 // Frozen first-stage policy (2026-10-31); benchmark only.
 "use strict";
-const E = require("../../engine");
+const E = require("../../backend/engine");
 const P = require("./practice-planner-stage1");
 
 // Disposable, private memory. No plan or inferred rival cards enter saves/views.

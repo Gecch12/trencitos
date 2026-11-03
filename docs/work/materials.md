@@ -7,7 +7,7 @@ Madera, mate, cromado y cobre como opciones intercambiables siguen pendientes.
 El tablero 3D ya tiene materiales de pintura, cargas, metal, acero satinado y vidrio,
 con reflejos procedurales. El transportador de deportivos ahora es amarillo de
 pintura normal; oro dejó de ser un color de jugador. Modelo, pintura y acabado están separados en
-[el renderizador](../../wagon-renderer.js); esto aún no es un selector de materiales.
+[el renderizador](../../frontend/wagon-renderer.js); esto aún no es un selector de materiales.
 
 ## Hitos de definición
 

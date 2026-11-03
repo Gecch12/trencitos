@@ -4,9 +4,9 @@
 const fs = require("node:fs"), os = require("node:os"), path = require("node:path");
 process.env.STATE_BACKEND = "file";
 process.env.STATE_FILE = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "rail-payment-")), "rooms.json");
-const E = require("../../engine");
+const E = require("../../backend/engine");
 const { tunnelRoom } = require("./tunnel-preview");
-const { server, rooms, ready } = require("../../server");
+const { server, rooms, ready } = require("../../backend/server");
 const qaToken = "a".repeat(48); // Disposable fixture identity, not a credential.
 function paymentRoom(code) {
   const g = E.newGame(["Probador", "Rival azul", "Rival verde", "Rival amarillo"]);

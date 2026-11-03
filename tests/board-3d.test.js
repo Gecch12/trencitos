@@ -1,10 +1,10 @@
 "use strict";
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const Camera = require('../board-camera');
-const UI = require('../game-ui');
-const Map = require('../map-layout');
-const { CITIES } = require('../data');
+const Camera = require('../frontend/board-camera');
+const UI = require('../frontend/game-ui');
+const Map = require('../frontend/map-layout');
+const { CITIES } = require('../shared/data');
 
 test('tilted ground projection fits safe area and preserves a zoom anchor', () => {
   for (const size of [{ width: 1460, height: 888 }, { width: 390, height: 792 }]) {

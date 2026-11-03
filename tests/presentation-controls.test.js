@@ -3,14 +3,14 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const vm = require("node:vm");
-const source = fs.readFileSync(require.resolve("../app.js"), "utf8");
+const source = fs.readFileSync(require.resolve("../frontend/app.js"), "utf8");
 
 test("compact-only controls start natively hidden and follow the layout, not the device", () => {
-  const html = fs.readFileSync(require.resolve("../index.html"), "utf8");
+  const html = fs.readFileSync(require.resolve("../frontend/index.html"), "utf8");
   for (const id of ["compactHud", "compactPlayers"]) assert.match(html, new RegExp(`id="${id}"[^>]*\\shidden[\\s>]`));
   for (const practiceMode of [true, false]) {
     const nodes = { compactHud: {}, compactPlayers: {}, compactPractice: { classList: { toggle(_, value) { nodes.compactPractice.hidden = value; } } } };
-    const context = vm.createContext({ I18n: require("../i18n"), practiceMode, compactMedia: { matches: false }, $: id => nodes[id] });
+    const context = vm.createContext({ I18n: require("../shared/i18n"), practiceMode, compactMedia: { matches: false }, $: id => nodes[id] });
     vm.runInContext(source.slice(source.indexOf("function syncCompactControls("), source.indexOf("function setCompactPanel(")), context);
     for (const compact of [false, true, false, true]) {
       context.compactMedia.matches = compact;
@@ -25,7 +25,7 @@ test("compact-only controls start natively hidden and follow the layout, not the
 function soundControls(storage) {
   const attributes = new Map(), button = { setAttribute: (key, value) => attributes.set(key, value) };
   let resumes = 0;
-  const context = vm.createContext({ I18n: require("../i18n"),
+  const context = vm.createContext({ I18n: require("../shared/i18n"),
     $: () => button, toast() {},
     localStorage: { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value) },
     document: { addEventListener() {}, hidden: false },
@@ -107,7 +107,7 @@ test("H shares the highlight action and excludes editing, modifiers, repeats and
 });
 
 test("urgent clocks select only the local player's live decisions in the final five seconds", () => {
-  const { urgentClock } = require("../game-ui");
+  const { urgentClock } = require("../frontend/game-ui");
   const game = { phase: "play", current: 0, players: [{}, {}], turnDeadline: 20000 };
   assert.equal(urgentClock(game, 0, 15000), null);
   assert.deepEqual(urgentClock(game, 0, 15001), { kind: "turn", deadline: 20000, seconds: 5 });
@@ -130,7 +130,7 @@ test("urgent clocks select only the local player's live decisions in the final f
 function clockSoundControls() {
   const sound = soundControls(new Map());
   Object.assign(sound.context, {
-    GameUI: require("../game-ui"), game: { phase: "play", current: 0, players: [{}, {}], turnDeadline: 20000 },
+    GameUI: require("../frontend/game-ui"), game: { phase: "play", current: 0, players: [{}, {}], turnDeadline: 20000 },
     room: "CLOCK", seat: 0, replayAt: null, spectating: false, sessionReplaced: false, storagePaused: false,
     pendingAction: null, members: [{}], sock: { readyState: 1 }, WebSocket: { OPEN: 1 },
     played: [], clockNow: 0,

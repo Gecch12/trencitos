@@ -1,7 +1,7 @@
 "use strict";
-const engine = require("../../engine");
-const Directory = require("../../room-directory");
-const Timing = require("../../game-timing");
+const engine = require("../../backend/engine");
+const Directory = require("../../backend/room-directory");
+const Timing = require("../../shared/game-timing");
 const { createAuthorizedViews } = require("../queries/authorized-views");
 
 function createLegacyAuthorizedViews({ now = () => Date.now() } = {}) {

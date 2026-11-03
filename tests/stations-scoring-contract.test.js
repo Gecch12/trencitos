@@ -1,6 +1,6 @@
 "use strict";
 const test = require("node:test"), assert = require("node:assert/strict");
-const E = require("../engine");
+const E = require("../backend/engine");
 function ready() {
   const g=E.newGame(["A","B"],0,0,null,{random:()=>0});
   for(const seat of [0,1])E.action(g,seat,{type:"choose_initial",indexes:[0,1]},{now:0,random:()=>0});

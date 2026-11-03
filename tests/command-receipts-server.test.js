@@ -1,13 +1,13 @@
 "use strict";
 const test = require("node:test"), assert = require("node:assert/strict");
 const fs = require("node:fs"), os = require("node:os"), path = require("node:path"), { once } = require("node:events");
-const { connect } = require("./helpers/ws-client"), { loadState } = require("../room-store");
+const { connect } = require("./helpers/ws-client"), { loadState } = require("../backend/room-store");
 const { fingerprintAction } = require("../game/infrastructure/command-fingerprint");
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), "command-receipts-"));
 Object.assign(process.env, { STATE_BACKEND: "file", STATE_FILE: path.join(directory, "state.json"), AUTH_ENABLED: "false" });
 let app, port;const peers = [];
 async function boot() {
-  delete require.cache[require.resolve("../server")];app = require("../server");await app.ready;
+  delete require.cache[require.resolve("../backend/server")];app = require("../backend/server");await app.ready;
   app.server.listen(0, "127.0.0.1");await once(app.server, "listening");port = app.server.address().port;
 }
 async function stop() { for (const peer of peers.splice(0)) peer.close();await app.shutdown(); }

@@ -1,0 +1,17 @@
+{
+  "node": "v25.6.1",
+  "checks": [
+    "Root CLI starts from a foreign working directory with an isolated default file backend",
+    "A durable room is written beside the root entry point, never in backend/ or the caller directory",
+    "Public URLs resolve from the copied runtime independently of cwd"
+  ],
+  "base_commit": "f9bbdaf4e5fae12000fee546302ad0de9891dbc8",
+  "source_sha256": {
+    "server.js": "493b6336a59bc9bbcc55abdbcd6dc073236490aeb1fc3ca747f8c8ca812a45d9",
+    "backend/server.js": "9a83cd6c0195e69adeabca264f43982fcabda9df17da41ec49212712c2ad498b",
+    "backend/public-assets.js": "ca49873452bb2fe020504299cc7c6ac7a7081c6c031fa404c4a66f61b347a221",
+    "backend/room-store.js": "54648aa15a656ebf1028ca704c013ae68696e046882e19dfc2a9013ab41e23df"
+  },
+  "passed": true,
+  "completed_at": "2026-11-03T04:02:32.560Z"
+}

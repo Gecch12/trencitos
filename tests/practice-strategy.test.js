@@ -1,8 +1,8 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const E = require("../engine");
-const { chooseBotAction, chooseReplacementAction } = require("../bots");
+const E = require("../backend/engine");
+const { chooseBotAction, chooseReplacementAction } = require("../backend/bots");
 
 const first = () => 0;
 const last = n => n - 1;

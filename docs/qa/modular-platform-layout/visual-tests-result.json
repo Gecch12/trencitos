@@ -1,0 +1,24 @@
+[
+  {
+    "name": "midsommar",
+    "command": [
+      "node",
+      "tests/browser-hippie.cjs"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 18.4,
+    "completed_at": "2026-11-03T03:58:02.789327+00:00",
+    "log_sha256": "374bc7afcc9631050074f1159daf5ceb633995ed8a6768bc86399df1dad18a83"
+  },
+  {
+    "name": "gallery",
+    "command": [
+      "node",
+      "tests/browser-wagon-gallery.cjs"
+    ],
+    "exit_code": 0,
+    "duration_seconds": 6.96,
+    "completed_at": "2026-11-03T03:58:09.744928+00:00",
+    "log_sha256": "bac24200cad355530346bffec0d21c94be1ce212e723162c660467f75bfdc16a"
+  }
+]

@@ -1,8 +1,8 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const Map = require("../map-layout");
-const { ROUTES, CITIES } = require("../data");
+const Map = require("../frontend/map-layout");
+const { ROUTES, CITIES } = require("../shared/data");
 const network = Map.createNetwork(ROUTES);
 
 function corners(cell) {

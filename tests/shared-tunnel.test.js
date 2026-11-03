@@ -1,7 +1,7 @@
 const test = require('node:test'), assert = require('node:assert/strict');
-const E = require('../engine'), {chooseBotAction, chooseReplacementAction} = require('../bots');
-const {shiftDeadlines} = require('../multiplayer');
-const {createGameClock} = require('../game-clock');
+const E = require('../backend/engine'), {chooseBotAction, chooseReplacementAction} = require('../backend/bots');
+const {shiftDeadlines} = require('../backend/multiplayer');
+const {createGameClock} = require('../backend/game-clock');
 function setup(surcharge = true) {
   const g = E.newGame(['A', 'B', 'C'], 0, 0);
   for(let i=0;i<3;i++) E.action(g,i,{type:'choose_initial',indexes:[0,1]},{now:0});

@@ -1,8 +1,8 @@
 "use strict";
 const test = require("node:test"), assert = require("node:assert/strict");
 const fs = require("node:fs"), path = require("node:path"), vm = require("node:vm");
-const Engine = require("../engine");
-const Bots = require("../bots");
+const Engine = require("../backend/engine");
+const Bots = require("../backend/bots");
 const { createAutomaticPlay } = require("../game/application/automatic-play");
 
 function fixture({ initial = false, practice = false } = {}) {

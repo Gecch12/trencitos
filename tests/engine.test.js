@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict');
-const E=require('../engine');
+const E=require('../backend/engine');
 function ready(n=2){let g=E.newGame(Array.from({length:n},(_,i)=>'P'+i));for(let i=0;i<n;i++)E.action(g,i,{type:'choose_initial',indexes:[0,1]});return g}
 const own=(g,r,seat=0)=>{r.owner=seat;g.players[seat].trains-=r.n;g.players[seat].score+=E.SCORE[r.n]};
 test('dataset Europe 47 cities, 101 routes, 40 regular + 6 long tickets',()=>{assert.equal(Object.keys(E.CITIES).length,47);assert.equal(E.ROUTES.length,101);assert.equal(E.TICKETS.length,46);assert.equal(E.TICKETS.filter(t=>t.long).length,6);const seen=new Set();for(const r of E.ROUTES){assert.ok(E.CITIES[r.a]&&E.CITIES[r.b]);assert.ok(E.SCORE[r.n]);assert.notEqual(r.a,r.b);seen.add(r.a);seen.add(r.b)}assert.equal(seen.size,47)});

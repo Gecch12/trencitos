@@ -2,7 +2,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
-const E = require("../engine");
+const E = require("../backend/engine");
 
 function state() {
   const g = E.newGame(["A", "B"]);

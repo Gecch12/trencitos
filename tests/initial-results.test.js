@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const E = require("../engine");
+const E = require("../backend/engine");
 const choose = (g, seat, now, indexes = [0, 1]) => E.action(g, seat, {type: "choose_initial", indexes}, {now, random: () => 0});
 
 test("2–5 players choose privately in any order under one clock; last ready starts the random starter", () => {

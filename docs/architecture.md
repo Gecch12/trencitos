@@ -4,6 +4,33 @@ Tablero principal exclusivamente Three.js; SVG conserva interacción y mapas de 
 Google Auth tiene implementación opcional; el catálogo comercial continúa pendiente.
 Evidencia, integración y límites en [la ficha del tablero](work/board-3d.md).
 
+## Organización del monorepo
+
+| Carpeta | Responsabilidad |
+| --- | --- |
+| `frontend/` | HTML, estilos, navegador, Three.js y assets originales. |
+| `backend/` | Transporte HTTP/WebSocket, composición, fachada `Engine`, bots, identidad y almacenamiento. |
+| `shared/` | Datos públicos de Europa, paleta/lobby, tiempos permitidos, idiomas y formato de replay usados en ambos entornos. |
+| `game/` | Dominio, aplicación, consultas y adaptadores extraídos. Dominio/aplicación siguen sin depender del navegador o del transporte. |
+| `scripts/`, `tests/`, `supabase/`, `docs/` | Herramientas, verificaciones, migraciones SQL y contexto documental. |
+
+El [arranque raíz](../server.js) delega en [backend/server.js](../backend/server.js).
+`npm start`, Render y Docker conservan un proceso. `STATE_FILE` mantiene su
+significado y el archivo predeterminado sigue en la raíz del repositorio,
+independientemente del directorio de trabajo. No hay paquetes ni instalaciones
+separados todavía.
+
+[public-assets.js](../backend/public-assets.js) traduce una lista explícita de URLs
+públicas a archivos de `frontend/`, los módulos públicos de `shared/` y Three.js
+instalado. `/app.js`, `/data.js`, `/assets/...` y las rutas de navegación no cambian.
+Las carpetas físicas no se publican; dominio, credenciales y almacenamiento quedan
+fuera de esa lista. Se conservan MIME, CSP, `no-store` y `nosniff`.
+
+`Engine` y los puentes de `game/compat` siguen siendo la adaptación al formato
+legado; moverlos no termina la abstracción de mapas. `app.js` aún coordina gran
+parte de la interfaz. Los siguientes cortes se definen por responsabilidades,
+sin convertir cada función en un archivo ni añadir buses o repositorios genéricos.
+
 ## Recorrido de una jugada
 
 Navegador → mensaje WebSocket → sesión/puesto y validación del servidor →
@@ -44,13 +71,13 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 
 | Responsabilidad | Código y puntos de entrada |
 | --- | --- |
-| HTTP, WebSocket, salas, credenciales, despachar y confirmar acciones | [server.js](../server.js): `dispatch`, `persist`, `sendRoom` |
+| HTTP, WebSocket, salas, credenciales, despachar y confirmar acciones | [server.js](../backend/server.js): `dispatch`, `persist`, `sendRoom` |
 | Huella estable del contenido de un comando | [command-fingerprint.js](../game/infrastructure/command-fingerprint.js): `fingerprintAction` |
 | Coordinación de jugadas humanas y respuesta compatible | [player-action.js](../game/application/player-action.js): `createPlayerActionHandler`; [legacy-action-reply.js](../game/compat/legacy-action-reply.js): `actionReply` |
 | Vencimientos y jugadas automáticas | [automatic-play.js](../game/application/automatic-play.js): `createAutomaticPlay`; [composición legada](../game/compat/legacy-automatic-play.js): `createLegacyAutomaticPlay` |
 | Preparación de sala, solicitud de checkpoint y vistas encoladas | [room-stage.js](../game/application/room-stage.js): `createRoomStager`; [checkpoint.js](../game/application/checkpoint.js): `createCheckpointHandler` |
 | Confirmación conjunta en archivo o remoto | [checkpoint-committer.js](../game/infrastructure/checkpoint-committer.js): `createFileCheckpointCommitter`, `createRemoteCheckpointCommitter` |
-| Fachada de reglas, fases, efectos, cierre y privacidad | [engine.js](../engine.js): `newRandomGame`, `action`, `expire`, `finish`, `view` |
+| Fachada de reglas, fases, efectos, cierre y privacidad | [engine.js](../backend/engine.js): `newRandomGame`, `action`, `expire`, `finish`, `view` |
 | Políticas de pago y decisión de construcción | [payment.js](../game/domain/payment.js): `planPayment`, `reservePayment`; [route-claim.js](../game/domain/route-claim.js): `decideRouteClaim`, `blocksParallelRoute` |
 | Transiciones de túnel y comienzo/avance de turno | [tunnel.js](../game/domain/tunnel.js): `beginTunnel`, `decideTunnel`, `advanceTunnel`; [turn.js](../game/domain/turn.js): `planTurnStart`, `planNextTurn` |
 | Preparación de recursos, reparto y elecciones de destinos | [setup.js](../game/domain/setup.js): `prepareGame`; [destinations.js](../game/domain/destinations.js): `decideInitialChoice`, `planOffer`, `decideOfferChoice`, `randomSelection` |
@@ -62,22 +89,22 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Lobby, estado y grabación con proyección común por puesto | [authorized-views.js](../game/queries/authorized-views.js): `createAuthorizedViews`; [composición legada](../game/compat/legacy-authorized-views.js) |
 | Acceso al historial y proyección de replay guardado | [history-queries.js](../game/application/history-queries.js): `createHistoryQueries`; [replay-view.js](../game/queries/replay-view.js): `projectSummary`, `projectReplay` |
 | Vistas copiadas por puesto e historial filtrado | [match-view.js](../game/queries/match-view.js): `projectMatch`, `historyEntryView` |
-| Normalización explícita de partidas antiguas | [engine.js](../engine.js): `normalize`; [legacy-timing.js](../game/compat/legacy-timing.js): `planTiming`; [legacy-scoring.js](../game/compat/legacy-scoring.js): `completeResults` |
-| Ciudades, rutas, billetes y paleta | [data.js](../data.js) |
-| Valores permitidos de relojes y defaults compartidos | [game-timing.js](../game-timing.js): `valid`, `normalize` |
-| Relojes, desconexiones y recuperación | [game-clock.js](../game-clock.js), [multiplayer.js](../multiplayer.js) |
-| Práctica y políticas de bots | [practice.js](../practice.js), [practice-bot.js](../practice-bot.js), [practice-planner.js](../practice-planner.js), [practice-tactics.js](../practice-tactics.js), [practice-search.js](../practice-search.js), [bots.js](../bots.js) |
-| Estado local y hash de credenciales | [room-store.js](../room-store.js): `serializableRoom`, `loadRooms`, `saveRooms` |
-| Checkpoint remoto y autoridad única | [supabase-store.js](../supabase-store.js), [SQL](../supabase/001_active_games.sql) |
-| Orden y confirmación durable | [durable-queue.js](../durable-queue.js) |
-| Conexión, interfaz y efectos del navegador | [app.js](../app.js), [index.html](../index.html) |
-| Navegación, directorio y perfil responsive | [shell.js](../shell.js), [shell.css](../shell.css), [shell-icons.js](../shell-icons.js) |
-| Listado público y bots persistentes | [room-directory.js](../room-directory.js), [room-bots.js](../room-bots.js) |
-| Cálculos de presentación y lobby | [game-ui.js](../game-ui.js), [lobby-ui.js](../lobby-ui.js) |
-| Escena 3D, textura cartográfica y piezas instanciadas | [board-3d.js](../board-3d.js): `createBoard3D`, `update`, `resize`, `dispose` |
-| Familias de vagones por color, geometrías y acabados | [wagon-models.mjs](../wagon-models.mjs): `wagonStyle`, `wagonParts`; [wagon-renderer.js](../wagon-renderer.js): `createWagonRenderer` |
-| Proyección ortográfica compartida con objetivos SVG | [board-camera.js](../board-camera.js): `view` |
-| Geometría visual, curvas y etiquetas | [map-layout.js](../map-layout.js): `createNetwork`, `pointAt`, `placeLabels` |
+| Normalización explícita de partidas antiguas | [engine.js](../backend/engine.js): `normalize`; [legacy-timing.js](../game/compat/legacy-timing.js): `planTiming`; [legacy-scoring.js](../game/compat/legacy-scoring.js): `completeResults` |
+| Ciudades, rutas, billetes y paleta | [data.js](../shared/data.js) |
+| Valores permitidos de relojes y defaults compartidos | [game-timing.js](../shared/game-timing.js): `valid`, `normalize` |
+| Relojes, desconexiones y recuperación | [game-clock.js](../backend/game-clock.js), [multiplayer.js](../backend/multiplayer.js) |
+| Práctica y políticas de bots | [practice.js](../backend/practice.js), [practice-bot.js](../backend/practice-bot.js), [practice-planner.js](../backend/practice-planner.js), [practice-tactics.js](../backend/practice-tactics.js), [practice-search.js](../backend/practice-search.js), [bots.js](../backend/bots.js) |
+| Estado local y hash de credenciales | [room-store.js](../backend/room-store.js): `serializableRoom`, `loadRooms`, `saveRooms` |
+| Checkpoint remoto y autoridad única | [supabase-store.js](../backend/supabase-store.js), [SQL](../supabase/001_active_games.sql) |
+| Orden y confirmación durable | [durable-queue.js](../backend/durable-queue.js) |
+| Conexión, interfaz y efectos del navegador | [app.js](../frontend/app.js), [index.html](../frontend/index.html) |
+| Navegación, directorio y perfil responsive | [shell.js](../frontend/shell.js), [shell.css](../frontend/shell.css), [shell-icons.js](../frontend/shell-icons.js) |
+| Listado público y bots persistentes | [room-directory.js](../backend/room-directory.js), [room-bots.js](../backend/room-bots.js) |
+| Cálculos de presentación y lobby | [game-ui.js](../frontend/game-ui.js), [lobby-ui.js](../shared/lobby-ui.js) |
+| Escena 3D, textura cartográfica y piezas instanciadas | [board-3d.js](../frontend/board-3d.js): `createBoard3D`, `update`, `resize`, `dispose` |
+| Familias de vagones por color, geometrías y acabados | [wagon-models.mjs](../frontend/wagon-models.mjs): `wagonStyle`, `wagonParts`; [wagon-renderer.js](../frontend/wagon-renderer.js): `createWagonRenderer` |
+| Proyección ortográfica compartida con objetivos SVG | [board-camera.js](../frontend/board-camera.js): `view` |
+| Geometría visual, curvas y etiquetas | [map-layout.js](../frontend/map-layout.js): `createNetwork`, `pointAt`, `placeLabels` |
 
 ## Casos de aplicación
 
@@ -365,8 +392,8 @@ Alcance y pruebas en
   de la selección autorizada del cliente. Atenúa el contexto y conserva los mismos
   vagones y colores; `destinationSpotlight` solo contiene etiquetas e indicadores,
   sin clonar vagones/estaciones SVG. No entrega manos ni billetes al renderizador.
-- Los 20 colores seleccionables tienen una familia propia; jade lleva Vivienda
-  e índigo Circo. Hongos, Cristales y Confitería se retiraron. Rosa conserva su
+- Los 21 colores seleccionables tienen una familia propia; jade lleva Vivienda
+  e índigo Circo; blanco lleva Midsommar Express. Hongos, Cristales y Confitería se retiraron. Rosa conserva su
   clave en partidas anteriores y usa Pasajeros; no se ofrece a nuevas selecciones.
   Pasajeros tiene seis composiciones: clásico, una/dos/tres personas, apoyado y
   saludo. Cabezas esféricas suaves sin rasgos faciales, cuatro peinados y cuatro
@@ -406,16 +433,36 @@ Alcance y pruebas en
   El resaltado atenúa todas las piezas. Tolvas, bloques y bobinas huecas usan
   geometrías compartidas; las bobinas separan acero satinado, capas y cinchos.
   Tablero y preview orientan la luz hemisférica al eje vertical Z.
+- Midsommar Express usa [hippie-model.mjs](../frontend/hippie-model.mjs) para seis escenas
+  deterministas, ropa, poses y decoración vegetal. Las actividades colocan los
+  instrumentos y objetos en las manos; la pareja de baile comparte dos puntos
+  de contacto en coordenadas del vagón. Poste, arco y utilería pertenecen al
+  mismo lote que las personas. [wagon-people.mjs](../frontend/wagon-people.mjs) comparte
+  la selección original de piel/pelo con Pasajeros, sin cambiar sus semillas.
+  [hippie-geometry.mjs](../frontend/hippie-geometry.mjs) y
+  [hippie-hair.mjs](../frontend/hippie-hair.mjs) combinan las 22 personas y los adornos de cada variante
+  en una geometría con colores por vértice. El renderizador crea sus lotes solo
+  cuando se usan; no reserva miles de instancias por personaje o prenda.
+  El tablero usa detalle bajo; previews individuales de al menos 240 px usan
+  alto. Ambos conservan cantidad, identidad, poses, blanco de la ropa y siluetas.
+  La reflexión Y corrige también el orden de índices, sin escalas negativas de
+  instancia. Un atributo por instancia aplica el mismo resaltado que al cuerpo.
+  Los lotes creados durante una construcción entran en sus rangos animados,
+  aterrizando con el vagón. El tamaño extra lateral y alto se verifica en su
+  prueba de integración; no sustituye las huellas de las demás familias.
+  La clave técnica `hippie` y los seis IDs se conservan por compatibilidad;
+  el nombre visible es Midsommar Express. Contratos y evidencia en
+  [la ficha de la familia](work/hippie-train.md).
 - Renderizado WebGL bajo demanda y DPR máximo 2. Sin selector ni retorno a 2D;
   se ignoran preferencias/enlaces antiguos de vista. Si falla WebGL, se oculta el
   mapa y se ofrece reintentar 3D, sin modificar sala ni estado del juego.
-- [wagon-preview.js](../wagon-preview.js) comparte `createWagonRenderer` con el
+- [wagon-preview.js](../frontend/wagon-preview.js) comparte `createWagonRenderer` con el
   tablero. El selector usa una sola escena/cámara ortográfica, lateral en escritorio, con
   capacidad para todas las variantes y centros separados 21,3 unidades: los
   enganches existentes se tocan sin superponer las carrocerías. La cámara encuadra
   el tren completo a la altura de sus laterales. `wagonVariants` aporta IDs y
   etiquetas: las seis
-  composiciones de Pasajeros o un diseño clásico para familias aún sin variantes.
+  composiciones de Pasajeros y de Midsommar Express, o un diseño clásico para familias aún sin variantes.
   Los ejemplos conservan un aspecto estable al volver a un color; no representan
   el orden ni los personajes exactos de una ruta. La paleta queda encima y los
   vagones se muestran conectados en una franja de 78 px de alto, sin tarjetas,

@@ -1,9 +1,9 @@
 "use strict";
 const test = require("node:test"), assert = require("node:assert/strict");
 const fs = require("node:fs"), os = require("node:os"), path = require("node:path");
-const Engine = require("../engine"), { createMatchArchive } = require("../match-archive");
-const { loadState } = require("../room-store"), { createSupabaseStore } = require("../supabase-store");
-const { createDurableQueue } = require("../durable-queue");
+const Engine = require("../backend/engine"), { createMatchArchive } = require("../backend/match-archive");
+const { loadState } = require("../backend/room-store"), { createSupabaseStore } = require("../backend/supabase-store");
+const { createDurableQueue } = require("../backend/durable-queue");
 const { fakeSupabase } = require("./helpers/fake-supabase");
 const { createCheckpointHandler } = require("../game/application/checkpoint");
 const { createRoomStager } = require("../game/application/room-stage");

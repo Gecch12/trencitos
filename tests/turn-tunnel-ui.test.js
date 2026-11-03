@@ -3,8 +3,8 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const vm = require("node:vm");
-const UI = require("../game-ui");
-const E = require("../engine");
+const UI = require("../frontend/game-ui");
+const E = require("../backend/engine");
 const { tunnelRoom } = require("./helpers/tunnel-preview");
 
 test("turn banner distinguishes playing, second draw, tunnels, initial selection and waiting", () => {
@@ -88,8 +88,8 @@ for (const [kind, cards, surcharge] of [
 });
 
 test("reconnect snapshots never replay stored tunnel evidence, while fresh events are consumed once", () => {
-  const source = fs.readFileSync(require.resolve("../app.js"), "utf8");
-  const context = vm.createContext({ I18n: require("../i18n"), lastEffectId: null, waitingForGameStart: false, document: { hidden: false } });
+  const source = fs.readFileSync(require.resolve("../frontend/app.js"), "utf8");
+  const context = vm.createContext({ I18n: require("../shared/i18n"), lastEffectId: null, waitingForGameStart: false, document: { hidden: false } });
   vm.runInContext(source.slice(source.indexOf("function prepareEffects("), source.indexOf("function playEffects(")), context);
   const next = { events: [{ id: 4, type: "tunnel_reveal", seat: 0, revealed: ["red"] }] };
   assert.equal(context.prepareEffects(next).length, 0);
@@ -104,14 +104,14 @@ test("reconnect snapshots never replay stored tunnel evidence, while fresh event
 });
 
 function revealHarness(reduced = false) {
-  const source = fs.readFileSync(require.resolve("../app.js"), "utf8");
+  const source = fs.readFileSync(require.resolve("../frontend/app.js"), "utf8");
   let time = 1000;
   const slots = Array.from({length: 3}, () => ({children: [], animations: 0, classList: {toggle() {}},
     replaceChildren(...children) { this.children = children; }, append(node) { this.children.push(node); }, animate() { this.animations++; return {cancel() {}}; }}));
   const nodes = { dialog: {dataset: {}, classList: {add() {}}, querySelector() {return null;}, querySelectorAll() {return [];}}, dialogTitle: {}, tunnelRevealStatus: {},
     tunnelSequence: { querySelector: selector => slots[+selector.match(/"(\d+)"/)[1]] } };
   const game = {players: [{name: "A"}, {name: "B"}], routes: [{id: 0,n:2}], sharedTunnel: {id: 7, seat: 0, routeId: 0, revealed: ["red", "blue", "wild"], paymentColor: "red", surcharge: 2, stage: "reveal", startedAt: 1000, until: 3800, cardMs: 700}};
-  const context = vm.createContext({I18n: require('../i18n'), GameUI:UI, game, seat: 1, tunnelReveal: null, uiDialog: null,
+  const context = vm.createContext({I18n: require('../shared/i18n'), GameUI:UI, game, seat: 1, tunnelReveal: null, uiDialog: null,
     reducedMotion: {matches: reduced}, Date: {now: () => time}, serverOffset: 0, replayAt: null,
     document: {hidden: false, createElement: () => ({})}, $: id => nodes[id], escapeHTML: String, routeName: () => "Paris — Bruxelles",
     colorCard: color => ({color}), playSound() {}, syncBoard3D() {}, showTunnelDialog() {throw Error('Rival cannot decide');},

@@ -3,15 +3,15 @@ const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
 const { once } = require('node:events');
 const { connect } = require('./helpers/ws-client');
-const Directory = require('../room-directory');
-const Engine = require('../engine');
-const { serializableRoom } = require('../room-store');
+const Directory = require('../backend/room-directory');
+const Engine = require('../backend/engine');
+const { serializableRoom } = require('../backend/room-store');
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'trencitos-directory-'));
 process.env.STATE_BACKEND='file'; process.env.STATE_FILE=path.join(dir,'rooms.json');
 let app, port; const peers=[];
 async function client(){const c=await connect(port);peers.push(c);return c;}
 async function flush(c){c.send({type:'ping'});await c.next('pong');}
-test.before(async()=>{app=require('../server');await app.ready;app.server.listen(0,'127.0.0.1');await once(app.server,'listening');port=app.server.address().port;});
+test.before(async()=>{app=require('../backend/server');await app.ready;app.server.listen(0,'127.0.0.1');await once(app.server,'listening');port=app.server.address().port;});
 test.after(async()=>{peers.forEach(c=>c.close());await app.shutdown();fs.rmSync(dir,{recursive:true,force:true});});
 
 test('legacy/private/practice/abandoned/finished rooms never enter the public directory',()=>{
@@ -38,7 +38,7 @@ test('spectator projection excludes hands, destinations and hidden draws, but in
   for(const p of view.players){assert.equal(p.hand,undefined);assert.equal(p.tickets,undefined);}
 });
 test('added bots can receive every free color, respect disconnected reservations and release their color on removal',async t=>{
-  const colors=require('../data').PLAYER_COLORS, crypto=require('node:crypto');
+  const colors=require('../shared/data').PLAYER_COLORS, crypto=require('node:crypto');
   const host=await client();host.send({type:'create',code:'834004',name:'Host',color:colors[0],visibility:'private'});await host.next('lobby');
   const guest=await client();guest.send({type:'join',code:'834004',name:'Guest',color:colors.at(-1)});await guest.next('lobby');
   guest.close();await host.next('lobby',m=>m.members.length===2&&!m.members[1].connected);

@@ -1,6 +1,6 @@
 // Disposable localhost fixtures. No production account or database is used.
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
-const Engine=require('../../engine'),{createMatchArchive}=require('../../match-archive'),{saveRooms,hashToken}=require('../../room-store');
+const Engine=require('../../backend/engine'),{createMatchArchive}=require('../../backend/match-archive'),{saveRooms,hashToken}=require('../../backend/room-store');
 const {chooseBotAction}=require('./bots-baseline');
 const token=crypto.randomBytes(32).toString('hex'),guest=hashToken(token),archive=createMatchArchive();
 for(const [index,visibility] of ['public','private','public'].entries()){
@@ -18,7 +18,7 @@ for(const [index,visibility] of ['public','private','public'].entries()){
 }
 const file=path.join(os.tmpdir(),'trencitos-history-ui-fixture.json');saveRooms(file,new Map(),archive.state);
 Object.assign(process.env,{STATE_BACKEND:'file',STATE_FILE:file,AUTH_ENABLED:'false'});
-const app=require('../../server'),handler=app.server.listeners('request')[0];app.server.removeListener('request',handler);
+const app=require('../../backend/server'),handler=app.server.listeners('request')[0];app.server.removeListener('request',handler);
 app.server.on('request',(req,res)=>{
  if(req.url==='/__qa/setup'){res.writeHead(303,{'Set-Cookie':`trencitos_guest=${token}; Path=/; HttpOnly; SameSite=Lax`,Location:'/profile?tab=history'});res.end();}
  else handler(req,res);

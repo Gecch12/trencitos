@@ -1,9 +1,9 @@
 // Full tunnel story over HTTP/WebSockets, with a separate server and temporary data.
 const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
-const {chromium}=require('playwright'),E=require('../engine'),{tunnelRoom}=require('./helpers/tunnel-preview');
+const {chromium}=require('playwright'),E=require('../backend/engine'),{tunnelRoom}=require('./helpers/tunnel-preview');
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'trencitos-tunnel-outcomes-'));
 Object.assign(process.env,{STATE_BACKEND:'file',STATE_FILE:path.join(temp,'state.json'),AUTH_ENABLED:'false'});
-const app=require('../server'),out=path.resolve('.qa/tunnel-outcomes');fs.mkdirSync(out,{recursive:true});
+const app=require('../backend/server'),out=path.resolve('.qa/tunnel-outcomes');fs.mkdirSync(out,{recursive:true});
 const report={checks:[],errors:[]};let browser;
 (async()=>{
  await app.ready;await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));

@@ -38,7 +38,7 @@ Implementado en esta rama:
   respalda el `block` usado por bots y otras comprobaciones del motor.
 - [legacy-errors.js](../../game/compat/legacy-errors.js): conserva los mensajes
   existentes de los cuatro errores de construcción extraídos.
-- [engine.js](../../engine.js): `pay`/`block` conservan sus firmas. `decideClaim`
+- [engine.js](../../backend/engine.js): `pay`/`block` conservan sus firmas. `decideClaim`
   proyecta temporalmente definición y propiedad por separado. Aplica el plan
   con el gasto, reciclado, registro, observación y avance de turno existentes.
 

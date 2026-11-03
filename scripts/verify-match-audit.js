@@ -1,5 +1,5 @@
 'use strict';
-const {frameHash}=require('../match-archive');
+const {frameHash}=require('../backend/match-archive');
 function verifyAudit(data){
  if(data?.match?.schemaVersion!==1||!Array.isArray(data.frames)||!data.frames.length)throw Error('Formato de auditoría no compatible.');
  let previous=null;

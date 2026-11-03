@@ -1,9 +1,9 @@
 // Real local HTTP/WebSocket and Chrome; disposable state, no existing server.
 const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
-const {chromium}=require('playwright'),E=require('../engine');
+const {chromium}=require('playwright'),E=require('../backend/engine');
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'trencitos-controls-')),out=path.resolve('.qa/table-controls');
 Object.assign(process.env,{STATE_BACKEND:'file',STATE_FILE:path.join(temp,'state.json'),AUTH_ENABLED:'false'});
-const app=require('../server'),report={checks:[],errors:[],date:new Date().toISOString()};fs.mkdirSync(out,{recursive:true});
+const app=require('../backend/server'),report={checks:[],errors:[],date:new Date().toISOString()};fs.mkdirSync(out,{recursive:true});
 let browser,host;
 (async()=>{
  await app.ready;await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
@@ -20,8 +20,8 @@ let browser,host;
  await guest.locator('#openJoin').click();await guest.locator('#code').fill(code);await guest.locator('#join').click();await guest.waitForSelector('#roompanel:not(.hidden)');
  assert.equal(await guest.locator('#roomTurnSeconds').isDisabled(),true);
  assert.deepEqual(app.rooms.get(code).timing,{turnSeconds:90,ticketExtraSeconds:15,initialSeconds:90});
- assert.deepEqual(require('../room-store').loadRooms(process.env.STATE_FILE).find(r=>r.code===code).timing,app.rooms.get(code).timing);
- assert.equal(require('../room-directory').listRooms(app.rooms).find(r=>r.code===code).turnSeconds,90);
+ assert.deepEqual(require('../backend/room-store').loadRooms(process.env.STATE_FILE).find(r=>r.code===code).timing,app.rooms.get(code).timing);
+ assert.equal(require('../backend/room-directory').listRooms(app.rooms).find(r=>r.code===code).turnSeconds,90);
  // Network validation must reject a tampered timer and a guest edit.
  await guest.evaluate(()=>send({type:'room_settings',visibility:'private',maxPlayers:4,timing:{turnSeconds:30,ticketExtraSeconds:30,initialSeconds:30}}));await guest.waitForFunction(()=>document.querySelector('#lobbyError').textContent.includes('anfitrión'));
  await host.evaluate(()=>send({type:'room_settings',visibility:'private',maxPlayers:4,timing:{turnSeconds:42,ticketExtraSeconds:30,initialSeconds:30}}));await host.waitForFunction(()=>document.querySelector('#lobbyError').textContent.includes('tiempos'));

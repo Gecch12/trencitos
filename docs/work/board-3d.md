@@ -149,16 +149,16 @@ la entrega histórica siguiente solo describe M1–M9.
 `syncBoard3D` entrega solo rutas públicas, colores, estaciones y los IDs del
 resaltado autorizado del cliente. Selección SVG y motor conservan reglas/privacidad.
 
-[WAGON_STYLES](../../wagon-models.mjs) determina la familia por color de jugador,
+[WAGON_STYLES](../../frontend/wagon-models.mjs) determina la familia por color de jugador,
 nunca por vía o cartas pagadas. Carbón usa tolva alta; piedra, bloques de cantera;
 bobinas, cilindros huecos con capas/cinchos/cunas; correo, coche postal; mercancías,
 contenedores acanalados. Amarillo lleva dos deportivos y ámbar lleva grano.
 Las claves persistidas anteriores se conservan: solo cambia la pintura visible.
 No hay reglas de carga, selector de materiales ni identidad dorada en la UI.
 
-[El renderizador](../../wagon-renderer.js) comparte geometrías/materiales en
+[El renderizador](../../frontend/wagon-renderer.js) comparte geometrías/materiales en
 instancias; reflejos de estudio procedurales y huella acotada. La
-[vista previa](../../wagon-preview.js) usa las mismas piezas: un canvas en práctica
+[vista previa](../../frontend/wagon-preview.js) usa las mismas piezas: un canvas en práctica
 y sala, liberado al ocultarlo o jugar. La selección provisional responde al clic
 y se reconcilia con el servidor; la corrección de latencia local y su evidencia
 están en [rendimiento del selector](wagon-preview-performance.md).

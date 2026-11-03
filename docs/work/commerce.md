@@ -24,6 +24,10 @@ checkout en esta etapa. Vendedor: Perú. Persona/empresa y proveedor sin definir
   candidatos discutidos): elegibilidad para videojuegos/cosméticos, desembolsos,
   costes y obligaciones. No hay proveedor elegido ni cuenta contratada.
 
+La beta incorpora [Midsommar Express](hippie-train.md) como familia del color Blanco.
+Es una selección disponible ahora, sin compra ni concesión de propiedad pagada.
+La futura separación entre color, familia y derechos sigue pendiente.
+
 ## Evidencia y siguiente paso
 
 Solo diseño. Tras identidad, definir esquema mínimo de catálogo/acceso y política

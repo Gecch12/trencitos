@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test"), assert = require("node:assert/strict");
 const fs = require("node:fs"), vm = require("node:vm");
-const Lobby = require("../lobby-ui"), { PLAYER_COLORS } = require("../data");
+const Lobby = require("../shared/lobby-ui"), { PLAYER_COLORS } = require("../shared/data");
 
 test("new codes are numeric strings of six to ten digits, preserving leading zeroes", () => {
   for (const code of ["000000", "1234567", "00123456", "123456789", "0000000000"]) assert.equal(Lobby.isNewCode(code), true);
@@ -33,7 +33,7 @@ test("retired pink is restored only for existing owners, never offered to new pl
   assert.equal(new Set(Lobby.restoreColors([{color:pink},{color:pink},{}])).size,3);
 });
 test("home exposes room directory tabs, join dialog and a separate profile route", () => {
-  const html = fs.readFileSync(require.resolve("../index.html"), "utf8");
+  const html = fs.readFileSync(require.resolve("../frontend/index.html"), "utf8");
   assert.match(html, /<title>Trencitos<\/title>/);
   assert.doesNotMatch(html, /1901|Europa te espera|EL GRAN VIAJE|Proyecto personal no oficial|Sonido activado|EUROPA ·/);
   assert.match(html, /id="roomDirectory"[^>]*role="tabpanel"/);
@@ -44,9 +44,9 @@ test("home exposes room directory tabs, join dialog and a separate profile route
   assert.ok(html.indexOf('src="lobby-ui.js"') < html.indexOf('src="app.js"'));
 });
 test("online status is hidden but offline errors remain visible", () => {
-  const source = fs.readFileSync(require.resolve("../app.js"), "utf8");
+  const source = fs.readFileSync(require.resolve("../frontend/app.js"), "utf8");
   const node = { dataset: {}, classList: { toggle(_, hidden) { node.hidden = hidden; } } };
-  const ctx = vm.createContext({ I18n: require("../i18n"), $: () => node, sock: { readyState: 1 }, WebSocket: { OPEN: 1 }, sessionReplaced: false, homeBusy: true, syncHomeAvailability() {} });
+  const ctx = vm.createContext({ I18n: require("../shared/i18n"), $: () => node, sock: { readyState: 1 }, WebSocket: { OPEN: 1 }, sessionReplaced: false, homeBusy: true, syncHomeAvailability() {} });
   vm.runInContext(source.slice(source.indexOf("function status("), source.indexOf("function send(")), ctx);
   ctx.status("● Conectado"); assert.equal(node.hidden, true);
   ctx.sock.readyState = 3; ctx.status("Desconectado");

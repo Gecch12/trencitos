@@ -1,8 +1,8 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const E = require("../engine");
-const { PLAYER_COLORS } = require("../data");
+const E = require("../backend/engine");
+const { PLAYER_COLORS } = require("../shared/data");
 
 // Behavioral boundary for the first extraction. Exercise the public facade,
 // real Europe routes and a complete card inventory without timers or sockets.

@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const E = require("../engine");
+const E = require("../backend/engine");
 
 test("blind draw color is private to its recipient in every seat's serialized view", () => {
   const g = E.newGame(["A", "B", "C", "D", "E"]);

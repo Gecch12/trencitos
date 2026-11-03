@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'), fs=require('node:fs'), os=require('n
 const {chromium}=require('playwright');
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'trencitos-shell-'));
 process.env.STATE_BACKEND='file';process.env.STATE_FILE=path.join(temp,'rooms.json');process.env.AUTH_ENABLED='false';
-const app=require('../server');
+const app=require('../backend/server');
 const out=path.resolve(process.env.QA_OUT || path.join(__dirname,'../docs/qa'));fs.mkdirSync(out,{recursive:true});
 const report={date:new Date().toISOString(),tests:[],responsive:[],errors:[]};
 const save=()=>fs.writeFileSync(path.join(out,'shell-report.json'),JSON.stringify(report,null,2)+'\n');
@@ -67,7 +67,7 @@ const save=()=>fs.writeFileSync(path.join(out,'shell-report.json'),JSON.stringif
   await host.waitForFunction(()=>document.querySelector('#roomCount').textContent==='3/3');assert.equal(await host.locator('#profilePage').isVisible(),true);assert.match(host.url(),/profile/);
   await host.locator('#returnRoom').click();assert.match(await host.locator('#roomFriendsMessage').textContent(),/La sala está llena/);
   assert.equal(await guest.locator('#roomCapacity').isDisabled(),true);assert.equal(await guest.locator('[data-add-bot]').count(),0);
-  const saved=require('../room-store').loadRooms(process.env.STATE_FILE).find(r=>r.code===code);assert.equal(saved.visibility,'public');assert.equal(saved.maxPlayers,3);assert.equal(saved.members.filter(m=>m.bot).length,1);
+  const saved=require('../backend/room-store').loadRooms(process.env.STATE_FILE).find(r=>r.code===code);assert.equal(saved.visibility,'public');assert.equal(saved.maxPlayers,3);assert.equal(saved.members.filter(m=>m.bot).length,1);
   await shot(host,'waiting-desktop');
   for(const [w,h] of [[1440,900],[1025,768],[1024,768],[768,1024],[390,844],[360,800],[844,390]]){
    await layout(host,'waiting',w,h);

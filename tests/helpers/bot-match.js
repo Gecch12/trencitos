@@ -24,8 +24,8 @@ function match({ seed = 1, seats = ["new", "old", "old", "old"], first = 0, meas
     }, module, module.exports);
     return module.exports;
   }
-  const engine = load(path.join(root, "engine.js"));
-  const policies = { new: load(path.join(root, "bots.js")).chooseBotAction,
+  const engine = load(path.join(root, "backend/engine.js"));
+  const policies = { new: load(path.join(root, "backend/bots.js")).chooseBotAction,
     old: load(path.join(root, "tests/helpers/bots-baseline.js")).chooseBotAction,
     stage1: load(path.join(root, "tests/helpers/bots-stage1.js")).chooseBotAction,
     heuristic: (g, seat, rng) => policies.new(g, seat, rng, { search: false }) };

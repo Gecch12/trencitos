@@ -2,7 +2,7 @@
 // Local visual QA: five routes claimed through the engine, no saved rooms.
 // PORT=3001 node tests/helpers/ownership-preview.js
 // Set localStorage['rr-room-QAMARK']='preview-human' before /?room=QAMARK.
-const E = require("../../engine");
+const E = require("../../backend/engine");
 function ownershipRoom(code = "QAMARK") {
   const game = E.newGame(["Probador", "Rival azul", "Rival verde", "Rival amarillo", "Rival violeta"]);
   const pool = [...game.deck, ...game.face, ...game.discard, ...game.players.flatMap(p => p.hand)];
@@ -37,7 +37,7 @@ function madridRoom() {
 if (require.main === module) {
   const path = require("node:path"), os = require("node:os");
   process.env.STATE_FILE = path.join(os.tmpdir(), `ferrovia-ownership-preview-${process.pid}.json`);
-  const { server, rooms } = require("../../server");
+  const { server, rooms } = require("../../backend/server");
   rooms.set("QAMARK", ownershipRoom());
   rooms.set("QAMAD", madridRoom());
   const completed = madridRoom(); completed.code = "QADONE";

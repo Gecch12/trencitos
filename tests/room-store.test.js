@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test"), assert = require("node:assert/strict");
 const fs = require("node:fs"), os = require("node:os"), path = require("node:path");
-const { saveRooms, loadState, loadRooms, hashToken, serializableRoom } = require("../room-store");
+const { saveRooms, loadState, loadRooms, hashToken, serializableRoom } = require("../backend/room-store");
 function fixture(t) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rail-store-"));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));

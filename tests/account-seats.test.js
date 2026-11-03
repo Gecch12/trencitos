@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict');
-const {createAccountSeats}=require('../account-seats');
-const {serializableRoom,hashToken}=require('../room-store');
+const {createAccountSeats}=require('../backend/account-seats');
+const {serializableRoom,hashToken}=require('../backend/room-store');
 function setup(){
   const r={code:'123456',members:[{name:'Angel',token:'a'.repeat(48)},{name:'Otro',tokenHash:hashToken('b'.repeat(48)),accountId:'other-account'}]};
   const rooms=new Map([[r.code,r]]);let saved;

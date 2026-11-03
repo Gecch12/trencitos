@@ -4,10 +4,10 @@
 const fs = require("node:fs"), os = require("node:os"), path = require("node:path");
 process.env.STATE_BACKEND = "file";
 process.env.STATE_FILE = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "rail-responsive-")), "rooms.json");
-const E = require("../../engine");
+const E = require("../../backend/engine");
 const { ownershipRoom } = require("./ownership-preview");
 const { tunnelRoom } = require("./tunnel-preview");
-const { server, rooms, ready } = require("../../server");
+const { server, rooms, ready } = require("../../backend/server");
 const qaToken = "a".repeat(48); // Disposable fixture identity, not a real credential.
 function add(room) {
   room.members[0].token = qaToken;

@@ -11,7 +11,7 @@ process.env.SUPABASE_SECRET_KEY = 'sb_secret_test_only';
 global.fetch = (url, options) => String(url).startsWith(process.env.SUPABASE_URL) ? api.fetch(url, options) : originalFetch(url, options);
 let app, port; const clients = [];
 async function boot() {
-  delete require.cache[require.resolve('../server')]; app = require('../server'); await app.ready;
+  delete require.cache[require.resolve('../backend/server')]; app = require('../backend/server'); await app.ready;
   app.server.listen(0, '127.0.0.1'); await once(app.server, 'listening'); port = app.server.address().port;
 }
 async function stop() {
@@ -83,7 +83,7 @@ test('remote failure restores room membership and tokens, emits no success, and 
 
 test('custom codes and chosen colors commit atomically to Supabase and survive a restart', async () => {
   await stop(); await boot();
-  const colors = require('../data').PLAYER_COLORS;
+  const colors = require('../shared/data').PLAYER_COLORS;
   const a = await client(); a.send({ type: 'create', code: '0022334455', name: 'Colores', color: colors[4] });
   const lobby = await a.next('lobby');
   const release = api.hold();

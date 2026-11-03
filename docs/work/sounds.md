@@ -6,7 +6,7 @@
 Pendiente aprobado para pulir después: sonidos al desplegar/desglosar cartas y
 construir. Ya existen efectos sintetizados de papel, barajado al renovar la mesa,
 construcción, turno, trazos de pluma al elegir billetes y tic-tac de cuenta atrás en
-[app.js](../../app.js); eso no implementa selección de packs.
+[app.js](../../frontend/app.js); eso no implementa selección de packs.
 
 ## Hitos de definición
 

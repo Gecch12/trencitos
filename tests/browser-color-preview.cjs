@@ -4,8 +4,8 @@ const fs = require('node:fs'), os = require('node:os'), path = require('node:pat
 const { chromium } = require('playwright');
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'trencitos-colors-'));
 Object.assign(process.env, { STATE_BACKEND: 'file', STATE_FILE: path.join(temp, 'rooms.json'), AUTH_ENABLED: 'false' });
-const app = require('../server');
-const { loadState } = require('../room-store');
+const app = require('../backend/server');
+const { loadState } = require('../backend/room-store');
 const out = path.resolve(__dirname, '../.qa/color-preview');
 
 (async () => {

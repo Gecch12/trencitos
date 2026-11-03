@@ -101,9 +101,9 @@ ya tienen puertos separados; los adaptadores conservan checkpoint global y
 formatos existentes. Lobby, estado, grabación e historial/replay ya usan
 consultas autorizadas separadas del transporte y con salidas independientes del
 estado fuente. Los recibos nuevos ya detectan IDs reutilizados con otra acción
-y conservan IDs legados, ventana de 128 y rollback conjunto. Continúa la
-organización de frontend/backend. Antes de mover archivos visuales, integrar
-un checkpoint revisado del trabajo de vagones. Las ediciones posteriores de
+y conservan IDs legados, ventana de 128 y rollback conjunto. El sexto corte incorpora un checkpoint revisado
+de vagones y organiza `frontend/`, `backend/` y `shared/`, conservando `game/`,
+las URLs y el despliegue único. Falta la aceptación conjunta de la fase. Las ediciones posteriores de
 otros worktrees no se sincronizan automáticamente con esta rama.
 
 No mover archivos por tamaño ni convertir cada función en un módulo. Los límites

@@ -3,6 +3,10 @@
 ## Entorno
 
 Node >=20; comandos en la raíz Git (la carpeta que contiene `package.json`).
+Frontend y backend tienen carpetas distintas, una instalación y un proceso Node.
+`server.js` conserva el arranque compatible; la implementación está en `backend/server.js`.
+El estado de archivo predeterminado sigue siendo `room-state.json` de la raíz,
+aunque el proceso se lance desde otra carpeta. Las herramientas Python viven en `scripts/`.
 Ejecutar `npm ci` para instalar Three.js y las herramientas de QA.
 PGlite es dependencia solo de desarrollo para comprobar SQL/permisos de identidad e historial;
 no se carga en producción. Auth es optativo: [configuración Google](GOOGLE_AUTH.md).
@@ -35,11 +39,11 @@ los conjuntos usados para ajuste/evaluación están en [la ficha](work/practice-
 
 ## Empaquetado Docker
 
-`Dockerfile` instala solo dependencias de producción y copia los módulos y
-recursos de la raíz (`*.js`, `*.mjs`, `*.css`, `*.html`), `game/` y `assets/`.
-No copia el repositorio entero. La lista pública de `server.js` sigue decidiendo
-qué archivos se sirven; incluir el dominio en la imagen no lo hace público.
-Al separar carpetas en fase 3 hay que actualizar estas entradas junto al código.
+`Dockerfile` instala solo dependencias de producción y copia
+el arranque raíz `server.js` y las carpetas `backend/`, `frontend/`, `shared/` y `game/`.
+No copia el repositorio entero; incluir el dominio en la imagen no lo hace público.
+La lista de URLs públicas vive en `backend/public-assets.js`; mover un archivo no
+lo expone automáticamente. El arranque y las variables de Render no cambian.
 `.dockerignore` excluye credenciales, estado/archivo local, QA, docs y worktrees.
 
 Para comprobar la imagen local, sin conectarla a servicios externos:

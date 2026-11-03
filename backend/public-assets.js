@@ -1,0 +1,64 @@
+"use strict";
+const fs = require("node:fs");
+const path = require("node:path");
+const ROOT = path.resolve(__dirname, "..");
+// Public URLs are a transport contract, independent of the repository layout.
+// Never expose a directory wholesale: shared modules are public only if listed.
+const ASSETS = Object.freeze({
+  "/": ["frontend/index.html", "text/html; charset=utf-8"],
+  "/index.html": ["frontend/index.html", "text/html; charset=utf-8"],
+  "/privacy.html": ["frontend/privacy.html", "text/html; charset=utf-8"],
+  "/privacy.css": ["frontend/privacy.css", "text/css; charset=utf-8"],
+  "/board-3d.js": ["frontend/board-3d.js", "text/javascript; charset=utf-8"],
+  "/wagon-renderer.js": ["frontend/wagon-renderer.js", "text/javascript; charset=utf-8"],
+  "/wagon-preview.js": ["frontend/wagon-preview.js", "text/javascript; charset=utf-8"],
+  "/wagon-models.mjs": ["frontend/wagon-models.mjs", "text/javascript; charset=utf-8"],
+  "/board-camera.js": ["frontend/board-camera.js", "text/javascript; charset=utf-8"],
+  "/board-3d.css": ["frontend/board-3d.css", "text/css; charset=utf-8"],
+  "/vendor/three.module.js": ["node_modules/three/build/three.module.js", "text/javascript; charset=utf-8"],
+  "/vendor/three.core.js": ["node_modules/three/build/three.core.js", "text/javascript; charset=utf-8"],
+  "/app.js": ["frontend/app.js", "text/javascript; charset=utf-8"],
+  "/style.css": ["frontend/style.css", "text/css; charset=utf-8"],
+  "/data.js": ["shared/data.js", "text/javascript; charset=utf-8"],
+  "/map-layout.js": ["frontend/map-layout.js", "text/javascript; charset=utf-8"],
+  "/game-timing.js": ["shared/game-timing.js", "text/javascript; charset=utf-8"],
+  "/game-ui.js": ["frontend/game-ui.js", "text/javascript; charset=utf-8"],
+  "/game.css": ["frontend/game.css", "text/css; charset=utf-8"],
+  "/responsive.css": ["frontend/responsive.css", "text/css; charset=utf-8"],
+  "/lobby.css": ["frontend/lobby.css", "text/css; charset=utf-8"],
+  "/lobby-ui.js": ["shared/lobby-ui.js", "text/javascript; charset=utf-8"],
+  "/account-ui.js": ["frontend/account-ui.js", "text/javascript; charset=utf-8"],
+  "/translations.js": ["shared/translations.js", "text/javascript; charset=utf-8"],
+  "/replay-state.js": ["shared/replay-state.js", "text/javascript; charset=utf-8"],
+  "/history-ui.js": ["frontend/history-ui.js", "text/javascript; charset=utf-8"],
+  "/i18n.js": ["shared/i18n.js", "text/javascript; charset=utf-8"],
+  "/shell.js": ["frontend/shell.js", "text/javascript; charset=utf-8"],
+  "/shell.css": ["frontend/shell.css", "text/css; charset=utf-8"],
+  "/shell-icons.js": ["frontend/shell-icons.js", "text/javascript; charset=utf-8"],
+  "/hippie-model.mjs": ["frontend/hippie-model.mjs", "text/javascript; charset=utf-8"],
+  "/hippie-geometry.mjs": ["frontend/hippie-geometry.mjs", "text/javascript; charset=utf-8"],
+  "/hippie-hair.mjs": ["frontend/hippie-hair.mjs", "text/javascript; charset=utf-8"],
+  "/wagon-people.mjs": ["frontend/wagon-people.mjs", "text/javascript; charset=utf-8"],
+});
+const CSP = "default-src 'self'; connect-src 'self' ws: wss:; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'";
+function servePublicAsset(pathname, res) {
+  let asset = Object.hasOwn(ASSETS, pathname) ? ASSETS[pathname] : null;
+  if (!asset && /^\/assets\/(?:cards\/[a-z]+|favicon|ticket)\.svg$/.test(pathname)) {
+    const file = "frontend" + pathname;
+    if (fs.existsSync(path.join(ROOT, file))) asset = [file, "image/svg+xml; charset=utf-8"];
+  }
+  if (!asset) {
+    res.writeHead(404);
+    return res.end("Not found");
+  }
+  res.writeHead(200, {
+    "Content-Type": asset[1],
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+    "Content-Security-Policy": CSP,
+  });
+  const stream = fs.createReadStream(path.join(ROOT, asset[0]));
+  stream.on("error", () => res.destroy());
+  stream.pipe(res);
+}
+module.exports = { servePublicAsset };

@@ -3,13 +3,13 @@ const test = require("node:test"), assert = require("node:assert/strict");
 const fs = require("node:fs"), path = require("node:path"), os = require("node:os");
 const { once } = require("node:events");
 const { connect } = require("./helpers/ws-client");
-const { PLAYER_COLORS: colors } = require("../data");
-const { loadRooms } = require("../room-store");
+const { PLAYER_COLORS: colors } = require("../shared/data");
+const { loadRooms } = require("../backend/room-store");
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "trencitos-lobby-"));
 process.env.STATE_FILE = path.join(dir, "rooms.json");
 let app, port;
 const clients = [];
-async function boot() { delete require.cache[require.resolve("../server")]; app = require("../server"); app.server.listen(0, "127.0.0.1"); await once(app.server, "listening"); port = app.server.address().port; }
+async function boot() { delete require.cache[require.resolve("../backend/server")]; app = require("../backend/server"); app.server.listen(0, "127.0.0.1"); await once(app.server, "listening"); port = app.server.address().port; }
 async function stop() { clients.splice(0).forEach(c => c.close()); await app.shutdown(); }
 async function client() { const c = await connect(port); clients.push(c); return c; }
 async function create(code, color = colors[0]) { const c = await client(); c.send({ type: "create", name: "Anfitrión", code, color }); return { c, lobby: await c.next("lobby") }; }

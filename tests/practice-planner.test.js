@@ -1,9 +1,9 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const E = require("../engine");
-const P = require("../practice-planner");
-const { chooseBotAction } = require("../bots");
+const E = require("../backend/engine");
+const P = require("../backend/practice-planner");
+const { chooseBotAction } = require("../backend/bots");
 const { match } = require("./helpers/bot-match");
 const first = () => 0;
 const route = (id, a, b, n, color = "red", extra = {}) => ({ id, a, b, n, color, owner: null, ferry: 0, tunnel: false, ...extra });

@@ -2,7 +2,7 @@
 // Deterministic browser QA only. Never imported or served by the application.
 // PORT=3002 node tests/helpers/tunnel-preview.js
 // Before opening /?room=QAPAY0, set localStorage['rr-room-QAPAY0']='preview-human'.
-const E = require("../../engine");
+const E = require("../../backend/engine");
 function tunnelRoom(code, kind = "color", readyToClaim = false) {
   const g = E.newGame(["Probador", "Rival azul", "Rival verde", "Rival amarillo"]);
   const all = [...g.deck, ...g.face, ...g.discard, ...g.players.flatMap(p => p.hand)];
@@ -31,7 +31,7 @@ function tunnelRoom(code, kind = "color", readyToClaim = false) {
 if (require.main === module) {
   const path = require("node:path"), os = require("node:os");
   process.env.STATE_FILE = path.join(os.tmpdir(), `ferrovia-tunnel-preview-${process.pid}.json`);
-  const { server, rooms } = require("../../server");
+  const { server, rooms } = require("../../backend/server");
   for (const [code, kind] of [["QAPAY0", "color"], ["QAPAY1", "color"], ["QADECL", "decline"], ["QAWILD", "wild"]]) rooms.set(code, tunnelRoom(code, kind));
   const port = Number(process.env.PORT || 3002);
   server.listen(port, "127.0.0.1", () => console.log(`Tunnel QA: http://localhost:${port}`));

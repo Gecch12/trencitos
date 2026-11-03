@@ -1,6 +1,6 @@
 "use strict";
 const test = require("node:test"), assert = require("node:assert/strict");
-const crypto = require("node:crypto"), E = require("../engine");
+const crypto = require("node:crypto"), E = require("../backend/engine");
 const random = seed => max => { seed = (Math.imul(seed,1664525)+1013904223)>>>0;return Math.floor(seed/4294967296*max); };
 const act = (g,seat,msg,now) => E.action(g,seat,msg,{now,random:()=>0});
 function ready() {

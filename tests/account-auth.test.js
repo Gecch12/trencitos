@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const crypto = require('node:crypto');
-const {createAccountAuth} = require('../account-auth');
+const {createAccountAuth} = require('../backend/account-auth');
 
 async function fixture(t, hooks={}) {
   let auth, time=Date.now(), revoked=false, expired=false, refreshCount=0;
@@ -65,7 +65,8 @@ test('origin, request size, profile fields and account IDs are verified on the s
   const f=await fixture(t);await f.login();
   assert.equal((await f.request('/api/account/profile',{nickname:'Evil',color:'#d45748'},{headers:{Origin:'https://evil.test'}})).status,403);
   assert.equal((await f.request('/api/account/profile',{nickname:'x'.repeat(5000),color:'#d45748'})).status,413);
-  for(const input of [{nickname:'<script>',color:'#d45748'},{nickname:'Angel',color:'#ffffff'},{nickname:'',color:'#d45748'}]) assert.equal((await f.request('/api/account/profile',input)).status,400);
+  for(const input of [{nickname:'<script>',color:'#d45748'},{nickname:'Angel',color:'#123456'},{nickname:'',color:'#d45748'}]) assert.equal((await f.request('/api/account/profile',input)).status,400);
+  assert.equal((await f.request('/api/account/profile',{nickname:'Hippie',color:'#ffffff'})).status,200);
   const res=await f.request('/api/account/profile',{id:'victim',nickname:'Angel',color:'#9ed7ed'});
   assert.equal(res.status,200);assert.deepEqual((await res.json()).profile,{id:'stable-account',nickname:'Angel',color:'#9ed7ed',avatar:'person',initialized:true});
   await f.request('/api/account/link',{id:'victim',code:'123456',token:'a'.repeat(48)});
@@ -94,7 +95,7 @@ test('Auth is explicitly optional and production refuses insecure or secret-key 
 });
 
 test('verified Google callback links guest history once; logout cannot expose that history',async t=>{
- const {createMatchArchive}=require('../match-archive'),{guestId,ensureGuest}=require('../guest-identity'),Engine=require('../engine');
+ const {createMatchArchive}=require('../backend/match-archive'),{guestId,ensureGuest}=require('../backend/guest-identity'),Engine=require('../backend/engine');
  const archive=createMatchArchive(),token=crypto.randomBytes(32).toString('hex'),guest=guestId({headers:{cookie:'trencitos_guest='+token}});
  const room={code:'12345678',visibility:'private',archiveFull:true,members:[{name:'Guest',guestId:guest},{name:'Bot',bot:true}],game:Engine.newGame(['Guest','Bot'])};
  archive.capture(room,'Abandono definitivo');archive.commit(archive.prepare());let linked=0;

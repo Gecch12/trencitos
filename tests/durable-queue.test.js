@@ -1,6 +1,6 @@
 "use strict";
 const test = require('node:test'), assert = require('node:assert/strict');
-const { createDurableQueue } = require('../durable-queue');
+const { createDurableQueue } = require('../backend/durable-queue');
 test('serialized mutations wait for commit before state/ack, including queued timers', async () => {
   let value = 0, release; const sent = [], saved = [];
   const pending = new Promise(resolve => { release = resolve; });

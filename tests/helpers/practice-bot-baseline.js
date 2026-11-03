@@ -1,6 +1,6 @@
 // Frozen pre-upgrade practice policy for reproducible comparisons (2026-10-31).
 "use strict";
-const Engine = require("../../engine");
+const Engine = require("../../backend/engine");
 
 // Private, disposable intent: never put plans into the game, broadcasts or saves.
 // Reconnection keeps the same game; replacing/collecting a game resets its plans.
