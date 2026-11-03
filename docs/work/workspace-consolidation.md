@@ -61,5 +61,6 @@ más los cambios de consolidación:
 
 El trabajo posterior parte de esa carpeta. El código publicado en Render se
 identifica exclusivamente en [Producción](../production.md): esta consolidación
-no despliega la respuesta inmediata de cartas. Su publicación y medición real
-continúan como entrega separada en [Cartas](card-interactions.md).
+no desplegó la respuesta inmediata de cartas. La publicación posterior y su
+medición real se siguen en [Cartas](card-interactions.md) y
+[la entrega continua](continuous-delivery.md).

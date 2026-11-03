@@ -23,10 +23,12 @@ locales antes de asumir que algo está integrado o publicado.
 - Verifica el cambio con las pruebas pertinentes y `node scripts/check-docs.js`.
   Para revisar impacto documental: `node scripts/check-docs.js --base HEAD`.
   Las auditorías de QA registran una ejecución histórica, no una garantía actual.
-- Publicar en `main` activa CI y, para cambios no excluidos, el despliegue de
-  Render tras aprobarlo. No uses `[skip render]` por rutina ni omitas CI para
-  publicar; coordina migraciones antes del código. Configuración y límites en
-  `docs/RENDER_SUPABASE.md`. Comprueba el estado Live antes de afirmar publicación.
+- Publicar en `main` activa CI. Render está configurado para esperar sus checks,
+  pero su automatización requiere resolver el acceso Git indicado en
+  `docs/work/continuous-delivery.md`; no presupongas que un push ya se publicó.
+  No uses `[skip render]` por rutina ni omitas CI para publicar; coordina
+  migraciones antes del código. Configuración en `docs/RENDER_SUPABASE.md`.
+  Comprueba el estado Live antes de afirmar publicación.
 
 El método general está disponible como `$project-docs-maintainer`; este archivo
 y los documentos del repo conservan las decisiones específicas de Trencitos.

@@ -1,5 +1,5 @@
 ---
-{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
+{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Cartas, pagos y limpieza de la interfaz
 
@@ -44,10 +44,9 @@ pendientes de resultados/avatar, además de las cinco propuestas sobre cartas.
 
 ## Siguiente paso
 
-Publicar y medir respuesta inmediata en producción como entrega separada.
-El cambio nuevo está validado en este checkout; la publicación histórica de las
-mejoras anteriores no certifica su despliegue. El servidor local habitual y las
-partidas de producción no se modificaron.
+Medir respuesta inmediata en un navegador de producción. El cambio está
+publicado y su protocolo/recursos fueron verificados; esa comprobación no mide
+la latencia real del clic. El servidor local habitual sigue sin reiniciar.
 
 ## Respuesta inmediata al clic · 2026-11-03
 
@@ -63,8 +62,11 @@ Ampliación aprobada con «implementa» tras el análisis Moti de la demora de c
 - [x] Métricas separadas para robos, construcción, bots y lotes mixtos. El
   guardado sigue siendo obligatorio; no se promete reducir su RTT con esta UI.
 - [x] Completar regresión y revisión final.
-- [ ] Publicar y medir en el entorno real como entrega separada, sin presentar
-  medidas locales como cifras de Render.
+- [x] Publicar: `c5c7bf2`, Live en Render a las 10:11:46 Lima del 2026-11-03.
+  CI completo 641/641, recursos iguales y `drawFeedbackVersion:1` verificados.
+  Evidencia en [Producción](../production.md).
+- [ ] Medir clic y confirmación en navegador de producción, sin presentar
+  medidas locales o de CI como cifras de Render.
 
 Verificación final: `node tests/browser-draw-feedback.cjs`, diez recorridos Chrome
 con doble remoto y guardado retenido, sin errores del navegador. En 18 clics,

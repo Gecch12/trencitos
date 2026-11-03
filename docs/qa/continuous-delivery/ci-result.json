@@ -1,0 +1,132 @@
+{
+  "commit": "c5c7bf2d83e6c581d011ae26fbf65bf3b714c413",
+  "runId": 41659648763,
+  "url": "https://github.com/Gecch12/trencitos/actions/runs/41659648763",
+  "completedAt": "2026-11-03T15:06:14Z",
+  "node": {
+    "tests": 641,
+    "pass": 641,
+    "fail": 0,
+    "durationMs": 122920.670212
+  },
+  "jobs": [
+    {
+      "id": 125999151831,
+      "name": "Tests, docs and browser",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 41659648763,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Validate documentation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run full Node suite",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Install Chrome for browser checks",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Check two-client lobby",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Check immediate draw feedback and recovery",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Keep browser evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Post Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19
+        },
+        {
+          "name": "Post Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21
+        }
+      ]
+    }
+  ],
+  "lobby": {
+    "at": "2026-11-03T15:05:07.951Z",
+    "checks": [
+      "Map cards replace select; host choice persists and reaches guest; guest cannot change it",
+      "Arrow/Home keyboard navigation and reconnect preserve authoritative choice",
+      "Compact preview opens all six variants; Escape disposes canvas and restores focus",
+      "Laptop/mobile fit, sticky start, scrolling maps and all six gallery models on mobile",
+      "Map titles, badges and controls translate into English",
+      "Selected South America starts for both clients; lobby preview resources are released"
+    ],
+    "errors": [],
+    "browser": "156.0.8078.79",
+    "passed": true
+  },
+  "drawFeedback": {
+    "checks": [
+      "Blind double click: immediate backs, bounded queue, two durable draws, no duplicate flights/sounds or rival disclosure",
+      "Two visible equal-color cards retain their distinct original slots",
+      "Depleted deck rebases the queued card after the first slot is removed",
+      "Three locomotives renew the market and cancel the old queued choice",
+      "Stale action rejects both provisional cards, restores controls and never executes the queued choice",
+      "Disconnect after send: one persisted draw, same-ID retry, canceled queue and no replayed animation",
+      "390px mobile and reduced motion preserve pending/confirmed semantics without overflow",
+      "Resize cancels provisional geometry and unsent choice without replaying the confirmed flight",
+      "Server without feedback capability keeps the legacy single confirmed animation",
+      "Failed remote commit removes previews, rolls back hand and keeps play paused"
+    ],
+    "errors": [],
+    "passed": true
+  }
+}

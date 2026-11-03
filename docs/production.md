@@ -1,6 +1,30 @@
 # Producción
 
-## Versión actual · 2026-11-03, 09:23 (Lima)
+## Versión actual · 2026-11-03, 10:11 (Lima)
+
+- Código `c5c7bf2d83e6c581d011ae26fbf65bf3b714c413`, en `origin/main`.
+  Incluye lobby con tarjetas, Sudamérica y la respuesta inmediata de cartas con
+  recibos durables, ya reunidos en la única carpeta de trabajo.
+- [Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbkvisoae00c73c6sirg):
+  **Live** a las 10:11:46 Lima, Node 26.13.0. Despliegue **manual del último
+  commit**, después de CI aprobado, sin SQL ni cambios de secretos/planes.
+  Salud previa 200, `ok:true`, `storage:supabase`, `rooms:0`.
+  [Captura](qa/continuous-delivery/render-live.png).
+- [GitHub CI](https://github.com/Gecch12/trencitos/actions/runs/41659648763):
+  **641/641 pruebas**, documentación y Chrome (lobby con dos clientes y diez
+  casos de respuesta/recuperación de cartas). [Resultado](qa/continuous-delivery/ci-result.json).
+- [Verificación HTTP/WebSocket](qa/continuous-delivery/production-http.json):
+  46 recursos públicos idénticos al checkout, siete rutas privadas con 404 y
+  backend con `drawFeedbackVersion:1`. Se creó y cerró únicamente una sala
+  privada temporal, sin iniciar partida. Salud final 200, Supabase y cero salas.
+  Este smoke test no mide la latencia de clic en un navegador real de producción.
+- Auto-Deploy quedó configurado en **After CI Checks Pass**, con filtros para
+  documentación y experimentos, pero **la automatización no está operativa**:
+  falta autorizar Render sobre `Gecch12/trencitos` desde la cuenta propietaria.
+  La publicación manual no prueba el disparador automático. Diagnóstico y
+  siguiente acción en [la ficha](work/continuous-delivery.md).
+
+## Entrega anterior · 2026-11-03, 09:23 (Lima)
 
 - Código `8146ffafbffa0c3e26a48f8f9157216a82dea13c` en `origin/main`.
   Lobby con tarjetas visuales de mapas, ajustes agrupados, vagón compacto y
@@ -22,7 +46,7 @@
   sin incorporar ni guardar cambios ajenos. El checkout local se reconcilió
   después en `e9cb403`: lobby y respuesta inmediata de cartas conviven en main.
   La [consolidación](work/workspace-consolidation.md) no despliega esos cambios
-  adicionales. La revisión publicada sigue siendo la indicada arriba.
+  adicionales. En esa entrega la revisión publicada era la indicada arriba.
 
 ## Entrega anterior · 2026-11-03, 02:26 (Lima)
 

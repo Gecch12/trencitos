@@ -18,7 +18,10 @@ El script es aditivo e idempotente: crea su propia tabla y funciones, sin borrar
 
 ## 2. Preparar Render
 
-1. Conecta tu repositorio privado con los cambios del juego en tu propia cuenta de Render. No hace falta acceso a la cuenta anterior.
+1. Conecta el repositorio mediante **Git Provider**, con la app Render autorizada
+   sobre él por su propietario. Una URL pública permite desplegar manualmente,
+   pero no aporta los eventos Git necesarios para autodeploy. No hace falta
+   cambiar la visibilidad del repositorio.
 2. Usa **New → Blueprint**, selecciona el repositorio y `render.yaml`. Si `trencitos` es una subcarpeta en el repositorio remoto, configura esa ruta como raíz del servicio y la ruta correcta del Blueprint; si el repositorio contiene directamente `package.json`, usa la raíz.
    Si ya existe el Blueprint, reutilízalo: no crees otro. `render.yaml` conserva el nombre `trencitos-swamp` para actualizar el servicio existente.
 3. Verifica **Free** antes de crear. No agregues discos ni bases Render de pago.
@@ -41,6 +44,10 @@ En un servicio existente, añade las dos variables de Supabase manualmente: `syn
 No copies la clave en `app.js`, `render.yaml`, capturas o mensajes. `.env*` queda fuera de Git y Docker; `.env.example` solo documenta nombres. La aplicación Node no carga archivos `.env` automáticamente. En un entorno local aislado se puede usar `node --env-file=.env.local server.js`, **con un proyecto de pruebas distinto**.
 
 ### Publicación continua
+
+La configuración ya está guardada, pero **la entrega automática aún no está
+operativa**: falta el acceso Git de Render a `Gecch12/trencitos`. Diagnóstico,
+evidencia y acción del propietario en [la ficha](work/continuous-delivery.md).
 
 El flujo acordado es `push a main → CI → Render`. CI instala con `npm ci`, ejecuta
 documentación y toda la suite Node, y comprueba en Chrome el lobby multijugador
@@ -70,6 +77,7 @@ El estado Live y la revisión publicada se registran en [Producción](production
 y la evidencia de activación en [la ficha](work/continuous-delivery.md).
 
 Referencias: [CI y despliegues](https://render.com/docs/deploys),
+[integración Git](https://render.com/docs/git-provider),
 [filtros](https://render.com/docs/monorepo-support),
 [Blueprint](https://render.com/docs/blueprint-spec),
 [conexiones durante despliegues](https://render.com/docs/websocket).
