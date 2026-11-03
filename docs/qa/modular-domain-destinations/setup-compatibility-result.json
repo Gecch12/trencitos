@@ -1,0 +1,12 @@
+{
+  "base_commit": "25a9135",
+  "completed_at": "2026-11-03T01:39:00.400Z",
+  "passed": true,
+  "cases": 20,
+  "seeds": "1..20",
+  "players": "2..5",
+  "comparison": "Complete initial game state, including deck order, private hands/tickets, market, clocks, events and logs",
+  "method": "Before extraction: load engine.js and dependencies in an isolated CommonJS graph with seeded crypto.randomInt. After extraction: newGame(names, first, 1234, timing, {random: seededGenerator}). Compare using assert.deepEqual; alternate legacy timing and 30/90/+15 timing.",
+  "baseline_sha256": "54b858c6e52dd394792f6124c8bb309631e8200046a94c5aa906fd846008abd1",
+  "engine_sha256": "6c5039852c73e9c0d9eacf8b96cc683a33a208002a36faa7bcfea79e7d436054"
+}

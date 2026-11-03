@@ -5,8 +5,8 @@ Diseño de fase 1, concretado el 2026-11-02 bajo la
 extraídos.** Estado, validación y siguiente entrega en
 [la ficha de fase 1](../work/modular-platform-contracts.md). La
 [arquitectura existente](../architecture.md) sigue describiendo el código actual.
-La [fase 2](../work/modular-platform-domain.md) materializa pagos/construcción y
-transiciones de túnel/turno; los demás contratos de este documento siguen siendo el
+La [fase 2](../work/modular-platform-domain.md) materializa pagos/construcción,
+transiciones de túnel/turno, reparto y elecciones de destinos; los demás contratos siguen siendo el
 destino de la transición, no capacidades ya disponibles.
 
 ## Responsabilidades y vocabulario
@@ -218,7 +218,7 @@ En archivo, conservar el manifiesto que confirma el prefijo de replay y su `.bak
 
 ## Puente y compatibilidad
 
-| Situación actual observada | Tratamiento acordado |
+| Situación observada al diseñar la fase 1 | Tratamiento acordado |
 | --- | --- |
 | `engine.js` exporta `action`, `expire`, `view`, utilidades y datos; modifica objetos existentes. | Mantener la fachada y las referencias que esperan los consumidores durante las primeras extracciones. El nuevo núcleo se prueba también directamente. |
 | `g.routes[id]` se usa en construcción, túneles y rutas prestadas; bots también usan constantes y ordenación numérica de IDs. | Buscar por identidad en el núcleo nuevo. Migrar todos los consumidores y comparadores antes de activar mapas con cadenas; no basta con cambiar `claim`. |
@@ -228,6 +228,11 @@ En archivo, conservar el manifiesto que confirma el prefijo de replay y su `.bak
 | Archivo local v2, formatos antiguos array / `{rooms,archive}`, esquema RPC de checkpoint y archivo `schemaVersion:1`. | Son envoltorios diferentes. Adaptadores leen cada formato conocido; no incrementar todos los números al cambiar solo `MatchState`. |
 | Partidas activas y archivos anteriores no tienen `mapRef`. | Identificar únicamente esos formatos legados conocidos como Europa/reglas históricas. Adaptar en memoria y guardar mediante el commit habitual; preservar original/backups. Formato nuevo sin referencia es inválido. |
 | Replay conserva vistas, estados, diferencias y hashes. | No reescribir frames históricos ni sus hashes. Seleccionar lector/renderizador por versión; nuevos campos de mapa se incorporan en formato compatible o con lector versionado. |
+
+El tercer corte de fase 2 permite inyectar azar en reparto/mercado inicial y
+elecciones de cierre forzado. Conserva el parámetro legado del sorteo de primer
+puesto y añade opciones para el reparto. Firmas implementadas y límites actuales
+en [arquitectura](../architecture.md); esto no completa todos los adaptadores.
 
 La migración debe ser idempotente y validar todos los lugares con IDs: vías,
 `pending.routeId`, eventos, asignaciones de estaciones, recorridos y detalles de

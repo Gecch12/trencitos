@@ -10,6 +10,9 @@ La composición/reserva de pagos y la decisión de construir están extraídas a
 reglamento; devuelven un plan sin gastar cartas. Las transiciones de
 [túnel](../game/domain/tunnel.js) y [turno](../game/domain/turn.js) también devuelven
 planes, con tiempo y duraciones explícitos. El motor aplica sus efectos.
+El [reparto](../game/domain/setup.js) recibe recursos y mazos definidos por reglas;
+las [elecciones y ofertas de destinos](../game/domain/destinations.js) reciben
+mínimos, cantidad ofrecida, reloj y generador de azar para decisiones automáticas.
 La extracción conserva las reglas descritas aquí; avance y límites en
 [fase 2](work/modular-platform-domain.md).
 
@@ -59,6 +62,8 @@ El primer jugador se sortea una vez. Cada jugador recibe un billete largo y tres
 cortos y conserva al menos dos, simultáneamente, dentro del plazo compartido configurado de 30, 60 o 90 segundos.
 Al terminar todos, juega el sorteado. El vencimiento conserva dos al azar por
 jugador pendiente. Reconectar no reinicia los plazos.
+Los billetes iniciales no elegidos salen de la partida, incluidos los cortos.
+Los largos que no se repartieron tampoco entran en el mazo de nuevas ofertas.
 
 Una acción por turno: robar cartas, construir ruta, pedir destinos o construir
 estación. El turno dura los 30, 60 o 90 segundos configurados. Tras robar la primera carta hay que resolver

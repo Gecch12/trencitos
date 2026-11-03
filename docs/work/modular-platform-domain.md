@@ -19,7 +19,8 @@ cambios de esta entrega. El trabajo visual de otros chats permanece separado.
 
 - [x] Pagos y decisión de construcción extraídos, puente compatible y validación registrada.
 - [x] Transiciones de túnel y turno extraídas, con tiempo explícito y cartas reveladas suministradas.
-- [ ] Creación, reparto, destinos, estaciones y puntuación extraídos.
+- [x] Preparación de recursos, reparto y elecciones/ofertas de destinos extraídos, con azar suministrado.
+- [ ] Cartas de tren/mercado, estaciones y puntuación extraídos.
 - [ ] Consultas sin mutación y compatibilidad de resultados/temporizadores fuera de ellas.
 - [ ] Europa completa verificada, incluyendo bots, privacidad, guardado y replay.
 
@@ -163,7 +164,7 @@ backend remoto se verifican con simuladores; no acredita Render, Supabase real
 ni dispositivos físicos. La evidencia previa `docs/qa/threejs-*` quedó restaurada.
 Entrega local, sin integración de otros worktrees ni publicación.
 
-### Límites pendientes
+### Límites al terminar el segundo corte
 
 La fachada aún crea/baraja mazos, coordina vencimientos generales, destinos,
 estaciones, cierre/puntuación y consultas. `newGame` y `finish(force)` todavía
@@ -171,11 +172,83 @@ usan azar global; no se declara determinista todo el motor. Se mantiene el
 formato de guardados y las referencias que esperan consumidores existentes.
 Frontend, tablero, vagones y datos de Europa no cambian en este corte.
 
+## Tercer corte: reparto y destinos
+
+Base: `25a9135` más los cambios de esta entrega.
+
+- [setup.js](../../game/domain/setup.js) valida cantidad de jugadores y primer
+  puesto, prepara mazos y reparte manos/billetes con recursos, colores y cantidades
+  suministrados. No importa datos de Europa ni produce historial, relojes o vistas.
+- [destinations.js](../../game/domain/destinations.js) decide selección inicial,
+  oferta y confirmación por ID; recibe mínimos y política de duración. Devuelve
+  planes sin mutar entradas. Las elecciones iniciales simultáneas arrancan el
+  primer turno solo cuando todos terminaron; las ofertas posteriores mantienen
+  devolución al mazo, confirmación fuera de turno y cierre pendiente.
+- [random.js](../../game/domain/random.js) comparte barajado y muestreo sin
+  reemplazo con el generador suministrado. Lo usan reparto, reciclado y elecciones
+  automáticas. Se conserva el orden de consumo de azar de los recorridos legados.
+- La fachada traduce errores, aplica los planes conservando referencias de manos
+  y mazo corto, coordina vencimientos e historial y normaliza partidas antiguas.
+  El reloj fijo de ofertas de guardados sin `timing` se traduce a una política
+  explícita; el dominio no detecta versiones de guardado.
+
+Se añadió `{random}` como quinto argumento opcional de `newGame` y
+`newRandomGame`, para reparto y mercado inicial. El tercer argumento de
+`newRandomGame` sigue consumiendo una sola muestra para elegir el primer puesto.
+`finish(g, true, {random})` permite controlar las elecciones del cierre forzado.
+Las firmas existentes y defaults de producción permanecen compatibles.
+
+### Evidencia del tercer corte
+
+- [Pruebas del dominio](../../tests/domain-setup-destinations.test.js): reglas y
+  billetes alternativos, reparto sin mutar entradas, validación antes del azar,
+  elecciones, devolución, mínimos y duraciones inyectados, muestreo sin reemplazo.
+- [Contratos de fachada](../../tests/setup-destinations-contract.test.js): estado
+  inicial reproducible incluso al renovar el mercado, rechazo sin azar/mutación,
+  diferencias entre descartes iniciales/posteriores, referencias e identidad de
+  oferta y cierre forzado con generador suministrado.
+- La prueba ambiental ejecuta también estos módulos con reloj/azar globales,
+  transporte e importaciones externas prohibidos.
+- Suite enfocada de nueve archivos: **62/62** correctas.
+- [Comparación de reparto con la base](../qa/modular-domain-destinations/setup-compatibility-result.json):
+  **20/20** estados completos iguales con semillas 1–20, 2–5 jugadores y relojes
+  legados/configurados. Incluye orden de mazos, manos, billetes, mercado, eventos
+  y plazos; se capturó la base antes de editar y se contrastó con la nueva API.
+
+Ejecución del 2026-11-02 (Lima), Node `v25.6.1`, sobre la base indicada y el diff
+de este corte:
+
+- `node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js`:
+  **421/421**, sin fallos ni omisiones. [Resultado y huellas del código](../qa/modular-domain-destinations/node-tests-result.json)
+  y [salida TAP](../qa/modular-domain-destinations/node-tests.tap).
+- `QA_PORT=0 npm run test:board3d`: **aprobado**, Chrome `156.0.8078.74`.
+  [Resultado](../qa/modular-domain-destinations/browser-tests-result.json) y
+  [reporte](../qa/modular-domain-destinations/browser/threejs-report.json): ocho
+  recorridos, nueve combinaciones de viewport/zoom y partida de cuatro jugadores
+  completa con 267 acciones, reconexión y cero errores. Incluye seis ofertas y
+  seis confirmaciones de destinos, selección inicial, construcción, túneles y
+  estación. Se inspeccionaron [resultado final](../qa/modular-domain-destinations/browser/threejs-finished.png)
+  y [móvil emulado](../qa/modular-domain-destinations/browser/threejs-mobile.png).
+- `node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
+  Las fichas históricas de contratos y bots se revisaron y conservan sus
+  evidencias anteriores. No cambian sus estrategias ni el protocolo de acciones.
+
+Entorno local con estado de archivo y puertos aislados, sin autenticación externa.
+Las pruebas SQL/remotas usan simuladores; no acreditan Render, Supabase real ni
+dispositivos físicos. Se restauró la evidencia histórica `docs/qa/threejs-*`.
+Entrega local, sin integración de otros worktrees ni publicación.
+
+### Límites pendientes
+
+El ensamblado del estado legado, robo/reciclado y renovación de cartas, estaciones,
+puntuación, coordinación de cierre/vencimientos y consultas siguen en la fachada.
+Los módulos nuevos reciben definiciones válidas; el catálogo/validador versionado
+de mapas pertenece a fase 4. No se ha activado otro mapa ni cambiado guardados.
+
 ## Siguiente corte
 
-Extraer creación/reparto y destinos con azar suministrado: partir de las pruebas
-de selección inicial simultánea, conservación de cartas/billetes, ofertas fuera
-de turno, retorno al puesto con oferta pendiente y cierre. Conservar los
-guardados sin `timing` y separar la compatibilidad de las políticas nuevas.
-Después abordar estaciones/puntuación y consultas sin mutación. La fase 2 sigue
-activa; no mover todavía frontend ni integrar Sudamérica.
+Extraer estaciones y puntuación: coste/ocupación de ciudad, asignación conjunta
+de vías prestadas a destinos, recorrido propio más largo, bonos y desempates.
+Conservar resultados guardados y su desglose, IDs opacos en políticas nuevas y
+privacidad antes del cierre. Después extraer cartas/mercado y normalización fuera
+de consultas. La fase 2 sigue activa; frontend y Sudamérica esperan sus fases.

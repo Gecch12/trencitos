@@ -6,6 +6,9 @@ const Payment=require('./game/domain/payment');
 const RouteClaim=require('./game/domain/route-claim');
 const Turn=require('./game/domain/turn');
 const Tunnel=require('./game/domain/tunnel');
+const Setup=require('./game/domain/setup');
+const Destinations=require('./game/domain/destinations');
+const {shuffle}=require('./game/domain/random');
 const {legacyError}=require('./game/compat/legacy-errors');
 // Per-action randomness stays outside serialized state. Simulations can supply
 // an isolated stream for all draws/recycles without patching global crypto.
@@ -19,6 +22,12 @@ const CLAIM_RULES={colors:COLORS,routePoints:SCORE,doubleRoutesMinPlayers:4};
 const TURN_MS=60000, INITIAL_MS=60000, OFFER_MS=60000;
 const TUNNEL_CARD_MS=700, TUNNEL_RESULT_MS=3000;
 const TUNNEL_RULES={colors:COLORS,cardMs:TUNNEL_CARD_MS,resultMs:TUNNEL_RESULT_MS};
+const SETUP_RULES={minPlayers:2,maxPlayers:5,maxNameLength:24,playerColors:PLAYER_COLORS,
+ trainCards:[...COLORS.map(color=>({color,count:12})),{color:'wild',count:14}],
+ initialHand:4,initialLongTickets:1,initialShortTickets:3,trains:45,stations:3};
+const DESTINATION_RULES={initialMinimum:2,offerMinimum:1,offerCount:3};
+const destinationRules=g=>({...DESTINATION_RULES,offerClock:g.timing?
+ {kind:'remaining-turn',extraMs:g.timing.ticketExtraSeconds*1000}:{kind:'fixed',durationMs:OFFER_MS}});
 const turnRules=g=>({initialMs:g.timing?.initialSeconds*1000||INITIAL_MS,turnMs:g.timing?.turnSeconds*1000||TURN_MS,finalTrainThreshold:2});
 const tunnelBusy = g => g.phase==='tunnel' && g.pending?.stage && g.pending.stage!=='decision';
 function deadlines(g) {
@@ -51,7 +60,6 @@ function ensureTiming(g,now=Date.now()){
  const waiting=!!(g.phase==='play'&&g.players[g.current].offer);
  if(g.turnSeat!==g.current||g.turnClockPhase!==(g.phase==='initial'?'initial':'play')||!!g.turnWaiting!==waiting||(!waiting&&!Number.isFinite(g.turnDeadline)))startTurn(g,now);
 }
-function shuffle(xs,random=crypto.randomInt){let a=[...xs];for(let i=a.length-1;i>0;i--){let j=random(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
 function fail(message){throw new Error(message)}
 function draw(g){if(!g.deck.length&&g.discard.length){g.deck=shuffle(g.discard,randomFor(g));g.discard=[]}return g.deck.pop()||null}
 // House rule: each resolved event returns its whole discard batch to the deck.
@@ -79,18 +87,22 @@ function refill(g){
  g.face=shuffle(g.face,randomFor(g));
  event(g,'market_refresh',null,{before,after:[...g.face]});
 }
-function newGame(names,first=0,now=Date.now(),timing=null){if(!Array.isArray(names)||names.length<2||names.length>5)fail('Se requieren 2–5 jugadores.');
- if(!Number.isInteger(first)||first<0||first>=names.length)fail('Primer jugador inválido.');
- let g={phase:'initial',current:first,first,initialDone:0,players:names.map((name,i)=>({name:String(name).slice(0,24),color:PLAYER_COLORS[i],hand:[],tickets:[],pending:[],trains:45,stations:3,placed:[],score:0})),routes:ROUTES.map(r=>({...r,owner:null})),deck:shuffle(COLORS.flatMap(x=>Array(12).fill(x)).concat(Array(14).fill('wild'))),discard:[],face:[],shortDeck:shuffle(TICKETS.filter(x=>!x.long)),finalRemaining:null,lastTrigger:null,drawCount:0,pending:null,logs:[],result:null};
+function newGame(names,first=0,now=Date.now(),timing=null,{random=crypto.randomInt}={}){
+ const decision=Setup.prepareGame({names,first},{map:{tickets:TICKETS},rules:SETUP_RULES,random});
+ if(!decision.ok)throw legacyError(decision.error);
+ const g={phase:'initial',current:first,first,initialDone:0,...decision.plan,routes:ROUTES.map(r=>({...r,owner:null})),
+ discard:[],face:[],finalRemaining:null,lastTrigger:null,drawCount:0,pending:null,logs:[],result:null};
  if(timing)g.timing=GameTiming.normalize(timing);
- const long=shuffle(TICKETS.filter(x=>x.long));
- g.players.forEach(p=>{for(let j=0;j<4;j++)p.hand.push(draw(g));p.pending=[long.pop(),...g.shortDeck.splice(0,3)]});
- refill(g);startTurn(g,now);return g}
+ actionRandom.set(g,random);
+ try{refill(g);startTurn(g,now);return g}finally{actionRandom.delete(g)}
+}
 // Production starts are chosen once on the server; explicit first seats remain
 // available for deterministic fixtures and rule tests.
-function newRandomGame(names,now=Date.now(),random=crypto.randomInt,timing=null){
+function newRandomGame(names,now=Date.now(),random=crypto.randomInt,timing=null,options){
  if(!Array.isArray(names)||names.length<2||names.length>5)fail('Se requieren 2–5 jugadores.');
- const g=newGame(names,random(names.length),now,timing);
+ // The third argument still draws only the starting seat. Optional fifth-argument
+ // randomness controls the deal/market without changing that existing contract.
+ const g=newGame(names,random(names.length),now,timing,options);
  note(g,I18n.message`${g.players[g.first].name} empieza la partida (sorteo aleatorio).`,g.first);return g;
 }
 function historyEntries(g){return g.logs.map((text,i)=>g.history?.[i]?.text===text?g.history[i]:{id:null,text,seat:null})}
@@ -131,10 +143,11 @@ function action(g,seat,msg,{now=Date.now(),random=crypto.randomInt}={}){
  try{expire(g,now,random);const serial=g.turnSerial;applyAction(g,seat,msg,now);if(g.turnSerial!==serial&&g.players[seat])g.players[seat].missedTurns=0;recycleDiscards(g);recorded(g,seat,msg)}
  finally{if(previous)actionRandom.set(g,previous);else actionRandom.delete(g)}
 }
-function settleOffer(g,seat,indexes,finalize=true,now=Date.now()){
- const p=g.players[seat],offer=p.offer,ix=indices(indexes,offer.tickets.length,1);
- p.tickets.push(...ix.map(i=>offer.tickets[i]));g.shortDeck.push(...offer.tickets.filter((_,i)=>!ix.includes(i)));p.offer=null;
- note(g,I18n.message`${p.name} conservó ${ix.length} billete(s) de destino.`,seat);
+function settleOffer(g,seat,selection,finalize=true,now=Date.now()){
+ const p=g.players[seat],decision=Destinations.decideOfferChoice(p,selection,{rules:DESTINATION_RULES});
+ if(!decision.ok)throw legacyError(decision.error);
+ const {kept,returned}=decision.plan;p.tickets.push(...kept);g.shortDeck.push(...returned);p.offer=null;
+ note(g,I18n.message`${p.name} conservó ${kept.length} billete(s) de destino.`,seat);
  if(finalize&&g.phase==='play'&&g.current===seat&&g.turnWaiting)startTurn(g,now);
  if(finalize&&g.phase==='closing'&&!g.players.some(p=>p.offer))finish(g);
 }
@@ -143,16 +156,15 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
  if(g.phase==='finished')fail('La partida terminó.');
  if(tunnelBusy(g)||(g.phase==='tunnel'&&g.pending?.stage&&msg.type==='keep_tickets'))fail('Espera a que termine el túnel.');
  if(msg.type==='keep_tickets'){
-  if(!p.offer||msg.offerId!==p.offer.id)fail('Esta selección de billetes ya no está pendiente.');
-  settleOffer(g,seat,msg.indexes,true,now);return;
+  settleOffer(g,seat,{offerId:msg.offerId,indexes:msg.indexes},true,now);return;
  }
  if(g.phase==='closing')fail('Esperando las últimas elecciones de billetes.');
  if(g.phase==='initial'){
   if(msg.type!=='choose_initial')fail('Selecciona primero los billetes iniciales.');
-  if(!p.pending.length)fail('Ya confirmaste tus billetes iniciales.');
-  const ix=indices(msg.indexes,p.pending.length,2);p.tickets.push(...ix.map(i=>p.pending[i]));p.pending=[];
-  g.initialDone=g.players.filter(player=>!player.pending.length).length;
-  if(g.initialDone===g.players.length){g.phase='play';g.current=g.first;note(g,'¡Partida iniciada!');startTurn(g,now)}
+  const decision=Destinations.decideInitialChoice(g,{seat,indexes:msg.indexes},{rules:DESTINATION_RULES});
+  if(!decision.ok)throw legacyError(decision.error);
+  p.tickets.push(...decision.plan.kept);p.pending=[];g.initialDone=decision.plan.initialDone;
+  if(decision.plan.startPlay){g.phase='play';g.current=g.first;note(g,'¡Partida iniciada!');startTurn(g,now)}
   return;
  }
  assertTurn(g,seat);
@@ -200,11 +212,9 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
   return;
  }
  if(msg.type==='draw_tickets'){
-  if(p.offer)fail('Confirma primero tus billetes pendientes.');
-  if(!g.shortDeck.length)fail('No quedan billetes de destino.');
-  g.offerSerial=(g.offerSerial||0)+1;
-  const duration=g.timing?Math.max(0,g.turnDeadline-now)+g.timing.ticketExtraSeconds*1000:OFFER_MS;
-  p.offer={id:g.offerSerial,tickets:g.shortDeck.splice(0,3),duration,deadline:now+duration};
+  const decision=Destinations.planOffer({offer:p.offer,shortDeck:g.shortDeck,offerSerial:g.offerSerial,turnDeadline:g.turnDeadline},{now,rules:destinationRules(g)});
+  if(!decision.ok)throw legacyError(decision.error);
+  p.offer=decision.plan.offer;g.offerSerial=p.offer.id;g.shortDeck.splice(0,decision.plan.takeCount);
   event(g,'tickets',seat);note(g,I18n.message`${p.name} está eligiendo nuevos billetes.`,seat);next(g,now);return;
  }
  if(msg.type==='station'){
@@ -247,14 +257,13 @@ function expireImpl(g,now=Date.now(),random=crypto.randomInt){
   // Other clocks and private choices remain frozen while the public modal owns focus.
   return false;
  }
- for(let seat=0;seat<g.players.length;seat++){const offer=g.players[seat].offer;if(offer&&now>=offer.deadline){const indexes=[random(offer.tickets.length)];settleOffer(g,seat,indexes,true,now);recorded(g,seat,{type:"keep_tickets",offerId:offer.id,indexes},true);changed=true}}
+ for(let seat=0;seat<g.players.length;seat++){const offer=g.players[seat].offer;if(offer&&now>=offer.deadline){const indexes=Destinations.randomSelection(offer.tickets,DESTINATION_RULES.offerMinimum,{random});settleOffer(g,seat,{offerId:offer.id,indexes},true,now);recorded(g,seat,{type:"keep_tickets",offerId:offer.id,indexes},true);changed=true}}
  if(['finished','closing'].includes(g.phase)||!Number.isFinite(g.turnDeadline)||now<g.turnDeadline)return changed;
  const seat=g.current,serial=g.turnSerial;
  if(g.phase==='initial'){
   for(let i=0;i<g.players.length;i++){
    if(!g.players[i].pending.length)continue;
-   const pool=g.players[i].pending.map((_,j)=>j),picked=[];
-   for(let j=0;j<2;j++)picked.push(...pool.splice(random(pool.length),1));
+   const picked=Destinations.randomSelection(g.players[i].pending,DESTINATION_RULES.initialMinimum,{random});
    note(g,I18n.message`${g.players[i].name}: tiempo agotado; conservó 2 billetes al azar.`,i);
    applyAction(g,i,{type:'choose_initial',indexes:picked},now);
   }
@@ -273,7 +282,6 @@ function expireImpl(g,now=Date.now(),random=crypto.randomInt){
  }
  recycleDiscards(g);return true;
 }
-function indices(xs,n,min){if(!Array.isArray(xs)||xs.length<min||xs.length>n||new Set(xs).size!==xs.length||xs.some(x=>!Number.isInteger(x)||x<0||x>=n))fail('Selección de billetes inválida.');return xs}
 function possibleClaim(g,seat){const p=g.players[seat];return g.routes.some(r=>r.owner===null&&!block(g,r,seat)&&r.n<=p.trains&&[...COLORS,'wild'].some(c=>pay(p.hand,c,r.n,r.ferry))&&(r.color==='gray'||[r.color,'wild'].some(c=>pay(p.hand,c,r.n,r.ferry))))}
 function possibleStation(g,seat){const p=g.players[seat];return p.stations>0&&Object.keys(CITIES).some(city=>!g.players.some(x=>x.placed.includes(city)))&&[...COLORS,'wild'].some(c=>pay(p.hand,c,4-p.stations))}
 function connected(owned,a,b){const adj=new Map();for(let r of owned){if(!adj.has(r.a))adj.set(r.a,[]);if(!adj.has(r.b))adj.set(r.b,[]);adj.get(r.a).push(r.b);adj.get(r.b).push(r.a)}const seen=new Set([a]),stack=[a];while(stack.length){let x=stack.pop();if(x===b)return true;for(let next of adj.get(x)||[])if(!seen.has(next)){seen.add(next);stack.push(next)}}return false}
@@ -285,8 +293,8 @@ function longestTrail(g,seat){const e=g.routes.filter(r=>r.owner===seat),adj={};
  function walk(node,used,len){cities.push(node);if(len>best.length)best={length:len,routes:[...routes],cities:[...cities]};for(let id of adj[node]||[]){let mask=1n<<BigInt(id);if(!(used&mask)){let r=e[id];routes.push(r.id);walk(r.a===node?r.b:r.a,used|mask,len+r.n);routes.pop()}}cities.pop()}
  for(let x of Object.keys(adj))walk(x,0n,0);return best}
 function longest(g,seat){return longestTrail(g,seat).length}
-function finish(g,force=false){
- if(force)for(let seat=0;seat<g.players.length;seat++){const offer=g.players[seat].offer;if(offer)settleOffer(g,seat,[crypto.randomInt(offer.tickets.length)],false)}
+function finish(g,force=false,{random=randomFor(g)}={}){
+ if(force)for(let seat=0;seat<g.players.length;seat++){const offer=g.players[seat].offer;if(offer)settleOffer(g,seat,{offerId:offer.id,indexes:Destinations.randomSelection(offer.tickets,DESTINATION_RULES.offerMinimum,{random})},false)}
  g.turnDeadline=null;g.turnWaiting=false;
  if(g.players.some(p=>p.offer)){g.phase='closing';return}
  g.phase='finished';const trails=g.players.map((_,i)=>longestTrail(g,i)),lengths=trails.map(t=>t.length),max=Math.max(...lengths);

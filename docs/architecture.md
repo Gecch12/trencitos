@@ -48,6 +48,8 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Fachada de reglas, fases, efectos, cierre y privacidad | [engine.js](../engine.js): `newRandomGame`, `action`, `expire`, `finish`, `view` |
 | Políticas de pago y decisión de construcción | [payment.js](../game/domain/payment.js): `planPayment`, `reservePayment`; [route-claim.js](../game/domain/route-claim.js): `decideRouteClaim`, `blocksParallelRoute` |
 | Transiciones de túnel y comienzo/avance de turno | [tunnel.js](../game/domain/tunnel.js): `beginTunnel`, `decideTunnel`, `advanceTunnel`; [turn.js](../game/domain/turn.js): `planTurnStart`, `planNextTurn` |
+| Preparación de recursos, reparto y elecciones de destinos | [setup.js](../game/domain/setup.js): `prepareGame`; [destinations.js](../game/domain/destinations.js): `decideInitialChoice`, `planOffer`, `decideOfferChoice`, `randomSelection` |
+| Barajado y muestreo con generador suministrado | [random.js](../game/domain/random.js): `shuffle`, `sampleIndexes` |
 | Ciudades, rutas, billetes y paleta | [data.js](../data.js) |
 | Valores permitidos de relojes y defaults compartidos | [game-timing.js](../game-timing.js): `valid`, `normalize` |
 | Relojes, desconexiones y recuperación | [game-clock.js](../game-clock.js), [multiplayer.js](../multiplayer.js) |
@@ -77,6 +79,19 @@ explícitos. Calculan suplemento, pago conjunto, etapas y reanudación de oferta
 Las de turno planifican el reloj, espera por billetes, rotación y última ronda.
 Devuelven cambios sin modificar el estado ni consultar reloj o azar globales.
 
+`prepareGame` recibe billetes y reglas de reparto, prepara mazos/manos y recursos
+de jugadores. Las políticas de destinos validan elecciones, generan ofertas con
+su duración y separan lo conservado de lo devuelto. Los descartes iniciales salen
+de juego; los posteriores vuelven al mazo corto. `randomSelection` conserva el
+muestreo sin reemplazo usado en vencimientos. El azar se recibe como función;
+la fachada lo usa también para completar el mercado inicial.
+
+El quinto argumento opcional `{random}` de `newGame`/`newRandomGame` controla
+reparto y mercado. El tercero de `newRandomGame` conserva el sorteo exclusivo del
+primer puesto. `finish(g, true, {random})` permite reproducir las elecciones al
+forzar el cierre. Ningún generador queda serializado; los llamadores existentes
+siguen usando `crypto.randomInt` por defecto.
+
 La fachada aún comprueba fase/puesto, despacha vencimientos, obtiene cartas y
 aplica los planes; emite historial/eventos y conserva el formato de guardados.
 `awardRoute` comparte la adjudicación entre construcción, túnel pagado y túnel
@@ -87,8 +102,9 @@ tras reservar la base, antes de gastar cualquier carta.
 
 No hay registro de mapas activo ni conversión de IDs de Europa todavía. Los
 otros consumidores siguen utilizando el formato legado. Las políticas extraídas
-no convierten en puro todo el motor: creación, mazos, destinos, estaciones,
-vencimientos fuera del túnel, cierre y consultas aún residen en la fachada.
+no convierten en puro todo el motor: el ensamblado de la partida, robo/reciclado y
+mercado de cartas, estaciones, coordinación de vencimientos, puntuación/cierre
+y consultas aún residen en la fachada.
 Alcance y pruebas en
 [la fase de dominio](work/modular-platform-domain.md).
 

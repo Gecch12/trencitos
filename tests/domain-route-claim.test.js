@@ -94,11 +94,11 @@ test("domain modules run without ambient clock, randomness, transport or externa
   const math=Object.create(Math);math.random=forbidden;
   const cache={};
   function load(name) {
-    if(!["payment","route-claim","tunnel","turn"].includes(name)) return forbidden();
+    if(!["payment","route-claim","tunnel","turn","random","setup","destinations"].includes(name)) return forbidden();
     if(cache[name]) return cache[name];
     const module={exports:{}};
     const source=fs.readFileSync(path.join(__dirname,"../game/domain",`${name}.js`),"utf8");
-    vm.runInNewContext(source,{module,require:id=>id==="./payment"?load("payment"):forbidden(),
+    vm.runInNewContext(source,{module,require:id=>["./payment","./random"].includes(id)?load(id.slice(2)):forbidden(),
       Date:class {constructor(){forbidden();}static now(){forbidden();}},Math:math,fetch:forbidden,setTimeout:forbidden}, {filename:name});
     return cache[name]=module.exports;
   }
@@ -116,4 +116,12 @@ test("domain modules run without ambient clock, randomness, transport or externa
   const state={phase:"play",current:0,players:[{trains:2},{trains:4}],finalRemaining:null};
   assert.equal(turn.planTurnStart(state,context).changes.turnDeadline,210);
   assert.equal(turn.planNextTurn(state,context).finalRoundStarted,true);
+  const setup=load("setup"),destinations=load("destinations"),ticketRules={initialMinimum:1,offerMinimum:1,offerCount:2,offerClock:{kind:"fixed",durationMs:100}};
+  const created=setup.prepareGame({names:["A","B"],first:0},{map:{tickets:[{id:"D1"},{id:"D2"}]},random:max=>max-1,
+    rules:{minPlayers:2,maxPlayers:2,maxNameLength:10,playerColors:["a","b"],trainCards:[{color:"copper",count:4}],initialHand:1,initialLongTickets:0,initialShortTickets:1,trains:5,stations:1}});
+  assert.equal(created.ok,true);
+  assert.equal(destinations.decideInitialChoice(created.plan,{seat:0,indexes:[0]},{rules:ticketRules}).ok,true);
+  const offer=destinations.planOffer({shortDeck:[{id:"D3"}]},{now:10,rules:ticketRules}).plan.offer;
+  assert.equal(destinations.decideOfferChoice({offer},{offerId:offer.id,indexes:[0]},{rules:ticketRules}).ok,true);
+  assert.equal(destinations.randomSelection(offer.tickets,1,{random:()=>0})[0],0);
 });
