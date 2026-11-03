@@ -1,0 +1,134 @@
+{
+  "conclusion": "success",
+  "createdAt": "2026-11-03T16:57:51Z",
+  "headSha": "b8e7b3726f846db6aa7630a2bc4976b5a3156c5c",
+  "jobs": [
+    {
+      "completedAt": "2026-11-03T17:03:50Z",
+      "conclusion": "success",
+      "databaseId": 126069020489,
+      "name": "Tests, docs and browser",
+      "startedAt": "2026-11-03T16:57:56Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-03T16:57:57Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-03T16:57:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T16:58:03Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "number": 2,
+          "startedAt": "2026-11-03T16:57:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T16:58:08Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+          "number": 3,
+          "startedAt": "2026-11-03T16:58:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T16:58:09Z",
+          "conclusion": "success",
+          "name": "Install locked dependencies",
+          "number": 4,
+          "startedAt": "2026-11-03T16:58:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T16:58:09Z",
+          "conclusion": "success",
+          "name": "Validate documentation",
+          "number": 5,
+          "startedAt": "2026-11-03T16:58:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T17:01:03Z",
+          "conclusion": "success",
+          "name": "Run full Node suite",
+          "number": 6,
+          "startedAt": "2026-11-03T16:58:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T17:01:44Z",
+          "conclusion": "success",
+          "name": "Install Chrome for browser checks",
+          "number": 7,
+          "startedAt": "2026-11-03T17:01:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T17:02:24Z",
+          "conclusion": "success",
+          "name": "Check two-client lobby",
+          "number": 8,
+          "startedAt": "2026-11-03T17:01:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T17:03:46Z",
+          "conclusion": "success",
+          "name": "Check immediate draw feedback and recovery",
+          "number": 9,
+          "startedAt": "2026-11-03T17:02:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T17:03:48Z",
+          "conclusion": "success",
+          "name": "Keep browser evidence",
+          "number": 10,
+          "startedAt": "2026-11-03T17:03:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T17:03:48Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+          "number": 19,
+          "startedAt": "2026-11-03T17:03:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T17:03:48Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "number": 20,
+          "startedAt": "2026-11-03T17:03:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T17:03:48Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 21,
+          "startedAt": "2026-11-03T17:03:48Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/Gecch12/trencitos/actions/runs/41679488781/job/126069020489"
+    }
+  ],
+  "status": "completed",
+  "updatedAt": "2026-11-03T17:03:51Z",
+  "url": "https://github.com/Gecch12/trencitos/actions/runs/41679488781",
+  "validation": {
+    "node": {
+      "tests": 651,
+      "pass": 651,
+      "fail": 0,
+      "durationMs": 174020.782088
+    },
+    "browserDrawScenarios": 15
+  }
+}

@@ -1,5 +1,5 @@
 ---
-{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"worktree","updated":"2026-11-03"}
+{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Cartas, pagos y limpieza de la interfaz
 
@@ -44,11 +44,10 @@ pendientes de resultados/avatar, además de las cinco propuestas sobre cartas.
 
 ## Siguiente paso
 
-Publicación solicitada por Ángel: pasar CI, desplegar la secuencia validada de
-recogida/revelación y envío encadenado, y medirla en Render. Producción sigue en `55b2dd8`,
-Live a las 11:05:27 Lima, con el comportamiento anterior y sus límites en
-[Producción](../production.md). La demora al añadir bots queda para otra tarea,
-por indicación de Ángel.
+La secuencia de recogida/revelación y envío encadenado está publicada en
+`b8e7b37`, Live a las 12:05:14 Lima. Observar la experiencia con la nueva versión;
+mediciones y límites en [Producción](../production.md). La demora al añadir bots
+queda para otra tarea, por indicación de Ángel.
 
 ## Dos intenciones y revelación durante el recorrido · 2026-11-03
 
@@ -65,7 +64,10 @@ tiempo dos cartas anónimas en la mano. Sustituye esa presentación anterior.
 - [x] Correlación privada ID/evento para distinguir dos robos aunque los estados
   lleguen antes que los ACK. Reglas, commit durable, privacidad y replay conservados.
 - [x] Completar pruebas Chrome, suite amplia, revisión visual y documentación.
-- [ ] Publicar y medir clic → color definitivo → mano en producción.
+- [x] Publicar y medir clic → color definitivo → mano en producción: seis robos
+  ocultos, tres pares enviados sin esperar el primer ACK, color reconocible entre
+  619,3 y 817,3 ms y llegada a la mano entre 719,6 y 918,5 ms. CI 651/651 y
+  quince recorridos Chrome aprobados; [evidencia y límites](../production.md).
 
 Pruebas y capturas de esta ampliación en `.qa/draw-pipeline/`; no sustituyen los
 informes históricos del lanzamiento anterior. Los tiempos locales con guardado
@@ -117,7 +119,9 @@ El criterio pasa de inicio del vuelo a carta/cantidad presentes en la mano.
 - [x] Publicar esta ampliación y medir clic → mano en producción: seis robos,
   primer rAF entre 6,8 y 13,4 ms, imágenes provisionales cargadas y sin duplicados.
   CI 645/645 y doce recorridos Chrome aprobados antes de publicar.
-- [ ] Medir aparte la pintura del color definitivo tras confirmar robos ocultos.
+
+La pintura del color definitivo no se midió en esa versión anterior; la
+ampliación de envío encadenado registra la medición de su nuevo comportamiento.
 
 Evidencia local en `.qa/draw-feedback/report.json`, `pending-visible-desktop.png`,
 `pending-desktop.png` y `pending-mobile-reduced.png`. Comparación CPU en

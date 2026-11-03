@@ -1,0 +1,86 @@
+{
+  "at": "2026-11-03T17:09:01.118Z",
+  "commit": "b8e7b3726f846db6aa7630a2bc4976b5a3156c5c",
+  "timings": [
+    {
+      "click": 0,
+      "kind": "blind",
+      "firstFrameMs": 28.799999952316284,
+      "sentMs": 2.399999976158142,
+      "confirmationMs": 488.6999999284744,
+      "colorRecognizableMs": 691.1999999284744,
+      "handArrivalMs": 792.7999999523163,
+      "color": "yellow"
+    },
+    {
+      "click": 1,
+      "kind": "blind",
+      "firstFrameMs": 21.399999976158142,
+      "sentMs": 0.6000000238418579,
+      "confirmationMs": 658.1999999284744,
+      "colorRecognizableMs": 817.2999999523163,
+      "handArrivalMs": 918.5,
+      "color": "white"
+    },
+    {
+      "click": 2,
+      "kind": "blind",
+      "firstFrameMs": 27.600000023841858,
+      "sentMs": 2.5,
+      "confirmationMs": 466.8000000715256,
+      "colorRecognizableMs": 619.3000000715256,
+      "handArrivalMs": 719.6000000238419,
+      "color": "white"
+    },
+    {
+      "click": 3,
+      "kind": "blind",
+      "firstFrameMs": 17.899999976158142,
+      "sentMs": 0.8999999761581421,
+      "confirmationMs": 646.7000000476837,
+      "colorRecognizableMs": 809.6000000238419,
+      "handArrivalMs": 910.6000000238419,
+      "color": "blue"
+    },
+    {
+      "click": 4,
+      "kind": "blind",
+      "firstFrameMs": 29.90000009536743,
+      "sentMs": 2,
+      "confirmationMs": 587.5,
+      "colorRecognizableMs": 754.9000000953674,
+      "handArrivalMs": 857.1000000238419,
+      "color": "orange"
+    },
+    {
+      "click": 5,
+      "kind": "blind",
+      "firstFrameMs": 23.600000023841858,
+      "sentMs": 0.5,
+      "confirmationMs": 608.5,
+      "colorRecognizableMs": 748.6999999284744,
+      "handArrivalMs": 850.7999999523163,
+      "color": "green"
+    }
+  ],
+  "checks": [
+    "Private QA room with one bot; initial tickets selected",
+    "All three second requests sent before their first ACK",
+    "Six actual colors revealed before hand arrival; images ready",
+    "No anonymous hand groups, duplicate cards or browser errors"
+  ],
+  "hand": 10,
+  "displayed": 10,
+  "errors": [],
+  "passed": true,
+  "notes": [
+    "Measurements cover six clicked draws; the later screenshot also includes one automatic two-card draw after the QA turn timer expired during report capture."
+  ],
+  "ownRoomLeft": true,
+  "cleanup": "closed",
+  "finalHealth": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 1
+  }
+}

@@ -1,0 +1,337 @@
+{
+  "at": "2026-11-03T17:05:37.688Z",
+  "commit": "b8e7b3726f846db6aa7630a2bc4976b5a3156c5c",
+  "assets": [
+    {
+      "url": "/",
+      "status": 200,
+      "sha256": "2cbb44edf6a0661773a94d98aef5f8245a8ceec16e2d9ab428600cc63c169933",
+      "matches": true
+    },
+    {
+      "url": "/index.html",
+      "status": 200,
+      "sha256": "2cbb44edf6a0661773a94d98aef5f8245a8ceec16e2d9ab428600cc63c169933",
+      "matches": true
+    },
+    {
+      "url": "/privacy.html",
+      "status": 200,
+      "sha256": "b5893ff3e726baa1d91ed9c949c728c8680b4e15fd1656b217c26bf9cf25b788",
+      "matches": true
+    },
+    {
+      "url": "/privacy.css",
+      "status": 200,
+      "sha256": "18ec0a1416f764be1826e29915ec5979ecf9d904e1b46abf5c6f18fd208c1829",
+      "matches": true
+    },
+    {
+      "url": "/board-3d.js",
+      "status": 200,
+      "sha256": "0d258bbf3154e3d276e0c0aa4a800b0484d661712b0ff32481a4a46c759d2d8a",
+      "matches": true
+    },
+    {
+      "url": "/wagon-renderer.js",
+      "status": 200,
+      "sha256": "5fa2d71ffcf3e6c6a4a50b840b7cd682c321c49f162d2a8ae9c5dbfd17cc6961",
+      "matches": true
+    },
+    {
+      "url": "/wagon-preview.js",
+      "status": 200,
+      "sha256": "7a4a2ea9198c22e0e31813498cd91ddaac7fed274d36939f0e53a861fc5f3b0c",
+      "matches": true
+    },
+    {
+      "url": "/wagon-models.mjs",
+      "status": 200,
+      "sha256": "1605948fb56c407beba67356f54731e994f0b40a9284b802e78b02f7a8b52725",
+      "matches": true
+    },
+    {
+      "url": "/board-camera.js",
+      "status": 200,
+      "sha256": "f97b8a79a1687529857b71d182dbe24c3dfac74ec24f8848c3b3c6cfa73ed583",
+      "matches": true
+    },
+    {
+      "url": "/board-3d.css",
+      "status": 200,
+      "sha256": "3eb8561981dbe1d2b93b2dff7f2f809518e53e9bf509b1903f831b9d1412ac36",
+      "matches": true
+    },
+    {
+      "url": "/vendor/three.module.js",
+      "status": 200,
+      "sha256": "104f56145899722094556490d787aae0617cc2fc3382f31df02d724ea1aee341",
+      "matches": true
+    },
+    {
+      "url": "/vendor/three.core.js",
+      "status": 200,
+      "sha256": "613e370f76638fdef83926642bf256dc9615684922de1ce1f63a8583e5d78578",
+      "matches": true
+    },
+    {
+      "url": "/app.js",
+      "status": 200,
+      "sha256": "314dcd66c4500d359c1b6e942da11a73b00be2c1885fdcd4d6a7dff439a34373",
+      "matches": true
+    },
+    {
+      "url": "/style.css",
+      "status": 200,
+      "sha256": "8627d34921f9e1eeac0305dfc42e29d8c2a02821266ad95ee7c8c0d1ef889dee",
+      "matches": true
+    },
+    {
+      "url": "/maps/europe-v1.js",
+      "status": 200,
+      "sha256": "e6a0157567de5aa336bf6f3f7211e2a5adb323dbb160a71f34841f5d6a9778df",
+      "matches": true
+    },
+    {
+      "url": "/maps/europe-legacy-v1.js",
+      "status": 200,
+      "sha256": "a98444a488518e1793cc411fc37e7a11e219eba800a740768b5b623063e11f89",
+      "matches": true
+    },
+    {
+      "url": "/data.js",
+      "status": 200,
+      "sha256": "ff9fed5598798f15f069ed89420d56ed28fe10138352ec61f84822cddb5aead9",
+      "matches": true
+    },
+    {
+      "url": "/layouts/europe-v1.js",
+      "status": 200,
+      "sha256": "78651811510606cdafae1fea86996fe849f18bfc27c53c50f117f41ade71d997",
+      "matches": true
+    },
+    {
+      "url": "/layouts/laboratory-v1.js",
+      "status": 200,
+      "sha256": "0f56fcb9f7b4d6b3c55e20c356e7cf40c85e2a0a920c20fb4299440c3db01636",
+      "matches": true
+    },
+    {
+      "url": "/layouts/south-america-v3.3-beta.js",
+      "status": 200,
+      "sha256": "90372d35a05868ae0fcde1b5b5d228d72029196ad7874465ed26017d7481d7f8",
+      "matches": true
+    },
+    {
+      "url": "/map-options.js",
+      "status": 200,
+      "sha256": "966f36fdd24011396df367a592f8d35ff61de80809f17981d4652ab1d14ccb15",
+      "matches": true
+    },
+    {
+      "url": "/match-presentation.js",
+      "status": 200,
+      "sha256": "48ff60cab576c6956787538811a3a2a17f1433e595dbdd1990463c95034493ca",
+      "matches": true
+    },
+    {
+      "url": "/map-layout.js",
+      "status": 200,
+      "sha256": "94ee21cc52b8fdbeaf5fe1f0f3970671fdc6d164d2e1d7d50e189ef79bf35a48",
+      "matches": true
+    },
+    {
+      "url": "/game-timing.js",
+      "status": 200,
+      "sha256": "8506a76452e33b2aadb6ec5bdd84793ab93fd5cd9b783530b47274c644505a71",
+      "matches": true
+    },
+    {
+      "url": "/game-ui.js",
+      "status": 200,
+      "sha256": "3453664a0d45b64dd6af64275aa6763f224ecc3001b6694a827d540db689e52c",
+      "matches": true
+    },
+    {
+      "url": "/draw-intent.js",
+      "status": 200,
+      "sha256": "d9fa5f512189095313f2e07782b906f90974e406a390c699532163cf1d56555c",
+      "matches": true
+    },
+    {
+      "url": "/game.css",
+      "status": 200,
+      "sha256": "562e76abac86618abf83d978fb25476d4941c84c174d5d980d69ade99edde805",
+      "matches": true
+    },
+    {
+      "url": "/responsive.css",
+      "status": 200,
+      "sha256": "7d33d4a3d1fb27305997ef43f708e5790d40b27495433c78197dd640991aaad8",
+      "matches": true
+    },
+    {
+      "url": "/lobby.css",
+      "status": 200,
+      "sha256": "8b227a0b93d86e98b98b9340bd5bf1f2738951c8c4586b113850a86a48c52ae1",
+      "matches": true
+    },
+    {
+      "url": "/lobby-ui.js",
+      "status": 200,
+      "sha256": "24566ab3662428fabfd11dda2b52eadb2bd22dcb6203f9085a2b5175c6e71135",
+      "matches": true
+    },
+    {
+      "url": "/account-ui.js",
+      "status": 200,
+      "sha256": "74b6500240aad5b9d8f878c6360c63ad4e034678bd3181e8daeec20824e65448",
+      "matches": true
+    },
+    {
+      "url": "/translations.js",
+      "status": 200,
+      "sha256": "9b078fabb2be173ff49ace92af4a8ec3f8af261bd691a2f8d56fe73ef4ca0b81",
+      "matches": true
+    },
+    {
+      "url": "/replay-state.js",
+      "status": 200,
+      "sha256": "3008e9a8fda81dc7c73219b93bbdf9934e67b2b8dda3882d631070f59f3ec0ea",
+      "matches": true
+    },
+    {
+      "url": "/replay-ui.js",
+      "status": 200,
+      "sha256": "063cc1eaaa5509155fc118dbf6c5eb169ca6cbbd2b27e912936d18360436176f",
+      "matches": true
+    },
+    {
+      "url": "/replay.css",
+      "status": 200,
+      "sha256": "b77a56e86edd6272947406a35ad3dd5edce4ba6dab3652c203f3b0b77a9c2404",
+      "matches": true
+    },
+    {
+      "url": "/history-ui.js",
+      "status": 200,
+      "sha256": "1082c8bc3699a40a1f3dc00cc006d7481aca1767c25a247b4d5d08e6288a4d4d",
+      "matches": true
+    },
+    {
+      "url": "/i18n.js",
+      "status": 200,
+      "sha256": "d604f99da1639a1083f6a643f9cba91398620a67dceed90394133b198eb74a56",
+      "matches": true
+    },
+    {
+      "url": "/room-map-picker.js",
+      "status": 200,
+      "sha256": "ed53ffe4a72f0cce0d2af280d06ff2046696eba81763e93a808e1ca2f27354aa",
+      "matches": true
+    },
+    {
+      "url": "/room-setup.css",
+      "status": 200,
+      "sha256": "45dd9def3235e1d7339669d13488a04f9dd5a7f83119bad0e2395a1c45fb151c",
+      "matches": true
+    },
+    {
+      "url": "/shell.js",
+      "status": 200,
+      "sha256": "e9994a6a837643c38791109c921bb13c513d91747a7f44215e1a6c3ecedc1b21",
+      "matches": true
+    },
+    {
+      "url": "/shell.css",
+      "status": 200,
+      "sha256": "9a4ae3930ee09593c44a63f9b59da7777377f5e50db26aeb9b64e47286dc87f6",
+      "matches": true
+    },
+    {
+      "url": "/shell-icons.js",
+      "status": 200,
+      "sha256": "6714b34bfee82bf1dd81c7da3a09bbf47f363fb830914082c99fd5cc6f832f9e",
+      "matches": true
+    },
+    {
+      "url": "/hippie-model.mjs",
+      "status": 200,
+      "sha256": "16fa84f6f75b1116e201fff88aa57b4f547276e57f0bec6c0d39e6746cc3047f",
+      "matches": true
+    },
+    {
+      "url": "/hippie-geometry.mjs",
+      "status": 200,
+      "sha256": "0550703ad988bc90f1d9cc5bff6076bcf880842166bab62b1bf18f3fa265fdb5",
+      "matches": true
+    },
+    {
+      "url": "/hippie-hair.mjs",
+      "status": 200,
+      "sha256": "7fe426991c2c8046a26ef38395bebfc6a130259bc1a1384b34c2edfbf5e8b5c3",
+      "matches": true
+    },
+    {
+      "url": "/wagon-people.mjs",
+      "status": 200,
+      "sha256": "24ea91ca163ec1fd5ae6af32379a117f2ee7e5dac6dab799f843e8cb006da189",
+      "matches": true
+    }
+  ],
+  "privateRoutes": [
+    {
+      "path": "/game/queries/destination-details.js",
+      "status": 404
+    },
+    {
+      "path": "/backend/server.js",
+      "status": 404
+    },
+    {
+      "path": "/game/application/player-action.js",
+      "status": 404
+    },
+    {
+      "path": "/experiments/passenger-extreme/index.html",
+      "status": 404
+    },
+    {
+      "path": "/.env",
+      "status": 404
+    },
+    {
+      "path": "/room-state.json",
+      "status": 404
+    },
+    {
+      "path": "/render.yaml",
+      "status": 404
+    },
+    {
+      "path": "/package.json",
+      "status": 404
+    }
+  ],
+  "health": {
+    "status": 200,
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 0
+  },
+  "backend": {
+    "drawPipelineVersion": 1,
+    "drawFeedbackVersion": 1,
+    "sessionVersion": 1,
+    "visibility": "private",
+    "started": false,
+    "temporaryRoomClosed": true
+  },
+  "finalHealth": {
+    "status": 200,
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 0
+  },
+  "passed": true
+}

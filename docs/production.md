@@ -1,6 +1,42 @@
 # Producción
 
-## Versión actual · 2026-11-03, 11:05 (Lima)
+## Versión actual · 2026-11-03, 12:05 (Lima)
+
+- Código `b8e7b3726f846db6aa7630a2bc4976b5a3156c5c`, en `origin/main`.
+  La segunda intención de robo se envía sin esperar el primer ACK; los robos
+  ocultos se revelan antes de incorporarse a la mano, con ilustraciones retenidas
+  en memoria y animaciones más pausadas. Alcance en [cartas](work/card-interactions.md).
+- [Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbl1863ncjis73fj70h0):
+  **Live** a las 12:05:14 Lima, Node 26.13.0, despliegue manual de 49,9 s tras
+  CI aprobado. Sin SQL, credenciales ni cambios de plan. Salud previa correcta
+  con cero salas. [Captura](qa/draw-pipeline-release/render-live.png).
+- [GitHub CI](https://github.com/Gecch12/trencitos/actions/runs/41679488781):
+  **651/651 pruebas**, 174,0 s en Node, documentación, lobby con dos clientes
+  y quince recorridos Chrome de robos/recuperación aprobados.
+  [Resultado](qa/draw-pipeline-release/ci-result.json).
+- [HTTP/WebSocket](qa/draw-pipeline-release/production-http.json): 46 recursos
+  públicos idénticos al checkout, ocho rutas privadas con 404, salud 200/Supabase
+  y `drawPipelineVersion:1`. Se creó y cerró únicamente una sala privada temporal.
+- [Chrome en producción](qa/draw-pipeline-release/production-browser.json):
+  seis robos ocultos en tres pares, en sala privada con un bot. Las tres segundas
+  peticiones salieron antes del primer ACK. Primer rAF entre **17,9 y 29,9 ms**;
+  confirmación entre **466,8 y 658,2 ms**; color reconocible entre **619,3 y
+  817,3 ms**; llegada a la mano entre **719,6 y 918,5 ms**. Imágenes cargadas,
+  cantidades correctas y sin grupos anónimos, duplicados ni errores de consola.
+  La [captura posterior](qa/draw-pipeline-release/production-browser.png) incluye
+  también dos cartas automáticas por vencimiento del turno de QA durante la
+  captura del informe; esas cartas no forman parte de las seis mediciones.
+- La sala de QA se cerró mediante el protocolo de la aplicación después de que
+  el control del navegador dejara de responder al aviso de salida. No se tocaron
+  otras partidas. Los instrumentos de medición se limitaron a esa pestaña de QA.
+- Muestra pequeña en Chrome de escritorio, sin retener red ni guardado. rAF no
+  mide la pantalla física; no se presenta como comparación controlada con la
+  versión anterior ni como garantía de latencia. La confirmación sigue esperando
+  persistencia durable. La demora al añadir bots queda fuera de esta entrega.
+- La publicación manual sigue siendo necesaria hasta autorizar la integración
+  Git de Render; [estado de entrega continua](work/continuous-delivery.md).
+
+## Entrega anterior · 2026-11-03, 11:05 (Lima)
 
 - Código `55b2dd898eb13e714babe5a1f1b41bc6284b37c0`, en `origin/main`.
   La mano incorpora inmediatamente cartas visibles y reversos provisionales;
