@@ -1,0 +1,77 @@
+{
+  "checked_at": "2026-11-03T05:52:08.197753+00:00",
+  "base_commit": "7fdb069e483644cf6c2c8eae378ed4ec2eb90ed3",
+  "results": {
+    "node-tests-result.json": {
+      "exit_code": 0,
+      "runtime_and_executed_test_sources_match": true,
+      "sha256": "b25bce9f0e31bb409917008341e75a68631abbecc4b93d884632b5f5267a0a68",
+      "log_hash_matches": true,
+      "unrelated_node_test_changes_after_browser_run": []
+    },
+    "browser-tests-result.json": {
+      "exit_code": 0,
+      "runtime_and_executed_test_sources_match": true,
+      "sha256": "b6d5c60b8411a7952674da26b667218e6a39681e4bf0721bc4fc2171f05f5c84",
+      "log_hash_matches": true,
+      "unrelated_node_test_changes_after_browser_run": [
+        "tests/match-presentation.test.js"
+      ]
+    },
+    "replay-tests-result.json": {
+      "exit_code": 0,
+      "runtime_and_executed_test_sources_match": true,
+      "sha256": "00960caa9501220fc34f0f51400dc672434acbfc9966e18980b544ebb515da51",
+      "log_hash_matches": true,
+      "unrelated_node_test_changes_after_browser_run": [
+        "tests/match-presentation.test.js"
+      ]
+    },
+    "client-tests-result.json": {
+      "exit_code": 0,
+      "runtime_and_executed_test_sources_match": true,
+      "sha256": "c5685d7f5b5a8a0f03a0c9a19234a071fda5ccd37147801488e2810a2d580e13",
+      "log_hash_matches": true,
+      "unrelated_node_test_changes_after_browser_run": [
+        "tests/match-presentation.test.js"
+      ]
+    },
+    "docker-result.json": {
+      "exit_code": 0,
+      "runtime_and_executed_test_sources_match": true,
+      "sha256": "067befe6281437087a22d8073f17406ea28f14704291193cde72d0724fc0d004",
+      "log_hash_matches": true,
+      "unrelated_node_test_changes_after_browser_run": []
+    }
+  },
+  "historical_qa_unchanged": true,
+  "historical_europe_fixtures_and_policies_unchanged": true,
+  "diff_check": "passed",
+  "docs_check": "OK: 49 documentos, 23 fichas. No se validan URLs externas ni anclas.",
+  "artifact_sha256": {
+    "frontend/app.js": "81616267bc080d9579f93de59483dbf5548f29f223c96e4b5128fb211be0777c",
+    "frontend/board-3d.js": "cffb786051183ff09753ab6b3741a93a0a076353a14bd771755691a1a57bd26a",
+    "frontend/game-ui.js": "3453664a0d45b64dd6af64275aa6763f224ecc3001b6694a827d540db689e52c",
+    "frontend/history-ui.js": "c7d2527199cec433c36c0ae17117252d8df567d586156b3cb5379cede86e27d1",
+    "frontend/index.html": "7de2c491fc922c3ca079d79ffeeb34d0ecfd0cbebfb3df90f24d818e8218c694",
+    "frontend/map-layout.js": "94ee21cc52b8fdbeaf5fe1f0f3970671fdc6d164d2e1d7d50e189ef79bf35a48",
+    "frontend/match-presentation.js": "702fc9c94920f168049708c567d2f3cb500b776fca90a2280276d14c427796fd",
+    "frontend/layouts/europe-v1.js": "78651811510606cdafae1fea86996fe849f18bfc27c53c50f117f41ade71d997",
+    "backend/public-assets.js": "dc2b33c5dfb63fb0c84622cf9cdefd04a0caa2a7cf59632d1805cd459c8688ed",
+    "shared/translations.js": "70580c462be82fb4311f8f4ffd5218dae79c433166fd28e7c81b9a29049eceb8",
+    "tests/match-presentation.test.js": "c09af8e4b58f1a9121317a05de7db52748e5bfaf4cdc773f74c0df5c85c66561",
+    "tests/helpers/client-map.js": "e11035044bfa5d767b7316910566644b427b4f76ba656494b57848fb43768a95",
+    "tests/browser-client-map.cjs": "e8e0c5778bf3c5bfa6e2958ad1f78e3717ccc42c6305be37f55625643b8450db",
+    "tests/browser-map-replay.cjs": "c4d07399540c65564b0d585421b80572eb134840d02668186a6e55b5d35ff81a",
+    "tests/fixtures/europe-layout-v1.json": "d2138cb7f198929fd01dc00a67e5fbecf5ede6d6d8d60c5b37609f34b904d991",
+    "tests/fixtures/europe-geometry-v1.json": "783d9cf7ab5710ef054953d0f894bbc23cb00add7eaef2c9d7eb2afa4aca40be",
+    "tests/fixtures/bots-europe-v1.json": "e287069bd0c24c112e5770f5bbad672115e7d0cc7fcd26316af56cac2d874f91",
+    "tests/fixtures/europe-legacy-v1.json": "ff924b0cb2c0a33aabedd356fc5d90f02210118b88ab3f0d722b8f91a68d836c",
+    "tests/fixtures/replay-europe-v1.json": "abfc9200d17ab09c2b368186a508ca65c3d5133351e177e4a340674ee516cc4d",
+    "tests/helpers/bots-baseline.js": "f14f40d63d757b8d19b0299982493f648bd3cfdbcb84bcec920aaa1e33203edd",
+    "tests/helpers/practice-bot-baseline.js": "143350e78f14d6cd4917ccc7cacb1f5739fc9ba3c39a5e25641a81bec8a6b94c",
+    "tests/helpers/bots-stage1.js": "ee78fb1ad901900a29cb013567c60b8a19bab990efc9ef25c45f848ab42edaf2",
+    "tests/helpers/practice-bot-stage1.js": "f96f43b569824026617d4b1272300d5985e211f49e7b70013f7768a9303e4eae",
+    "tests/helpers/practice-planner-stage1.js": "f19ea7a636aa5d7b9da1370adbc6cfa678a36279d2fc36481cc1527c2023c962"
+  }
+}

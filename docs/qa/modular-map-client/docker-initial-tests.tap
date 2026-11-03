@@ -1,0 +1,322 @@
+TAP version 13
+# Subtest: Europe bot decisions and results match the three pre-migration seeded traces
+ok 1 - Europe bot decisions and results match the three pre-migration seeded traces
+  ---
+  duration_ms: 9329.353963
+  type: 'test'
+  ...
+# Subtest: route set identity is order independent, delimiter safe and preserves numeric versus string IDs
+ok 2 - route set identity is order independent, delimiter safe and preserves numeric versus string IDs
+  ---
+  duration_ms: 0.283916
+  type: 'test'
+  ...
+# Subtest: sampled worlds use only their map's tickets and preserve references, counts and card inventory
+ok 3 - sampled worlds use only their map's tickets and preserve references, counts and card inventory
+  ---
+  duration_ms: 10.366834
+  type: 'test'
+  ...
+# Subtest: lookahead executes hypothetical actions through the same engine and map context
+ok 4 - lookahead executes hypothetical actions through the same engine and map context
+  ---
+  duration_ms: 18.068125
+  type: 'test'
+  ...
+# Subtest: bots cannot inspect hidden cards or ticket contents while sampling a custom map
+ok 5 - bots cannot inspect hidden cards or ticket contents while sampling a custom map
+  ---
+  duration_ms: 56.433708
+  type: 'test'
+  ...
+# Subtest: stations and destination opportunities use the custom map, including retired tickets
+ok 6 - stations and destination opportunities use the custom map, including retired tickets
+  ---
+  duration_ms: 13.269625
+  type: 'test'
+  ...
+# Subtest: replacement and practice bots settle opaque tunnel IDs and enforce ferry payment
+ok 7 - replacement and practice bots settle opaque tunnel IDs and enforce ferry payment
+  ---
+  duration_ms: 11.946625
+  type: 'test'
+  ...
+# Subtest: an unknown reference and an observation passed to the wrong policy context fail without mutation
+ok 8 - an unknown reference and an observation passed to the wrong policy context fail without mutation
+  ---
+  duration_ms: 4.747375
+  type: 'test'
+  ...
+# Subtest: automatic play interleaves full Europe and custom-map games, including restoration, without cross-map memory
+ok 9 - automatic play interleaves full Europe and custom-map games, including restoration, without cross-map memory
+  ---
+  duration_ms: 4544.448544
+  type: 'test'
+  ...
+# Could not persist rooms: EISDIR: illegal operation on a directory, open '/tmp/command-receipts-ehCkDK/state.json.tmp'
+# Subtest: file receipts survive reconnection/restart and roll back atomically without changing legacy IDs or replay
+ok 10 - file receipts survive reconnection/restart and roll back atomically without changing legacy IDs or replay
+  ---
+  duration_ms: 306.0335
+  type: 'test'
+  ...
+# Subtest: runtime assets load through HTML, JavaScript imports and CSS references
+ok 11 - runtime assets load through HTML, JavaScript imports and CSS references
+  ---
+  duration_ms: 154.415458
+  type: 'test'
+  ...
+# Loaded 49 runtime resources: /, /privacy.html, /assets/cards/red.svg, /assets/cards/blue.svg, /assets/cards/green.svg, /assets/cards/yellow.svg, /assets/cards/black.svg, /assets/cards/white.svg, /assets/cards/orange.svg, /assets/cards/purple.svg, /assets/cards/wild.svg, /assets/cards/back.svg, /assets/ticket.svg, /style.css, /game.css, /responsive.css, /lobby.css, /assets/favicon.svg, /board-3d.css, /shell.css, /translations.js, /i18n.js, /maps/europe-v1.js, /maps/europe-legacy-v1.js, /data.js, /layouts/europe-v1.js, /map-layout.js, /match-presentation.js, /game-timing.js, /game-ui.js, /lobby-ui.js, /board-camera.js, /account-ui.js, /shell-icons.js, /replay-state.js, /history-ui.js, /shell.js, /app.js, /privacy.css, /board-3d.js, /wagon-preview.js, /vendor/three.module.js, /wagon-renderer.js, /wagon-models.mjs, /vendor/three.core.js, /hippie-model.mjs, /hippie-geometry.mjs, /wagon-people.mjs, /hippie-hair.mjs
+# Subtest: static SVG is served safely with right MIME and traversal returns 404
+ok 12 - static SVG is served safely with right MIME and traversal returns 404
+  ---
+  duration_ms: 48.358625
+  type: 'test'
+  ...
+# Subtest: versioned Europe and its frozen numeric bridge preserve every legacy city, route and ticket
+ok 13 - versioned Europe and its frozen numeric bridge preserve every legacy city, route and ticket
+  ---
+  duration_ms: 2.304208
+  type: 'test'
+  ...
+# Subtest: browser classic scripts and Node deliver identical legacy data without server modules
+ok 14 - browser classic scripts and Node deliver identical legacy data without server modules
+  ---
+  duration_ms: 4.476209
+  type: 'test'
+  ...
+# Subtest: complete seeded setups retain their pre-extraction content apart from explicit version references
+ok 15 - complete seeded setups retain their pre-extraction content apart from explicit version references
+  ---
+  duration_ms: 3.708542
+  type: 'test'
+  ...
+# Subtest: file HTTP history serves stored map definitions and legacy frames without a registered live map
+ok 16 - file HTTP history serves stored map definitions and legacy frames without a registered live map
+  ---
+  duration_ms: 174.518625
+  type: 'test'
+  ...
+# Subtest: supabase HTTP history serves stored map definitions and legacy frames without a registered live map
+ok 17 - supabase HTTP history serves stored map definitions and legacy frames without a registered live map
+  ---
+  duration_ms: 85.320875
+  type: 'test'
+  ...
+# Subtest: WebSocket state and reconnection deliver the same definition that HTTP replay records
+ok 18 - WebSocket state and reconnection deliver the same definition that HTTP replay records
+  ---
+  duration_ms: 41.081625
+  type: 'test'
+  ...
+# Subtest: public definitions match live identities and corridors on Europe and an opaque-ID map
+ok 19 - public definitions match live identities and corridors on Europe and an opaque-ID map
+  ---
+  duration_ms: 58.173125
+  type: 'test'
+  ...
+# Subtest: definition projection reads only public context and never hidden allocations or extra rule fields
+ok 20 - definition projection reads only public context and never hidden allocations or extra rule fields
+  ---
+  duration_ms: 13.295791
+  type: 'test'
+  ...
+# Subtest: authorized state and recording carry one detached definition shared in meaning across perspectives
+ok 21 - authorized state and recording carry one detached definition shared in meaning across perspectives
+  ---
+  duration_ms: 14.657834
+  type: 'test'
+  ...
+# Subtest: archive records map metadata and hashes its public definition without duplicating it in each view
+ok 22 - archive records map metadata and hashes its public definition without duplicating it in each view
+  ---
+  duration_ms: 26.17725
+  type: 'test'
+  ...
+# Subtest: stored definitions support replay without a registered map or access to the current engine
+ok 23 - stored definitions support replay without a registered map or access to the current engine
+  ---
+  duration_ms: 24.579958
+  type: 'test'
+  ...
+# Subtest: original Europe public, participant and audit responses retain their frozen hashes
+ok 24 - original Europe public, participant and audit responses retain their frozen hashes
+  ---
+  duration_ms: 17.989833
+  type: 'test'
+  ...
+# Subtest: resuming a legacy recording appends definitions while preserving its original prefix and hash chain
+ok 25 - resuming a legacy recording appends definitions while preserving its original prefix and hash chain
+  ---
+  duration_ms: 77.806
+  type: 'test'
+  ...
+# Subtest: unknown definition versions and incomplete references reject before loading remote frames
+ok 26 - unknown definition versions and incomplete references reject before loading remote frames
+  ---
+  duration_ms: 10.982125
+  type: 'test'
+  ...
+# Subtest: incompatible recorded definitions and mixed view references never silently fall back to Europe
+ok 27 - incompatible recorded definitions and mixed view references never silently fall back to Europe
+  ---
+  duration_ms: 25.785708
+  type: 'test'
+  ...
+# Subtest: new metadata requires a recorded definition and cannot label an entirely legacy recording
+ok 28 - new metadata requires a recorded definition and cannot label an entirely legacy recording
+  ---
+  duration_ms: 4.651333
+  type: 'test'
+  ...
+# Subtest: client context resolves opaque IDs and names independently of array order and keeps contexts isolated
+ok 29 - client context resolves opaque IDs and names independently of array order and keeps contexts isolated
+  ---
+  duration_ms: 37.420542
+  type: 'test'
+  ...
+# Subtest: only an entirely legacy replay uses the frozen Europe fallback; current missing or incompatible data fail
+ok 30 - only an entirely legacy replay uses the frozen Europe fallback; current missing or incompatible data fail
+  ---
+  duration_ms: 35.948333
+  type: 'test'
+  ...
+# Subtest: client refuses ambiguous DOM identities, missing coordinates and mismatched route data
+ok 31 - client refuses ambiguous DOM identities, missing coordinates and mismatched route data
+  ---
+  duration_ms: 2.201584
+  type: 'test'
+  ...
+# Subtest: client payment and pass hints use the supplied rule values without granting authority
+ok 32 - client payment and pass hints use the supplied rule values without granting authority
+  ---
+  duration_ms: 0.829958
+  type: 'test'
+  ...
+# Subtest: extracted Europe geometry matches the prior renderer exactly and reordering preserves double lanes
+not ok 33 - extracted Europe geometry matches the prior renderer exactly and reordering preserves double lanes
+  ---
+  duration_ms: 17.943708
+  type: 'test'
+  location: '/app/tests/match-presentation.test.js:66:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + '0af2e9234b6c1e7d90318e97f2caab169ee98028fcf143f8825c881ac03fdcec'
+    - '86d38d6715bb362bbf16e7eec85aaba084d8f739f91e821d91badf04d1c0a8e7'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '86d38d6715bb362bbf16e7eec85aaba084d8f739f91e821d91badf04d1c0a8e7'
+  actual: '0af2e9234b6c1e7d90318e97f2caab169ee98028fcf143f8825c881ac03fdcec'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/app/tests/match-presentation.test.js:69:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: browser classic scripts load the client read model without backend imports
+ok 34 - browser classic scripts load the client read model without backend imports
+  ---
+  duration_ms: 29.093834
+  type: 'test'
+  ...
+# Subtest: array restores and commits versioned live state while preserving the old replay prefix
+ok 35 - array restores and commits versioned live state while preserving the old replay prefix
+  ---
+  duration_ms: 41.717625
+  type: 'test'
+  ...
+# Subtest: inline restores and commits versioned live state while preserving the old replay prefix
+ok 36 - inline restores and commits versioned live state while preserving the old replay prefix
+  ---
+  duration_ms: 25.948958
+  type: 'test'
+  ...
+# Subtest: manifest restores and commits versioned live state while preserving the old replay prefix
+ok 37 - manifest restores and commits versioned live state while preserving the old replay prefix
+  ---
+  duration_ms: 22.17625
+  type: 'test'
+  ...
+# Subtest: supabase restores and commits versioned live state while preserving the old replay prefix
+ok 38 - supabase restores and commits versioned live state while preserving the old replay prefix
+  ---
+  duration_ms: 44.896333
+  type: 'test'
+  ...
+# Subtest: inline rejects an incompatible match before installing or committing any room
+ok 39 - inline rejects an incompatible match before installing or committing any room
+  ---
+  duration_ms: 39.789291
+  type: 'test'
+  ...
+# Subtest: supabase rejects an incompatible match before installing or committing any room
+ok 40 - supabase rejects an incompatible match before installing or committing any room
+  ---
+  duration_ms: 62.960625
+  type: 'test'
+  ...
+# Subtest: known legacy states migrate as detached copies without touching clocks, piles, IDs or scores
+ok 41 - known legacy states migrate as detached copies without touching clocks, piles, IDs or scores
+  ---
+  duration_ms: 33.5855
+  type: 'test'
+  ...
+# Subtest: current and transitional referenced states restore without relying on array position or object identity
+ok 42 - current and transitional referenced states restore without relying on array position or object identity
+  ---
+  duration_ms: 4.624625
+  type: 'test'
+  ...
+# Subtest: unknown schema versions and missing references never become legacy Europe or mutate the input
+ok 43 - unknown schema versions and missing references never become legacy Europe or mutate the input
+  ---
+  duration_ms: 7.673584
+  type: 'test'
+  ...
+# Subtest: restore rejects missing, duplicated, coerced or changed routes and tickets against the exact definition
+ok 44 - restore rejects missing, duplicated, coerced or changed routes and tickets against the exact definition
+  ---
+  duration_ms: 14.086958
+  type: 'test'
+  ...
+# Subtest: pending tunnels, offers, station assignments and result paths validate their saved identities
+ok 45 - pending tunnels, offers, station assignments and result paths validate their saved identities
+  ---
+  duration_ms: 5.192958
+  type: 'test'
+  ...
+# Subtest: opaque map identities survive validated restoration in a new engine with the same catalog
+ok 46 - opaque map identities survive validated restoration in a new engine with the same catalog
+  ---
+  duration_ms: 0.947333
+  type: 'test'
+  ...
+# Subtest: migration appends new audit state while old replay frames and public views stay byte-for-byte unchanged
+ok 47 - migration appends new audit state while old replay frames and public views stay byte-for-byte unchanged
+  ---
+  duration_ms: 31.679708
+  type: 'test'
+  ...
+# Subtest: WebSocket practice flow: create, choose tickets, bots, finish, leave and create again
+ok 48 - WebSocket practice flow: create, choose tickets, bots, finish, leave and create again
+  ---
+  duration_ms: 12910.926255
+  type: 'test'
+  ...
+1..48
+# tests 48
+# suites 0
+# pass 47
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 29463.536971

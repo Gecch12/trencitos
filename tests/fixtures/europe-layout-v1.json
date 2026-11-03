@@ -1,0 +1,13 @@
+{
+  "baseCommit": "7fdb069",
+  "network": "86d38d6715bb362bbf16e7eec85aaba084d8f739f91e821d91badf04d1c0a8e7",
+  "layout": {
+    "bounds": "a8386b6e1dc13ea4ea9e9f699b4b6b6b9a9b331857c2fcfa8a45bc6da12f5db5",
+    "tile": "ae6a352c9fd5d451baf9c4d681c2f60228bcdb8dfc3b28f3f3c17b1538b33a6e",
+    "cities": "6ef12f045a56ec3bae873ba6ff78face19d9b528aec4c5f6784012d9698fd7e1",
+    "bends": "4169f380a9ef50412b7169cec1182d18c8a94f627c0370beef605944eea50e57",
+    "labels": "8a56123f448d031eabc834856d605efd652e5c0df573c3a23b9d23accb8720af",
+    "land": "c70659cd55ba485ba01e6ea71148464ce2f61fca2b81db0fddffd44b0d66ce35",
+    "details": "d96c6b2e26f1d4a0d22c899c46fd7036c17195828c90690334896039b27c35ad"
+  }
+}

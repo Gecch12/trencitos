@@ -47,7 +47,7 @@ function dialog(hand, route = { id: 0, a: "PAR", b: "BRU", color: "gray", n: 2, 
   const node = () => ({ textContent: "", disabled: false, dataset: {}, setAttribute() {}, animate() {}, children: [], style: { setProperty() {} }, classList: { add() {} }, replaceChildren() { this.children = []; }, appendChild(child) { this.children.push(child); } });
   let html, inputs = [];
   const context = vm.createContext({ I18n: require("../shared/i18n"),
-    game, seat: 0, buildTarget: { routeId: 0 }, GameUI: UI, buildSubmitting: false, reducedMotion: {matches: false},
+    gameRules: require("../frontend/match-presentation").legacyRules, game, seat: 0, buildTarget: { routeId: 0 }, GameUI: UI, buildSubmitting: false, reducedMotion: {matches: false},
     N: Object.fromEntries([...E.COLORS, "wild"].map(c => [c, c])), C: UI.ROUTE_COLORS,
     $: id => nodes[id], escapeHTML: s => s, routeName: r => `${r.a} — ${r.b}`, cityName: s => s,
     plural: (n, word) => `${n} ${word}`, dialogClockHTML: () => "", updateClocks() {}, closeOptionalDialog() {},

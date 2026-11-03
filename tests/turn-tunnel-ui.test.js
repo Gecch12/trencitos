@@ -111,7 +111,7 @@ function revealHarness(reduced = false) {
   const nodes = { dialog: {dataset: {}, classList: {add() {}}, querySelector() {return null;}, querySelectorAll() {return [];}}, dialogTitle: {}, tunnelRevealStatus: {},
     tunnelSequence: { querySelector: selector => slots[+selector.match(/"(\d+)"/)[1]] } };
   const game = {players: [{name: "A"}, {name: "B"}], routes: [{id: 0,n:2}], sharedTunnel: {id: 7, seat: 0, routeId: 0, revealed: ["red", "blue", "wild"], paymentColor: "red", surcharge: 2, stage: "reveal", startedAt: 1000, until: 3800, cardMs: 700}};
-  const context = vm.createContext({I18n: require('../shared/i18n'), GameUI:UI, game, seat: 1, tunnelReveal: null, uiDialog: null,
+  const context = vm.createContext({I18n: require('../shared/i18n'), GameUI:UI, gameRules:require("../frontend/match-presentation").legacyRules, game, seat: 1, tunnelReveal: null, uiDialog: null,
     reducedMotion: {matches: reduced}, Date: {now: () => time}, serverOffset: 0, replayAt: null,
     document: {hidden: false, createElement: () => ({})}, $: id => nodes[id], escapeHTML: String, routeName: () => "Paris — Bruxelles",
     colorCard: color => ({color}), playSound() {}, syncBoard3D() {}, showTunnelDialog() {throw Error('Rival cannot decide');},

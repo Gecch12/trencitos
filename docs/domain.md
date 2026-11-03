@@ -42,7 +42,9 @@ reemplazo ya usan el contexto de su partida; sus simulaciones conservan ese mapa
 y solo infieren secretos desde cantidades públicas. La estrategia no cambia.
 Vistas y archivo ya declaran el mapa/reglamento y transportan su definición pública,
 sin revelar el reparto real. El replay utiliza la definición grabada y conserva
-el formato de los pasos antiguos. La selección por sala y adaptación del frontend siguen pendientes en
+el formato de los pasos antiguos. El frontend consume esa definición mediante
+un contexto de lectura y separa el layout de las reglas; el bundle aún incluye
+solo el diseño europeo. La selección por sala y aceptación conjunta siguen pendientes en
 [fase 4](work/modular-platform-maps.md); detalles del puente en
 [arquitectura](architecture.md).
 

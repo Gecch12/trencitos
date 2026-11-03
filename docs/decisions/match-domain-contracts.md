@@ -320,6 +320,15 @@ del encabezado completo mantiene el protocolo anterior. Selección y presentaci�
 de otros mapas siguen pendientes. Contrato canónico en [arquitectura](../architecture.md)
 y [historial](../history-replay.md).
 
+El sexto corte incorpora un contexto de lectura en el cliente y extrae el layout
+europeo como datos de presentación. Se pasa la definición a la interfaz de estado
+y replay; solo los pasos legados sin encabezado admiten el fallback europeo.
+Geometría, DOM y Three.js conservan identidades opacas, con búsquedas por ID.
+El catálogo de layouts se inyecta para probar otros mapas sin publicar un selector
+incompleto. Un mapa sin diseño disponible falla explícitamente. Los controles
+reciben reglas para orientar al jugador; no se duplica la autoridad del servidor
+ni se incorpora un framework de CQRS o un editor de reglas.
+
 El tercer corte de fase 2 permite inyectar azar en reparto/mercado inicial y
 elecciones de cierre forzado. Conserva el parámetro legado del sorteo de primer
 puesto y añade opciones para el reparto. Firmas implementadas y límites actuales

@@ -23,7 +23,8 @@ la rama aislada; no se sincronizan automáticamente otros worktrees ni se public
 - [x] Versionar referencias de estado/guardado y preservar compatibilidad de archivos y replay anteriores.
 - [x] Adaptar bots y simulaciones a la definición de cada partida, conservando estrategia y privacidad.
 - [x] Adaptar consultas, transporte y archivo a la definición de cada partida, con compatibilidad histórica.
-- [ ] Separar composición visual por mapa, habilitar selección y conservar Three.js y cosméticos.
+- [x] Consumir definiciones por partida en el cliente, separar layout y conservar identidades en Three.js y controles.
+- [ ] Registrar el mapa/layout de prueba en el producto, habilitar selección y conservar cosméticos.
 - [ ] Aceptación conjunta: Europa y mapa pequeño jugables simultáneamente, con guardado/reconexión/replay.
 
 ## Primer corte: definición y puente de Europa
@@ -354,10 +355,88 @@ Quinto corte aceptado localmente. El segundo mapa se verifica en motor y API;
 el cliente aún muestra Europa. Supabase se prueba con un simulador y móvil por
 emulación. Sin push, merge ni despliegue.
 
+## Sexto corte: contexto de presentación y layout
+
+Base: `7fdb069`. El cliente resuelve la definición antes de dibujar estado o
+replay. Nombres, puntos, pagos, dobles, estaciones, mercado y mínimos de destinos
+proceden de su contexto de lectura. Europa conserva sus datos legados solo para
+pasos antiguos sin encabezado; mensajes actuales incompletos o mapas sin layout
+no usan ese fallback. Un error de presentación detiene también el reproductor.
+Contrato en [arquitectura](../architecture.md#contexto-y-layout-del-cliente).
+
+El layout europeo se extrae de `map-layout.js` y la geometría pasa a generarse
+por composición. Three.js y las vistas de destinos/resultados buscan vías por ID,
+con carriles dobles estables al reordenar arrays. Selección y atributos del DOM
+conservan IDs de texto, incluidos comillas, `"0"` y `"__proto__"`. Las elecciones
+de ofertas mantienen sus índices de protocolo. No se cambian modelos de vagón.
+
+[Las pruebas del contexto](../../tests/match-presentation.test.js) comprueban
+aislamiento, reglas explícitas, identidades, coordenadas, rechazo de contratos
+incompatibles y carga como scripts clásicos sin backend. La
+[referencia de geometría](../../tests/fixtures/europe-layout-v1.json), capturada
+del commit base antes de extraerla, verifica equivalencia completa de rutas y
+datos visuales europeos, comparando valores con tolerancia de `1e-9` unidades
+entre versiones de Node; el mismo runtime produce valores idénticos.
+
+[La prueba de navegador](../../tests/browser-client-map.cjs) lee por HTTP un
+replay sintético y ejecuta la app/Three.js reales. Inyecta únicamente el catálogo
+de layouts de prueba, comprueba selección de destinos y vías, vagones, navegación
+y privacidad en escritorio/móvil. Sin esa inyección, el mismo replay muestra
+«Mapa no disponible». El layout sintético no se incorpora al bundle ni al lobby.
+
+## Evidencia del sexto corte
+
+Validación local del 2026-11-03 (Lima), sobre `7fdb069` más los cambios de esta
+entrega. Entorno limpio, archivo temporal y autenticación externa desactivada:
+
+- Node `v25.6.1`: **594/594**, sin fallos ni omisiones. Incluye las seis pruebas
+  nuevas del contexto y geometría; conserva compatibilidad, privacidad,
+  persistencia, reglas y contratos HTTP/WebSocket.
+  [Resultado y huellas](../qa/modular-map-client/node-tests-result.json),
+  [TAP](../qa/modular-map-client/node-tests.tap).
+- Chrome `156.0.8078.80`: cuatro recorridos de replay europeo anterior/actual,
+  público/participante, con navegación y secretos filtrados. Otros tres casos
+  verifican rechazo por falta de layout y replay sintético con layout inyectado
+  en escritorio/móvil: IDs opacos, billetes con comillas, selección, tres vagones,
+  nombres de ciudades, cambios de perspectiva y un solo canvas. Cero errores.
+  Capturas sintéticas, error y replay antiguo revisadas.
+  [Replays europeos](../qa/modular-map-client/replay/replay-report.json),
+  [mapa sintético](../qa/modular-map-client/client/client-report.json).
+- `QA_PORT=0 npm run test:board3d`: ocho pruebas, nueve combinaciones de
+  viewport/zoom y partida completa de cuatro jugadores con **267 acciones**,
+  reconexión y cero errores. Incluye estaciones, destinos, pagos y desistimientos
+  de túnel; capturas final y móvil revisadas.
+  [Resultado](../qa/modular-map-client/browser-tests-result.json),
+  [informe](../qa/modular-map-client/browser/threejs-report.json).
+- Docker `linux/arm64`, Node `v22.23.4`: **48/48** sobre el código empaquetado,
+  incluidos recursos públicos y scripts nuevos. Arranque, salud, UID 1000 y
+  escritura de estado correctos; raíz de solo lectura, sin red externa ni
+  dependencias de desarrollo.
+  [Construcción](../qa/modular-map-client/docker-build.txt),
+  [resultado](../qa/modular-map-client/docker-result.json),
+  [TAP](../qa/modular-map-client/docker-tests.tap).
+- La comparación inicial por hash de decimales falló entre Node 25/macOS y
+  Node 22/Linux. El redondeo también encontró un valor en su límite. Se pasó a
+  comparar la [geometría anterior congelada](../../tests/fixtures/europe-geometry-v1.json)
+  con tolerancia numérica `1e-9`, manteniendo exactos textos, estructura y layout.
+  En el mismo Node 22, generadores anterior/actual son idénticos; la diferencia
+  máxima entre entornos fue `5.72e-12` unidades. Sin cambios al generador para
+  corregir esta aserción.
+  [Comparación de runtimes](../qa/modular-map-client/geometry-runtimes.json),
+  [primer intento](../qa/modular-map-client/docker-initial-tests.tap),
+  [intento con redondeo](../qa/modular-map-client/docker-rounding-tests.tap).
+- Documentación y diff correctos; fuentes ejecutadas y logs contrastados con sus
+  huellas. Tras los recorridos de navegador solo cambió la aserción Node de
+  geometría, verificada nuevamente en Node/Docker; el runtime del navegador y
+  sus pruebas permanecen iguales. QA y fixtures históricos intactos.
+  [Comprobación final](../qa/modular-map-client/final-checks.json).
+
+Sexto corte aceptado localmente. El mapa sintético usa inyección de layout y un
+replay preparado; no certifica todavía salas simultáneas de dos mapas. Móvil por
+emulación y servicios remotos simulados. Sin push, merge ni despliegue.
+
 ## Siguiente corte
 
-Adaptar el cliente para consumir definiciones por partida y distinguir el formato
-europeo legado en replay. Separar el layout por mapa y retirar accesos por posición
-en selección, pagos, destinos, etiquetas y Three.js. Después habilitar el mapa de
-prueba con su selector y completar la aceptación conjunta de dos mapas jugables,
-incluidos guardado, reconexión y replay.
+Registrar el mapa pequeño de prueba y su layout, habilitar su selección por sala
+y comprobar partidas de ambos mapas simultáneas. Completar la aceptación de
+fase 4 con bots, guardado, reconexión, replay y cosméticos antes de Sudamérica.

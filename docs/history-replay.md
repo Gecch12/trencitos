@@ -202,6 +202,16 @@ Tiene inicio/final, pasos, búsqueda por acción, barra de posición, pausa y ve
 0,5×, 1×, 2×, 4× y 8×. Los participantes pueden elegir cualquier perspectiva y consultar
 cartas/destinos del paso; la vista pública recibe únicamente su proyección.
 
+El cliente recibe la definición reconstruida de cada paso junto a su vista.
+Usa los nombres de ciudades guardados incluso en el panel privado, y conserva
+IDs numéricos o de texto al seleccionar destinos y vías. Solo el protocolo
+antiguo completo usa el contexto europeo legado; un paso actual sin definición
+o sin layout compatible detiene la reproducción y muestra el error. Los controles
+se cierran de forma segura si la pestaña cambia de visibilidad tras ese error.
+El layout no está en los frames: se resuelve por referencia exacta en el bundle,
+que todavía incluye solo Europa. Contrato del cliente en
+[arquitectura](architecture.md#contexto-y-layout-del-cliente).
+
 `i18n.js` y `translations.js` localizan HTML, accesibilidad, mensajes y registros.
 Español es el valor inicial; Más → Idioma permite ESP o ENG y guarda `rr-language`.
 Durante la partida se accede desde el engranaje, también en móvil. El cambio

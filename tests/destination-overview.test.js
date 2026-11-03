@@ -79,7 +79,7 @@ test("destination rows use CSP-safe styles without rerendering unchanged rows af
   const list = { scrollTop: 40, querySelectorAll: () => [row] };
   Object.defineProperty(list, "innerHTML", { get: () => `${html}<!-- DOM-only style changes -->`, set: value => { writes++; html = value; } });
   const game = { tickets: [{ id: 15, a: "MAD", b: "DIE", p: 8 }], ticketProgress: [{ id: 15, completed: false }] };
-  const context = vm.createContext({ I18n: require("../shared/i18n"), game, GameUI: UI, CITIES: E.CITIES, escapeHTML: s => s, ticketColor: i => `color-${i}`,
+  const context = vm.createContext({ I18n: require("../shared/i18n"), game, GameUI: UI, cityName: id => E.CITIES[id][2], ticketIdFromDom: value => game.tickets.find(t => String(t.id) === value)?.id, escapeHTML: s => s, ticketColor: i => `color-${i}`,
     $: () => list, document: { activeElement: { closest: () => null } } });
   vm.runInContext(source.slice(source.indexOf("function renderDestinations("), source.indexOf("function playerMetric(")), context);
   context.renderDestinations(); context.renderDestinations();

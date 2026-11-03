@@ -4,6 +4,7 @@ import { wagonRouteAppearances, wagonStyle } from './wagon-models.mjs';
 
 // A presentation adapter only. No transport, rule engine or hidden game state.
 export function createBoard3D({ container, map, network, onFailure }) {
+  const geometryById = new Map(network.map(route => [route.id, route]));
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
   renderer.setClearColor('#bbd6d9');
@@ -14,7 +15,7 @@ export function createBoard3D({ container, map, network, onFailure }) {
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 5000);
   const textureCanvas = document.createElement('canvas');
-  textureCanvas.width = 1960; textureCanvas.height = 1320;
+  textureCanvas.width = Math.ceil(map.bounds.width * 2); textureCanvas.height = Math.ceil(map.bounds.height * 2);
   const ctx = textureCanvas.getContext('2d');
   ctx.scale(2, 2); ctx.translate(-map.bounds.x, -map.bounds.y);
   ctx.fillStyle = '#bbd6d9'; ctx.fillRect(map.bounds.x, map.bounds.y, map.bounds.width, map.bounds.height);
@@ -105,7 +106,7 @@ export function createBoard3D({ container, map, network, onFailure }) {
         positions.push(...a,...c,...b,...b,...c,...d);
         lengths.push(length + span / 2); length += span;
       }
-      ranges.set(route.id ?? network.indexOf(route), { start, count: positions.length / 3 - start, lengths });
+      ranges.set(route.id, { start, count: positions.length / 3 - start, lengths });
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -169,7 +170,7 @@ export function createBoard3D({ container, map, network, onFailure }) {
     plane.material.color.set(spotlight ? '#73868d' : '#ffffff');
     renderer.setClearColor(spotlight ? '#536c77' : '#bbd6d9');
     for (const route of routes) {
-      const geometry = network[route.id]; if (!geometry) continue;
+      const geometry = geometryById.get(route.id); if (!geometry) continue;
       const owner = route.id === hiddenRoute ? null : route.owner;
       const player = owner === null ? null : players[owner];
       const faded = spotlight ? (litRoutes.has(route.id) ? false : 'dim') : highlight !== null && owner !== highlight;

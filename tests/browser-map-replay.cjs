@@ -28,6 +28,8 @@ let app, browser;
       await page.goto(`${base}/replay?id=${record.id}`);
       await page.waitForFunction(() => !!game && !!board3D && !document.getElementById('game').classList.contains('hidden'));
       assert.equal(await page.evaluate(() => game.definitionVersion), version);
+      assert.equal(await page.evaluate(() => matchContext.legacy), version === undefined);
+      assert.equal(await page.evaluate(() => matchContext.cityName("PAR")), "Paris");
       assert.equal(await page.locator('#replayViewer option').count(), own ? 3 : 1);
       assert.equal(await page.locator('#replaySecretsOpen').count(), own ? 1 : 0);
       if (own) {

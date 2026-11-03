@@ -127,8 +127,43 @@ reconectar. Repite la definición por mensaje de estado, no por perspectiva
 dentro del archivo. La grabación la conserva una vez en la raíz del snapshot y
 el diff omite datos estáticos. `createMatchArchive({engine,projections})` permite
 usar el mismo motor/contexto que la sala. Lectores y compatibilidad histórica en
-[historial](history-replay.md). El cliente aún usa los datos/layout europeos;
-consumir la definición para renderizar otro mapa corresponde al próximo corte.
+[historial](history-replay.md).
+
+### Contexto y layout del cliente
+
+[match-presentation.js](../frontend/match-presentation.js) recibe vista y definición
+antes de renderizar estados WebSocket o pasos del replay. Comprueba versión,
+referencias, identidades, datos de vías y coordenadas disponibles. Construye un
+contexto de lectura con nombres, reglas públicas, geometría y búsquedas por ID.
+Reutiliza el contexto mientras la definición no cambie; cambiarlo dispone el
+tablero anterior y limpia cámara, selección y resaltados. No modifica la vista
+ni llama al motor; los controles sugieren pagos y el servidor decide la jugada.
+
+Solo un paso de replay sin definición ni campos del encabezado utiliza los datos
+europeos legados. Un estado actual incompleto, referencias incompatibles o un
+mapa sin layout muestran un error y ocultan el tablero previo. No se elige Europa
+como sustituto. La compatibilidad no modifica frames ni hashes históricos.
+
+[layouts/europe-v1.js](../frontend/layouts/europe-v1.js) contiene coordenadas,
+curvas, geografía, rótulos y tamaños, vinculados a `europe@1`.
+[map-layout.js](../frontend/map-layout.js) genera geometría y coloca etiquetas
+con ese layout; conserva una fachada europea para consumidores de compatibilidad.
+Los carriles dobles tienen orden estable por ID y la geometría europea conserva
+las huellas anteriores (tolerancia numérica de `1e-9` unidades al comparar
+entornos JavaScript distintos). El cliente y Three.js buscan geometría por identidad,
+sin indexar arrays con IDs. El DOM recupera el tipo original de cada ID y escapa
+atributos/selectores; rechaza identidades ambiguas como `0` y `"0"` en un mismo
+catálogo público. Ofertas siguen enviando índices de elección, no IDs de billete.
+
+`app.js` usa el contexto para ciudades, cartas, puntos, mercado, mínimos de
+destinos y costes de estaciones. `game-ui.js` recibe reglas para orientar pagos,
+dobles y pasar turno; sus valores por defecto solo conservan la API europea
+anterior. Esto no añade reglas arbitrarias: el servidor sigue soportando el
+reglamento existente. La paleta y los modelos de vagón son presentación.
+
+El bundle registra únicamente el layout europeo. Las pruebas de otro mapa
+inyectan un catálogo de layouts en el cliente; no habilitan salas ni otro mapa
+en el producto. Selección y aceptación conjunta permanecen en [fase 4](work/modular-platform-maps.md).
 
 ### Estado versionado y restauración durable
 

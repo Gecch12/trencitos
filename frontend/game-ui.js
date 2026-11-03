@@ -4,7 +4,8 @@
 const GameUI = (() => {
   const I18n = typeof module !== "undefined" && module.exports ? require('../shared/i18n') : globalThis.TrencitosI18n;
   const MIN_ZOOM = .25, MAX_ZOOM = 6;
-  const ROUTE_POINTS = Object.freeze({ 1: 1, 2: 2, 3: 4, 4: 7, 6: 15, 8: 21 });
+  const legacyRules = (typeof module !== "undefined" && module.exports ? require("./match-presentation") : MatchPresentation).legacyRules;
+  const ROUTE_POINTS = legacyRules.routePoints;
   function cityLabelScale(zoom) { return Math.min(1.6, Math.max(1, 1 + (zoom - 2.5) * .24)); }
   function turnPresentation(game, seat, controlled = true) {
     if (!game) return { title: "", hint: "", clock: null, mine: false };
@@ -111,8 +112,7 @@ const GameUI = (() => {
       stations: [...new Map(paths.flatMap(p => p.stations || []).map(s => [`${s.seat}:${s.city}`, s])).values()],
       ...(!ticket ? { overview: true } : {}) };
   }
-  const colors = ["red", "blue", "green", "yellow", "black", "white", "orange", "purple"];
-  function payments(hand, cost, color = "gray", ferry = 0) {
+  function payments(hand, cost, color = "gray", ferry = 0, colors = legacyRules.colors) {
     const wild = hand.filter(c => c === "wild").length;
     const options = [];
     for (const c of color === "gray" ? colors : [color]) {
@@ -132,7 +132,7 @@ const GameUI = (() => {
       .map(color => ({ color, options: [...options.filter(option => option.color === color), ...(allWild ? [allWild] : [])].sort((a, b) => a.wild - b.wild) }));
     return groups.length ? groups : allWild ? [{ color: "wild", options: [allWild] }] : [];
   }
-  function construction(game, seat, target) {
+  function construction(game, seat, target, rules = legacyRules) {
     const no = reason => ({ reason, options: [] });
     if (!game || game.phase === "finished") return no(I18n.t("La partida ha terminado."));
     if (game.current !== seat) return no(I18n.t("No es tu turno."));
@@ -146,7 +146,7 @@ const GameUI = (() => {
       if (route.owner !== null) return no(I18n.t("Esta ruta ya está ocupada."));
       const parallel = game.routes.some(r => r.id !== route.id && r.owner !== null &&
         ((r.a === route.a && r.b === route.b) || (r.a === route.b && r.b === route.a)) &&
-        (r.owner === seat || game.players.length <= 3));
+        (r.owner === seat || game.players.length < rules.doubleRoutesMinPlayers));
       if (parallel) return no(I18n.t("La ruta paralela impide construir aquí."));
       if (player.trains < route.n) return no(I18n.t("No te quedan suficientes vagones."));
       cost = route.n;
@@ -155,9 +155,10 @@ const GameUI = (() => {
     } else if (target?.city) {
       if (player.stations < 1) return no(I18n.t("No te quedan estaciones."));
       if (game.players.some(p => p.placed.includes(target.city))) return no(I18n.t("Esta ciudad ya tiene una estación."));
-      cost = 4 - player.stations;
+      cost = rules.stationCosts[rules.setup.stations - player.stations];
+      if (!Number.isFinite(cost)) return no(I18n.t("No te quedan estaciones."));
     } else return no(I18n.t("Selecciona una ruta o una ciudad."));
-    const options = payments(game.hand, cost, color, ferry);
+    const options = payments(game.hand, cost, color, ferry, rules.colors);
     return { reason: options.length ? null : I18n.t("No tienes las cartas suficientes."), options, cost, route };
   }
   function tunnelShortfall(hand, tunnel) {
@@ -178,11 +179,11 @@ const GameUI = (() => {
       ? [{ color: "wild", regular: 0, wild: tunnel.surcharge }] : [];
     return payments(remaining, tunnel.surcharge, tunnel.color);
   }
-  function canPass(game, seat, cities) {
+  function canPass(game, seat, cities, rules = legacyRules) {
     if (!game || game.phase !== "play" || game.turnWaiting || game.current !== seat || game.drawCount ||
       game.deckCount + game.discardCount || game.face.length || (!game.ticketOffer && game.ticketDeckCount)) return false;
-    return !game.routes.some(r => !construction(game, seat, { routeId: r.id }).reason) &&
-      !cities.some(city => !construction(game, seat, { city }).reason);
+    return !game.routes.some(r => !construction(game, seat, { routeId: r.id }, rules).reason) &&
+      !cities.some(city => !construction(game, seat, { city }, rules).reason);
   }
   function overviewLabels(entries, important) {
     const shown = [];

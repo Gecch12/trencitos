@@ -65,7 +65,7 @@ function renderHarness() {
   const controls = { onclick: null, setAttribute() {} };
   const panel = { innerHTML: "", setAttribute() {}, querySelectorAll: () => [], querySelector: () => controls, classList: { toggle() {} } };
   const context = vm.createContext({ I18n: require("../shared/i18n"), game: g, resultViews: new Map(), expandedResults: new Set(), resultMapCleanup: null, GameUI: UI,
-    $: () => panel, CITIES: E.CITIES, playerAvatar: () => '<span class="player-avatar"></span>',
+    $: () => panel, matchContext: {cityName: id => E.CITIES[id]?.[2] || id}, playerAvatar: () => '<span class="player-avatar"></span>',
     applyPlayerAppearance() {}, renderResultMap() {},
     escapeHTML: x => String(x).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;") });
   vm.runInContext(app.slice(app.indexOf("const cityName ="), app.indexOf("function showResults()")), context);

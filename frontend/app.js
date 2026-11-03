@@ -53,9 +53,13 @@ let wagonSeed = '';
 let spectating = false, roomCapacity = 5, roomVisibility = 'private', roomTiming = GameTiming.normalize();
 let desiredWatch = new URLSearchParams(location.search).get('watch') || '';
 if (!LobbyUI.isColor(preferredColor)) preferredColor = LobbyUI.PALETTE[0].color;
-const MAP_BOUNDS = RailMap.bounds;
-const MAP_GEOMETRY = RailMap.createNetwork(ROUTES);
-const MAP_CENTER = { x: MAP_BOUNDS.x + MAP_BOUNDS.width / 2, y: MAP_BOUNDS.y + MAP_BOUNDS.height / 2 };
+const presentationResolver = MatchPresentation.create();
+let matchContext = null, boardMap = RailMap, gameRules = MatchPresentation.legacyRules;
+let MAP_BOUNDS = boardMap.bounds, MAP_GEOMETRY = [];
+const geometryFor = id => matchContext?.geometryFor(id);
+const ticketIdFromDom = value => matchContext?.ticketIdFromDom(value);
+const routeIdFromDom = value => matchContext?.routeIdFromDom(value);
+let MAP_CENTER = { x: MAP_BOUNDS.x + MAP_BOUNDS.width / 2, y: MAP_BOUNDS.y + MAP_BOUNDS.height / 2 };
 const TICKET_COLORS = ["#b48916", "#c64e48", "#357bb5", "#32815b"];
 let zoom = 1,
   mapCenter = { ...MAP_CENTER };
@@ -63,6 +67,31 @@ let board3D = null, board3DLoading = false, board3DFailed = false;
 let boardSpotlight = null;
 let labelPriority = [];
 let labelPlacements3D = new Map();
+function useMatchDefinition(view, definition, options) {
+  let next;
+  try { next = presentationResolver.resolve(view, definition, options); }
+  catch (failure) {
+    cancelConstruction(); cancelTunnelReveal(); cancelCardFlights(); stopSounds(); closeMapMenu();
+    board3D?.dispose(); board3D = null; matchContext = null; game = null;
+    $("board").replaceChildren(); $("game").classList.add("hidden");
+    $("dialog").innerHTML = `<h2>${I18n.t("Mapa no disponible")}</h2><p>${escapeHTML(I18n.t(failure.message))}</p><button id="unsupportedMapHome">${I18n.t("Volver al inicio")}</button>`;
+    $("unsupportedMapHome").onclick = () => location.assign("/");
+    $("overlay").classList.remove("hidden");
+    throw failure;
+  }
+  if (next === matchContext) return;
+  cancelConstruction(); cancelTunnelReveal(); closeMapMenu();
+  board3D?.dispose(); board3D = null; board3DFailed = false;
+  $("mapscroll").classList.remove("board-ready");
+  matchContext = next; boardMap = next.layout; gameRules = next.rules; MAP_GEOMETRY = next.network;
+  MAP_BOUNDS = boardMap.bounds; MAP_CENTER = {x:MAP_BOUNDS.x + MAP_BOUNDS.width / 2,y:MAP_BOUNDS.y + MAP_BOUNDS.height / 2};
+  zoom = 1; mapCenter = {...MAP_CENTER}; selected = stationCity = null;
+  labelPriority = []; labelPlacements3D.clear();
+  hoveredDestination = null; allDestinationsVisible = false; resultMapSelection = null; boardSpotlight = null;
+  retainedVisible.clear(); ticketChoices.clear(); pendingChoiceKey = null; seenOfferId = null;
+  resultMapCleanup?.(); resultMapCleanup = null; resultCamera = null; resultCameraKey = "";
+  $("ticketList")._destinationHTML = null;
+}
 function boardUnavailable() {
   board3D?.dispose(); board3D = null; board3DFailed = true;
   $("mapscroll").classList.remove("board-ready");
@@ -72,13 +101,14 @@ function boardUnavailable() {
   closeMapMenu();
 }
 async function initializeBoard3D() {
-  if (board3DLoading || board3D) return;
+  if (board3DLoading || board3D || !game || !matchContext) return;
   board3DLoading = true; board3DFailed = false;
   $("boardStatus").hidden = false; $("retryBoard").hidden = true;
   $("boardStatusText").textContent = I18n.t("Preparando el tablero…");
   try {
     const { createBoard3D } = await import("./board-3d.js");
-    board3D = createBoard3D({ container: $("mapscroll"), map: RailMap, network: MAP_GEOMETRY, onFailure: boardUnavailable });
+    if (!game || !matchContext) return;
+    board3D = createBoard3D({ container: $("mapscroll"), map: boardMap, network: MAP_GEOMETRY, onFailure: boardUnavailable });
     $("board").setAttribute("preserveAspectRatio", "none");
     $("mapscroll").classList.add("board-ready"); $("boardStatus").hidden = true;
     labelPlacements3D.clear();
@@ -395,6 +425,7 @@ function connect() {
       return;
     }
     if (m.type === "state") {
+      try { useMatchDefinition(m.game, m.definition); } catch { return; }
       const effects = prepareEffects(m.game), oldTurn = game?.turnSerial, oldOffer = game?.ticketOffer;
       if (oldOffer && oldOffer.id !== m.game.ticketOffer?.id) localStorage.removeItem(`rr-choice-${room}-${seat}-${oldOffer.id}`);
       if (game?.initial && !m.game.initial) localStorage.removeItem(`rr-choice-${room}-${seat}-initial-${game.initial.map(t => t.id).join("-")}`);
@@ -650,7 +681,7 @@ function amIUp() {
   return !sessionReplaced && !storagePaused && sock?.readyState === WebSocket.OPEN && !members[seat]?.autopilot && game && game.current === seat && game.phase === "play" && !game.turnWaiting;
 }
 function drawAllowed() {
-  return !marketRefresh && amIUp() && game.drawCount < 2;
+  return !marketRefresh && amIUp() && game.drawCount < gameRules.trainCards.drawsPerTurn;
 }
 function colorCard(c, count, click, disabled) {
   const b = document.createElement(click ? "button" : "div");
@@ -737,7 +768,7 @@ function render() {
   $("viewResults").classList.toggle("hidden", game.phase !== "finished");
   if (game.phase === "closing") $("roundStatus").innerHTML = I18n.t('Últimos billetes <span data-clock="closing"></span>');
   $("hand").innerHTML = "";
-  for (const c of [...COLORS, "wild"]) {
+  for (const c of [...gameRules.colors, "wild"]) {
     let n = game.hand.filter((x) => x === c).length;
     if (n) $("hand").appendChild(colorCard(c, n, null, false));
   }
@@ -752,9 +783,9 @@ function render() {
   $("pendingTickets").classList.toggle("hidden", !game.ticketOffer);
   $("deckinfo").textContent =
     I18n.t`${game.deckCount} cartas ocultas · ${game.ticketDeckCount} destinos por robar`;
-  $("drawstats").textContent = active ? `${game.drawCount}/2` : "";
-  $("drawstats").setAttribute("aria-label", active ? I18n.t`${game.drawCount} de 2 robos usados` : "");
-  $("pass").classList.toggle("hidden", !GameUI.canPass(game, seat, Object.keys(CITIES)));
+  $("drawstats").textContent = active ? `${game.drawCount}/${gameRules.trainCards.drawsPerTurn}` : "";
+  $("drawstats").setAttribute("aria-label", active ? I18n.t`${game.drawCount} de ${gameRules.trainCards.drawsPerTurn} robos usados` : "");
+  $("pass").classList.toggle("hidden", !GameUI.canPass(game, seat, matchContext.cityIds, gameRules));
   renderHistory();
   renderBoard();
   renderDialog();
@@ -789,10 +820,11 @@ function updateClocks() {
   updateSharedTunnel();
 }
 setInterval(updateClocks, 250);
-$("pendingTickets").onclick = () => { if (game?.ticketOffer) { uiDialog = "tickets"; showTicketDialog(game.ticketOffer.tickets, 1); } };
+$("pendingTickets").onclick = () => { if (game?.ticketOffer) { uiDialog = "tickets"; showTicketDialog(game.ticketOffer.tickets, Math.min(game.ticketOffer.tickets.length, gameRules.destinations.offerMinimum)); } };
 function renderMarket() {
+  $("market").setAttribute("aria-label", I18n.t`${gameRules.trainCards.marketSize} cartas visibles y mazo oculto`);
   const blindDeck = $("drawblind");
-  const visibleCards = Array.from({ length: 5 }, (_, i) => {
+  const visibleCards = Array.from({ length: gameRules.trainCards.marketSize }, (_, i) => {
     const c = game.face[i];
     if (!c) { const empty = document.createElement("div"); empty.className = "empty-market-slot"; empty.setAttribute("aria-label", I18n.t("Sin carta disponible")); return empty; }
     const card = colorCard(c, null, () => act("draw_train", { index: i }), !drawAllowed() || (c === "wild" && game.drawCount === 1));
@@ -1177,7 +1209,7 @@ function animateCardFlight(event) {
   };
 }
 function constructionTarget(event) {
-  return event.routeId !== undefined ? $("board").querySelector(`[data-route-id="${event.routeId}"]`) : $("board").querySelector(`[data-city="${event.city}"]`);
+  return event.routeId !== undefined ? $("board").querySelector(`[data-route-id="${CSS.escape(String(event.routeId))}"]`) : $("board").querySelector(`[data-city="${CSS.escape(event.city)}"]`);
 }
 function animateConstruction(event) {
   if (board3D) {
@@ -1241,7 +1273,7 @@ function renderDestinations() {
     const status = GameUI.destinationStatus(game, t.id);
     const hint = !status ? I18n.t("Progreso no disponible: el backend no envía este dato. Reinícialo al terminar la partida.") : status.completed ? status.viaStation ? I18n.t("Conectado usando una estación. Puntos al final de la partida.") : I18n.t("Conectado. Puntos al final de la partida.") : I18n.t("Destino pendiente");
     const number = GameUI.destinationNumber(game, t.id);
-    return I18n.t`<button type="button" class="destination-row ${status?.completed ? "is-complete" : ""}" data-destination="${t.id}" title="${hint} · Ver en el mapa"><span class="ticket-number"><span class="sr-only">Destino </span>${number}</span><span class="destination-endpoints">${escapeHTML(CITIES[t.a][2])} <span aria-hidden="true">→</span> ${escapeHTML(CITIES[t.b][2])}</span><strong>${t.p}<span class="sr-only"> puntos</span></strong>${!status ? I18n.t('<span class="destination-unknown" aria-label="Progreso no disponible">?</span>') : status.completed ? I18n.t('<span class="destination-check" aria-label="Completado">✓</span>') : I18n.t('<span class="destination-pending" aria-label="Pendiente">·</span>')}</button>`;
+    return I18n.t`<button type="button" class="destination-row ${status?.completed ? "is-complete" : ""}" data-destination="${escapeHTML(t.id)}" title="${hint} · Ver en el mapa"><span class="ticket-number"><span class="sr-only">Destino </span>${number}</span><span class="destination-endpoints">${escapeHTML(cityName(t.a))} <span aria-hidden="true">→</span> ${escapeHTML(cityName(t.b))}</span><strong>${t.p}<span class="sr-only"> puntos</span></strong>${!status ? I18n.t('<span class="destination-unknown" aria-label="Progreso no disponible">?</span>') : status.completed ? I18n.t('<span class="destination-check" aria-label="Completado">✓</span>') : I18n.t('<span class="destination-pending" aria-label="Pendiente">·</span>')}</button>`;
   }).join("") || I18n.t('<p class="smallmuted">Elige tus billetes iniciales.</p>');
   // Keep the user's scroll position while bots act or a new card arrives.
   if ($("ticketList")._destinationHTML !== content) {
@@ -1249,8 +1281,8 @@ function renderDestinations() {
     const top = $("ticketList").scrollTop;
     $("ticketList").innerHTML = content;
     $("ticketList")._destinationHTML = content;
-    for (const row of $("ticketList").querySelectorAll("[data-destination]")) row.querySelector(".ticket-number").style.setProperty("--ticket-color", ticketColor(GameUI.destinationNumber(game, +row.dataset.destination) - 1));
-    if (focus !== undefined) $("ticketList").querySelector(`[data-destination="${focus}"]`)?.focus({ preventScroll: true });
+    for (const row of $("ticketList").querySelectorAll("[data-destination]")) row.querySelector(".ticket-number").style.setProperty("--ticket-color", ticketColor(GameUI.destinationNumber(game, ticketIdFromDom(row.dataset.destination)) - 1));
+    if (focus !== undefined) $("ticketList").querySelector(`[data-destination="${CSS.escape(String(focus))}"]`)?.focus({ preventScroll: true });
     $("ticketList").scrollTop = top;
   }
 }
@@ -1263,7 +1295,6 @@ function playerMetric(type, label, value) {
   };
   return `<span class="player-metric" data-metric="${type}" title="${label}: ${value}" aria-label="${label}: ${value}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[type]}</svg><strong aria-hidden="true">${value}</strong></span>`;
 }
-const LABEL_OFFSETS = RailMap.labels;
 function plural(n, word) {
   return n + " " + I18n.t(word + (n === 1 ? "" : "s"));
 }
@@ -1281,7 +1312,7 @@ function routeSummaryText(r) {
   const tags = [];
   if (r.tunnel) tags.push(I18n.t("Túnel"));
   if (r.ferry) tags.push(I18n.t("Ferri"));
-  return I18n.t`${CITIES[r.a][2]} — ${CITIES[r.b][2]} · ${plural(r.n, "espacio")}${tags.length ? " · " + tags.join(" · ") : ""} · Requiere ${routeRequirementText(r)}`;
+  return I18n.t`${cityName(r.a)} — ${cityName(r.b)} · ${plural(r.n, "espacio")}${tags.length ? " · " + tags.join(" · ") : ""} · Requiere ${routeRequirementText(r)}`;
 }
 function svgElements(svg) {
   return (tag, attrs = {}, parent = svg) => {
@@ -1305,22 +1336,17 @@ function drawMapBase(el, prefix) {
   el("circle", { cx: 1, cy: 2, r: 0.45, fill: "#9c8861", opacity: 0.15 }, grain);
   el("circle", { cx: 5, cy: 7, r: 0.3, fill: "#fffdf5", opacity: 0.6 }, grain);
   const geography = el("g", { class: "map-geography", "pointer-events": "none" });
-  for (const d of RailMap.land) {
+  for (const d of boardMap.land) {
     el("path", { d, fill: "none", stroke: "#e5f0e8", "stroke-width": 5, opacity: 0.55 }, geography);
     el("path", { d, fill: "#eee6d2", stroke: "#a5b3a7", "stroke-width": 1.1, "stroke-linejoin": "round" }, geography);
     el("path", { d, fill: `url(#${prefix}-paper)` }, geography);
   }
-  for (const d of RailMap.details)
+  for (const d of boardMap.details)
     el("path", { d, fill: "none", stroke: "#c2b797", "stroke-width": 0.7, "stroke-dasharray": "2 3", opacity: 0.55 }, geography);
-  for (const [x, y, name, size, rotation] of [
-    [55, 392, I18n.t("ATLÁNTICO"), 13, -70],
-    [346, 615, I18n.t("MEDITERRÁNEO"), 11, 0],
-    [761, 473, I18n.t("MAR NEGRO"), 9, 0],
-    [509, 101, I18n.t("BÁLTICO"), 8, -25],
-  ]) el("text", {
+  for (const [x, y, name, size, rotation] of boardMap.seaLabels) el("text", {
     x, y, class: "sea-label", "font-size": size, "text-anchor": "middle",
     transform: `rotate(${rotation} ${x} ${y})`,
-  }, geography).textContent = name;
+  }, geography).textContent = I18n.t(name);
   return defs;
 }
 function drawFerryGlyph(el, parent) {
@@ -1339,7 +1365,7 @@ function syncBoard3D() {
   board3D.update({ routes: game.routes.map(({ id, owner, color, tunnel, ferry, a, b }) => ({ id, owner, color, tunnel, ferry, a, b })),
     players: game.players.map(p => ({ color: GameUI.playerColor(p.color), placed: [...p.placed] })),
     visualSeed: wagonSeed, hiddenRoute: null, highlight, spotlight: boardSpotlight,
-    selectedRoute: selected ?? (focus ? +focus.dataset.routeId : null), selectedCity: stationCity ?? cityFocus?.dataset.city ?? null,
+    selectedRoute: selected ?? (focus ? routeIdFromDom(focus.dataset.routeId) : null), selectedCity: stationCity ?? cityFocus?.dataset.city ?? null,
     routeColors: C });
 }
 function highlightPlayerRoutes() {
@@ -1393,7 +1419,7 @@ function renderBoard() {
   drawMapBase(el, "board");
   const guides = el("g", { class: "rail-guides" });
   for (const r of game.routes) {
-    const geometry = MAP_GEOMETRY[r.id];
+    const geometry = geometryFor(r.id);
     const owner = GameUI.routeOwner(game, r, seat), owned = owner !== null;
     const color = owned ? owner.color : C[r.color];
     const description = `${routeSummaryText(r)}${owned ? ` · ${owner.label}` : ""}`;
@@ -1445,10 +1471,10 @@ function renderBoard() {
       if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectRoute(event); }
     });
   }
-  for (const [key, [x, y]] of Object.entries(RailMap.cities)) {
+  for (const [key, [x, y]] of Object.entries(boardMap.cities)) {
     const occupant = game.players.findIndex(p => p.placed.includes(key));
     const group = el("g", { transform: `translate(${x} ${y})`, class: "city-node", "data-city": key,
-      role: "button", tabindex: 0, "aria-label": `${CITIES[key][2]}${occupant >= 0 ? I18n.t` · Estación de ${game.players[occupant].name}` : I18n.t(" · Ver ciudad")}` });
+      role: "button", tabindex: 0, "aria-label": `${cityName(key)}${occupant >= 0 ? I18n.t` · Estación de ${game.players[occupant].name}` : I18n.t(" · Ver ciudad")}` });
     if (board3D) el("circle", { r: occupant >= 0 ? 16 : 8, fill: "transparent", "pointer-events": "all", class: "city-hit" }, group);
     el("circle", { r: 6.6, fill: "#fffdf1", opacity: 0.9 }, group);
     el("circle", {
@@ -1456,7 +1482,7 @@ function renderBoard() {
       stroke: stationCity === key ? "#bd6b38" : "#6b7972",
       "stroke-width": stationCity === key ? 2.3 : 1.3, class: "city-circle",
     }, group);
-    el("title", {}, group).textContent = `${CITIES[key][2]}${occupant >= 0 ? I18n.t` · Estación de ${game.players[occupant].name}` : ""}`;
+    el("title", {}, group).textContent = `${cityName(key)}${occupant >= 0 ? I18n.t` · Estación de ${game.players[occupant].name}` : ""}`;
     const selectCity = event => {
       stationCity = key;
       selected = null;
@@ -1471,10 +1497,10 @@ function renderBoard() {
     if (occupant >= 0) drawStation(el, group, GameUI.playerColor(game.players[occupant].color));
   }
   const names = el("g", { class: "city-names", "pointer-events": "none" });
-  for (const key of Object.keys(RailMap.cities)) {
+  for (const key of Object.keys(boardMap.cities)) {
     const group = el("g", { "data-city-label": key }, names);
     el("line", { class: "city-leader", stroke: "#6e8078", "stroke-width": 0.8 }, group);
-    el("text", { class: "city-label" }, group).textContent = CITIES[key][2];
+    el("text", { class: "city-label" }, group).textContent = cityName(key);
   }
   updateStationScale();
   updateCityLabels();
@@ -1485,7 +1511,7 @@ function prioritizeCityLabels(element, cities) {
     labelPriority = cities;
     if (board3D && type === "focus") {
       const safe = mapSafeArea($("mapscroll").getBoundingClientRect());
-      const points = cities.map(key => RailMap.cities[key]);
+      const points = cities.map(key => boardMap.cities[key]);
       if (points.some(([x, y]) => { const p = board3D.project(x, y); return p.x < safe.x + 30 || p.x > safe.x + safe.width - 30 || p.y < safe.y + 30 || p.y > safe.y + safe.height - 30; })) {
         mapCenter = { x: points.reduce((n, p) => n + p[0], 0) / points.length, y: points.reduce((n, p) => n + p[1], 0) / points.length };
         applyZoom();
@@ -1512,7 +1538,7 @@ function updateCityLabels() {
   const entries = [];
   const groups = new Map();
   for (const g of $("board").querySelectorAll("[data-city-label]")) {
-    const key = g.dataset.cityLabel, [x, y] = screen(RailMap.cities[key]);
+    const key = g.dataset.cityLabel, [x, y] = screen(boardMap.cities[key]);
     const visible = x >= labelArea.x && y >= labelArea.y && x <= labelArea.x + labelArea.width && y <= labelArea.y + labelArea.height;
     g.style.display = visible ? "" : "none";
     if (!visible) continue;
@@ -1527,7 +1553,7 @@ function updateCityLabels() {
     return { x: x - width / 2, y: y - height / 2, width, height };
   }));
   for (const player of game.players) for (const city of player.placed) {
-    const [x, y] = screen(RailMap.cities[city]), scale = Math.max(.8 / view.scale, 1);
+    const [x, y] = screen(boardMap.cities[city]), scale = Math.max(.8 / view.scale, 1);
     obstacles.push({ x: x - 10 * scale, y: y - (board3D ? 20 : 11) * scale, width: 20 * scale, height: (board3D ? 29 : 20) * scale });
   }
   const chosenRoute = game?.routes.find(r => r.id === selected);
@@ -1542,14 +1568,14 @@ function updateCityLabels() {
     for (const entry of entries) if (!keys.has(entry.key)) groups.get(entry.key).style.display = "none";
   }
   const relative = item => ({ ...item, x: item.x - labelArea.x, y: item.y - labelArea.y });
-  const placements = RailMap.placeLabels(displayed.map(relative), labelArea.width, labelArea.height, obstacles.map(relative), { height: 18 * labelScale, baseline },
+  const placements = boardMap.placeLabels(displayed.map(relative), labelArea.width, labelArea.height, obstacles.map(relative), { height: 18 * labelScale, baseline },
     board3D ? { previous: labelPlacements3D, maxLeader: 36, hideColliding: true } : {});
   if (board3D) {
     const shown = new Set(placements.map(p => p.key));
     for (const entry of entries) if (!shown.has(entry.key)) groups.get(entry.key).style.display = "none";
   }
   for (const box of placements) {
-    const g = groups.get(box.key), city = RailMap.cities[box.key], [sx, sy] = screen(city);
+    const g = groups.get(box.key), city = boardMap.cities[box.key], [sx, sy] = screen(city);
     const dx = box.x + labelArea.x - sx, dy = box.y + labelArea.y - sy;
     if (board3D) labelPlacements3D.set(box.key, { dx, dy });
     // Stable screen sizing at overview; type grows gently once zoom exceeds 2.5×.
@@ -1580,9 +1606,9 @@ function showMapMenu(event, target) {
   const owner = r ? GameUI.routeOwner(game, r, seat) : stationOwner < 0 ? null : { seat: stationOwner, color: GameUI.playerColor(game.players[stationOwner].color), label: I18n.t`Estación de ${game.players[stationOwner].name}` };
   const stationsLeft = game.players[seat]?.stations || 0;
   const canBuild = !owner && amIUp() && !game.drawCount && (r || stationsLeft > 0);
-  const title = r ? `${CITIES[r.a][2]} — ${CITIES[r.b][2]}` : CITIES[target.city][2];
+  const title = r ? `${cityName(r.a)} — ${cityName(r.b)}` : cityName(target.city);
   const detail = r ? `${routeRequirementText(r)}${r.tunnel ? I18n.t(" · Túnel") : ""}${r.ferry ? I18n.t(" · Ferri") : ""}`
-    : stationsLeft > 0 ? I18n.t`Estación · ${plural(4 - stationsLeft, "carta")} del mismo color` : I18n.t("Ya construiste tus 3 estaciones");
+    : stationsLeft > 0 ? I18n.t`Estación · ${plural(gameRules.stationCosts[gameRules.setup.stations - stationsLeft], "carta")} del mismo color` : I18n.t("Ya construiste todas tus estaciones");
   const menu = $("mapMenu");
   menu.innerHTML = I18n.t`<button class="menu-close" aria-label="Cerrar menú">×</button><h3>${escapeHTML(title)}</h3>${owner
     ? `<p class="route-ownership"><span>${escapeHTML(owner.label)}</span></p>`
@@ -1604,9 +1630,9 @@ function showMapMenu(event, target) {
   menu.querySelector(".menu-close").onclick = () => { closeMapMenu(); sourceElement.focus({ preventScroll: true }); };
   if (!canBuild) { menu.querySelector(".menu-close").focus({ preventScroll: true }); return; }
   $("startBuild").onclick = () => {
-    const result = GameUI.construction(game, seat, target);
+    const result = GameUI.construction(game, seat, target, gameRules);
     if (result.reason) { toast(result.reason); return; }
-    dialogReturnFocus = document.querySelector(r ? `[data-route-id="${r.id}"]` : `[data-city="${target.city}"]`);
+    dialogReturnFocus = document.querySelector(r ? `[data-route-id="${CSS.escape(String(r.id))}"]` : `[data-city="${CSS.escape(target.city)}"]`);
     buildTarget = target;
     uiDialog = "build";
     closeMapMenu();
@@ -1615,7 +1641,7 @@ function showMapMenu(event, target) {
   $("startBuild").focus({ preventScroll: true });
 }
 function showBuildDialog() {
-  const result = GameUI.construction(game, seat, buildTarget);
+  const result = GameUI.construction(game, seat, buildTarget, gameRules);
   if (result.reason) { closeOptionalDialog(); toast(result.reason); return; }
   const { route: r, options } = result;
   const groups = GameUI.paymentGroups(options);
@@ -1623,7 +1649,7 @@ function showBuildDialog() {
   let chosen = group.options[0]; // Server-valid combinations, minimum wildcards first.
   showDialog(r ? I18n.t("Construir ruta") : I18n.t("Construir estación"),
     I18n.t`${dialogClockHTML()}<div class="build-content"><div class="build-summary"><strong>${escapeHTML(r ? routeName(r) : I18n.t`Estación en ${cityName(buildTarget.city)}`)}</strong>
-    ${r ? I18n.t`<div class="build-track" aria-hidden="true">${'<i></i>'.repeat(r.n)}</div><span>${r.n} vagones · <b>+${GameUI.ROUTE_POINTS[r.n]} puntos</b>${r.tunnel ? I18n.t(" · Túnel") : r.ferry ? I18n.t(" · Ferri") : ""}</span>` : I18n.t`<span>Estación ${result.cost} de 3 · ${plural(result.cost, "carta")}</span>`}</div>
+    ${r ? I18n.t`<div class="build-track" aria-hidden="true">${'<i></i>'.repeat(r.n)}</div><span>${r.n} vagones · <b>+${gameRules.routePoints[r.n]} puntos</b>${r.tunnel ? I18n.t(" · Túnel") : r.ferry ? I18n.t(" · Ferri") : ""}</span>` : I18n.t`<span>Estación ${gameRules.setup.stations - game.players[seat].stations + 1} de ${gameRules.setup.stations} · ${plural(result.cost, "carta")}</span>`}</div>
     <h3 class="payment-heading">${r?.tunnel ? I18n.t("Cartas que reservas") : I18n.t("Pagarás")}</h3>
     <div id="paymentPreview" class="payment-preview build-payment" aria-live="polite"></div>
     ${options.length > 1 ? I18n.t`<details class="change-payment"><summary>Cambiar cartas</summary><div class="payment-controls">
@@ -1672,7 +1698,7 @@ function showBuildDialog() {
   $("cancelBuild").onclick = closeOptionalDialog;
   $("confirmBuild").onclick = () => {
     if (buildSubmitting) return;
-    const validation = GameUI.construction(game, seat, buildTarget);
+    const validation = GameUI.construction(game, seat, buildTarget, gameRules);
     if (validation.reason) { toast(validation.reason); return; }
     if (!validation.options.some(o => o.color === chosen.color && o.wild === chosen.wild && o.regular === chosen.regular)) return error(I18n.t("Ese pago ya no está disponible."));
     if (!sock || sock.readyState !== WebSocket.OPEN) return error(I18n.t("Sin conexión."));
@@ -1745,7 +1771,7 @@ function openRoutes(ticketId, source = $("viewRoutes")) {
 $("viewRoutes").onclick = () => openRoutes();
 $("ticketList").onclick = event => {
   const row = event.target.closest("[data-destination]");
-  if (row) openRoutes(+row.dataset.destination, row);
+  if (row) openRoutes(ticketIdFromDom(row.dataset.destination), row);
 };
 for (const type of ["pointerover", "pointerout"]) $("ticketList").addEventListener(type, event => {
   // Touch browsers synthesize hover/focus around taps. Restored keyboard focus
@@ -1753,7 +1779,7 @@ for (const type of ["pointerover", "pointerout"]) $("ticketList").addEventListen
   if (event.pointerType !== "mouse" || !matchMedia("(any-hover: hover)").matches || uiDialog) return;
   const row = event.target.closest("[data-destination]");
   if (!row || row.contains(event.relatedTarget)) return;
-  const id = +row.dataset.destination;
+  const id = ticketIdFromDom(row.dataset.destination);
   if (type === "pointerover") hoveredDestination = id;
   if (type === "pointerout" && hoveredDestination === id) hoveredDestination = null;
   updateDestinationSpotlight();
@@ -1821,14 +1847,14 @@ function updateDestinationSpotlight() {
   // Only readable endpoint labels/numbers belong above the Three.js scene.
   const labels = new Map(), endpoints = [];
   for (const key of new Set(selection.endpoints || [])) {
-    const [wx, wy] = RailMap.cities[key];
+    const [wx, wy] = boardMap.cities[key];
     const p = GameUI.endpointPosition({ x: (wx - view.x) / view.scale, y: (wy - view.y) / (view.scaleY || view.scale) }, safe);
     const marker = el("g", { class: "destination-beacon", "data-endpoint": key, "data-offscreen": p.outside });
     el("circle", { cx: p.x, cy: p.y, r: 13, fill: "#f9df8b", opacity: .2 }, marker);
     el("circle", { cx: p.x, cy: p.y, r: 8, fill: "#fff9df", stroke: "#e4bd59", "stroke-width": 2 }, marker);
     if (p.outside) el("path", { d: "M-2-3L2 0-2 3", fill: "none", stroke: "#24444e", "stroke-width": 1.7, transform: `translate(${p.x} ${p.y}) rotate(${p.angle})` }, marker);
     else el("circle", { cx: p.x, cy: p.y, r: 3.5, fill: "#24444e" }, marker);
-    const label = el("text", { class: "destination-beacon-label" }, marker); label.textContent = CITIES[key][2];
+    const label = el("text", { class: "destination-beacon-label" }, marker); label.textContent = cityName(key);
     label.style.fontSize = `${15 * GameUI.cityLabelScale(zoom)}px`;
     const numbers = (selection.destinations || []).filter(t => t.a === key || t.b === key);
     const badges = destinationBadgeSize(numbers.length);
@@ -1839,7 +1865,7 @@ function updateDestinationSpotlight() {
   // coordinates so many destinations stay readable at any zoom level.
   const labelScale = GameUI.cityLabelScale(zoom);
   const badgeHeight = Math.max(0, ...[...labels.values()].map(l => l.badges.height));
-  for (const box of RailMap.placeLabels(endpoints, safe.width, safe.height, [], { height: badgeHeight + 18 * labelScale, baseline: badgeHeight + 14 * labelScale })) {
+  for (const box of boardMap.placeLabels(endpoints, safe.width, safe.height, [], { height: badgeHeight + 18 * labelScale, baseline: badgeHeight + 14 * labelScale })) {
     const { label, marker, numbers } = labels.get(box.key);
     const x = safe.x + box.x + box.width / 2, y = safe.y + box.y;
     label.setAttribute("text-anchor", "middle"); label.setAttribute("x", x);
@@ -1855,7 +1881,7 @@ function renderTicketMap(tickets) {
   const network = el("g", { class: "ticket-network", "aria-hidden": "true" });
   for (const r of MAP_GEOMETRY)
     el("path", { d: r.d, fill: "none" }, network);
-  for (const [x, y] of Object.values(RailMap.cities))
+  for (const [x, y] of Object.values(boardMap.cities))
     el("circle", { cx: x, cy: y, r: 2.8 }, network);
 
   const preview = hoveredTicket;
@@ -1866,9 +1892,9 @@ function renderTicketMap(tickets) {
   const highlights = el("g", { class: "ticket-paths" });
   const occupied = el("g", { class: "ticket-occupied" });
   for (const route of game.routes.filter(r => r.owner !== null)) {
-    const owner = GameUI.routeOwner(game, route, seat), geometry = MAP_GEOMETRY[route.id];
+    const owner = GameUI.routeOwner(game, route, seat), geometry = geometryFor(route.id);
     const group = el("g", { opacity: route.owner === seat ? 1 : .3, "data-occupied-route": route.id }, occupied);
-    el("title", {}, group).textContent = `${CITIES[route.a][2]} — ${CITIES[route.b][2]} · ${owner.name}`;
+    el("title", {}, group).textContent = `${cityName(route.a)} — ${cityName(route.b)} · ${owner.name}`;
     el("path", { d: geometry.d, fill: "none", stroke: owner.color, "stroke-width": 11.5, opacity: .3, "stroke-linecap": "round" }, group);
     for (const cell of geometry.cells) {
       const slot = el("g", { transform: `translate(${cell.x} ${cell.y}) rotate(${cell.angle})` }, group);
@@ -1876,21 +1902,21 @@ function renderTicketMap(tickets) {
     }
   }
   for (const [i, player] of game.players.entries()) for (const city of player.placed) {
-    const [x, y] = RailMap.cities[city], group = el("g", { transform: `translate(${x} ${y})`, opacity: i === seat ? 1 : .55, "data-preview-station": city }, occupied);
+    const [x, y] = boardMap.cities[city], group = el("g", { transform: `translate(${x} ${y})`, opacity: i === seat ? 1 : .55, "data-preview-station": city }, occupied);
     drawStation(el, group, GameUI.playerColor(player.color), .9, "tickets");
-    el("title", {}, group).textContent = I18n.t`Estación de ${player.name} · ${CITIES[city][2]}`;
+    el("title", {}, group).textContent = I18n.t`Estación de ${player.name} · ${cityName(city)}`;
   }
   const endpoints = new Map();
   for (const { ticket, i, key, active } of visible) {
     const number = GameUI.destinationNumber(game, ticket.id, i), color = ticketColor(number - 1);
-    const [x, y] = RailMap.cities[ticket.a], [xx, yy] = RailMap.cities[ticket.b];
+    const [x, y] = boardMap.cities[ticket.a], [xx, yy] = boardMap.cities[ticket.b];
     const strong = active || preview === key;
     const opacity = !strong ? .25 : preview !== null && preview !== key ? .5 : 1;
     const completed = GameUI.destinationStatus(game, ticket.id)?.completed;
     const path = completed ? game.ticketPaths?.find(p => p.id === ticket.id) : null;
     for (const routeId of path?.routes || []) {
       const borrowed = path.stationRoutes.includes(routeId);
-      const trace = el("path", { d: MAP_GEOMETRY[routeId].d, fill: "none", stroke: borrowed ? "#c69643" : "#e7b639", "stroke-width": 15, opacity: opacity * .75, "stroke-linecap": "round", ...(borrowed ? { "stroke-dasharray": "4 4" } : {}), "data-completed-ticket": ticket.id, "data-path-route": routeId }, highlights);
+      const trace = el("path", { d: geometryFor(routeId).d, fill: "none", stroke: borrowed ? "#c69643" : "#e7b639", "stroke-width": 15, opacity: opacity * .75, "stroke-linecap": "round", ...(borrowed ? { "stroke-dasharray": "4 4" } : {}), "data-completed-ticket": ticket.id, "data-path-route": routeId }, highlights);
       el("title", {}, trace).textContent = borrowed ? I18n.t("Tramo prestado mediante estación") : I18n.t("Conexión completada");
     }
     const g = el("g", {
@@ -1898,7 +1924,7 @@ function renderTicketMap(tickets) {
       opacity,
     });
     el("title", {}, g).textContent =
-      I18n.t`${CITIES[ticket.a][2]} → ${CITIES[ticket.b][2]} · ${ticket.p} puntos`;
+      I18n.t`${cityName(ticket.a)} → ${cityName(ticket.b)} · ${ticket.p} puntos`;
     const line = { x1: x, y1: y, x2: xx, y2: yy, "stroke-linecap": "round" };
     if (!path?.routes.length) {
       el("line", { ...line, stroke: "#fffefa", "stroke-width": 6 }, g);
@@ -1908,7 +1934,7 @@ function renderTicketMap(tickets) {
       }, g);
     }
     // A number as well as a color keeps overlapping destinations identifiable.
-    const middle = path?.routes.length ? MAP_GEOMETRY[path.routes[Math.floor(path.routes.length / 2)]].cells : null;
+    const middle = path?.routes.length ? geometryFor(path.routes[Math.floor(path.routes.length / 2)]).cells : null;
     const mid = middle?.[Math.floor(middle.length / 2)];
     const mx = mid?.x ?? (x + xx) / 2, my = mid?.y ?? (y + yy) / 2;
     const marker = el("g", { class: "ticket-map-marker", transform: `translate(${mx} ${my})` }, g);
@@ -1920,12 +1946,12 @@ function renderTicketMap(tickets) {
     }
   }
   for (const [city, indexes] of endpoints) {
-    const [x, y] = RailMap.cities[city], name = CITIES[city][2];
+    const [x, y] = boardMap.cities[city], name = cityName(city);
     const g = el("g", { class: "ticket-endpoint", "data-city": city });
     el("circle", { cx: x, cy: y, r: 5, fill: "#fffefa", stroke: "#24495a", "stroke-width": 1.3 }, g);
     g.dataset.destinations = JSON.stringify(indexes);
     el("circle", { cx: x, cy: y, r: 8, fill: "none", stroke: "#d5af55", "stroke-width": 2.5 }, g);
-    const offset = LABEL_OFFSETS[city] || [0, -19];
+    const offset = boardMap.labels[city] || [0, -19];
     const radius = 8 + (indexes.length - 1) * 4;
     el("text", {
       x, y: y + (offset[1] > 0 ? radius + 17 : -radius - 7),
@@ -1950,14 +1976,14 @@ function layoutTicketMapLabels() {
   let badgeHeight = 0;
   const labels = groups.map(group => {
     group.querySelector(".destination-numbers")?.remove();
-    const key = group.dataset.city, [x, y] = RailMap.cities[key], text = group.querySelector(".ticket-city-label");
+    const key = group.dataset.city, [x, y] = boardMap.cities[key], text = group.querySelector(".ticket-city-label");
     const badges = destinationBadgeSize(JSON.parse(group.dataset.destinations).length);
     badgeHeight = Math.max(badgeHeight, badges.height);
     text.style.fontSize = `${11 * scale}px`; text.style.strokeWidth = `${3 * scale}px`;
     text.setAttribute("text-anchor", "start");
     return { key, x: ox + (x - MAP_BOUNDS.x) / scale, y: oy + (y - MAP_BOUNDS.y) / scale, width: Math.max(text.getComputedTextLength() / scale, badges.width) };
   });
-  const placements = RailMap.placeLabels(labels, svg.clientWidth, svg.clientHeight, [], { height: badgeHeight + 14, baseline: badgeHeight + 11 });
+  const placements = boardMap.placeLabels(labels, svg.clientWidth, svg.clientHeight, [], { height: badgeHeight + 14, baseline: badgeHeight + 11 });
   for (const place of placements) {
     const group = groups.find(g => g.dataset.city === place.key), text = group.querySelector(".ticket-city-label");
     const x = MAP_BOUNDS.x + (place.x + place.width / 2 - ox) * scale, y = MAP_BOUNDS.y + (place.y - oy) * scale;
@@ -1976,7 +2002,7 @@ function updateTicketSelection(tickets, min) {
     row.classList.toggle("is-preview", hoveredTicket === i);
   }
   for (const row of $("dialog").querySelectorAll("[data-ticket-id]")) {
-    const status = GameUI.destinationStatus(game, +row.dataset.ticketId);
+    const status = GameUI.destinationStatus(game, ticketIdFromDom(row.dataset.ticketId));
     row.classList.toggle("is-complete", !!status?.completed);
     row.querySelector(".ticket-complete").textContent = status?.completed ? I18n.t`✓ Completada${status.viaStation ? I18n.t(" · estación") : ""}` : "";
   }
@@ -1984,7 +2010,7 @@ function updateTicketSelection(tickets, min) {
   // never the offered tickets or their submitted indexes, and preserve focus.
   const reorder = (container, owned) => {
     if (!container) return;
-    const rows = GameUI.destinationEntries(game, owned).map(({ ticket }) => container.querySelector(`[data-ticket-id="${ticket.id}"]`));
+    const rows = GameUI.destinationEntries(game, owned).map(({ ticket }) => container.querySelector(`[data-ticket-id="${CSS.escape(String(ticket.id))}"]`));
     if (rows.some((row, i) => row !== container.children[i])) {
       const focus = container.contains(document.activeElement) ? document.activeElement : null;
       container.append(...rows);
@@ -2042,12 +2068,12 @@ function showTicketDialog(tickets, min, viewing = false) {
         <p class="ticket-options-title">${viewing ? I18n.t("Tus destinos") : I18n.t("Billetes para conservar")}</p>
         <p class="ticket-options-hint">${viewing ? I18n.t("Toca los billetes que quieras resaltar.") : I18n.t("Toca para comparar y elegir qué conservar; confirma abajo.")}</p>
         <div class="ticket-collections"><div class="ticket-choices">${tickets.map((t, i) => I18n.t`
-          <label class="choice ticket-choice" data-ticket-index="${i}" data-ticket-id="${t.id}">
+          <label class="choice ticket-choice" data-ticket-index="${i}" data-ticket-id="${escapeHTML(t.id)}">
             <input type="checkbox" class="keep" value="${i}" ${ticketChoices.has(i) ? "checked" : ""}>
             <span class="ticket-number"><span class="sr-only">Destino </span>${GameUI.destinationNumber(game, t.id, i)}</span>
-            <span class="ticket-choice-text"><b>${escapeHTML(CITIES[t.a][2])} → ${escapeHTML(CITIES[t.b][2])}</b><small>${t.p} puntos ${t.long ? I18n.t('<span class="longtag">LARGA</span>') : ""}</small><small class="ticket-complete"></small></span>
+            <span class="ticket-choice-text"><b>${escapeHTML(cityName(t.a))} → ${escapeHTML(cityName(t.b))}</b><small>${t.p} puntos ${t.long ? I18n.t('<span class="longtag">LARGA</span>') : ""}</small><small class="ticket-complete"></small></span>
           </label>`).join("") || I18n.t('<p>Todavía no has conservado billetes.</p>')}</div>
-        ${choosing && game.tickets.length ? I18n.t`<div class="retained-heading">Tus destinos actuales <small>Solo comparar</small></div><div class="retained-choices">${game.tickets.map(t => I18n.t`<div class="retained-choice" data-ticket-id="${t.id}" data-owned-ticket="${t.id}"><button class="ticket-eye" type="button" aria-pressed="${retainedVisible.has(t.id)}" aria-label="Resaltar ${escapeHTML(CITIES[t.a][2])} a ${escapeHTML(CITIES[t.b][2])}">◉</button><span class="ticket-number"><span class="sr-only">Destino </span>${GameUI.destinationNumber(game, t.id)}</span><span class="ticket-choice-text"><b>${escapeHTML(CITIES[t.a][2])} → ${escapeHTML(CITIES[t.b][2])}</b><small>${t.p} puntos</small><small class="ticket-complete"></small></span></div>`).join("")}</div>` : ""}</div>
+        ${choosing && game.tickets.length ? I18n.t`<div class="retained-heading">Tus destinos actuales <small>Solo comparar</small></div><div class="retained-choices">${game.tickets.map(t => I18n.t`<div class="retained-choice" data-ticket-id="${escapeHTML(t.id)}" data-owned-ticket="${escapeHTML(t.id)}"><button class="ticket-eye" type="button" aria-pressed="${retainedVisible.has(t.id)}" aria-label="Resaltar ${escapeHTML(cityName(t.a))} a ${escapeHTML(cityName(t.b))}">◉</button><span class="ticket-number"><span class="sr-only">Destino </span>${GameUI.destinationNumber(game, t.id)}</span><span class="ticket-choice-text"><b>${escapeHTML(cityName(t.a))} → ${escapeHTML(cityName(t.b))}</b><small>${t.p} puntos</small><small class="ticket-complete"></small></span></div>`).join("")}</div>` : ""}</div>
         <div class="ticket-confirm">
           <p id="ticketCount" role="status" aria-live="polite"></p>
           ${viewing ? I18n.t('<button class="secondary full" id="closeRoutes">Volver al mapa</button>') : I18n.t('<button class="primary full" id="keep" aria-describedby="ticketCount">Conservar seleccionados</button>')}
@@ -2071,7 +2097,7 @@ function showTicketDialog(tickets, min, viewing = false) {
     bindTicketPreview(row, i, tickets, min);
   }
   for (const row of $("dialog").querySelectorAll("[data-owned-ticket]")) {
-    const id = +row.dataset.ownedTicket, key = `owned-${id}`, button = row.querySelector("button");
+    const id = ticketIdFromDom(row.dataset.ownedTicket), key = `owned-${id}`, button = row.querySelector("button");
     row.style.setProperty("--ticket-color", ticketColor(GameUI.destinationNumber(game, id) - 1));
     button.onclick = () => { retainedVisible.has(id) ? retainedVisible.delete(id) : retainedVisible.add(id); hoveredTicket = null; button.setAttribute("aria-pressed", String(retainedVisible.has(id))); row.classList.toggle("is-highlighted", retainedVisible.has(id)); updateTicketSelection(tickets, min); };
     bindTicketPreview(row, key, tickets, min);
@@ -2094,16 +2120,16 @@ function renderDialog() {
   if(replayMode){if(uiDialog==="results")showResults();else if(uiDialog==="routes")showTicketDialog(game.tickets,0,true);else $("overlay").classList.add("hidden");return;}
   if (game.sharedTunnel) { showSharedTunnel(); return; }
   const myTurn = game.current === seat;
-  if (myTurn && game.turnWaiting && game.ticketOffer) { uiDialog = "tickets"; showTicketDialog(game.ticketOffer.tickets, 1); return; }
+  if (myTurn && game.turnWaiting && game.ticketOffer) { uiDialog = "tickets"; showTicketDialog(game.ticketOffer.tickets, Math.min(game.ticketOffer.tickets.length, gameRules.destinations.offerMinimum)); return; }
   if (game.phase === "finished" && (!resultsSeen || uiDialog === "results")) { showResults(); return; }
   const mandatory = (game.phase === "initial" && game.initial?.length) || (myTurn && game.phase === "tunnel");
   if (mandatory && uiDialog) { uiDialog = null; pendingChoiceKey = null; }
   if (uiDialog === "routes") { showTicketDialog(game.tickets, 0, true); return; }
-  if (uiDialog === "tickets" && game.ticketOffer) { showTicketDialog(game.ticketOffer.tickets, 1); return; }
+  if (uiDialog === "tickets" && game.ticketOffer) { showTicketDialog(game.ticketOffer.tickets, Math.min(game.ticketOffer.tickets.length, gameRules.destinations.offerMinimum)); return; }
   if (uiDialog === "build") return;
   if (!game.ticketOffer && (!myTurn || game.phase !== "initial")) pendingChoiceKey = null;
   if (game.phase === "initial" && game.initial?.length) {
-    showTicketDialog(game.initial, 2);
+    showTicketDialog(game.initial, Math.min(game.initial.length, gameRules.destinations.initialMinimum));
     return;
   }
   if (!myTurn) {
@@ -2121,7 +2147,7 @@ function renderDialog() {
   $("overlay").classList.add("hidden");
 }
 
-const cityName = city => CITIES[city]?.[2] || city;
+const cityName = city => matchContext?.cityName(city) || city;
 const routeName = route => `${cityName(route.a)} — ${cityName(route.b)}`;
 const signedPoints = points => points >= 0 ? `+${points}` : `−${Math.abs(points)}`;
 function resultCategories(result) {
@@ -2272,7 +2298,7 @@ function renderResultMap(result, selection) {
   const view = resultView(result.seat), prefix = `score-${result.seat}`;
   if (view.category === "express") svg.setAttribute("aria-label", I18n.t`Mapa: Camino más largo de ${game.players[selection.seat].name}`);
   const key = `${result.seat}:${view.category}:${view.category === "routes" ? "all" : view.category === "express" ? view.expressSeat : view.index}`;
-  const points = [...selection.routes.flatMap(id => MAP_GEOMETRY[id]?.points || []), ...selection.endpoints.map(id => RailMap.cities[id])];
+  const points = [...selection.routes.flatMap(id => geometryFor(id)?.points || []), ...selection.endpoints.map(id => boardMap.cities[id])];
   const bounds = points.length ? { x: Math.min(...points.map(p => p[0])) - 65, y: Math.min(...points.map(p => p[1])) - 55,
     width: Math.max(220, Math.max(...points.map(p => p[0])) - Math.min(...points.map(p => p[0])) + 130),
     height: Math.max(160, Math.max(...points.map(p => p[1])) - Math.min(...points.map(p => p[1])) + 110) } : MAP_BOUNDS;
@@ -2283,7 +2309,7 @@ function renderResultMap(result, selection) {
   drawMapBase(worldEl, prefix);
   const routeGroups = new Map();
   for (const id of selection.routes) {
-    const route = game.routes.find(r => r.id === id), geometry = MAP_GEOMETRY[id];
+    const route = game.routes.find(r => r.id === id), geometry = geometryFor(id);
     if (!route || !geometry) continue;
     const owner = GameUI.routeOwner(game, route, result.seat), borrowed = selection.stationRoutes.includes(id);
     if (!owner) continue;
@@ -2296,7 +2322,7 @@ function renderResultMap(result, selection) {
     routeGroups.set(id, halo);
   }
   if (selection.incomplete && selection.endpoints.length === 2) {
-    const [a, b] = selection.endpoints.map(id => RailMap.cities[id]);
+    const [a, b] = selection.endpoints.map(id => boardMap.cities[id]);
     el("path", { d: `M${a[0]} ${a[1]}L${b[0]} ${b[1]}`, fill: "none", stroke: "#ae6455", "stroke-width": 2, "stroke-dasharray": "5 6", "data-incomplete-destination": true }, world);
   }
   const cityKeys = new Set([...selection.endpoints, ...selection.routes.flatMap(id => {
@@ -2306,11 +2332,11 @@ function renderResultMap(result, selection) {
     const route = game.routes.find(r => r.id === id); return route && [route.a, route.b].includes(city);
   }).length !== 2));
   for (const city of cityKeys) {
-    const [x, y] = RailMap.cities[city];
+    const [x, y] = boardMap.cities[city];
     el("circle", { cx: x, cy: y, r: 4, fill: "#fffaf0", stroke: "#657d7c", "stroke-width": 1.3 }, world);
   }
   for (const station of selection.stations) {
-    const [x, y] = RailMap.cities[station.city];
+    const [x, y] = boardMap.cities[station.city];
     const marker = el("g", { transform: `translate(${x} ${y})`, "data-score-station": station.city }, world);
     drawStation(el, marker, GameUI.playerColor(game.players[station.seat].color), 1.25, prefix);
   }
@@ -2348,13 +2374,13 @@ function renderResultMap(result, selection) {
       // only terminals/junctions and the selected route's cities; zoom restores all.
       const chosen = result.details.routes[view.index];
       if (view.category === "routes" && resultCamera.zoom < 1.7 && !junctions.has(city) && ![chosen?.a, chosen?.b].includes(city)) continue;
-      const p = screen(...RailMap.cities[city]); if (!onScreen(p)) continue;
+      const p = screen(...boardMap.cities[city]); if (!onScreen(p)) continue;
       const text = el("text", { class: "score-city-name", "pointer-events": "none" }, labels); text.textContent = cityName(city);
       entries.push({ key: `city-${city}`, ...p, width: text.getComputedTextLength() + 4 });
       nodes.set(`city-${city}`, { node: text, p });
     }
     for (const badge of selection.badges) {
-      const geometry = MAP_GEOMETRY[badge.routeId], point = RailMap.pointAt(geometry, geometry.length / 2), p = screen(...point);
+      const geometry = geometryFor(badge.routeId), point = boardMap.pointAt(geometry, geometry.length / 2), p = screen(...point);
       if (!onScreen(p)) continue;
       const route = result.details.routes[badge.index];
       const group = el("g", { class: "score-point-badge", "data-score-badge": badge.index, role: "button", tabindex: "0",
@@ -2366,7 +2392,7 @@ function renderResultMap(result, selection) {
       group.onkeydown = event => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); event.stopPropagation(); chooseRoute(badge.index); } };
       entries.push({ key: `route-${badge.routeId}`, ...p, width: 36 }); nodes.set(`route-${badge.routeId}`, { node: group, p });
     }
-    for (const place of RailMap.placeLabels(entries, width, height, [], { height: 22, baseline: 16 })) {
+    for (const place of boardMap.placeLabels(entries, width, height, [], { height: 22, baseline: 16 })) {
       const { node, p } = nodes.get(place.key);
       if (place.key.startsWith("city-")) {
         node.setAttribute("x", place.x + 2); node.setAttribute("y", place.y + 15);
@@ -2505,7 +2531,7 @@ function tunnelLedger(t, extra = null) {
 }
 function tunnelOutcome(t, route) {
   const built = t.outcome === "built", mine = t.seat === seat;
-  const caption = built ? I18n.t`+${GameUI.ROUTE_POINTS[route.n]} puntos · ${route.n} vagones` : t.reason === "timeout" ? I18n.t("Tiempo agotado · Túnel no construido") : I18n.t("Intento cancelado · Túnel no construido");
+  const caption = built ? I18n.t`+${gameRules.routePoints[route.n]} puntos · ${route.n} vagones` : t.reason === "timeout" ? I18n.t("Tiempo agotado · Túnel no construido") : I18n.t("Intento cancelado · Túnel no construido");
   return `<div class="tunnel-outcome ${built ? "is-built" : "is-declined"}">
     <div class="tunnel-track" aria-hidden="true">${Array.from({length:route.n}, () => '<i></i>').join("")}<b class="tunnel-outcome-mark">${built ? "✓" : "×"}</b></div>
     <p role="status">${caption}</p>
@@ -2964,7 +2990,7 @@ window.addEventListener("keydown", (e) => {
     else if (uiDialog) { e.preventDefault(); closeOptionalDialog(); }
     else if (!$("mapMenu").classList.contains("hidden")) {
       e.preventDefault(); closeMapMenu();
-      const selector = stationCity ? `[data-city="${stationCity}"]` : `[data-route-id="${selected}"]`;
+      const selector = stationCity ? `[data-city="${CSS.escape(stationCity)}"]` : `[data-route-id="${CSS.escape(String(selected))}"]`;
       $("board").querySelector(selector)?.focus({ preventScroll: true });
     }
   }
@@ -3009,6 +3035,7 @@ shell = AppShell.create({
 if(replayMode){
   document.body.classList.add('is-replaying');
   HistoryUI.replay(new URLSearchParams(location.search).get('id')||'',(view,recordedMembers,context)=>{
+    useMatchDefinition(view, context.definition, {replay:true});
     game=view;members=recordedMembers;seat=context.seat;sessionSupported=true;replayAt=context.at;spectating=seat===-1;resultsSeen=true;uiDialog=null;
     wagonSeed=context.match.code || context.match.id || '';
     displayedHistoryKey=null;document.body.classList.toggle('is-spectating',spectating);

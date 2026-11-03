@@ -1,6 +1,13 @@
 "use strict";
 // Spanish source messages and their English translations. Values are never translated.
 const Translations = {
+  "Ya construiste todas tus estaciones": "You have built all your stations",
+  "{0} cartas visibles y mazo oculto": "{0} face-up cards and blind deck",
+  "{0} de {1} robos usados": "{0} of {1} draws used",
+  "Mapa no disponible": "Map unavailable",
+  "La definición de esta partida no es compatible.": "This game definition is not supported.",
+  "El diseño de este mapa todavía no está disponible.": "The layout for this map is not available yet.",
+  "Estación {0} de {1} · {2}": "Station {0} of {1} · {2}",
   "Recuperar mi puesto": "Recover my seat",
   "Copiar enlace de recuperación": "Copy recovery link",
   "Cambiar enlace de recuperación": "Change recovery link",

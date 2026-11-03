@@ -108,6 +108,8 @@ El cuarto adapta bots, planes y simulaciones al contexto, con partidas completas
 de dos mapas alternadas en el controlador automático y estrategia europea conservada.
 El quinto añade referencias y definiciones públicas a vistas, transporte y archivo;
 la API de replay lee el mapa grabado y conserva respuestas y hashes históricos.
+El sexto conecta el cliente a esas definiciones, separa el layout europeo y
+conserva IDs opacos en controles y Three.js; otro layout se verifica por inyección.
 El producto sigue ofreciendo Europa. La independencia se aceptará cuando Europa
 y un mapa pequeño funcionen simultáneamente en partidas completas con sus
 guardados, bots, consultas y presentación.

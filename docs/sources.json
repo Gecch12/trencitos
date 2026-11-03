@@ -52,7 +52,14 @@
     "tests/match-definition-server.test.js",
     "tests/fixtures/replay-europe-v1.json",
     "tests/helpers/map-recording.js",
-    "tests/browser-map-replay.cjs"
+    "tests/browser-map-replay.cjs",
+    "frontend/match-presentation.js",
+    "frontend/layouts/europe-v1.js",
+    "tests/match-presentation.test.js",
+    "tests/helpers/client-map.js",
+    "tests/fixtures/europe-layout-v1.json",
+    "tests/browser-client-map.cjs",
+    "tests/fixtures/europe-geometry-v1.json"
   ],
   "domain.md": [
     "game/application/automatic-play.js",
@@ -204,7 +211,13 @@
     "tests/match-definition-server.test.js",
     "tests/fixtures/replay-europe-v1.json",
     "tests/helpers/map-recording.js",
-    "tests/browser-map-replay.cjs"
+    "tests/browser-map-replay.cjs",
+    "frontend/match-presentation.js",
+    "frontend/layouts/europe-v1.js",
+    "tests/match-presentation.test.js",
+    "tests/helpers/client-map.js",
+    "tests/fixtures/europe-layout-v1.json",
+    "tests/browser-client-map.cjs"
   ],
   "work/table-controls.md": [
     "shared/game-timing.js",
@@ -278,7 +291,14 @@
     "tests/match-definition-server.test.js",
     "tests/fixtures/replay-europe-v1.json",
     "tests/helpers/map-recording.js",
-    "tests/browser-map-replay.cjs"
+    "tests/browser-map-replay.cjs",
+    "frontend/match-presentation.js",
+    "frontend/layouts/europe-v1.js",
+    "tests/match-presentation.test.js",
+    "tests/helpers/client-map.js",
+    "tests/fixtures/europe-layout-v1.json",
+    "tests/browser-client-map.cjs",
+    "tests/fixtures/europe-geometry-v1.json"
   ],
   "work/modular-platform-domain.md": [
     "game/queries/",
@@ -415,6 +435,13 @@
     "tests/match-definition-server.test.js",
     "tests/fixtures/replay-europe-v1.json",
     "tests/helpers/map-recording.js",
-    "tests/browser-map-replay.cjs"
+    "tests/browser-map-replay.cjs",
+    "frontend/match-presentation.js",
+    "frontend/layouts/europe-v1.js",
+    "tests/match-presentation.test.js",
+    "tests/helpers/client-map.js",
+    "tests/fixtures/europe-layout-v1.json",
+    "tests/browser-client-map.cjs",
+    "tests/fixtures/europe-geometry-v1.json"
   ]
 }
