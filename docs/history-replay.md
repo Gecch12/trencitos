@@ -22,7 +22,10 @@ si una sala ya iniciada se recupera, su grabación se marca parcial.
   ni liquida destinos/bonificaciones como resultado completado.
 
 Una desconexión breve no cierra el historial. Continúan las reglas existentes de
-reconexión, reserva, plazos y deduplicación por ID de acción. Salas normales se
+reconexión, reserva, plazos y deduplicación por ID de acción. Los recibos nuevos
+comparan también la huella de la acción; un ID reutilizado con contenido diferente
+se rechaza sin añadir pasos al replay. IDs antiguos y ventana de 128 se conservan
+según el [contrato de recibos](architecture.md#recibos-de-comandos). Salas normales se
 recuperan desde el checkpoint. La práctica conserva su archivo, pero la sesión
 activa sigue siendo efímera y no se reanuda tras reiniciar el proceso.
 

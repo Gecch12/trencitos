@@ -22,7 +22,7 @@ otros worktrees ni se publica en Render.
 - [x] Separar entradas automáticas y coordinar vencimientos, bots y práctica desde aplicación.
 - [x] Separar preparación/confirmación/publicación y definir puertos de repositorio/commit conjuntos con historial.
 - [x] Centralizar vistas autorizadas de jugador/espectador, conservando privacidad de replay.
-- [ ] Introducir recibos con huella de comando y compatibilidad de los 128 IDs legados.
+- [x] Introducir recibos con huella de comando y compatibilidad de los 128 IDs legados.
 - [ ] Integrar un checkpoint revisado de vagones antes de mover archivos visuales.
 - [ ] Separar responsabilidades de frontend/backend en código y verificar empaquetado.
 - [ ] Aceptación conjunta de Europa tras todos los cortes de esta fase.
@@ -321,11 +321,92 @@ prueban con simuladores, Docker sin red externa y móvil mediante emulación; no
 se acredita producción ni dispositivos físicos. Entrega aislada en esta rama,
 sin integrar otros worktrees, push ni despliegue.
 
+## Quinto corte: recibos con huella de comando
+
+Base `9c1f720` más los cambios de esta entrega. [player-action.js](../../game/application/player-action.js)
+consulta el recibo del miembro antes de vencer relojes, comprobar revisión o
+volver a ejecutar. Un reintento idéntico conserva ACK; otra acción con un ID ya
+aceptado produce `COMMAND_ID_CONFLICT` sin publicar datos del comando anterior.
+La respuesta tiene traducción española/inglesa y el cliente existente la procesa
+como los demás rechazos, liberando su acción pendiente.
+
+El [adaptador de huella](../../game/infrastructure/command-fingerprint.js) se
+inyecta en aplicación: SHA-256 con codificación `sha256-json-v1`, claves de JSON
+ordenadas y arrays en su orden original. Incluye todo el payload; revisión e ID
+pertenecen al sobre y no cambian la identidad de la acción. No se introduce una
+dependencia de criptografía en el caso de uso. Formato y orden de decisión quedan
+en [arquitectura](../architecture.md), con el motivo de compatibilidad en
+[contratos](../decisions/match-domain-contracts.md).
+
+`actionIds` mantiene la ventana de 128 por partida/puesto; `actionReceipts`
+conserva las huellas de comandos nuevos que siguen dentro de esa ventana. Un
+reintento no refresca su posición. Los IDs legados sin huella siguen confirmándose
+por ID, sin inventar contenido. Un ID expulsado debe pasar controles como nuevo.
+La serialización y los snapshots de rollback incluyen los recibos; se confirman
+con revisión/estado/historial. No se modifica el esquema SQL ni el formato de
+replay y no se publican huellas en lobby, estado, errores o frames.
+
+## Evidencia del quinto corte
+
+- [Aplicación](../../tests/player-action.test.js): reintento con claves reordenadas,
+  revisión distinta, reloj vencido, almacenamiento pausado y piloto automático;
+  conflicto antes de cualquier ejecución; compatibilidad legada, ventana de 128,
+  expulsión conjunta, independencia de puestos/partidas y solicitudes sin ID.
+- [Codificación](../../tests/command-fingerprint.test.js): valor conocido persistible,
+  JSON anidado, arrays ordenados, tipos/campos distintos y claves especiales sin
+  modificar prototipos. [Checkpoint](../../tests/checkpoint-application.test.js)
+  comprueba que el lote preparado no comparte las huellas mutables del runtime.
+  [Vistas](../../tests/authorized-views.test.js) comprueba que los recibos siguen
+  privados. Suite enfocada de aplicación/huellas/checkpoint/vistas/idiomas:
+  **33/33**, sin fallos ni omisiones.
+- [Archivo y WebSocket](../../tests/command-receipts-server.test.js): reconexión,
+  reinicio, ID antiguo, nuevo duplicado, conflicto sin añadir historial, fallo de
+  manifiesto y recuperación. Un guardado fallido no reserva el ID: tras recuperar
+  se acepta una acción diferente válida con ese ID y se guarda su huella correcta.
+- [Supabase simulado](../../tests/supabase-server.test.js): respuesta de commit
+  perdida reintenta un cuerpo idéntico, incluidos los recibos; reinicio conserva
+  ACK/conflicto y un fallo restaura huellas junto con revisión y archivo.
+  Integración enfocada con multijugador e historial: **22/22**, sin fallos ni
+  omisiones.
+
+
+Ejecución del 2026-11-02 (Lima), sobre la base indicada y los cambios de este corte:
+
+- Suite completa, Node `v25.6.1`: **524/524**, sin fallos ni omisiones,
+  `node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js`.
+  Incluye cinco pruebas nuevas y la ampliación de contratos existentes.
+  [Resultado y huellas](../qa/modular-application-receipts/node-tests-result.json),
+  [TAP](../qa/modular-application-receipts/node-tests.tap).
+- `QA_PORT=0 npm run test:board3d`: **aprobado**, Chrome `156.0.8078.80`.
+  Ocho recorridos de interacción, nueve combinaciones de viewport/zoom y partida
+  completa de cuatro jugadores con **269 acciones**, reconexión y cero errores.
+  Incluye 68 intentos de construcción, cinco pagos/seis desistimientos de túnel,
+  cuatro estaciones y siete ofertas/confirmaciones de destinos.
+  [Resultado](../qa/modular-application-receipts/browser-tests-result.json),
+  [reporte](../qa/modular-application-receipts/browser/threejs-report.json).
+  Se inspeccionaron [resultado final](../qa/modular-application-receipts/browser/threejs-finished.png)
+  y [móvil emulado](../qa/modular-application-receipts/browser/threejs-mobile.png).
+- Docker `linux/arm64`, Node `v22.23.4`: arranque, `healthz`, UID 1000 y estado
+  escribible correctos; **4/4** pruebas sobre código empaquetado. Además de assets,
+  privacidad HTTP y práctica con bots, se ejecutó el recorrido de recibos con
+  reinicio y rollback. El adaptador nuevo está incluido y su URL devuelve 404.
+  [Construcción](../qa/modular-application-receipts/docker-build.txt),
+  [resultado](../qa/modular-application-receipts/docker-result.json),
+  [TAP](../qa/modular-application-receipts/docker-tests.tap).
+- `node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
+  Revisados arquitectura, contratos, dominio, historial, operación y fichas
+  afectadas; la traducción añadida no cambia el trabajo de variantes de vagones.
+  `docs/qa/threejs-*` quedó restaurado y las huellas de fuentes/logs coinciden con
+  los archivos finales. Las evidencias anteriores conservan su alcance histórico.
+
+Quinto corte aceptado localmente; fase 3 sigue activa. Supabase/SQL se prueban
+con simuladores, Docker sin red externa y móvil mediante emulación; no se acredita
+producción ni dispositivos físicos. Entrega en esta rama, sin push ni despliegue.
+
 ## Siguiente corte
 
-Introducir recibos con huella de comando: distinguir un reintento idéntico de
-la reutilización del mismo ID con otra acción, conservando compatibilidad con
-los 128 IDs legados por puesto y confirmación conjunta de revisión/recibo/historial.
-Verificar reconexión, reinicio, guardado incierto y rollback. Después continúa la
-organización de frontend/backend; antes de mover archivos visuales corresponde
-integrar un checkpoint revisado de vagones.
+Revisar un checkpoint del trabajo de vagones y sus cambios de código/documentación
+antes de mover archivos visuales. Después, organizar frontend y backend dentro
+del mismo repositorio, manteniendo rutas de assets, contratos HTTP/WebSocket,
+arranque y empaquetado. La fase 3 requiere aún esa organización y la aceptación
+conjunta de Europa antes de avanzar a mapas versionados.

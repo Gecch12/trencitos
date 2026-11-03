@@ -5,6 +5,7 @@ const http = require("node:http"),
   crypto = require("node:crypto");
 const Engine = require("./engine");
 const { createPlayerActionHandler } = require("./game/application/player-action");
+const { fingerprintAction } = require("./game/infrastructure/command-fingerprint");
 const { actionReply } = require("./game/compat/legacy-action-reply");
 const { createLegacyAutomaticPlay } = require("./game/compat/legacy-automatic-play");
 const { createLegacyAuthorizedViews } = require("./game/compat/legacy-authorized-views");
@@ -60,7 +61,7 @@ for (const r of rooms.values()) committed.set(r, snapshot(r));
 function captureRuntime() {
   return { failureAt: storageFailureAt, archivePending:archive.snapshot(),
     rooms: [...rooms.values()].map(r => ({ room: r, data: { ...r, game: r.game ? structuredClone(r.game) : null },
-      members: r.members.map(member => ({ member, data: { ...member, actionIds: [...(member.actionIds || [])] } })) })),
+      members: r.members.map(member => ({ member, data: { ...member, actionIds: [...(member.actionIds || [])], actionReceipts: structuredClone(member.actionReceipts || []) } })) })),
     peers: [...peers].map(peer => ({ peer, room: peer.room, watching: peer.watching, seat: peer.seat, token: peer.token })) };
 }
 function restoreRuntime(saved) {
@@ -112,7 +113,7 @@ const sendRoom = createRoomStager({ repository: rooms, engine: Engine, history: 
   queueDirectory: sendDirectory,
 });
 const submitPlayerAction = createPlayerActionHandler({ engine: Engine, stageRoom: sendRoom,
-  storagePaused: () => storageFailureAt !== null, now: () => Date.now(), random: max => crypto.randomInt(max) });
+  storagePaused: () => storageFailureAt !== null, now: () => Date.now(), random: max => crypto.randomInt(max), fingerprintAction });
 const automaticPlay = createLegacyAutomaticPlay({ stageRoom: sendRoom });
 const practice = createPracticeController({ rooms, sendRoom, automaticPlay, dispatch, blocked:()=>storageFailureAt!==null, onRemove: room => { clocks.cancel(room); archive.capture(room,"Práctica cerrada."); return persist(); } });
 const clocks = createGameClock({ rooms, sendRoom, automaticPlay, dispatch, canTick: r => storageFailureAt === null && (r.practice || r.emptySince == null) });
@@ -122,7 +123,7 @@ function snapshot(r) {
   return { archiveHash:r.archiveHash,matchId:r.matchId,archiveSeq:r.archiveSeq,archiveFull:r.archiveFull,archiveStartedAt:r.archiveStartedAt,archiveClosedAt:r.archiveClosedAt,_archiveState:r._archiveState, game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
     hostSeat: r.hostSeat, visibility: r.visibility, maxPlayers: r.maxPlayers, timing: r.timing ? {...r.timing} : undefined,
     members: r.members.map(m => ({ member: m, data: { token: m.token || m.ws?.token, tokenHash: m.tokenHash,
-      name: m.name, bot: m.bot, color: m.color, accountId: m.accountId, guestId:m.guestId, actionIds: [...(m.actionIds || [])], autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
+      name: m.name, bot: m.bot, color: m.color, accountId: m.accountId, guestId:m.guestId, actionIds: [...(m.actionIds || [])], actionReceipts: structuredClone(m.actionReceipts || []), autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
 }
 function restoreLocalCheckpoint(e) {
   console.error("Could not persist rooms:", e.message);

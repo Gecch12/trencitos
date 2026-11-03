@@ -45,6 +45,7 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Responsabilidad | Código y puntos de entrada |
 | --- | --- |
 | HTTP, WebSocket, salas, credenciales, despachar y confirmar acciones | [server.js](../server.js): `dispatch`, `persist`, `sendRoom` |
+| Huella estable del contenido de un comando | [command-fingerprint.js](../game/infrastructure/command-fingerprint.js): `fingerprintAction` |
 | Coordinación de jugadas humanas y respuesta compatible | [player-action.js](../game/application/player-action.js): `createPlayerActionHandler`; [legacy-action-reply.js](../game/compat/legacy-action-reply.js): `actionReply` |
 | Vencimientos y jugadas automáticas | [automatic-play.js](../game/application/automatic-play.js): `createAutomaticPlay`; [composición legada](../game/compat/legacy-automatic-play.js): `createLegacyAutomaticPlay` |
 | Preparación de sala, solicitud de checkpoint y vistas encoladas | [room-stage.js](../game/application/room-stage.js): `createRoomStager`; [checkpoint.js](../game/application/checkpoint.js): `createCheckpointHandler` |
@@ -80,15 +81,16 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 
 ## Casos de aplicación
 
-`createPlayerActionHandler` recibe motor, `now`, `random`, `storagePaused` y
-`stageRoom`. Opera sobre la sala legada y un puesto autenticado por el servidor;
+`createPlayerActionHandler` recibe motor, `now`, `random`, `fingerprintAction`,
+`storagePaused` y `stageRoom`. Opera sobre la sala legada y un puesto autenticado por el servidor;
 el sobre interno contiene `commandId`, `expectedRevision` y `action`. No recibe
 el socket ni toma contexto de ejecución del mensaje del cliente.
 
 Comprueba partida/ID, duplicados, vencimiento multijugador, control y revisión;
 ejecuta la jugada y prepara revisión/recibo antes de llamar a `stageRoom`.
 Las elecciones privadas conservan validación por estado/oferta y la ventana de
-deduplicación sigue siendo de 128 IDs por puesto, sin huella de payload todavía.
+deduplicación sigue siendo de 128 IDs por puesto. Los recibos nuevos incluyen
+una huella de la acción, con compatibilidad para los IDs legados descrita abajo.
 Devuelve `accepted`, `duplicate` o `rejected`; no expone una vista ni estado del
 motor. `actionReply` conserva el protocolo ACK/error, incluidos los mensajes
 legados de excepciones del motor. Las excepciones del puente de infraestructura
@@ -102,6 +104,39 @@ dentro del `dispatch` existente: su outbox espera el commit global y descarta la
 respuesta si falla. La aceptación del caso de uso nunca sustituye esa confirmación.
 Autenticación, límites de solicitudes y autorización de espectadores siguen en
 transporte. Detalle y trabajo pendiente en [fase 3](work/modular-platform-application.md).
+
+### Recibos de comandos
+
+`member.actionIds` conserva el orden de los últimos 128 IDs aceptados;
+`member.actionReceipts` añade `{id, fingerprint}` únicamente para los comandos
+aceptados por la implementación nueva. La pertenencia al miembro de esa sala
+acota el recibo a partida/puesto; una revancha crea miembros nuevos. Se calcula
+la huella antes de ejecutar, y se registra después de una acción exitosa junto
+con el incremento de revisión. Acciones rechazadas o sin ID no crean recibos.
+
+`fingerprintAction` está inyectado en aplicación; su adaptador usa SHA-256 con
+prefijo `sha256-json-v1:` sobre el JSON de `{action}`. Ordena claves de objetos
+recursivamente y conserva orden de arrays, tipos y todos los campos del payload,
+incluso los que el motor no utiliza. No incluye ID ni revisión: esta última es
+una precondición para una acción nueva, no la identidad de una ya aceptada.
+La codificación persistida tiene una prueba de valor conocido; cambiarla exige
+un lector compatible o una migración explícita.
+
+| Solicitud dentro de la ventana | Resultado |
+| --- | --- |
+| ID nuevo | Pasa controles de reloj, control y revisión; si se acepta, añade ID y huella. |
+| ID con huella y misma acción | ACK de duplicado; no vuelve a ejecutar ni consumir azar. El orden de claves o una revisión distinta no lo convierten en una acción nueva. |
+| ID con huella y otro contenido | `COMMAND_ID_CONFLICT`, antes de vencimientos y sin preparar guardado, historial o vistas. No expone acción anterior ni huella. |
+| ID legado sin huella | Conserva ACK por ID aunque el payload difiera; no inventa una huella a partir del reintento. |
+
+Un duplicado no renueva su posición en la ventana. Al aceptar un comando nuevo
+se descartan juntos IDs y huellas que salen de los 128; un ID fuera de esa ventana
+se trata como solicitud nueva y debe pasar los controles actuales. La confirmación
+sigue siendo del checkpoint completo: la serialización local/remota incluye las
+huellas y los snapshots de rollback las copian. Un fallo restaura revisión,
+recibos e historial juntos. Los formatos JSON/RPC existentes admiten este campo
+opcional sin cambiar su versión. Las vistas de lobby/partida y los frames de
+replay no contienen los recibos.
 
 `createAutomaticPlay` coordina vencimientos, jugadas de bots permanentes,
 reemplazos, bots de práctica y cierre anticipado de práctica. Recibe motor,

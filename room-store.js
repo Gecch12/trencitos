@@ -37,8 +37,8 @@ function serializableRoom(room) {
   const { code, updated, game, hostSeat = 0, revision = 0, emptySince, savedAt, rematchCode, visibility = "private", maxPlayers = 5, timing } = room;
   return { code, updated, game, hostSeat, revision, emptySince, savedAt, rematchCode, visibility, maxPlayers, timing,
     matchId:room.matchId,archiveHash:room.archiveHash,archiveSeq:room.archiveSeq,archiveFull:room.archiveFull,archiveStartedAt:room.archiveStartedAt,archiveClosedAt:room.archiveClosedAt,
-    members: room.members.map(({ name, color, accountId, guestId, token, tokenHash, bot, autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds }) =>
-      ({ name, color, accountId, guestId, bot: !!bot, tokenHash: tokenHash || (token ? hashToken(token) : undefined), autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds })) };
+    members: room.members.map(({ name, color, accountId, guestId, token, tokenHash, bot, autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds, actionReceipts }) =>
+      ({ name, color, accountId, guestId, bot: !!bot, tokenHash: tokenHash || (token ? hashToken(token) : undefined), autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds, actionReceipts })) };
 }
 function loadState(file) {
   file = path.resolve(file);

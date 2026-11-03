@@ -3,6 +3,7 @@
 const errors = {
   MATCH_NOT_STARTED: { message: "La partida aún no empieza." },
   INVALID_COMMAND_ID: { message: "Identificador de acción inválido." },
+  COMMAND_ID_CONFLICT: { message: "Este identificador ya se usó para otra acción. Revisa la mesa e inténtalo de nuevo.", code: "COMMAND_ID_CONFLICT" },
   STORAGE_PAUSED: { message: "No se pudo guardar.", code: "STORAGE_FAILED" },
   AUTOPILOT_ACTIVE: { message: "El bot controla tu puesto. Pulsa Recuperar control." },
   STALE_ACTION: { message: "La mesa cambió. Revisa la jugada e inténtalo otra vez.", code: "STALE_ACTION" },

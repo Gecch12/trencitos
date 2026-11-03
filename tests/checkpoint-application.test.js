@@ -15,7 +15,7 @@ function fixture(t, remote = null) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "checkpoint-application-"));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const room = { code: "ROOM01", revision: 0, updated: 1000,
-    members: [{ name: "A", token: "private-recovery", actionIds: ["command-0001"] }, { name: "B" }],
+    members: [{ name: "A", token: "private-recovery", actionIds: ["command-0001"], actionReceipts: [{ id: "command-0001", fingerprint: "original-fingerprint" }] }, { name: "B" }],
     game: Engine.newGame(["A", "B"], 0, 1000, null, { random: () => 0 }) };
   const practice = { ...structuredClone(room), code: "TEMP01", practice: true };
   const repository = new Map([[room.code, room], [practice.code, practice]]);
@@ -30,10 +30,12 @@ test("file preparation detaches room state and receipts, includes practice histo
   assert.equal(Object.keys(f.archive.state.matches).length, 0);assert.equal(f.archive.pending.length, 2);
   assert.ok(!JSON.stringify(batch).includes("private-recovery"));
   f.room.revision++;f.room.members[0].actionIds.push("later-command");f.room.game.players[0].hand.push("red");
+  f.room.members[0].actionReceipts[0].fingerprint = "changed-after-preparation";
   committer.commit(batch);
   const saved = loadState(f.file);
   assert.deepEqual(saved.rooms, json(batch.rooms));assert.deepEqual(saved.archive, json(batch.archive));
   assert.equal(saved.rooms[0].revision, 0);assert.deepEqual(saved.rooms[0].members[0].actionIds, ["command-0001"]);
+  assert.equal(saved.rooms[0].members[0].actionReceipts[0].fingerprint, "original-fingerprint");
   assert.equal(saved.rooms[0].archiveHash, saved.archive.matches[f.room.matchId].digest);
   assert.equal(f.archive.pending.length, 0);
 });

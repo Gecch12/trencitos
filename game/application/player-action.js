@@ -4,7 +4,7 @@
 // The caller authenticates the seat and runs this inside its serialized dispatch.
 // stageRoom is synchronous and includes history and authorized views: false means local rollback;
 // true means staged, NOT necessarily committed. Remote ACKs must use the outbox.
-function createPlayerActionHandler({ engine, stageRoom, storagePaused, now, random }) {
+function createPlayerActionHandler({ engine, stageRoom, storagePaused, now, random, fingerprintAction }) {
   const reject = (code, legacyMessage) => ({ status: "rejected", error: {
     code, ...(legacyMessage === undefined ? {} : { legacyMessage }),
   } });
@@ -15,9 +15,11 @@ function createPlayerActionHandler({ engine, stageRoom, storagePaused, now, rand
     if (commandId !== undefined && (typeof commandId !== "string" || !/^[\w-]{8,80}$/.test(commandId))) {
       return reject("INVALID_COMMAND_ID");
     }
-    // These legacy receipts identify accepted commands by ID only, per seat.
-    // Repeating one must not expire a clock, consume randomness or execute again.
+    // Receipts belong to this match/seat. Legacy IDs have no recoverable payload;
+    // retain their ID-only semantics until they leave the bounded window.
     if (commandId && member.actionIds?.includes(commandId)) {
+      const receipt = member.actionReceipts?.find(entry => entry.id === commandId);
+      if (receipt && receipt.fingerprint !== fingerprintAction(action)) return reject("COMMAND_ID_CONFLICT");
       stageRoom(room);
       return { status: "duplicate", commandId };
     }
@@ -34,6 +36,7 @@ function createPlayerActionHandler({ engine, stageRoom, storagePaused, now, rand
       stageRoom(room);
       return reject("STALE_ACTION");
     }
+    const fingerprint = commandId ? fingerprintAction(action) : undefined;
     try {
       engine.action(room.game, seat, action, { now: now(), random });
     } catch (error) {
@@ -42,7 +45,11 @@ function createPlayerActionHandler({ engine, stageRoom, storagePaused, now, rand
       return reject("GAME_ACTION_REJECTED", error.message);
     }
     room.revision = (room.revision || 0) + 1;
-    if (commandId) member.actionIds = [...(member.actionIds || []), commandId].slice(-128);
+    if (commandId) {
+      member.actionIds = [...(member.actionIds || []), commandId].slice(-128);
+      member.actionReceipts = [...(member.actionReceipts || []).filter(entry =>
+        entry.id !== commandId && member.actionIds.includes(entry.id)), { id: commandId, fingerprint }];
+    }
     if (!stageRoom(room)) return reject("ACTION_NOT_SAVED");
     return { status: "accepted", commandId };
   };

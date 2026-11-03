@@ -153,7 +153,10 @@
     "game/queries/replay-view.js",
     "game/compat/legacy-authorized-views.js",
     "tests/authorized-views.test.js",
-    "tests/history-queries.test.js"
+    "tests/history-queries.test.js",
+    "game/application/player-action.js",
+    "game/infrastructure/command-fingerprint.js",
+    "tests/command-receipts-server.test.js"
   ],
   "work/table-controls.md": [
     "game-timing.js",
@@ -212,7 +215,10 @@
     "durable-queue.js",
     "room-store.js",
     "supabase-store.js",
-    "tests/route-claim-contract.test.js"
+    "tests/route-claim-contract.test.js",
+    "tests/player-action.test.js",
+    "tests/command-fingerprint.test.js",
+    "tests/command-receipts-server.test.js"
   ],
   "work/modular-platform-domain.md": [
     "game/queries/",
@@ -291,6 +297,9 @@
     "game/compat/legacy-authorized-views.js",
     "match-archive.js",
     "tests/authorized-views.test.js",
-    "tests/history-queries.test.js"
+    "tests/history-queries.test.js",
+    "translations.js",
+    "tests/command-fingerprint.test.js",
+    "tests/command-receipts-server.test.js"
   ]
 }

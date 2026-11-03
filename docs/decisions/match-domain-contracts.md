@@ -238,15 +238,20 @@ Si el vencimiento vuelve obsoleta la revisión o la jugada falla, confirmar solo
 los cambios automáticos que existan. Las elecciones privadas mantienen su
 excepción actual a revisión global y se validan por oferta/estado pendiente.
 
-Duplicados: hoy `member.actionIds` conserva los últimos 128 IDs aceptados; un
-duplicado se confirma sin volver a ejecutar. Mantener ese alcance durante el
-puente, sin prometer entrega exactamente una vez indefinida. Para el nuevo
-contrato, asociar el recibo a partida/puesto/ID y guardar también una huella del
-comando; mismo ID con distinto contenido debe rechazarse. Migrar los recibos
-anteriores sin inventar una huella, conservando su semántica hasta que caduquen.
-Conservar el límite de 128; una repetición fuera de esa ventana no está cubierta
-por deduplicación y debe pasar de nuevo controles de fase/revisión. No habilitar
-reintentos automáticos antiguos sin conciliarlos con una vista actual.
+Duplicados: el quinto corte de fase 3 conserva los últimos 128 IDs aceptados
+en `member.actionIds` y añade huellas para nuevos comandos en `actionReceipts`.
+La ubicación en el miembro acota partida/puesto/ID. Mismo ID con otro payload
+produce `COMMAND_ID_CONFLICT`; los IDs legados sin huella mantienen su semántica
+hasta salir de la ventana. No se reconstruye una huella usando un reintento.
+
+La huella versionada usa todo el JSON de la acción, con claves ordenadas y arrays
+en su orden original. Excluye la revisión porque su función es validar una jugada
+nueva: el reintento de una ya aceptada conserva ACK aun con otra revisión, como
+antes. Los IDs tampoco se refrescan al repetirlos. Se conserva el límite de 128;
+fuera de esa ventana se deben pasar de nuevo controles de fase/revisión. No se
+promete entrega exactamente una vez indefinida ni se habilitan reintentos antiguos
+sin conciliarlos con una vista actual. Formato y orden implementados en
+[arquitectura](../architecture.md).
 
 Supabase reintenta el mismo ID de commit, no vuelve a ejecutar el dominio ni
 sortear. Un resultado remoto incierto o pérdida de autoridad pausa el proceso
@@ -326,7 +331,7 @@ un checkpoint revisado del trabajo visual; cada worktree mantiene sus propios do
 | Núcleo extraído | [Políticas de construcción](../../tests/domain-route-claim.test.js) y suites `domain-*`: IDs desordenados/de cadena, contexto inyectado, rechazo sin mutar y ejecución sin reloj/azar/red ambientales. Las suites de contratos contrastan el comportamiento vía fachada. |
 | Mapas/versiones, pendiente de fase 4 | Europa y mapa mínimo simultáneos, orden de vías permutado, estaciones/túneles/bots/replay con IDs opacos; guardados legados y versiones desconocidas. |
 | Consultas y carga explícita | [Consultas](../../tests/match-queries.test.js) sobre estados congelados sin alias ni mutación; [carga legada](../../tests/legacy-load-server.test.js) normaliza antes de persistir/publicar; [archivo](../../tests/match-archive.test.js) conserva hashes y privacidad. |
-| Aplicación, fase 3 activa | Jugadas humanas/automáticas y checkpoint preservan guardado incierto, deduplicación y elecciones simultáneas. [Vistas](../../tests/authorized-views.test.js), [historial](../../tests/history-queries.test.js) e [integración HTTP/WebSocket](../../tests/history-server.test.js) comprueban permisos, filtro público común y copias sin alterar el archivo. Pendientes: huellas de comandos y organización de interfaz. |
+| Aplicación, fase 3 activa | Jugadas humanas/automáticas y checkpoint preservan guardado incierto, deduplicación y elecciones simultáneas. [Vistas](../../tests/authorized-views.test.js), [historial](../../tests/history-queries.test.js) e [integración HTTP/WebSocket](../../tests/history-server.test.js) comprueban permisos, filtro público común y copias sin alterar el archivo. [Recibos](../../tests/command-receipts-server.test.js) y pruebas de aplicación comprueban huellas, ventana legada, reinicio y rollback. Pendiente: organización de interfaz. |
 
 Las pruebas de fase 1 caracterizaron el motor de esa base. La implementación y
 evidencia de las políticas/consultas posteriores viven en la [fase de dominio](../work/modular-platform-domain.md).

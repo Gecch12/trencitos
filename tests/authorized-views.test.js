@@ -10,7 +10,8 @@ function fixture(initial = false) {
   if (!initial) for (const seat of [0, 1]) Engine.action(game, seat, { type: "choose_initial", indexes: [0, 1] }, { now: 0 });
   return { code: "ROOM01", matchId: "match-1", visibility: "public", revision: 7, game,
     members: [0, 1].map(i => ({ name: ["A", "B"][i], token: `private-token-${i}`, tokenHash: "private-hash",
-      accountId: "private-account", guestId: "private-guest", actionIds: ["private-receipt"], ws: { closed: i === 1 } })) };
+      accountId: "private-account", guestId: "private-guest", actionIds: ["private-receipt"],
+      actionReceipts: [{ id: "private-receipt", fingerprint: "private-fingerprint" }], ws: { closed: i === 1 } })) };
 }
 function freeze(value) {
   if (value && typeof value === "object" && !Object.isFrozen(value)) { Object.freeze(value);Object.values(value).forEach(freeze); }
@@ -28,7 +29,7 @@ test("lobby projections expose only the recipient's supplied credential and publ
     assert.equal(lobby.type, "lobby");assert.equal(lobby.seat, seat);
     assert.equal(lobby.host, seat === 0);assert.equal(lobby.members[0].connected, true);assert.equal(lobby.members[1].connected, false);
     assert.equal(lobby.token, seat === -1 ? undefined : `session-${seat}`);
-    assert.doesNotMatch(JSON.stringify(lobby), /private-token|private-hash|private-account|private-guest|private-receipt|"ws"/);
+    assert.doesNotMatch(JSON.stringify(lobby), /private-token|private-hash|private-account|private-guest|private-receipt|private-fingerprint|"ws"/);
     if (seat === -1) { assert.equal(lobby.spectator, true);assert.equal(Object.hasOwn(lobby, "token"), false); }
   }
 });

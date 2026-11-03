@@ -100,7 +100,8 @@ deduplicación y rollback. Preparación, confirmación conjunta y vistas encolad
 ya tienen puertos separados; los adaptadores conservan checkpoint global y
 formatos existentes. Lobby, estado, grabación e historial/replay ya usan
 consultas autorizadas separadas del transporte y con salidas independientes del
-estado fuente. Los siguientes cortes son recibos con huella de comando y
+estado fuente. Los recibos nuevos ya detectan IDs reutilizados con otra acción
+y conservan IDs legados, ventana de 128 y rollback conjunto. Continúa la
 organización de frontend/backend. Antes de mover archivos visuales, integrar
 un checkpoint revisado del trabajo de vagones. Las ediciones posteriores de
 otros worktrees no se sincronizan automáticamente con esta rama.

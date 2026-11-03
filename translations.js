@@ -394,6 +394,7 @@ const Translations = {
   "Todos deben estar conectados para iniciar.": "Everyone must be connected to start.",
   "La partida aún no empieza.": "The game hasn't started yet.",
   "Identificador de acción inválido.": "Invalid action identifier.",
+  "Este identificador ya se usó para otra acción. Revisa la mesa e inténtalo de nuevo.": "This identifier was already used for another action. Review the board and try again.",
   "No se pudo guardar.": "Couldn't save.",
   "El bot controla tu puesto. Pulsa Recuperar control.": "A bot controls your seat. Press Regain control.",
   "La mesa cambió. Revisa la jugada e inténtalo otra vez.": "The board changed. Review your move and try again.",

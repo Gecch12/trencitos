@@ -3,6 +3,7 @@ const test = require('node:test'), assert = require('node:assert/strict');
 const { once } = require('node:events');
 const { connect } = require('./helpers/ws-client');
 const { fakeSupabase } = require('./helpers/fake-supabase');
+const { fingerprintAction } = require('../game/infrastructure/command-fingerprint');
 const api = fakeSupabase(), originalFetch = global.fetch;
 process.env.STATE_BACKEND = 'supabase';
 process.env.SUPABASE_URL = 'https://fixture.supabase.co';
@@ -116,16 +117,33 @@ test('a lost commit response retries storage, not the player action or its histo
   assert.equal(f.room.game.players[seat].hand.length, hand + 1);assert.equal(f.room.revision, revision + 1);
   const saved = api.state.rooms.find(room => room.code === f.la.code);
   assert.equal(saved.members[seat].actionIds.filter(id => id === command.id).length, 1);
+  assert.deepEqual(saved.members[seat].actionReceipts, [{ id: command.id, fingerprint: fingerprintAction(command.action) }]);
   const frames = structuredClone(api.state.matches[f.room.matchId].frames);
   peer.send(command);await peer.next('ack', message => message.id === command.id);
   assert.deepEqual(api.state.matches[f.room.matchId].frames, frames);
   assert.equal(f.room.game.players[seat].hand.length, hand + 1);
+  peer.send({ ...command, action: { type: 'draw_tickets' } });
+  await peer.next('error', message => message.code === 'COMMAND_ID_CONFLICT');
+  assert.deepEqual(api.state.matches[f.room.matchId].frames, frames);
+  await stop();await boot();
+  const reconnected = [];
+  for (const lobby of [f.la, f.lb]) {
+    const c = await client();c.send({ type: 'join', code: f.la.code, token: lobby.token });
+    await c.next('lobby');await c.next('state');reconnected.push(c);
+  }
+  const room = app.rooms.get(f.la.code), before = structuredClone(room.game), digest = room.archiveHash;
+  reconnected[seat].send(command);await reconnected[seat].next('ack', message => message.id === command.id);
+  reconnected[seat].send({ ...command, action: { type: 'draw_tickets' } });
+  await reconnected[seat].next('error', message => message.code === 'COMMAND_ID_CONFLICT');
+  assert.deepEqual(room.game, before);assert.equal(room.archiveHash, digest);
+  assert.deepEqual(room.members[seat].actionReceipts, saved.members[seat].actionReceipts);
 });
 
 test('a failed player command commit restores game, receipt and archive without publishing success', async () => {
   const f = await playing(), seat = f.room.game.current, peer = [f.a, f.b][seat];
   const game = structuredClone(f.room.game), revision = f.room.revision;
   const receipts = structuredClone(f.room.members[seat].actionIds || []);
+  const fingerprints = structuredClone(f.room.members[seat].actionReceipts || []);
   const frames = structuredClone(api.state.matches[f.room.matchId].frames), hash = f.room.archiveHash, sequence = f.room.archiveSeq;
   const command = { type: 'action', id: 'failed-action-commit', revision, action: { type: 'draw_train', index: -1 } };
   api.fail = true;
@@ -135,6 +153,8 @@ test('a failed player command commit restores game, receipt and archive without 
     await assert.rejects(peer.next('state', message => message.game.revision > revision, 60));
     assert.deepEqual(f.room.game, game);assert.equal(f.room.revision, revision);
     assert.deepEqual(f.room.members[seat].actionIds || [], receipts);
+    assert.deepEqual(f.room.members[seat].actionReceipts || [], fingerprints);
+    assert.deepEqual(api.state.rooms.find(r => r.code === f.la.code).members[seat].actionReceipts || [], fingerprints);
     assert.equal(f.room.archiveHash, hash);assert.equal(f.room.archiveSeq, sequence);
     assert.deepEqual(api.state.matches[f.room.matchId].frames, frames);
   } finally { api.fail = false; }
