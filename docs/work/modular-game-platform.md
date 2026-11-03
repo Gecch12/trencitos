@@ -49,7 +49,7 @@ bloquea la fase 4 ni Sudamérica. Mantener un solo repositorio está acordado.
 
 ## Hitos
 
-- [ ] Fase 0 aceptada según [su ficha](modular-platform-baseline.md).
+- [x] Fase 0 aceptada según [su ficha](modular-platform-baseline.md).
 - [ ] Fase 1: modelo y compatibilidad definidos.
 - [ ] Fase 2: dominio extraído y Europa verificada.
 - [ ] Fase 3: coordinación e interfaz separadas y verificadas.
@@ -104,6 +104,8 @@ siguen responsabilidades y dependencias verificables.
 
 ## Evidencia y próximo paso
 
-La decisión y esta hoja de ruta registran acuerdos de la conversación. La evidencia
-ejecutada y sus límites se concentran en [fase 0](modular-platform-baseline.md).
-Completar la referencia de pruebas y abrir la fase 1 con esos resultados.
+La decisión y esta hoja de ruta registran acuerdos de la conversación. La
+[fase 0](modular-platform-baseline.md) está cerrada y conserva los resultados,
+fallos iniciales de conductores, correcciones y límites de la referencia.
+Siguiente paso: desarrollar la fase 1 descrita arriba y concretar el primer
+recorrido de extracción sin cambiar todavía el comportamiento de Europa.

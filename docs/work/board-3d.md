@@ -18,6 +18,10 @@ Revisión posterior aprobada: se retiran y el catálogo queda en 20 familias, co
 Circo, Vivienda y variantes de Pasajeros. Estado local y evidencia en
 [Variantes de vagones](wagon-variants.md).
 
+La referencia del checkout experimental para la reorganización modular y el
+ajuste de su conductor de pruebas viven en [fase 0](modular-platform-baseline.md).
+Sus resultados no sustituyen los informes históricos ni certifican publicación.
+
 ## Hitos
 
 - [x] M1: plano cartográfico y cámara ortográfica con pan/zoom.

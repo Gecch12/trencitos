@@ -1,0 +1,10 @@
+{
+  "command": "QA_PORT=0 npm run test:board3d",
+  "base_commit": "f3b3f6902541ad669e4d4a1128e5bb83a738a380",
+  "exit_code": 0,
+  "duration_seconds": 133.18,
+  "completed_at": "2026-11-03T00:29:43.388526+00:00",
+  "node": "v25.6.1",
+  "environment": "clean environment; isolated local file state; external auth disabled; loopback fixtures only",
+  "log_sha256": "e784d670aa6a23e4234c5a30fb27558f7c3790a058d0ab5653915fda8cbce2b8"
+}

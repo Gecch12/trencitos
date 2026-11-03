@@ -1,0 +1,28 @@
+{
+  "status": "passed",
+  "baseline_commit": "7003904f264dac1e740cefc66fa7dd0c1c58617c",
+  "tested_commit": "f3b3f6902541ad669e4d4a1128e5bb83a738a380",
+  "checked_at": "2026-11-03T00:31:14.707830+00:00",
+  "checks": [
+    {
+      "command": "node scripts/check-docs.js --base 7003904",
+      "exit_code": 0,
+      "output": "REVISAR docs/work/board-3d.md: tests/browser-threejs.cjs (documento también modificado)\nREVISAR docs/work/modular-platform-baseline.md: tests/browser-threejs.cjs, tests/mobile-ui.test.js (documento también modificado)\nREVISAR solicita contraste semántico; no demuestra drift ni exige editar texto correcto.\nOK: 43 documentos, 18 fichas. No se validan URLs externas ni anclas."
+    },
+    {
+      "command": "git diff --check 7003904",
+      "exit_code": 0,
+      "output": ""
+    }
+  ],
+  "code_changes": [
+    "tests/browser-threejs.cjs",
+    "tests/mobile-ui.test.js"
+  ],
+  "runtime_code_unchanged": true,
+  "original_checkout_preserved": true,
+  "limits": [
+    "No Render deployment or real Supabase verification",
+    "Chrome desktop and viewport emulation; no physical mobile device verification"
+  ]
+}

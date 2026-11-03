@@ -1,5 +1,5 @@
 ---
-{"id":"modular-platform-baseline","status":"active","parent":"modular-game-platform","depends_on":[],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-02"}
+{"id":"modular-platform-baseline","status":"done","parent":"modular-game-platform","depends_on":[],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-02"}
 ---
 # Fase 0: base reproducible de la reorganización
 
@@ -20,10 +20,10 @@ identificado; esta fase no convierte correcciones ajenas en una refactorización
 - [x] Crear snapshot local reproducible sin cambiar `main` ni su índice.
 - [x] Conservar referencias del encargo y huellas de materiales de Sudamérica.
 - [x] Registrar fases, decisión y enlaces mediante el método documental existente.
-- [ ] Ejecutar la suite completa de Node y clasificar sus resultados.
-- [ ] Ejecutar referencia de navegador/Three.js y clasificar sus resultados.
-- [ ] Comprobar documentación y diff; verificar preservación final del origen.
-- [ ] Dejar alcance y siguiente paso de fase 1 explícitos.
+- [x] Ejecutar la suite completa de Node y clasificar sus resultados.
+- [x] Ejecutar referencia de navegador/Three.js y clasificar sus resultados.
+- [x] Comprobar documentación y diff; verificar preservación final del origen.
+- [x] Dejar alcance y siguiente paso de fase 1 explícitos.
 
 ## Base observada
 
@@ -80,8 +80,41 @@ Correcciones acotadas a los conductores de prueba, sin modificar código del jue
   vencimientos ni omitir la prueba de partida completa.
 
 Prueba móvil tras corregir el contexto: `node --test tests/mobile-ui.test.js`,
-10 correctas, cero fallos. Falta repetir suite completa y navegador con estos
-conductores. Las capturas históricas de otras tareas no son evidencia de esta base.
+10 correctas, cero fallos.
+
+Repetición completa sobre `f3b3f6902541ad669e4d4a1128e5bb83a738a380`:
+`node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js`,
+372 correctas, cero fallos, omitidas o canceladas; 97,53 s en este equipo.
+[Resultado](../qa/modular-platform-baseline/node-tests-result.json) y
+[salida TAP](../qa/modular-platform-baseline/node-tests.tap).
+El comando recorre el mismo conjunto `tests/*.test.js` de `npm test`, con
+concurrencia de archivos limitada a uno según la guía de operación.
+
+Navegador sobre el mismo commit: `QA_PORT=0 npm run test:board3d`, correcto en
+Chrome `156.0.8078.74`, 133,18 s. Ocho escenarios de interacción, nueve casos de
+viewport/zoom y una partida completa de cuatro jugadores con 255 acciones,
+reconexión, pagos y desistimientos de túnel, estaciones y resultados. Cero errores
+de consola/página registrados. La etapa del túnel avanza por el servidor real.
+[Resultado de ejecución](../qa/modular-platform-baseline/browser-tests-result.json),
+[salida](../qa/modular-platform-baseline/browser-tests.txt) e
+[informe detallado](../qa/modular-platform-baseline/browser/threejs-report.json).
+
+Se inspeccionaron las capturas de [fin de partida](../qa/modular-platform-baseline/browser/threejs-finished.png)
+y [móvil emulado](../qa/modular-platform-baseline/browser/threejs-mobile.png).
+Los artefactos nuevos se guardan aparte; `docs/qa/threejs-*` conserva sus bytes
+anteriores para no reemplazar evidencia de otras entregas.
+
+Comprobaciones finales: `node scripts/check-docs.js --base 7003904` y
+`git diff --check`, correctas. Se revisó semánticamente la ficha del tablero
+señalada por el mapa de fuentes y se enlazó esta evidencia sin alterar su historia.
+La [verificación del origen](../qa/modular-platform-baseline/source-preservation.json)
+confirma HEAD, rama, índice, estado Git y los 264 archivos preservados.
+La [verificación final](../qa/modular-platform-baseline/validation-summary.json)
+registra comandos, revisión y límites del diff.
+
+No se modificó código de ejecución del juego respecto al snapshot `7003904`.
+Las únicas modificaciones de código son las dos correcciones de conductores
+descritas arriba. La fase 0 queda aceptada; las fases de arquitectura siguen pendientes.
 
 ## Límites
 
@@ -91,5 +124,7 @@ de trabajo parte de cambios que todavía no están integrados en `main`.
 
 ## Siguiente paso
 
-Completar pruebas, registrar fallos previos si existen y verificar el origen.
-Después desarrollar la fase 1 indicada en la ficha principal.
+Desarrollar la fase 1 indicada en la ficha principal desde este worktree:
+vocabulario, límites, contratos y puente compatible con `engine.js`. Empezar por
+el recorrido de construcción; usar esta referencia para comparar las extracciones.
+No se requiere otra decisión del usuario para iniciar ese alcance ya acordado.
