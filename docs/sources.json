@@ -58,7 +58,9 @@
     "Dockerfile",
     "render.yaml",
     ".env.example",
-    "scripts/"
+    "scripts/",
+    ".dockerignore",
+    "tests/deployment.test.js"
   ],
   "work/board-3d.md": [
     "map-layout.js",
@@ -223,7 +225,10 @@
     "tests/match-queries.test.js",
     "tests/legacy-load-server.test.js",
     "tests/match-archive.test.js",
-    "tests/initial-results.test.js"
+    "tests/initial-results.test.js",
+    "Dockerfile",
+    ".dockerignore",
+    "tests/deployment.test.js"
   ],
   "work/wagon-variants.md": [
     "data.js",

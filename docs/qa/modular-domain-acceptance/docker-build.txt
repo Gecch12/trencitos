@@ -1,0 +1,57 @@
+#1 [internal] load build definition from Dockerfile
+#1 sha256:b067370aec9bb0d9c129caa6a53ef2b998b20f2e54c82758ad0e62db834b2d4d
+#1 transferring dockerfile: 630B done
+#1 DONE 0.0s
+
+#2 [internal] load .dockerignore
+#2 sha256:a08a4d3694c63516cf961163a6a96ee4a652995b6e9a155ff4378952fcb77409
+#2 transferring context: 72B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:22-alpine
+#3 sha256:ea040a8ae8d48010beeae405e35e2010b014bb438d42def3e578fd4426535172
+#3 DONE 0.5s
+
+#4 [1/8] FROM docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914
+#4 sha256:76e893960c7e132a8e4d8391f236b95d5b4eb1e14793410b466179771adda06e
+#4 DONE 0.0s
+
+#6 [internal] load build context
+#6 sha256:fc7483ab221090ecd4d14e311bf0b7eb246f406529b11002496843bd9f843e57
+#6 transferring context: 194.73kB 0.0s done
+#6 DONE 0.0s
+
+#7 [3/8] COPY package.json package-lock.json ./
+#7 sha256:e27c9985883db12f96f8dd828df765f445c4feedf787ac7c02ffcc59a1e3124a
+#7 CACHED
+
+#5 [2/8] WORKDIR /app
+#5 sha256:fd19c84f89e7a8fbaff4b9f028749d46a1a4c1d9b42eb3a401b0949cd6cbad19
+#5 CACHED
+
+#8 [4/8] RUN npm ci --omit=dev --ignore-scripts
+#8 sha256:143162a3d21c28219c4d912f7767e8de64bc20bea090d6b4bd4a8512c5c1e5eb
+#8 CACHED
+
+#9 [5/8] COPY --chown=node:node *.js *.mjs *.css *.html ./
+#9 sha256:a5ab208cb309c5d80cfe9c8426580231f90eab36124ee0c4519d005212468ffd
+#9 DONE 0.0s
+
+#10 [6/8] COPY --chown=node:node game ./game
+#10 sha256:b22e78d5aa7bc5d503be000f6d165bce6e6a3b33d9e2e6302ef51081bcd9dbd1
+#10 DONE 0.0s
+
+#11 [7/8] COPY --chown=node:node assets ./assets
+#11 sha256:a11a620dd8ce91b6801cb6eb34e16e0a9d757aa5c579420abb18f0d680e3111b
+#11 DONE 0.0s
+
+#12 [8/8] RUN mkdir -p /data && chown node:node /data
+#12 sha256:71e49cbafef7c2b1a374061ef33b232bbf60fa91826d1b4894d9026b258f9bb5
+#12 DONE 0.2s
+
+#13 exporting to image
+#13 sha256:e8c613e07b0b7ff33893b694f7759a10d42e180f2b4dc349fb57dc6b71dcab00
+#13 exporting layers 0.0s done
+#13 writing image sha256:620f8b0586c72b87dff8b096df0ecdd9cd053279ed2322083562f6f60f4984ad done
+#13 naming to docker.io/library/trencitos-domain-acceptance done
+#13 DONE 0.0s

@@ -290,10 +290,12 @@ un checkpoint revisado del trabajo visual; cada worktree mantiene sus propios do
 | Túneles | Contrato nuevo para todas las vías túnel sin suplemento; [túnel compartido](../../tests/shared-tunnel.test.js) cubre pagos, desistimiento, plazos, privacidad y recuperación; [reciclado](../../tests/recycling.test.js) cubre conservación y reserva. |
 | Vencimiento | Contrato nuevo conserva robos automáticos cuando una construcción tardía se rechaza. Las pruebas futuras distinguen transición de reloj y comando rechazado. |
 | Persistencia y privacidad | [Cola](../../tests/durable-queue.test.js), [almacenamiento](../../tests/room-store.test.js), [multijugador](../../tests/multiplayer-server.test.js) y [historial](../../tests/match-archive.test.js) siguen como contratos de integración. |
-| Núcleo extraído, pendiente | Casos directos con IDs desordenados/de cadena y contexto inyectado; mismo resultado vía fachada; rechazo sin mutar; sin imports de red, disco, navegador, i18n o datos globales. |
+| Núcleo extraído | [Políticas de construcción](../../tests/domain-route-claim.test.js) y suites `domain-*`: IDs desordenados/de cadena, contexto inyectado, rechazo sin mutar y ejecución sin reloj/azar/red ambientales. Las suites de contratos contrastan el comportamiento vía fachada. |
 | Mapas/versiones, pendiente de fase 4 | Europa y mapa mínimo simultáneos, orden de vías permutado, estaciones/túneles/bots/replay con IDs opacos; guardados legados y versiones desconocidas. |
-| Aplicación/consulta, pendiente | Guardado incierto, duplicado con contenido distinto, elecciones simultáneas y consulta sobre estado congelado; replay público al terminar sin destinos privados. |
+| Consultas y carga explícita | [Consultas](../../tests/match-queries.test.js) sobre estados congelados sin alias ni mutación; [carga legada](../../tests/legacy-load-server.test.js) normaliza antes de persistir/publicar; [archivo](../../tests/match-archive.test.js) conserva hashes y privacidad. |
+| Aplicación, pendiente de fase 3 | Mantener contratos de guardado incierto, deduplicación y elecciones simultáneas al separar los casos de uso. El filtro público de resultados sigue compuesto en servidor/archivo; la consulta del motor por sí sola no sustituye `safePublic`. |
 
-Las pruebas de fase 1 caracterizan el motor actual, no acreditan que estas APIs
-futuras existan. Las garantías nuevas se probarán contra código real en su fase,
-sin tests de frases de documentos ni mocks que solo reproduzcan el diseño.
+Las pruebas de fase 1 caracterizaron el motor de esa base. La implementación y
+evidencia de las políticas/consultas posteriores viven en la [fase de dominio](../work/modular-platform-domain.md).
+Los contratos pendientes de aplicación y mapas se verificarán contra código real
+en sus fases, sin tests de frases de documentos ni mocks que solo reproduzcan el diseño.

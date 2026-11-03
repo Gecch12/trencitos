@@ -1,5 +1,5 @@
 ---
-{"id":"modular-platform-domain","status":"active","parent":"modular-game-platform","depends_on":["modular-platform-contracts"],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-02"}
+{"id":"modular-platform-domain","status":"done","parent":"modular-game-platform","depends_on":["modular-platform-contracts"],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-02"}
 ---
 # Fase 2: extracción del dominio
 
@@ -23,7 +23,7 @@ cambios de esta entrega. El trabajo visual de otros chats permanece separado.
 - [x] Estaciones, conectividad, puntuación y desglose extraídos, con puente para resultados guardados.
 - [x] Cartas de tren y mercado extraídos, con azar explícito y puente compatible.
 - [x] Consultas sin mutación ni alias y normalización explícita de resultados/temporizadores.
-- [ ] Europa completa verificada, incluyendo bots, privacidad, guardado y replay.
+- [x] Europa completa verificada, incluyendo bots, privacidad, guardado y replay.
 
 ## Primer corte: pagos y construcción
 
@@ -477,13 +477,89 @@ Supabase real, una imagen Docker ni dispositivos físicos. Entrega local sin
 integración de otros worktrees ni publicación. La aceptación conjunta de fase 2
 permanece pendiente.
 
-## Siguiente corte
+## Aceptación conjunta de fase 2
 
-Realizar la aceptación conjunta de Europa: revisar los límites finales del
-dominio, consultas y puente, y los recorridos de bots, privacidad, guardado/replay
-y errores de persistencia antes de cerrar fase 2. Revisar además el empaquetado:
-el `Dockerfile` actual tiene una lista explícita desactualizada que no copia
-`game/` ni módulos como `i18n.js`/`match-archive.js`; no se acredita una imagen
-Docker arrancable con las pruebas de Node. `render.yaml` usa runtime Node.
-La separación de aplicación/infraestructura y frontend corresponde a fase 3,
-con un checkpoint revisado de vagones antes de mover archivos visuales.
+Base: `5a5854e` más los cambios de esta entrega. Revisión del 2026-11-02 (Lima).
+Este cierre corrige el empaquetado y amplía su comprobación; no cambia reglas,
+datos, estrategias de bots ni archivos visuales.
+
+### Revisión de fronteras
+
+| Frontera | Resultado y evidencia |
+| --- | --- |
+| Políticas de dominio | Once módulos ejecutables con reglas/mapa/tiempo/azar suministrados. La prueba VM de [construcción](../../tests/domain-route-claim.test.js) ejecuta los recorridos principales sin reloj/azar/transporte globales; las suites `domain-*` cubren rechazo e inmutabilidad. |
+| Consultas y compatibilidad | `projectMatch` devuelve copias sin reparar estado. `normalize` actúa al cargar/ejecutar/capturar, nunca al leer frames de replay. [Consultas](../../tests/match-queries.test.js), [carga legada](../../tests/legacy-load-server.test.js) y [archivo](../../tests/match-archive.test.js) conservan plazos, resultados e historial. |
+| Europa y bots | [Simulaciones](../../tests/simulation.test.js) completan tres partidas por cada tamaño de 2–5 jugadores, con puntuación y conservación de 110 cartas. [Práctica](../../tests/server.test.js), [bots permanentes](../../tests/room-bots.test.js) y las suites de estrategia cubren turnos, destinos privados, pausa y recuperación. |
+| Privacidad | [Directorio/espectadores](../../tests/room-directory.test.js), consultas, servidor y archivo verifican manos, destinos, ofertas y robos ocultos. `safePublic` continúa filtrando los destinos finales fuera de `Engine.view`; esa composición debe conservarse en fase 3. |
+| Persistencia y confirmación | [Multijugador](../../tests/multiplayer-server.test.js) comprueba rollback local y reintento sin duplicar la jugada; [servidor remoto](../../tests/supabase-server.test.js) comprueba confirmar antes de publicar, reinicio y fallo con backend simulado. [Cola](../../tests/durable-queue.test.js) conserva una confirmación aunque falle su entrega. |
+| Historial | [Integración de historial](../../tests/history-server.test.js) cubre recarga/reinicio, deduplicación y autorización. El contrato de archivo conserva hashes y vistas históricas sin volver a sortear ni normalizar frames anteriores. |
+
+El límite de esta fase sigue siendo explícito: `engine.js` conserva validación
+de fase/puesto, coordinación de vencimientos, comprobación de acciones disponibles
+para pasar, aplicación mutable de planes y textos/eventos. El servidor mantiene
+salas, autorización, persistencia y confirmaciones. El núcleo extraído no convierte
+toda la fachada en una función pura. Su separación de aplicación y la composición
+de vistas autorizadas corresponden a fase 3; IDs/mapas versionados, a fase 4.
+
+### Corrección y comprobación del paquete
+
+La lista anterior de `Dockerfile` omitía módulos raíz y todo `game/`. Se reprodujo
+en una imagen local: su comando normal falló con `Cannot find module './i18n'`
+([construcción anterior](../qa/modular-domain-acceptance/docker-before-build.txt),
+[fallo de arranque](../qa/modular-domain-acceptance/docker-before-start.txt)).
+Ahora se copian los recursos/módulos raíz por extensión y los directorios
+`game/`/`assets/`, sin copiar el repositorio completo. El contexto excluye también
+archivos de replay, QA, docs y worktrees. Los comandos están en [operación](../operations.md#empaquetado-docker).
+
+La [prueba de recursos](../../tests/deployment.test.js) recorre HTML, imports JS
+estáticos/dinámicos y referencias CSS, además de las cartas generadas por nombre.
+Comprueba **41 recursos** y rechazo de módulos privados. Sustituye la afirmación
+incompleta de que bastaba encontrar algunos nombres en el texto de Dockerfile.
+
+Se construyó y arrancó la imagen corregida (`linux/arm64`, Node `v22.23.4`):
+`healthz` correcto, usuario `node`/UID 1000, escritura en `/data` y ausencia de
+credenciales, estado local, docs, tests y dependencias de desarrollo en `/app`.
+Las tres pruebas seleccionadas de recursos/privacidad HTTP y práctica con bots
+pasaron dentro de esa imagen. Solo para esa ejecución se montó `tests/` en modo
+lectura; raíz del contenedor de solo lectura, estado temporal y red externa desactivada.
+[Construcción](../qa/modular-domain-acceptance/docker-build.txt),
+[arranque](../qa/modular-domain-acceptance/docker-start.txt),
+[TAP](../qa/modular-domain-acceptance/docker-tests.tap) y
+[resultado con comandos, imagen y huellas](../qa/modular-domain-acceptance/docker-result.json).
+
+### Evidencia de aceptación
+
+- Suite completa en Node `v25.6.1`: **471/471**, sin fallos ni omisiones,
+  `node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js`.
+  [Resultado y huellas](../qa/modular-domain-acceptance/node-tests-result.json),
+  [TAP](../qa/modular-domain-acceptance/node-tests.tap).
+- `QA_PORT=0 npm run test:board3d`: **aprobado**, Chrome `156.0.8078.80`.
+  Ocho recorridos, nueve combinaciones de viewport/zoom y partida de cuatro
+  jugadores completa con **243 acciones**, reconexión y cero errores. Incluye
+  60 intentos de construcción, cinco pagos/dos desistimientos de túnel, tres
+  estaciones y tres ofertas/confirmaciones de destinos.
+  [Resultado](../qa/modular-domain-acceptance/browser-tests-result.json),
+  [reporte](../qa/modular-domain-acceptance/browser/threejs-report.json).
+  Se inspeccionaron las capturas de [resultado final](../qa/modular-domain-acceptance/browser/threejs-finished.png)
+  y [móvil emulado](../qa/modular-domain-acceptance/browser/threejs-mobile.png).
+- Las huellas de los 19 archivos de dominio, consultas, compatibilidad y entradas
+  de ejecución coinciden con la evidencia del sexto corte. Sus comparaciones
+  diferenciales conservan su fecha original; no se presentan como una ejecución nueva.
+- `node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
+  Revisados operación, contratos, mapa de fuentes y avance de la iniciativa.
+  La evidencia histórica `docs/qa/threejs-*` quedó restaurada.
+
+Fase 2 aceptada en este worktree. Los tests de almacenamiento remoto/SQL usan
+simuladores; la ejecución Docker corresponde a `linux/arm64` local y la prueba
+visual a Chrome de escritorio con móvil emulado. No certifican Render, Supabase
+real ni dispositivos físicos. No se integró trabajo visual de otros worktrees,
+ni se hizo push, merge o despliegue.
+
+## Siguiente fase
+
+Iniciar fase 3 por un caso de uso de aplicación: separar recepción del comando,
+ejecución y confirmación/presentación conservando guardado conjunto con historial,
+deduplicación y rollback. Mantener la fachada compatible mientras se cambia cada
+entrada. Antes de mover archivos visuales, integrar un checkpoint revisado del
+trabajo de vagones. La separación frontend/backend será en código dentro del
+mismo repositorio; no exige dividir ahora los despliegues.

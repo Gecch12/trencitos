@@ -1,0 +1,131 @@
+{
+  "base_commit": "5a5854eb5cf62371d5263ee5555d9aa7837d329f",
+  "isolation": "local Docker; network none; read-only root; tmpfs state; default node user; no production environment",
+  "before_start_exit_code": 1,
+  "before_start_log": "docker-before-start.txt",
+  "image": {
+    "Id": "sha256:620f8b0586c72b87dff8b096df0ecdd9cd053279ed2322083562f6f60f4984ad",
+    "Architecture": "arm64",
+    "Os": "linux",
+    "user": "node",
+    "command": [
+      "node",
+      "server.js"
+    ]
+  },
+  "startup": {
+    "node": "v22.23.4",
+    "uid": 1000,
+    "health": {
+      "ok": true,
+      "storage": "file",
+      "rooms": 0
+    },
+    "stateWritable": true,
+    "productionOnly": true
+  },
+  "test_exit_code": 0,
+  "commands": [
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "image",
+        "inspect",
+        "--format",
+        "{{json .}}",
+        "trencitos-domain-acceptance"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "run",
+        "--detach",
+        "--network",
+        "none",
+        "--read-only",
+        "--tmpfs",
+        "/data:uid=1000,gid=1000",
+        "-e",
+        "STATE_BACKEND=file",
+        "-e",
+        "AUTH_ENABLED=false",
+        "trencitos-domain-acceptance"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "exec",
+        "0de78a2764626d7f60b558c40bf36fcb261cbe5cc4c99251ae6f1e49bbd27b94",
+        "node",
+        "-e",
+        "const assert=require('node:assert/strict'),fs=require('node:fs');\n(async()=>{let health;for(let i=0;i<30;i++){try{const r=await fetch('http://127.0.0.1:3000/healthz');assert.equal(r.status,200);health=await r.json();break;}catch(e){if(i===29)throw e;await new Promise(ok=>setTimeout(ok,100));}}\nassert.deepEqual(health,{ok:true,storage:'file',rooms:0});assert.equal(process.getuid(),1000);\nfs.writeFileSync('/data/write-check','ok');assert.equal(fs.readFileSync('/data/write-check','utf8'),'ok');fs.unlinkSync('/data/write-check');\nfor(const p of ['.env','room-state.json','room-state.json.archive','tests','docs','scripts','node_modules/playwright','node_modules/@electric-sql/pglite'])assert.equal(fs.existsSync('/app/'+p),false,p);\nconsole.log(JSON.stringify({node:process.version,uid:process.getuid(),health,stateWritable:true,productionOnly:true}));})().catch(e=>{console.error(e);process.exit(1)});"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "logs",
+        "0de78a2764626d7f60b558c40bf36fcb261cbe5cc4c99251ae6f1e49bbd27b94"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "rm",
+        "-f",
+        "0de78a2764626d7f60b558c40bf36fcb261cbe5cc4c99251ae6f1e49bbd27b94"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--read-only",
+        "--tmpfs",
+        "/data:uid=1000,gid=1000",
+        "--tmpfs",
+        "/tmp:mode=1777",
+        "-e",
+        "STATE_BACKEND=file",
+        "-e",
+        "AUTH_ENABLED=false",
+        "-v",
+        "/Users/angelaltarodri/Desktop/free/trains/worktrees/modular-game-platform/tests:/app/tests:ro",
+        "trencitos-domain-acceptance",
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "--test-name-pattern=runtime assets|static SVG|WebSocket practice flow",
+        "tests/deployment.test.js",
+        "tests/server.test.js"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "completed_at": "2026-11-03T02:25:11.915672+00:00",
+  "source_sha256": {
+    "Dockerfile": "ac3137b9efa30ee1636db02ea5a8e965fdb3501643f0280735484860fc8d7284",
+    ".dockerignore": "e0b82edb2e80a4a1a51c70e25a2d9cc6be23b3d15e21813377e2eee092a9130c",
+    "package-lock.json": "e87d35d818ad33717a190b3d48b215e9ad6daed442a850163752b7f8d0ec27f6",
+    "tests/deployment.test.js": "bf8a20c60a8fa399ac682285379a741855a4af9ac5171b5380e06620724b2b73"
+  }
+}

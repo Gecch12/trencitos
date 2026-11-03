@@ -2,6 +2,8 @@ preview-*.png
 room-state.json
 room-state.json.tmp
 room-state.json.bak
+room-state.json.bak.tmp
+room-state.json.archive
 *.zip
 tests
 .git
@@ -10,3 +12,8 @@ tests
 
 node_modules
 .qa
+docs
+scripts
+worktrees
+.codex
+.agents

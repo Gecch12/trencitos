@@ -19,11 +19,9 @@ test('map preserves gestures and does not restore the retired zoom toolbar',()=>
  assert.match(app,/addEventListener\("wheel"/);
  assert.match(app,/GameUI\.pinchTransform\(/);
 });
-test('Docker includes every local server module, without saved rooms',()=>{
- const docker=fs.readFileSync(path.join(ROOT,'Dockerfile'),'utf8');
- for(const file of ['game-clock.js','multiplayer.js','room-store.js','supabase-store.js','durable-queue.js','account-auth.js','account-seats.js','account-ui.js','privacy.html','privacy.css','bots.js','practice-bot.js','practice-planner.js','practice-tactics.js','practice-search.js','practice.js','lobby-ui.js','lobby.css']) assert.ok(docker.includes(file),file);
+test('Docker context excludes local saved rooms, archives and credentials',()=>{
  const ignore=fs.readFileSync(path.join(ROOT,'.dockerignore'),'utf8');
- for(const file of ['room-state.json','room-state.json.tmp','room-state.json.bak']) assert.ok(ignore.split('\n').includes(file));
+ for(const file of ['room-state.json','room-state.json.tmp','room-state.json.bak','room-state.json.bak.tmp','room-state.json.archive','.env','.env.*','.qa']) assert.ok(ignore.split('\n').includes(file),file);
 });
 test('rainbow wildcard uses the engraved locomotive; the deck stays text-free',()=>{
  const generator=fs.readFileSync(path.join(ROOT,'make_assets.py'),'utf8');
@@ -65,6 +63,26 @@ test('disabled draw controls preserve suit saturation at eighty percent opacity'
  assert.match(disabled,/opacity:\.8;/);assert.doesNotMatch(disabled,/grayscale/);
  assert.match(gameStyles,/\.game \.train-deck:disabled, \.game \.destination-deck:disabled \{ opacity: \.8;/);
 });
+test('runtime assets load through HTML, JavaScript imports and CSS references',async t=>{
+ if(!server.listening)await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
+ const base='http://127.0.0.1:'+server.address().port,visited=new Set(),queue=['/','/privacy.html'];
+ const health=await fetch(base+'/healthz');assert.equal(health.status,200);assert.equal((await health.json()).ok,true);
+ // Card URLs are assembled dynamically; HTML/import/CSS references are traversed below.
+ queue.push(...require('../data').COLORS.concat(['wild','back']).map(color=>`/assets/cards/${color}.svg`),'/assets/ticket.svg');
+ while(queue.length){
+  const url=new URL(queue.shift(),base);if(visited.has(url.href))continue;visited.add(url.href);
+  assert.equal(url.origin,base,'runtime resources must stay local');
+  const response=await fetch(url);assert.equal(response.status,200,url.pathname);
+  const body=await response.text(),type=response.headers.get('content-type');assert.ok(body.length>0,url.pathname);
+  const extension=path.extname(url.pathname),mime={'.js':'javascript','.mjs':'javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml'}[extension]||'text/html';
+  assert.ok(type.includes(mime),`${url.pathname}: ${type}`);
+  const references=type.includes('text/html')?[...body.matchAll(/<(?:script|link|img)\b[^>]*\b(?:src|href)=["']([^"']+)["']/g)].map(m=>m[1]):
+   type.includes('javascript')?[...body.matchAll(/\b(?:import|export)\s+(?:[^'";]*?\s+from\s*)?["']([^"']+)["']|\bimport\s*\(\s*["']([^"']+)["']\s*\)/g)].map(m=>m[1]||m[2]):
+   type.includes('text/css')?[...body.matchAll(/url\(\s*["']?([^\s"')]+)["']?\s*\)/g)].map(m=>m[1]):[];
+  for(const reference of references)if(!reference.startsWith('#')&&!reference.startsWith('data:'))queue.push(new URL(reference,url).href);
+ }
+ t.diagnostic(`Loaded ${visited.size} runtime resources: ${[...visited].map(url=>new URL(url).pathname).join(', ')}`);
+});
 test('static SVG is served safely with right MIME and traversal returns 404',async()=>{
  if(!server.listening)await new Promise(ok=>server.listen(0,'127.0.0.1',ok));const base='http://127.0.0.1:'+server.address().port;
  let response=await fetch(base+'/assets/cards/red.svg');assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/image\/svg\+xml/);assert.match(await response.text(),/TRENCITOS/);
@@ -72,7 +90,7 @@ test('static SVG is served safely with right MIME and traversal returns 404',asy
  response=await fetch(base+'/privacy.html');assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/text\/html/);
  response=await fetch(base+'/privacy.css');assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/text\/css/);
  response=await fetch(base+'/does-not-exist.html');assert.equal(response.status,404);
- for(const file of ['/account-auth.js','/account-seats.js','/supabase/002_identity.sql']) assert.equal((await fetch(base+file)).status,404);
+ for(const file of ['/account-auth.js','/account-seats.js','/supabase/002_identity.sql','/engine.js','/game/domain/payment.js','/game/queries/match-view.js','/match-archive.js','/package.json','/.env','/room-state.json']) assert.equal((await fetch(base+file)).status,404);
  response=await fetch(base+'/practice-bot.js');assert.equal(response.status,404);
  response=await fetch(base+'/practice-planner.js');assert.equal(response.status,404);
  response=await fetch(base+'/practice-tactics.js');assert.equal(response.status,404);

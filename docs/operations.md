@@ -33,6 +33,37 @@ y reproduce repartos, mercados y reciclados sin cambiar el RNG de producción.
 de tiempo dependen de la máquina y de la carga. Los resultados registrados y
 los conjuntos usados para ajuste/evaluación están en [la ficha](work/practice-ai.md).
 
+## Empaquetado Docker
+
+`Dockerfile` instala solo dependencias de producción y copia los módulos y
+recursos de la raíz (`*.js`, `*.mjs`, `*.css`, `*.html`), `game/` y `assets/`.
+No copia el repositorio entero. La lista pública de `server.js` sigue decidiendo
+qué archivos se sirven; incluir el dominio en la imagen no lo hace público.
+Al separar carpetas en fase 3 hay que actualizar estas entradas junto al código.
+`.dockerignore` excluye credenciales, estado/archivo local, QA, docs y worktrees.
+
+Para comprobar la imagen local, sin conectarla a servicios externos:
+
+```sh
+docker build -t trencitos-local .
+docker run --rm --network none --read-only \
+  --tmpfs /data:uid=1000,gid=1000 --tmpfs /tmp:mode=1777 \
+  -e STATE_BACKEND=file -e AUTH_ENABLED=false \
+  -v "$PWD/tests:/app/tests:ro" trencitos-local \
+  node --test --test-concurrency=1 \
+  --test-name-pattern='runtime assets|static SVG|WebSocket practice flow' \
+  tests/deployment.test.js tests/server.test.js
+```
+
+Las pruebas se montan en modo lectura solo para esta verificación; no pertenecen
+a la imagen. Comprueban dependencias servidas desde HTML/imports/CSS, recursos
+dinámicos de cartas, archivos privados inaccesibles y práctica con bots por
+WebSocket. Ejecutan el código empaquetado como `node` con estado temporal.
+El comando normal de la imagen es `node server.js`, con `STATE_FILE=/data/rooms.json`;
+para conservar partidas fuera de pruebas, `/data` necesita almacenamiento persistente.
+Render sigue usando el runtime Node definido en `render.yaml`; construir esta
+imagen local no modifica ni verifica ese despliegue.
+
 ## Worktrees y ramas
 
 Cada worktree tiene sus archivos y estado local. Git comparte historial y

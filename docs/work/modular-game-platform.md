@@ -51,7 +51,7 @@ bloquea la fase 4 ni Sudamérica. Mantener un solo repositorio está acordado.
 
 - [x] Fase 0 aceptada según [su ficha](modular-platform-baseline.md).
 - [x] Fase 1 completada según [modelo y contratos](modular-platform-contracts.md).
-- [ ] Fase 2: dominio extraído y Europa verificada.
+- [x] Fase 2 aceptada según [dominio y Europa](modular-platform-domain.md).
 - [ ] Fase 3: coordinación e interfaz separadas y verificadas.
 - [ ] Fase 4: independencia del mapa demostrada.
 - [ ] Fase 5: Sudamérica disponible para pruebas del usuario.
@@ -80,20 +80,23 @@ por separado. El cierre de esta ficha no implica publicación.
 - Mantener Three.js, las familias de vagones, cartas y estaciones existentes.
   El SVG provisional y el visor de referencia no sustituyen el tablero principal.
 
-## Hito en curso: fase 2
+## Próximo hito: fase 3
 
 El [modelo de fase 1](../decisions/match-domain-contracts.md) define los contratos
-y el puente. La [ficha de dominio](modular-platform-domain.md) conserva avance,
-evidencia y alcance pendiente. Pagos/construcción, transiciones de túnel/turno,
+y el puente. La [ficha de dominio](modular-platform-domain.md) conserva la aceptación
+conjunta y sus límites. Pagos/construcción, transiciones de túnel/turno,
 reparto, elecciones de destinos, estaciones, puntuación y cartas/mercado ya cuentan con políticas
 independientes de textos y efectos externos. `engine.js`
 conserva la fachada, el formato de guardado y la aplicación de sus planes.
 Las consultas devuelven copias sin mutar la partida y la normalización ya tiene
-una operación explícita en los puntos de carga/ejecución. La ficha desarrolla la
-aceptación conjunta de Europa antes de cerrar fase 2.
+una operación explícita en los puntos de carga/ejecución. Europa fue verificada
+con bots, privacidad, guardado/replay y errores de persistencia; también se corrigió
+y comprobó el empaquetado Docker local.
 
-No declarar terminada toda la fase 2 al extraer solo el primer recorrido. La
-separación de frontend espera a fase 3; antes de mover archivos visuales, integrar
+Fase 3 empieza por separar un caso de uso del servidor, preservando confirmación
+durable de partida e historial, deduplicación, rollback y vistas autorizadas.
+La coordinación aún reside en `engine.js`/`server.js`; las políticas extraídas
+no implican haber completado esa separación. Antes de mover archivos visuales, integrar
 un checkpoint revisado del trabajo de vagones. Las ediciones posteriores de
 otros worktrees no se sincronizan automáticamente con esta rama.
 
@@ -107,5 +110,5 @@ La [fase 0](modular-platform-baseline.md) conserva la base y sus límites; la
 pruebas de aceptación del primer recorrido. La
 [fase 2](modular-platform-domain.md) contiene las extracciones de pagos,
 construcción, transiciones de túnel/turno, reparto, destinos, estaciones,
-puntuación, cartas/mercado y consultas; queda coordinación en la fachada. Siguiente paso y
-validación de la entrega en esa ficha.
+puntuación, cartas/mercado y consultas, más la aceptación conjunta. El siguiente
+paso de aplicación/interfaz y la validación de esta entrega están en esa ficha.

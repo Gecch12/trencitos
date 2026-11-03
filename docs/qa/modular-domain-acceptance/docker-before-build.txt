@@ -1,0 +1,95 @@
+#1 [internal] load build definition from Dockerfile.before
+#1 sha256:4e3e8955949dbda761166237ca01f183cddd9047520848d110846e503507c4a1
+#1 transferring dockerfile: 882B 0.0s done
+#1 DONE 0.1s
+
+#2 [internal] load .dockerignore
+#2 sha256:c5f04b0039cada907528c6bb783e0d8969339e3a01fcd466fbd2d7500fa839ae
+#2 transferring context: 282B 0.0s done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:22-alpine
+#3 sha256:ea040a8ae8d48010beeae405e35e2010b014bb438d42def3e578fd4426535172
+#3 DONE 2.5s
+
+#6 [internal] load build context
+#6 sha256:b5b063bb608b6b089a37720ee360cd4d51bd17c5902d34d5fdb1b33670594a27
+#6 transferring context: 647.73kB 0.1s done
+#6 DONE 0.1s
+
+#4 [1/7] FROM docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914
+#4 sha256:76e893960c7e132a8e4d8391f236b95d5b4eb1e14793410b466179771adda06e
+#4 resolve docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914 done
+#4 sha256:21487655851bca3d32f31162c9530bf08bd4596e2e5f74851881b8e8d1c33520 6.73kB / 6.73kB done
+#4 sha256:d3531b7a4f217bdc3426c57bcff84c170f086f456a39689d4a615c6d026c4be0 0B / 4.19MB 0.1s
+#4 sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce 0B / 55.69MB 0.1s
+#4 sha256:e51951d495a7da196c9ad4a10e58817f7e8ae25e5ca4564911ab879377fba153 0B / 1.26MB 0.1s
+#4 sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914 6.41kB / 6.41kB done
+#4 sha256:fd4a97c1630a4a0a70117dd7b393e322db316d0489bdf36a0e776e7b235341b0 1.72kB / 1.72kB done
+#4 sha256:e51951d495a7da196c9ad4a10e58817f7e8ae25e5ca4564911ab879377fba153 1.05MB / 1.26MB 0.2s
+#4 sha256:d3531b7a4f217bdc3426c57bcff84c170f086f456a39689d4a615c6d026c4be0 1.05MB / 4.19MB 0.3s
+#4 sha256:e51951d495a7da196c9ad4a10e58817f7e8ae25e5ca4564911ab879377fba153 1.26MB / 1.26MB 0.2s done
+#4 sha256:f04c63730cb349b2c5fcd49010e45ce74ed3caa240639ea8b248f42827a75249 0B / 444B 0.3s
+#4 sha256:d3531b7a4f217bdc3426c57bcff84c170f086f456a39689d4a615c6d026c4be0 4.19MB / 4.19MB 0.4s done
+#4 sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce 4.19MB / 55.69MB 0.5s
+#4 sha256:f04c63730cb349b2c5fcd49010e45ce74ed3caa240639ea8b248f42827a75249 444B / 444B 0.4s done
+#4 extracting sha256:d3531b7a4f217bdc3426c57bcff84c170f086f456a39689d4a615c6d026c4be0
+#4 sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce 8.39MB / 55.69MB 0.6s
+#4 sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce 15.73MB / 55.69MB 0.8s
+#4 sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce 19.92MB / 55.69MB 1.0s
+#4 sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce 24.12MB / 55.69MB 1.1s
+#4 extracting sha256:d3531b7a4f217bdc3426c57bcff84c170f086f456a39689d4a615c6d026c4be0 0.6s done
+#4 sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce 31.46MB / 55.69MB 1.3s
+#4 sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce 34.60MB / 55.69MB 1.4s
+#4 sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce 39.85MB / 55.69MB 1.6s
+#4 sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce 44.04MB / 55.69MB 1.7s
+#4 sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce 51.38MB / 55.69MB 1.9s
+#4 sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce 55.69MB / 55.69MB 2.0s
+#4 sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce 55.69MB / 55.69MB 2.0s done
+#4 extracting sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce
+#4 extracting sha256:5c8e282ceef79775f7764a7ebcc588c0ae1d03bd53fefafb20015a2902cafcce 1.4s done
+#4 extracting sha256:e51951d495a7da196c9ad4a10e58817f7e8ae25e5ca4564911ab879377fba153
+#4 extracting sha256:e51951d495a7da196c9ad4a10e58817f7e8ae25e5ca4564911ab879377fba153 0.1s done
+#4 extracting sha256:f04c63730cb349b2c5fcd49010e45ce74ed3caa240639ea8b248f42827a75249 done
+#4 DONE 3.8s
+
+#5 [2/7] WORKDIR /app
+#5 sha256:fd19c84f89e7a8fbaff4b9f028749d46a1a4c1d9b42eb3a401b0949cd6cbad19
+#5 DONE 0.2s
+
+#7 [3/7] COPY package.json package-lock.json ./
+#7 sha256:d661bf80b7ba45618f297aa91bd41dbf4c68d2688bc56e6662bb9275ff024351
+#7 DONE 0.1s
+
+#8 [4/7] RUN npm ci --omit=dev --ignore-scripts
+#8 sha256:e4400345e0a62d68938d8e989aed6b2a57b14c770c84cfcb29594cdd4668d3ec
+#8 1.904
+#8 1.904 added 1 package, and audited 2 packages in 2s
+#8 1.904
+#8 1.904 found 0 vulnerabilities
+#8 1.906 npm notice
+#8 1.906 npm notice New major version of npm available! 10.9.9 -> 12.2.1
+#8 1.906 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+#8 1.906 npm notice To update run: npm install -g npm@12.2.1
+#8 1.906 npm notice
+#8 DONE 2.0s
+
+#9 [5/7] COPY --chown=node:node board-3d.js wagon-preview.js wagon-renderer.js wagon-models.mjs board-camera.js board-3d.css data.js map-layout.js game-ui.js lobby-ui.js engine.js game-clock.js bots.js practice-bot.js practice.js multiplayer.js room-store.js supabase-store.js durable-queue.js account-auth.js account-seats.js account-ui.js server.js index.html privacy.html privacy.css app.js style.css game.css responsive.css lobby.css practice-planner.js practice-tactics.js practice-search.js ./
+#9 sha256:7b45cabec4b24472ce50391e86e0db24d4220f957afec80ea1b0876db2f28656
+#9 DONE 0.2s
+
+#10 [6/7] COPY --chown=node:node assets ./assets
+#10 sha256:11cd1fa791a015b0006315233f91f8d88781cd17d1119fc45d06e20a71da8a8b
+#10 DONE 0.0s
+
+#11 [7/7] RUN mkdir -p /data && chown node:node /data
+#11 sha256:df0bc025a17eb64bb2fde8659d7c6f7219db80c972e6b9b142863bd11d9bcb89
+#11 DONE 0.2s
+
+#12 exporting to image
+#12 sha256:e8c613e07b0b7ff33893b694f7759a10d42e180f2b4dc349fb57dc6b71dcab00
+#12 exporting layers
+#12 exporting layers 0.2s done
+#12 writing image sha256:c576b31c1892f28ddf83b8ca7e4bcfb7153ff29dcefb7d0848c3858a730fcabe done
+#12 naming to docker.io/library/trencitos-domain-acceptance-before done
+#12 DONE 0.2s
