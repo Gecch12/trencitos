@@ -16,7 +16,7 @@ function paymentRoom(code) {
   const take = color => g.deck.splice(g.deck.indexOf(color), 1)[0];
   g.players[0].hand = [...E.COLORS.flatMap(c => Array(8).fill(c)), ...Array(8).fill("wild")].map(take);
   g.face = ["red", "blue", "green", "yellow", "black"].map(take);
-  // A pure-locomotive claim reveals no matching cards; the server completes it.
+  // A pure-wildcard claim reveals no matching cards; the server completes it.
   g.deck.push(...["red", "blue", "green"].map(take));
   E.ensureTiming(g);
   return { code, updated: Date.now(), practice: true, game: g,

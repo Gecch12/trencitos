@@ -1,0 +1,36 @@
+✔ Google uses PKCE and encrypted HttpOnly cookies; only a separate game profile is public (70.221583ms)
+✔ origin, request size, profile fields and account IDs are verified on the server (32.308791ms)
+✔ invalid cookies and callbacks fail closed, revoked sessions cannot update or recover (26.065417ms)
+✔ refresh is coalesced, survives reload, and logout revokes the local session (14.859375ms)
+✔ Auth is explicitly optional and production refuses insecure or secret-key configuration (0.2975ms)
+✔ verified Google callback links guest history once; logout cannot expose that history (25.850333ms)
+✔ only a proved seat can be bound; account association persists without tokens or rival data (3.277708ms)
+✔ recovery requires the owning account, rotates private credential and replaces the previous peer (0.430667ms)
+✔ an account cannot acquire two seats; practice stays ephemeral (0.142292ms)
+✔ automatic resume keeps a valid credential; stale credentials recover only for the owner (0.219958ms)
+✔ all 12 original SVG card/deck/ticket/favicon files are valid and present (2.303833ms)
+✔ browser HTML references server-served local assets and no third-party scripts (0.653375ms)
+✔ map preserves gestures and does not restore the retired zoom toolbar (0.86825ms)
+✔ Docker context excludes local saved rooms, archives and credentials (0.403333ms)
+✔ rainbow wildcard uses the engraved wildcard; the deck stays text-free (0.724083ms)
+✔ eight distinct wagons match route hues and keep color names accessible, not printed (4.572667ms)
+✔ disabled draw controls preserve suit saturation at eighty percent opacity (0.276458ms)
+✔ runtime assets load through HTML, JavaScript imports and CSS references (125.707292ms)
+ℹ Loaded 54 runtime resources: /, /privacy.html, /assets/cards/red.svg, /assets/cards/blue.svg, /assets/cards/green.svg, /assets/cards/yellow.svg, /assets/cards/black.svg, /assets/cards/white.svg, /assets/cards/orange.svg, /assets/cards/purple.svg, /assets/cards/wild.svg, /assets/cards/back.svg, /assets/ticket.svg, /style.css, /game.css, /replay.css, /replay-ui.js, /responsive.css, /lobby.css, /assets/favicon.svg, /board-3d.css, /shell.css, /room-setup.css, /translations.js, /i18n.js, /maps/europe-v1.js, /maps/europe-legacy-v1.js, /data.js, /layouts/europe-v1.js, /layouts/laboratory-v1.js, /layouts/south-america-v3.3-beta.js, /map-options.js, /map-layout.js, /match-presentation.js, /game-timing.js, /game-ui.js, /draw-intent.js, /lobby-ui.js, /board-camera.js, /account-ui.js, /shell-icons.js, /replay-state.js, /history-ui.js, /room-map-picker.js, /shell.js, /app.js, /privacy.css, /board-3d.js, /wagon-preview.js, /vendor/three.module.js, /wagon-renderer.js, /wagon-models.mjs, /vendor/three.core.js, /wagon-people.mjs
+✔ static SVG is served safely with right MIME and traversal returns 404 (23.727709ms)
+✔ every player color has a wagon, including legacy yellow, without changing paint ownership (6.541125ms)
+✔ wagon primitives stay within their shared footprint and height budget (82.4625ms)
+✔ all six carriages have distinct decoration without covering occupied windows (1.62125ms)
+✔ passengers lean out from inside the window and have bent supporting or waving arms (0.867708ms)
+✔ retired cargo models disappear while old paints keep their ownership (2.05ms)
+✔ every route exhausts six distinct variants before reshuffling, including long future routes (29.495083ms)
+✔ passenger compositions have round faceless heads and independent varied clothes and hair (7.703916ms)
+✔ inactive white family cannot be selected; saved seats receive distinct active colors (3.401ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15909.7635

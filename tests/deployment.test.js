@@ -23,7 +23,7 @@ test('Docker context excludes local saved rooms, archives and credentials',()=>{
  const ignore=fs.readFileSync(path.join(ROOT,'.dockerignore'),'utf8');
  for(const file of ['room-state.json','room-state.json.tmp','room-state.json.bak','room-state.json.bak.tmp','room-state.json.archive','.env','.env.*','.qa']) assert.ok(ignore.split('\n').includes(file),file);
 });
-test('rainbow wildcard uses the engraved locomotive; the deck stays text-free',()=>{
+test('rainbow wildcard uses the engraved wildcard; the deck stays text-free',()=>{
  const generator=fs.readFileSync(path.join(ROOT,'scripts/make_assets.py'),'utf8');
  for(const name of ['back']){
   const svg=fs.readFileSync(path.join(ROOT,`frontend/assets/cards/${name}.svg`),'utf8');
@@ -33,8 +33,8 @@ test('rainbow wildcard uses the engraved locomotive; the deck stays text-free',(
  }
  const wild=fs.readFileSync(path.join(ROOT,'frontend/assets/cards/wild.svg'),'utf8');
  const back=fs.readFileSync(path.join(ROOT,'frontend/assets/cards/back.svg'),'utf8');
- assert.match(wild,/id="rainbow-field"/);assert.match(wild,/id="engraved-locomotive"/);
- assert.match(wild,/Locomotora arcoíris · comodín/);assert.match(wild,/id="steam-engraving"/);
+ assert.match(wild,/id="rainbow-field"/);assert.match(wild,/id="engraved-wildcard"/);
+ assert.match(wild,/Comodín arcoíris · comodín/);assert.match(wild,/id="steam-engraving"/);
  assert.doesNotMatch(wild,/gold-foil|gold-relief|dorada|wagon-/);
  for(const hue of ['#e3474b','#ed913b','#f4d83d','#46966d','#4d85c3','#956dae']) assert.ok(wild.includes(hue));
  assert.doesNotMatch(back,/<text\b|FERROVÍA|EUROPA/);
@@ -49,7 +49,7 @@ test('eight distinct wagons match route hues and keep color names accessible, no
   assert.match(svg,/<title>Vagón de [^<]+<\/title>/);
   assert.deepEqual([...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map(match=>match[1]),['TRENCITOS']);
   for(const detail of [`wagon-${color}`,'rail-ornament']) assert.ok(svg.includes(`id="${detail}"`));
-  assert.doesNotMatch(svg,/linearGradient|gold-foil|engraved-locomotive|steam-engraving/,'Regular suits must be wagons, not engines');
+  assert.doesNotMatch(svg,/linearGradient|gold-foil|engraved-wildcard|steam-engraving/,'Regular suits must be wagons, not engines');
  }
  assert.equal(palette.black,'#1c2025');
  assert.notEqual(palette.white,palette.gray);
@@ -94,12 +94,12 @@ test('static SVG is served safely with right MIME and traversal returns 404',asy
  response=await fetch(base+'/privacy.html');assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/text\/html/);
  response=await fetch(base+'/privacy.css');assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/text\/css/);
  response=await fetch(base+'/does-not-exist.html');assert.equal(response.status,404);
- for(const file of ['/backend/server.js','/backend/maps.js','/backend/match-context.js','/game/compat/match-state.js','/backend/rules/europe-classic-v1.js','/game/maps/catalog.js','/shared/maps/europe-v1.js','/maps/europe-v2.js','/backend/public-assets.js','/backend/room-store.js','/shared/data.js','/frontend/app.js','/frontend/assets/cards/red.svg','/__proto__','/constructor','/account-auth.js','/account-seats.js','/supabase/002_identity.sql','/engine.js','/game/domain/payment.js','/game/queries/match-view.js','/game/queries/match-definition.js','/game/compat/replay-definition.js','/game/queries/authorized-views.js','/game/queries/replay-view.js','/game/application/history-queries.js','/game/compat/legacy-authorized-views.js','/game/application/player-action.js','/game/application/automatic-play.js','/game/application/checkpoint.js','/game/application/room-stage.js','/game/infrastructure/checkpoint-committer.js','/game/infrastructure/command-fingerprint.js','/game/compat/legacy-automatic-play.js','/match-archive.js','/package.json','/.env','/room-state.json']) assert.equal((await fetch(base+file)).status,404);
+ for(const file of ['/backend/server.js','/backend/maps.js','/backend/match-context.js','/game/compat/match-state.js','/backend/rules/europe-classic-v1.js','/game/maps/catalog.js','/shared/maps/europe-v1.js','/maps/europe-v2.js','/backend/public-assets.js','/backend/room-store.js','/shared/data.js','/frontend/app.js','/frontend/assets/cards/red.svg','/__proto__','/constructor','/account-auth.js','/account-seats.js','/supabase/002_identity.sql','/engine.js','/game/domain/payment.js','/game/queries/match-view.js','/game/queries/match-definition.js','/game/compat/replay-definition.js','/game/queries/authorized-views.js','/game/queries/replay-view.js','/game/application/history-queries.js','/game/compat/legacy-authorized-views.js','/game/application/player-action.js','/game/application/automatic-play.js','/game/application/checkpoint.js','/game/application/room-stage.js','/game/infrastructure/checkpoint-committer.js','/game/infrastructure/command-fingerprint.js','/game/compat/legacy-automatic-play.js','/match-archive.js','/package.json','/.env','/room-state.json','/hippie-model.mjs','/inactive/midsommar/model.mjs','/frontend/inactive/midsommar/model.mjs']) assert.equal((await fetch(base+file)).status,404);
  response=await fetch(base+'/practice-bot.js');assert.equal(response.status,404);
  response=await fetch(base+'/practice-planner.js');assert.equal(response.status,404);
  response=await fetch(base+'/practice-tactics.js');assert.equal(response.status,404);
  response=await fetch(base+'/practice-search.js');assert.equal(response.status,404);
- for(const file of ['/board-3d.js','/wagon-renderer.js','/wagon-preview.js','/wagon-models.mjs','/hippie-model.mjs','/hippie-geometry.mjs','/hippie-hair.mjs','/wagon-people.mjs','/board-camera.js','/vendor/three.module.js','/vendor/three.core.js']) {
+ for(const file of ['/board-3d.js','/wagon-renderer.js','/wagon-preview.js','/wagon-models.mjs','/wagon-people.mjs','/board-camera.js','/vendor/three.module.js','/vendor/three.core.js']) {
   response=await fetch(base+file);assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/javascript/);
   assert.ok((await response.text()).length>100);
  }

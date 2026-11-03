@@ -145,7 +145,7 @@ let browser;
     await choose('#458ad4'); await choose('#d45748');
     await page.locator('#wagonPreview').scrollIntoViewIfNeeded(); await frames();
     assert.deepEqual(await page.locator('#wagonPreview').screenshot(), before, 'returning to a color preserves its example appearances');
-    report.checks.push('All 21 families reuse the compact canvas, stay stable on return and do not redraw continuously');
+    report.checks.push('All 20 families reuse the compact canvas, stay stable on return and do not redraw continuously');
 
     await page.evaluate(() => I18n.select('en')); await page.reload();
     await page.waitForFunction(() => !!wagonPreview);

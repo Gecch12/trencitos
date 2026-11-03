@@ -46,6 +46,14 @@ jobs:
         env:
           QA_OUT: .qa/ci/draw-feedback
         run: node tests/browser-draw-feedback.cjs
+      - name: Check public card motions and market history
+        env:
+          QA_OUT: .qa/ci/card-ui
+        run: node tests/browser-card-ui.cjs
+      - name: Check automatic account seat recovery
+        env:
+          QA_OUT: .qa/ci/account-resume
+        run: node tests/browser-account-resume.cjs
       - name: Keep browser evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

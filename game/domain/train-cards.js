@@ -8,6 +8,7 @@ const workingCopy = state => ({ piles: { deck: [...state.deck], discard: [...sta
 function recycle(plan, random) {
   const piles = plan.piles;
   if (!piles.discard.length) return;
+  plan.sequence?.push({ type:"recycled", data:{ count:piles.discard.length } });
   piles.deck = shuffle([...piles.deck, ...piles.discard], random);
   piles.discard = [];plan.recycled = true;
 }
@@ -70,6 +71,7 @@ function refill(plan, { rules, random }) {
     piles.face = shuffle(piles.face, random);
   }
   plan.refresh = { before, after: [...piles.face] };
+  plan.sequence?.push({ type:"market_refresh", data:plan.refresh });
 }
 
 function refillMarket(state, context) {
@@ -88,11 +90,14 @@ function decideTrainDraw(state, { index }, context) {
   if (index >= 0 && state.face[index] === "wild" && state.drawCount > 0)
     return { ok: false, error: { code: "VISIBLE_WILD_AFTER_FIRST_DRAW" } };
   const plan = workingCopy(state), { piles } = plan;
+  plan.sequence = [];
   const card = index === -1 ? take(plan, context.random) : piles.face[index];
   if (!card) return { ok: false, error: { code: "NO_TRAIN_CARDS" } };
+  plan.sequence.push({ type:"draw", data:{ index, color:card } });
   if (index >= 0) {
     const replacement = take(plan, context.random);
     if (replacement) piles.face[index] = replacement;else piles.face.splice(index, 1);
+    plan.sequence.push({ type:"market_refill", data:{ index, color:replacement } });
     refill(plan, context);
   }
   const drawCount = state.drawCount + 1;

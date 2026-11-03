@@ -4,7 +4,7 @@ const E=require('../backend/engine');
 const {createPlayerActionHandler}=require('../game/application/player-action');
 const {fingerprintAction}=require('../game/infrastructure/command-fingerprint');
 function fixture(){
- const game=E.newGame(['A','B'],0,1000);game.phase='play';game.players.forEach(p=>{p.pending=[];p.tickets=[];});
+ const game=E.newGame(['A','B'],0,1000);game.phase='play';game.logs=[];game.history=[];game.events=[];game.eventSerial=0;game.players.forEach(p=>{p.pending=[];p.tickets=[];});
  E.ensureTiming(game,1000);
  game.face=['red','blue','green','white','yellow'];game.deck=['orange','black','purple','blue'];game.discard=[];
  const room={game,revision:10,members:[{},{}],practice:false},context={now:1000};
@@ -61,9 +61,14 @@ test('visible dependencies retain original slot identity, including depletion, a
  const h=fixture();h.room.game.face=['wild','wild','red','blue','green'];h.room.game.deck.push('wild');
  h.first.action.index=2;h.second.action.index=3;h.submit(h.room,0,h.first);
  assert.ok(h.room.game.events.some(e=>e.type==='market_refresh'));
+ const renewals=h.room.game.history.filter(entry=>entry.marketRefresh);
+ assert.equal(renewals.length,1);assert.deepEqual(renewals[0].marketRefresh.before,['wild','wild','wild','blue','green']);
+ assert.ok(renewals[0].id>h.room.game.history.find(entry=>entry.draw).id,'history records draw, then renewal');
+ for(const seat of [0,1,-1])assert.deepEqual(E.view(h.room.game,seat).history.find(entry=>entry.marketRefresh).marketRefresh,renewals[0].marketRefresh);
+
  assert.equal(h.submit(h.room,0,h.second).error.code,'DRAW_DEPENDENCY_CHANGED');
 });
-test('visible locomotives and third draws cannot be smuggled through the dependency',()=>{
+test('visible wildcards and third draws cannot be smuggled through the dependency',()=>{
  const f=fixture();f.room.game.face[0]='wild';f.submit(f.room,0,f.first);
  assert.equal(f.submit(f.room,0,{...f.second,action:{type:'draw_train',index:0}}).error.code,'DRAW_DEPENDENCY_CHANGED');
  assert.equal(f.submit(f.room,0,f.second).status,'accepted');

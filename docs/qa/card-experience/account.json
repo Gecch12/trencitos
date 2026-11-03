@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Login preserves target room, automatically recovers the owning seat and releases the off-turn replacement bot",
+    "Authenticated device without local seat credentials recovers automatically; previous device stops; reload does not rotate access",
+    "Explicit take-back recovers a rotated credential without automatic session ping-pong",
+    "Guest cannot automatically acquire the account seat; white is absent from the selector"
+  ],
+  "errors": [],
+  "passed": true
+}

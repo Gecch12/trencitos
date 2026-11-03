@@ -46,3 +46,13 @@ test('hand previews contain only known colors or unknown backs, never double cou
     assert.deepEqual(Draw.pending({...after,...changed},first,queued),[]);
   assert.deepEqual(game,before);
 });
+
+test('two visible wildcards require seeing a visible replacement before choosing again',()=>{
+ const game={...view(),face:['wild','wild','red','green','blue']};
+ const visible=Draw.create(game,0,2),blind=Draw.create(game,0,-1);
+ assert.equal(Draw.canQueue(visible,game,3),false);
+ assert.equal(Draw.canQueue(visible,game,-1),false);
+ assert.equal(Draw.canQueue(blind,game,-1),true);
+ const after=next(visible,{face:['wild','wild','yellow','green','blue']});
+ assert.ok(Draw.create(after,0,3),'replacement settled: second choice is available');
+});

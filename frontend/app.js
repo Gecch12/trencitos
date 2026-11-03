@@ -10,7 +10,7 @@ const N = {
   white: I18n.t("Blanco"),
   orange: I18n.t("Naranja"),
   purple: I18n.t("Morado"),
-  wild: I18n.t("Locomotora"),
+  wild: I18n.t("Comodín"),
 };
 // Keep decoded public artwork for this page. HTTP assets are no-store, so a
 // disposable preload alone cannot guarantee a new color paints without a fetch.
@@ -90,6 +90,7 @@ function useMatchDefinition(view, definition, options) {
   try { next = presentationResolver.resolve(view, definition, options); }
   catch (failure) {
     cancelConstruction(); cancelTunnelReveal(); cancelCardFlights(); stopSounds(); closeMapMenu();
+    disposeTicketMap(); $("tunnelBoardNotice").hidden = true;
     board3D?.dispose(); board3D = null; matchContext = null; game = null;
     $("board").replaceChildren(); $("game").classList.add("hidden");
     $("dialog").innerHTML = `<h2>${I18n.t("Mapa no disponible")}</h2><p>${escapeHTML(I18n.t(failure.message))}</p><button id="unsupportedMapHome">${I18n.t("Volver al inicio")}</button>`;
@@ -98,7 +99,8 @@ function useMatchDefinition(view, definition, options) {
     throw failure;
   }
   if (next === matchContext) return;
-  cancelConstruction(); cancelTunnelReveal(); closeMapMenu();
+  cancelConstruction(); cancelTunnelReveal(); closeMapMenu(); disposeTicketMap();
+  ticketMapCameraKey = null; ticketPlans.clear(); dismissedTunnelId = observedTunnelId = null;
   board3D?.dispose(); board3D = null; board3DFailed = false;
   $("mapscroll").classList.remove("board-ready");
   matchContext = next; boardMap = next.layout; gameRules = next.rules; MAP_GEOMETRY = next.network;
@@ -194,6 +196,7 @@ let displayedHistoryKey = null;
 let hoveredDestination = null, allDestinationsVisible = false;
 let historyFollowing = true, lastDrawId = null;
 let marketRefresh = null;
+const pendingMarketRefreshes = [];
 let lastEffectId = null, serverOffset = 0, seenOfferId = null;
 let waitingForGameStart = false;
 let retainedVisible = new Set();
@@ -205,6 +208,11 @@ const constructionBusy=()=>!replayMode&&!!game?.construction&&Date.now()+serverO
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 let uiDialog = null, dialogReturnFocus = null, buildTarget = null, buildSubmitting = false;
 let tunnelReveal = null;
+let dismissedTunnelId = null, observedTunnelId = null;
+let ticketMapView = null, ticketMapLoadingNode = null, ticketMapCamera = null, ticketMapCameraKey = null;
+let pinnedTicket = null, ticketPlans = new Map();
+function disposeTicketMap() { ticketMapView?.dispose(); ticketMapView = null; ticketMapLoadingNode = null; }
+
 let resultsSeen = false, resultMapSelection = null;
 const expandedResults = new Set();
 const resultViews = new Map();
@@ -215,6 +223,11 @@ let pendingChoiceKey = null,
   ticketChoices = new Set(),
   hoveredTicket = null,
   desiredRoom = new URLSearchParams(location.search).get("room") || "";
+if (new URLSearchParams(location.search).get('auth') === 'ok') {
+  const returnRoom = sessionStorage.getItem('rr-account-return-room');
+  sessionStorage.removeItem('rr-account-return-room');
+  if (!desiredRoom && LobbyUI.isJoinCode(returnRoom)) desiredRoom = returnRoom;
+}
 desiredRoom = desiredRoom.trim().toUpperCase();
 $("code").value = desiredRoom;
 if (LobbyUI.isJoinCode(desiredRoom) && localStorage.getItem(identityKey(desiredRoom))) attempted = true;
@@ -278,7 +291,9 @@ function identityKey(code) {
 function resetToLobby(message = "", preserveIdentity = false) {
   pendingRoomColor = colorRequest = null;
   message = I18n.t(message);
-  cancelTunnelReveal();
+  cancelTunnelReveal(); disposeTicketMap();
+  board3D?.setTunnelCards(null, cardArtwork); $("tunnelBoardNotice").hidden = true;
+  observedTunnelId = dismissedTunnelId = null;
   if (!spectating && !preserveIdentity && (room || desiredRoom)) localStorage.removeItem(identityKey(room || desiredRoom));
   spectating = false; desiredWatch = ''; roomCapacity = 5;
   room = desiredRoom = token = "";
@@ -337,28 +352,44 @@ function resetToLobby(message = "", preserveIdentity = false) {
   shell?.reset();
   account?.listRooms().catch(() => {});
 }
+const resumedRooms = new Set();
+let resolvingJoin = false;
+function syncRecoveryControls() {
+  $("privateSession").hidden = spectating || practiceMode || !sessionSupported || !!account?.ownsCurrentSeat();
+}
+async function joinDesiredRoom(automatic = false) {
+  if (resolvingJoin || sessionReplaced || !desiredRoom) return;
+  resolvingJoin = true;
+  const code = desiredRoom, connection = sock;
+  try {
+    let credential = room === code && token ? token : incomingRecovery || localStorage.getItem(identityKey(code));
+    if (!automatic || !resumedRooms.has(code)) {
+      const recovered = await account.resumeSeat(code,credential);
+      resumedRooms.add(code);
+      if (recovered) { credential = recovered.token; incomingRecovery = credential; attempted = true; }
+    }
+    if (connection !== sock || code !== desiredRoom || sessionReplaced || sock.readyState !== WebSocket.OPEN) return;
+    if (automatic && !attempted) return;
+    send({type:'join',code,token:credential || undefined,name:$("nickname").value,color:LobbyUI.freeColor([],preferredColor)});
+  } catch (failure) { homeBusy = false;syncHomeAvailability();error(failure.message); }
+  finally {
+    resolvingJoin = false;
+    if (connection !== sock && sock?.readyState === WebSocket.OPEN && !sessionReplaced) joinDesiredRoom(automatic);
+  }
+}
 function connect() {
   if (sessionReplaced) return;
   const proto = location.protocol === "https:" ? "wss:" : "ws:";
   sock = new WebSocket(proto + "//" + location.host + "/socket");
   status(I18n.t("Conectando…"));
-  sock.onopen = () => {
+  sock.onopen = async () => {
     resendPending = true;
-    lastDrawId = null; // The reconnect snapshot is not a new draw.
+    lastDrawId = null;
     lastEffectId = null;
     status(I18n.t("● Conectado"));
     send({type:'list_rooms',compactMessages:2});
     if (desiredWatch) send({type:'spectate',code:desiredWatch});
-    else if (attempted && desiredRoom) {
-      let t = incomingRecovery || localStorage.getItem(identityKey(desiredRoom));
-      send({
-        type: "join",
-        code: desiredRoom,
-        token: t || undefined,
-        name: $("nickname").value,
-        color: LobbyUI.freeColor([], preferredColor),
-      });
-    }
+    else if (desiredRoom) await joinDesiredRoom(true);
   };
   const receive = m => {
     if (m.type === 'directory') { shell?.receiveDirectory(m); return; }
@@ -471,7 +502,7 @@ function connect() {
       sessionSupported = m.sessionVersion >= 1;
       drawFeedbackSupported = m.drawFeedbackVersion === 1;
       drawPipelineSupported = m.drawPipelineVersion === 1;
-      $("privateSession").hidden = spectating || practiceMode || !sessionSupported;
+      syncRecoveryControls();
       $("leaveRoom").hidden = spectating;
       $("reclaimControl").classList.toggle("hidden", !members[seat]?.autopilot);
       $("reclaimControl").disabled = !!members[seat]?.reclaim;
@@ -690,13 +721,7 @@ $("homeJoin").onsubmit = event => {
   if (!LobbyUI.isJoinCode(desiredRoom)) { homeCodeError("join", I18n.t("Introduce un código válido de 6 a 10 caracteres.")); $("code").focus(); return; }
   attempted = true;
   homeBusy = true; syncHomeAvailability();
-  send({
-    type: "join",
-    code: desiredRoom,
-    token: localStorage.getItem(identityKey(desiredRoom)) || undefined,
-    name: $("nickname").value,
-    color: LobbyUI.freeColor([], preferredColor),
-  });
+  joinDesiredRoom();
 };
 $("start").onclick = () =>
   send({ type: "start" });
@@ -723,6 +748,7 @@ function notice(message, action) {
 }
 $("takeOver").onclick = () => {
   sessionReplaced = false; attempted = true; desiredRoom = room;
+  resumedRooms.delete(room);
   $("sessionNotice").classList.add("hidden"); connect();
 };
 $("retrySave").onclick = () => send({ type: "retry_save" });
@@ -842,25 +868,47 @@ function renderHand() {
   const groups = colors.map(color => ({ color,
     confirmed: confirmed.filter(c => c === color).length,
     pending: pending.filter(draw => draw.color === color).length,
+    arriving: [...drawPresentations.values()].some(draw => !draw.landed && !draw.cancelled && draw.flight?.landing && (draw.event?.color || draw.intent.color) === color),
   }));
   const hand = $("hand"), key = JSON.stringify([I18n.language, groups]);
   if (hand._cardsKey !== key) {
+    const before = new Map([...hand.querySelectorAll('.traincard')].map(card => [card, card.getBoundingClientRect()]));
+    for (const card of before.keys()) { card._layoutMotion?.cancel(); card._layoutMotion = null; }
     hand._cardsKey = key;
-    hand.replaceChildren();
+    const kept = new Set();
     for (const group of groups) {
       const count = group.confirmed + group.pending;
-      if (!count) continue;
-      const card = colorCard(group.color, count, null, false);
+      if (!count && !group.arriving) continue;
+      let card = hand.querySelector(`.suit-${group.color}`);
+      if (!card) card = colorCard(group.color, count, null, false);
+      const label = I18n.t`${N[group.color]}: ${count} carta${count === 1 ? "" : "s"}`;
+      card.querySelector('img').alt = N[group.color];
+      card.querySelector('.cardcount').lastChild.textContent = String(count);
+      card.title = `${N[group.color]} · ${count}`;
+      card.setAttribute('aria-label', label);
       card.classList.toggle("is-pending", group.pending > 0);
+      card.classList.toggle('is-arriving', !count);
+      if (!count) card.setAttribute('aria-hidden','true'); else card.removeAttribute('aria-hidden');
+      card.setAttribute('aria-busy', String(group.pending > 0));
       if (group.pending) {
-        card.setAttribute("aria-busy", "true");
-        const label = I18n.t`${group.pending} carta(s) pendiente(s) de confirmación`;
-        card.title = `${card.title} · ${label}`;
-        card.setAttribute("aria-label", `${card.getAttribute("aria-label")} · ${label}`);
+        const pendingLabel = I18n.t`${group.pending} carta(s) pendiente(s) de confirmación`;
+        card.title += ` · ${pendingLabel}`;
+        card.setAttribute('aria-label', `${label} · ${pendingLabel}`);
       }
-      hand.appendChild(card);
+      kept.add(card); hand.appendChild(card);
     }
+    for (const child of [...hand.children]) if (!kept.has(child)) child.remove();
     if (!hand.children.length) hand.innerHTML = I18n.t('<span class="smallmuted">Aún no tienes cartas de tren.</span>');
+    layoutHand();
+    if (!reducedMotion.matches && !document.hidden) for (const card of kept) {
+      const old = before.get(card), rect = card.getBoundingClientRect();
+      if (!rect.width) continue;
+      const frames = old ? [
+        {transform:`translate(${old.x-rect.x}px,${old.y-rect.y}px) scale(${old.width/rect.width},${old.height/rect.height})`},
+        {transform:'none'},
+      ] : [{opacity:0,transform:'translateY(8px) scale(.94)'},{opacity:1,transform:'none'}];
+      card._layoutMotion = card.animate(frames,{duration:230,easing:'cubic-bezier(.2,.7,.2,1)'});
+    }
   }
   const count = confirmed.length + pending.length;
   $("handCount").textContent = I18n.t`${count} cartas`;
@@ -871,14 +919,14 @@ function renderHand() {
     ownMetric.querySelector("strong").textContent = count;
     ownMetric.title = label; ownMetric.setAttribute("aria-label", label);
     const player = game.players[seat];
-    ownMetric.closest("[data-player]").setAttribute("aria-label", I18n.t`${player.name}. ${game.result?.find(r => r.seat === seat)?.score ?? player.score} puntos, ${count} cartas, ${player.trains} vagones, ${player.stations} estaciones. Enfoca para resaltar sus rutas.`);
+    ownMetric.closest("[data-player]").setAttribute("aria-label", I18n.t`${player.name}. ${playerScore(seat)} puntos, ${count} cartas, ${player.trains} vagones, ${player.stations} estaciones. Enfoca para resaltar sus rutas.`);
   }
   layoutHand();
   updateCompactPlayer();
 }
-function playerAvatar(index, compact = false) {
+function playerAvatar(index, compact = false, actor = null) {
   const member = members[index];
-  if (member?.bot || member?.autopilot) return `<span class="player-avatar is-bot${compact ? " history-avatar" : ""}" aria-hidden="true">${ShellIcons.svg('bot')}</span>`;
+  if (actor===null ? member?.bot || member?.autopilot : ['bot','replacement'].includes(actor)) return `<span class="player-avatar is-bot${compact ? " history-avatar" : ""}" aria-hidden="true">${ShellIcons.svg('bot')}</span>`;
   return `<span class="player-avatar${compact ? " history-avatar" : ""}" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M7 27v-4a9 9 0 0 1 18 0v4Z"/></svg></span>`;
 }
 function render() {
@@ -889,19 +937,27 @@ function render() {
   $("lobby").classList.add("hidden");
   $("game").classList.remove("hidden");
   renderPracticeControls();
-  $("serverWarning").classList.toggle("hidden", game.uiVersion >= 9 && sessionSupported);
+  $("serverWarning").classList.toggle("hidden", game.uiVersion >= 10 && sessionSupported);
   const active = amIUp();
+  const scoreOpen=$("scores").querySelector(".live-score-details")?.open;
   const previousFocus = document.activeElement.closest("[data-player]")?.dataset.player;
   const previousHover = $("scores").querySelector(".scorebadge:hover")?.dataset.player;
   $("scores").innerHTML = game.players
     .map(
       (x, i) =>
-        I18n.t`<div class="scorebadge ${i === game.current && ["play", "tunnel"].includes(game.phase) ? "active" : ""}" data-player="${i}" tabindex="0" aria-label="${escapeHTML(x.name)}. ${game.result?.find(r => r.seat === i)?.score ?? x.score} puntos, ${x.handCount ?? "—"} cartas, ${x.trains} vagones, ${x.stations} estaciones. Enfoca para resaltar sus rutas.">
+        I18n.t`<div class="scorebadge ${i === game.current && ["play", "tunnel"].includes(game.phase) ? "active" : ""}" data-player="${i}" tabindex="0" aria-label="${escapeHTML(x.name)}. ${playerScore(i)} puntos, ${x.handCount ?? "—"} cartas, ${x.trains} vagones, ${x.stations} estaciones. Enfoca para resaltar sus rutas.">
           <div class="player-heading">${playerAvatar(i)}<div class="player-details"><b title="${escapeHTML(x.name)}">${escapeHTML(x.name)}</b><div class="player-status"><span class="player-turn-tag">EN TURNO</span><span class="player-state">${[i === seat ? I18n.t("Tú") : "", game.phase === "initial" ? (x.initialReady ? I18n.t("✓ Listo") : I18n.t("Eligiendo billetes")) : ""].filter(Boolean).join(" · ")}</span></div></div></div>
-          <div class="player-metrics">${playerMetric("points", I18n.t("Puntos"), game.result?.find(r => r.seat === i)?.score ?? x.score)}${playerMetric("cards", I18n.t("Cartas en mano"), x.handCount ?? "—")}${playerMetric("trains", I18n.t("Vagones"), x.trains)}${playerMetric("stations", I18n.t("Estaciones"), x.stations)}</div>
+          <div class="player-metrics">${playerMetric("points", I18n.t(i===seat?"Puntos propios":"Puntos públicos"), playerScore(i))}${playerMetric("cards", I18n.t("Cartas en mano"), x.handCount ?? "—")}${playerMetric("trains", I18n.t("Vagones"), x.trains)}${playerMetric("stations", I18n.t("Estaciones"), x.stations)}</div>${scoreExtras(i)}
         </div>`,
     )
     .join("");
+  const scoreDetails=$("scores").querySelector('.live-score-details');
+  if(scoreDetails)scoreDetails.addEventListener('toggle',()=>{
+    if(!scoreDetails.open||compactMedia.matches)return;
+    const anchor=scoreDetails.getBoundingClientRect(),panel=scoreDetails.querySelector('dl');
+    panel.style.top=`${Math.max(8,anchor.top-panel.getBoundingClientRect().height-8)}px`;
+  });
+  if(scoreOpen&&$("scores").querySelector(".live-score-details"))$("scores").querySelector(".live-score-details").open=true;
   hoveredPlayer = previousHover === undefined ? null : +previousHover;
   focusedPlayer = previousFocus === undefined ? null : +previousFocus;
   [...$("scores").children].forEach((badge, i) => {
@@ -911,11 +967,13 @@ function render() {
     badge.addEventListener("focus", () => { focusedPlayer = i; highlightPlayerRoutes(); });
     badge.addEventListener("blur", () => { focusedPlayer = null; highlightPlayerRoutes(); });
     badge.setAttribute("role", "button");
-    badge.onclick = () => {
+    badge.onclick = event => {
+      if(event.target.closest(".live-score-details"))return;
       if (compactMedia.matches) { compactPlayer = i; updateCompactPlayer(); }
       else { focusedPlayer = i; highlightPlayerRoutes(); }
     };
     badge.addEventListener("keydown", event => {
+      if(event.target.closest(".live-score-details"))return;
       if (event.key === "Enter" || event.key === " ") { event.preventDefault(); badge.click(); }
     });
   });
@@ -950,6 +1008,7 @@ function render() {
   renderHistory();
   renderBoard();
   renderDialog();
+  if ($("overlay").classList.contains("hidden")) disposeTicketMap();
   applyZoom();
   updateCompactStatus();
   updateCompactPlayer();
@@ -982,6 +1041,7 @@ function updateClocks() {
   }
   updateClockSound(now);
   updateSharedTunnel();
+  syncTunnelBoard();
 }
 setInterval(updateClocks, 250);
 $("pendingTickets").onclick = () => { if (game?.ticketOffer) { uiDialog = "tickets"; showTicketDialog(game.ticketOffer.tickets, Math.min(game.ticketOffer.tickets.length, gameRules.destinations.offerMinimum)); } };
@@ -1003,8 +1063,31 @@ function renderMarket() {
   $("drawblind").disabled =
     !drawAllowed(-1);
 }
+function renderTurnHistory() {
+  const list=$("history"),entries=$("historyEntries"),rows=TurnHistory.displayRows(game.turnHistory);
+  const key=JSON.stringify(rows);if(displayedHistoryKey===key)return;displayedHistoryKey=key;
+  const following=historyFollowing,top=list.getBoundingClientRect().top;
+  const anchor=[...entries.children].find(row=>row.getBoundingClientRect().bottom>top);
+  const anchorId=anchor?.dataset.historyId,offset=anchor?anchor.getBoundingClientRect().top-top:0;
+  const existing=new Map([...entries.children].map(node=>[node.dataset.historyId,node]));
+  const nodes=rows.map(row=>{const signature=JSON.stringify(row),old=existing.get(row.id);
+    if(old?._signature===signature)return old;
+    const node=TurnHistory.render(row,{players:game.players,city:cityName});
+    if(Number.isInteger(row.seat)&&game.players[row.seat]){
+      node.insertAdjacentHTML('afterbegin',playerAvatar(row.seat,true,row.events[0]?.actor||'player'));
+      applyPlayerAppearance(node,game.players[row.seat].color);node.dataset.actor=row.seat;
+    }
+    node._signature=signature;return node;});
+  entries.replaceChildren(...nodes);
+  if(game.historyPartial){const partial=document.createElement('p');partial.className='history-empty';partial.textContent=I18n.t('Registro parcial: esta partida comenzó con una versión anterior.');entries.prepend(partial);}
+  displayedLogs=rows.map(row=>row.id);
+  if(following)list.scrollTop=list.scrollHeight;
+  else {const node=nodes.find(n=>n.dataset.historyId===anchorId);if(node)list.scrollTop+=node.getBoundingClientRect().top-top-offset;$("historyLatest").classList.remove('hidden');}
+  updateHistoryScroll();
+}
 function renderHistory() {
   if (replayMode) return;
+  if (game.turnHistory) return renderTurnHistory();
   const logs = game.logs, list = $("history"), entries = $("historyEntries");
   const history = game.history || logs.map(text => ({ text, seat: null }));
   const historyKey = JSON.stringify(history);
@@ -1028,12 +1111,24 @@ function renderHistory() {
       text.className = "history-draw";
       text.textContent = I18n.t`${player.name} robó` + " ";
       const card = document.createElement("img");
-      const color = N[entry.draw.color] ? entry.draw.color : "back";
+      const color = entry.draw.index >= 0 && N[entry.draw.color] ? entry.draw.color : "back";
       card.src = `assets/cards/${color}.svg`; card.draggable = false;
       card.alt = color === "back" ? I18n.t("Carta oculta del mazo") : N[color];
       card.title = card.alt;
       text.appendChild(card);
-    } else text.textContent = entry.message ? I18n.format(entry.message) : I18n.t(entry.text);
+    } else {
+      text.textContent = entry.message ? I18n.format(entry.message) : I18n.t(entry.text);
+      if (entry.marketRefresh) {
+        row.classList.add('history-market-refresh');
+        const cards = document.createElement('span'); cards.className = 'history-draw';
+        cards.setAttribute('aria-label', I18n.t('Cartas retiradas de la mesa'));
+        for (const color of entry.marketRefresh.before) {
+          const image = document.createElement('img'); image.src = cardImageSource(color);
+          image.alt = N[color]; image.title = N[color]; cards.appendChild(image);
+        }
+        text.appendChild(cards);
+      }
+    }
     row.appendChild(text);
     return row;
   }));
@@ -1110,22 +1205,26 @@ function prepareEffects(next) {
     return { ...e, source: source?.getBoundingClientRect() };
   });
 }
+let observedDrawEnd = 0, observedDrawLaunch = 0;
 function playEffects(events) {
-  let drawDelay = 0;
   for (const event of events) {
     if (event.type === "draw") {
       if (event.seat === seat && handledDrawEvents.has(event.id)) continue;
+      const now = performance.now();
+      const followsRenewal = marketRefresh && !events.some(e => e.type === 'market_refresh' && e.id === marketRefresh.id);
+      const drawDelay = reducedMotion.matches ? 0 : Math.max(0, observedDrawLaunch + 320 - now, followsRenewal ? (marketRefresh.until || now) - now : 0);
+      observedDrawLaunch = now + drawDelay; observedDrawEnd = observedDrawLaunch + 680;
       const timer = setTimeout(() => {
         effectTimers.delete(timer);
         if (document.hidden || game?.phase === "finished") return;
         playSound("card");
         if (!reducedMotion.matches && event.source?.width) animateCardFlight(event);
       }, drawDelay);
-      effectTimers.add(timer); drawDelay += 120;
+      effectTimers.add(timer);
     } else if (event.type === "market_refresh") {
       // The renewal is public even when the compact market panel is closed.
-      playSound("shuffle");
-      if (event.id === marketRefresh?.id) animateMarketRefresh();
+      if (event.id !== marketRefresh?.id && !pendingMarketRefreshes.some(refresh => refresh.id === event.id)) playSound("shuffle");
+      // Visible renewal sound starts with its gesture below.
     }
     else if (event.type === "tickets") playSound("card");
     else if (event.type === "build" && !event.deferredForTunnel) animateConstruction(event);
@@ -1134,6 +1233,7 @@ function playEffects(events) {
       effectTimers.add(timer);
     }
   }
+  if (events.some(event => event.type === 'market_refresh' && event.id === marketRefresh?.id)) animateMarketRefresh();
 }
 // Small original synthesized effects: no external audio, tracking or downloads.
 let soundContext = null, muted = localStorage.getItem("rr-muted") === "true";
@@ -1268,20 +1368,29 @@ function playSound(kind) {
   soundNodes.add(source); source.onended = () => { soundNodes.delete(source); source.disconnect(); filter.disconnect(); gain.disconnect(); };
 }
 function prepareMarketRefresh(events) {
-  const same = cards => JSON.stringify(cards) === JSON.stringify(game.face);
-  if (marketRefresh && (!same(marketRefresh.after) || game.phase !== "play")) cancelMarketRefresh(false);
-  const event = events.findLast(e => e.type === "market_refresh");
-  if (!event || !same(event.after) || game.phase !== "play" || document.hidden || !$("market").getBoundingClientRect().width) return;
-  cancelMarketRefresh(false);
-  marketRefresh = { ...event, layer: null, animations: [], timer: null };
+  if (game.phase !== 'play') { cancelMarketRefresh(false); return; }
+  if (document.hidden || !$("market").getBoundingClientRect().width) return;
+  // New authoritative states update underneath the presentation. They must not
+  // cut short a public renewal the player is still watching.
+  for (const event of events.filter(event => event.type === 'market_refresh')) {
+    if (marketRefresh) pendingMarketRefreshes.push(event);
+    else marketRefresh = { ...event, layer:null, animations:[], timer:null };
+  }
 }
-function cancelMarketRefresh(redraw = true) {
-  if (!marketRefresh) return;
+function cancelMarketRefresh(redraw = true, advance = false) {
   const current = marketRefresh; marketRefresh = null;
-  clearTimeout(current.timer);
-  current.animations.forEach(animation => animation.cancel()); current.layer?.remove();
+  if (current) {
+    clearTimeout(current.timer);clearTimeout(current.soundTimer);effectTimers.delete(current.soundTimer);
+    current.animations.forEach(animation => animation.cancel()); current.layer?.remove();
+  }
   $("market").classList.remove("market-refreshing");
-  if (redraw && game) renderMarket();
+  if (advance && game?.phase === 'play' && pendingMarketRefreshes.length) {
+    marketRefresh = {...pendingMarketRefreshes.shift(),layer:null,animations:[],timer:null};
+    renderMarket();animateMarketRefresh();
+  } else {
+    pendingMarketRefreshes.length = 0;
+    if (redraw && game) renderMarket();
+  }
 }
 function animateMarketRefresh() {
   const current = marketRefresh;
@@ -1292,7 +1401,15 @@ function animateMarketRefresh() {
   const layer = document.createElement("div"); layer.className = "market-refresh-layer";
   layer.setAttribute("role", "status"); layer.setAttribute("aria-label", I18n.t("Renovando las cartas de la mesa"));
   current.layer = layer; market.appendChild(layer);
-  const duration = reducedMotion.matches ? 120 : 420;
+  const duration = reducedMotion.matches ? 120 : 1200;
+  const delay = reducedMotion.matches ? 0 : Math.max(0, observedDrawEnd - performance.now(),
+    ...[...drawPresentations.values()].filter(draw => !draw.landed && !draw.cancelled).map(draw => Math.max(190, (draw.flight?.deadline || 0) - performance.now())));
+  current.until = performance.now() + delay + duration;
+  current.soundTimer = setTimeout(() => {
+    effectTimers.delete(current.soundTimer);
+    if (marketRefresh === current) playSound('shuffle');
+  }, delay + (reducedMotion.matches ? 0 : 180));
+  effectTimers.add(current.soundTimer);
   const card = (color, i) => {
     const rect = slots[i], image = document.createElement("img");
     image.src = `assets/cards/${color}.svg`; image.alt = ""; image.draggable = false;
@@ -1310,7 +1427,7 @@ function animateMarketRefresh() {
       {transform:gather,opacity:1,filter:"brightness(1)",offset:.43},
       {transform:intoDeck,opacity:0,offset:.6}, {transform:intoDeck,opacity:0,offset:1}
     ];
-    current.animations.push(image.animate(frames,{duration,fill:"forwards",easing:"ease-in-out"}));
+    current.animations.push(image.animate(frames,{duration,delay,fill:"both",easing:"ease-in-out"}));
   });
   current.after.forEach((color, i) => {
     const image = card(color, i), rect = slots[i], start = .56 + i * .035;
@@ -1319,9 +1436,9 @@ function animateMarketRefresh() {
       {transform:from,opacity:0,offset:0},{transform:from,opacity:0,offset:start},
       {transform:from,opacity:1,offset:start+.01},{transform:move(0,0),opacity:1,offset:start+.26},{transform:move(0,0),opacity:1,offset:1}
     ];
-    current.animations.push(image.animate(frames,{duration,fill:"forwards",easing:"ease-out"}));
+    current.animations.push(image.animate(frames,{duration,delay,fill:"both",easing:"ease-out"}));
   });
-  current.timer = setTimeout(() => { if (marketRefresh === current) cancelMarketRefresh(); }, duration);
+  current.timer = setTimeout(() => { if (marketRefresh === current) cancelMarketRefresh(true, true); }, delay + duration);
 }
 function removeCardFlight(flight) {
   if (!flight) return;
@@ -1360,9 +1477,23 @@ function startDrawFeedback(draw) {
   ], { duration: reducedMotion.matches ? 40 : 150, delay, easing:'ease-out', fill:'forwards' });
   const flight = { node, face, img, animations:[motion], motion, started, deadline:started + delay + 520 };
   cardFlights.add(flight);
-  motion.finished.then(() => { flight.pickedUp = true;landDrawFeedback(draw); }).catch(() => {});
+  motion.finished.then(() => { flight.pickedUp = true;approachDrawFeedback(draw);landDrawFeedback(draw); }).catch(() => {});
   flight.waitTimer = setTimeout(() => { if (!flight.landing && cardFlights.has(flight)) node.classList.add('draw-flight-waiting'); }, 850);
   playSound('card');return flight;
+}
+function approachDrawFeedback(draw) {
+  const flight = draw.flight;
+  if (draw.intent.index >= 0 || draw.event || !flight || !cardFlights.has(flight) || reducedMotion.matches) return;
+  const area = $("hand").getBoundingClientRect();
+  if (!area.width) return;
+  const from = getComputedStyle(flight.node).transform;
+  const dx = (area.x + area.width / 2 - parseFloat(flight.node.style.left) - parseFloat(flight.node.style.width)/2) * .62;
+  const dy = (area.y - parseFloat(flight.node.style.top) - parseFloat(flight.node.style.height)) * .62;
+  flight.motion.cancel();
+  flight.motion = flight.node.animate([{transform:from},{transform:`translate(${dx}px,${dy}px) scale(.9) rotate(-3deg)`}],
+    {duration:220,easing:'ease-out',fill:'forwards'});
+  flight.animations.push(flight.motion);
+  flight.node.dataset.approaching = 'true';
 }
 function finishDrawPresentation(draw) {
   draw.landed = true;removeCardFlight(draw.flight);
@@ -1382,8 +1513,14 @@ async function landDrawFeedback(draw) {
   if (draw.cancelled || !cardFlights.has(flight)) return;
   flight.landing = true;flight.node.classList.remove('draw-flight-waiting');
   flight.node.dataset.revealedColor = color;
+  renderHand();
   const area = $("hand").getBoundingClientRect();
-  let target = $("hand").querySelector(`.suit-${color}`)?.getBoundingClientRect() || area;
+  const targetCard = $("hand").querySelector(`.suit-${color}`);
+  const targetMotion = targetCard?._layoutMotion;
+  const targetTime = targetMotion?.currentTime;
+  if (targetMotion) targetMotion.currentTime = 230;
+  let target = targetCard?.getBoundingClientRect() || area;
+  if (targetMotion) targetMotion.currentTime = targetTime;
   if (compactMedia.matches && (!target.width || target.left < area.left || target.right > area.right ||
       target.top < area.top || target.bottom > area.bottom)) target = $("handCount").getBoundingClientRect();
   const node = flight.node, style = getComputedStyle(node), from = style.transform;
@@ -1391,7 +1528,7 @@ async function landDrawFeedback(draw) {
   const targetWidth = Math.min(width, target.width);
   const dx = target.x + target.width / 2 - parseFloat(node.style.left) - width / 2;
   const dy = target.y + target.height / 2 - parseFloat(node.style.top) - height / 2;
-  const duration = reducedMotion.matches ? 100 : Math.max(260, flight.deadline - performance.now());
+  const duration = reducedMotion.matches ? 100 : Math.max(reveal ? 190 : 160, flight.deadline - performance.now());
   flight.motion.cancel();
   const motion = node.animate(reducedMotion.matches ? [{opacity:1},{opacity:0}] : [
     { transform:from, opacity:1 },
@@ -1449,7 +1586,7 @@ function cancelCardFlights(preservePending = false) {
   cancelDrawFeedback(preservePending);
   cancelMarketRefresh();
   for (const timer of effectTimers) clearTimeout(timer);
-  effectTimers.clear();
+  effectTimers.clear(); observedDrawLaunch = observedDrawEnd = 0;
   for (const flight of [...cardFlights]) removeCardFlight(flight);
   cardFlights.clear();
 }
@@ -1483,14 +1620,15 @@ function animateCardFlight(event) {
   const scale = (own ? end.width : 24) / start.width;
   const motion = node.animate([
     { transform: "translate(0,0) scale(1)", opacity: 1 },
-    { transform: `translate(${dx * .52}px,${dy * .52 - 32}px) scale(1.04)`, offset: .5, opacity: 1 },
+    { transform: "translate(-28px,-22px) scale(.93) rotate(-5deg)", offset: .22, opacity: 1 },
+    { transform: "translate(-28px,-22px) scale(.93) rotate(-5deg)", offset: .44, opacity: 1 },
     { transform: `translate(${dx}px,${dy}px) scale(${scale})`, opacity: own ? 1 : .2 },
-  ], { duration: 560, easing: "cubic-bezier(.22,.65,.28,1)", fill: "forwards" });
+  ], { duration: 680, easing: "cubic-bezier(.22,.65,.28,1)", fill: "forwards" });
   const animations = [motion];
   if (reveal) animations.push(face.animate([
     { transform: "rotateY(0deg)" }, { transform: "rotateY(0deg)", offset: .18 },
     { transform: "rotateY(180deg)", offset: .65 }, { transform: "rotateY(180deg)" },
-  ], { duration: 560, fill: "forwards" }));
+  ], { duration: 680, fill: "forwards" }));
   const flight = { node, animations }; cardFlights.add(flight);
   motion.onfinish = () => {
     node.remove(); cardFlights.delete(flight);
@@ -1506,15 +1644,25 @@ function constructionTarget(event) {
 }
 function animateConstruction(event, speed=1) {
   if (board3D) {
-    clearTimeout(constructionFocusTimer);constructionFocus=event;syncBoard3D();
     const timing=GameTiming.construction,delay=reducedMotion.matches?0:timing.focusMs/speed,duration=reducedMotion.matches?0:timing.flightMs/speed;
-    const total=(timing.focusMs+timing.flightMs+timing.holdMs)/speed;
-    if(reducedMotion.matches||document.hidden||!board3D.animateConstruction(event,()=>{if(!document.hidden)playSound("build");},{delay,duration}))playSound("build");
+    clearTimeout(constructionFocusTimer);
+    if(reducedMotion.matches||document.hidden){constructionFocus=null;syncBoard3D();if(!document.hidden)playSound("build");return;}
+    constructionFocus={...event,transitionMs:delay};syncBoard3D();
+    const activeFocus=constructionFocus;
+    const restore=()=>{
+      if(constructionFocus!==activeFocus)return;
+      constructionFocusTimer=null;constructionFocus=null;
+      document.querySelectorAll('.construction-notice').forEach(n=>n.remove());
+      syncBoard3D(timing.restoreMs/speed);
+    };
+    if(!board3D.animateConstruction(event,()=>{
+      if(!document.hidden)playSound("build");
+      if(constructionFocus===activeFocus)constructionFocusTimer=setTimeout(restore,timing.holdMs/speed);
+    },{delay,duration,hideDuringDelay:true})){playSound("build");restore();return;}
     const target=constructionTarget(event)?.getBoundingClientRect(),area=$("mapscroll").getBoundingClientRect();
     if(target&&(target.right<area.left||target.left>area.right||target.bottom<area.top||target.top>area.bottom)){
       const notice=document.createElement('div');notice.className='construction-notice';notice.textContent=I18n.t('Construcción fuera de vista')+' · '+game.players[event.seat].name;$("mapscroll").append(notice);
     }
-    constructionFocusTimer=setTimeout(()=>{constructionFocus=null;document.querySelectorAll('.construction-notice').forEach(n=>n.remove());syncBoard3D();},total);
     return;
   }
   if (reducedMotion.matches || document.hidden || !constructionTarget(event)) { playSound("build"); return; }
@@ -1556,6 +1704,7 @@ function cancelConstruction() {
     clearTimeout(flight.timer); flight.animations.forEach(a => a.cancel()); flight.band?.style.removeProperty("opacity");
   }
   constructionFlights.clear();
+  syncBoard3D();
 }
 document.addEventListener("visibilitychange", () => { if (document.hidden) { cancelCardFlights(true); cancelConstruction(); cancelTunnelMotion(); stopSounds(); } else { updateSharedTunnel(); if (game) renderMarket(); } });
 reducedMotion.addEventListener("change", () => { if (reducedMotion.matches) cancelConstruction(); });
@@ -1565,7 +1714,8 @@ function layoutHand() {
   const cards = [...$("hand").querySelectorAll(".traincard")];
   if (!cards.length) return;
   if (compactMedia.matches) { cards.forEach(card => { card.style.marginRight = "0"; }); return; }
-  const width = cards[0].getBoundingClientRect().width;
+  // Layout uses the untransformed width while the previous positions animate.
+  const width = cards[0].offsetWidth;
   const available = $("hand").clientWidth - 12;
   const step = cards.length === 1 ? width : Math.min(width + 10, (available - width) / (cards.length - 1));
   cards.forEach((card, i) => { card.style.marginRight = i === cards.length - 1 ? "0" : `${step - width}px`; });
@@ -1588,6 +1738,19 @@ function renderDestinations() {
     $("ticketList").scrollTop = top;
   }
 }
+function playerScore(index) {
+  return game.result?.find(r=>r.seat===index)?.score ?? (index===seat?game.scoreProgress?.own?.score:null) ?? game.scoreProgress?.players[index]?.visible ?? game.players[index].score;
+}
+function scoreExtras(index) {
+  if(game.result||!game.scoreProgress)return '';
+  const bonus=game.scoreProgress.players[index]?.bonus||0,own=index===seat?game.scoreProgress.own:null;
+  const badge=bonus?`<span class="live-bonus" title="${I18n.t('Camino más largo provisional')}">★ +${bonus}</span>`:'';
+  if(!own)return badge;
+  return `${badge}<details class="live-score-details"><summary>${I18n.t('Tu puntuación')}</summary><dl>
+    <dt>${I18n.t('Construcción')}</dt><dd>${own.route}</dd><dt>${I18n.t('Destinos cumplidos · privados')}</dt><dd>+${own.completedPoints}</dd>
+    <dt>${I18n.t('Camino más largo provisional')}</dt><dd>+${own.bonus}</dd>${own.closingBonus!==own.bonus?`<dt>${I18n.t('Bono al cerrar sin vías')}</dt><dd>+${own.closingBonus}</dd>`:''}<dt>${I18n.t('Destinos pendientes')}</dt><dd>−${own.pendingPoints}</dd>
+    <dt>${I18n.t('Estaciones sin usar')}</dt><dd>+${own.stations}</dd><dt>${I18n.t('Si terminara ahora')}</dt><dd>${own.projected}</dd></dl></details>`;
+}
 function playerMetric(type, label, value) {
   const icons = {
     points: '<path d="M7 3h10v5a5 5 0 0 1-10 0ZM7 4H3v3a4 4 0 0 0 5 4m9-7h4v3a4 4 0 0 1-5 4M12 13v5m-4 2h8"/>',
@@ -1598,16 +1761,16 @@ function playerMetric(type, label, value) {
   return `<span class="player-metric" data-metric="${type}" title="${label}: ${value}" aria-label="${label}: ${value}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[type]}</svg><strong aria-hidden="true">${value}</strong></span>`;
 }
 function plural(n, word) {
-  return n + " " + I18n.t(word + (n === 1 ? "" : "s"));
+  return n + " " + I18n.t(word === "comodín" && n !== 1 ? "comodines" : word + (n === 1 ? "" : "s"));
 }
 function routeRequirementText(r) {
   const base = r.n - r.ferry;
   if (r.color === "gray") {
-    if (r.ferry) return `${base ? plural(base, "carta") + I18n.t(" de un mismo color + ") : ""}${plural(r.ferry, "locomotora")}`;
+    if (r.ferry) return `${base ? plural(base, "carta") + I18n.t(" de un mismo color + ") : ""}${plural(r.ferry, "comodín")}`;
     return I18n.t`${plural(r.n, "carta")} de un mismo color`;
   }
   const colorName = N[r.color].toLowerCase();
-  if (r.ferry) return `${base ? plural(base, "carta") + I18n.t(" de color ") + colorName + " + " : ""}${plural(r.ferry, "locomotora")}`;
+  if (r.ferry) return `${base ? plural(base, "carta") + I18n.t(" de color ") + colorName + " + " : ""}${plural(r.ferry, "comodín")}`;
   return I18n.t`${plural(r.n, "carta")} de color ${colorName}`;
 }
 function routeSummaryText(r) {
@@ -1658,18 +1821,34 @@ function drawFerryGlyph(el, parent) {
   }, g);
   for (const x of [-4, 4]) el("circle", { cx: x, cy: 3, r: 1.5 }, g);
 }
-function syncBoard3D() {
+let tunnelFocusRoute = null;
+function syncBoard3D(transitionMs = 0) {
   if (!board3D || !game) return;
   const requested = hoveredPlayer ?? focusedPlayer;
   const highlight = requested !== null && game.routes.some(r => r.owner === requested) ? requested : null;
+  const tunnelRoute = game.sharedTunnel?.routeId ?? null;
+  const tunnelChanged = tunnelRoute !== tunnelFocusRoute;
+  tunnelFocusRoute = tunnelRoute;
+  const active = constructionFocus || (tunnelRoute !== null ? { routeId: tunnelRoute } : null);
+  let spotlight = boardSpotlight;
+  if (active) {
+    const routes = new Set(spotlight?.routes || []), endpoints = new Set(spotlight?.endpoints || []);
+    if (highlight !== null && !spotlight) {
+      game.routes.filter(r => r.owner === highlight).forEach(r => routes.add(r.id));
+      game.players[highlight].placed.forEach(city => endpoints.add(city));
+    }
+    if (active.routeId !== undefined) routes.add(active.routeId);
+    if (active.city) endpoints.add(active.city);
+    spotlight = { ...spotlight, routes: [...routes], endpoints: [...endpoints],
+      activeRoutes: active.routeId === undefined ? [] : [active.routeId] };
+  }
   const focus = document.activeElement.closest?.("#board [data-route-id]");
   const cityFocus = document.activeElement.closest?.("#board [data-city]");
   board3D.update({ routes: game.routes.map(({ id, owner, color, tunnel, ferry, a, b }) => ({ id, owner, color, tunnel, ferry, a, b })),
     players: game.players.map(p => ({ color: GameUI.playerColor(p.color), placed: [...p.placed] })),
-    visualSeed: wagonSeed, hiddenRoute: null, highlight, spotlight: constructionFocus ? {
-      ...(boardSpotlight||{}),routes:[...new Set([...(boardSpotlight?.routes||[]),...(constructionFocus.routeId===undefined?[]:[constructionFocus.routeId])])],
-      endpoints:[...(boardSpotlight?.endpoints||[]),...(constructionFocus.city?[constructionFocus.city]:[])]
-    } : boardSpotlight,
+    visualSeed: wagonSeed, hiddenRoute: null, highlight, spotlight,
+    transitionMs: transitionMs || constructionFocus?.transitionMs || (tunnelChanged ?
+      (tunnelRoute === null ? GameTiming.construction.restoreMs : GameTiming.construction.focusMs) : 0),
     selectedRoute: selected ?? (focus ? routeIdFromDom(focus.dataset.routeId) : null), selectedCity: stationCity ?? cityFocus?.dataset.city ?? null,
     routeColors: C });
 }
@@ -1959,11 +2138,11 @@ function showBuildDialog() {
     <div id="paymentPreview" class="payment-preview build-payment" aria-live="polite"></div>
     ${options.length > 1 ? I18n.t`<details class="change-payment"><summary>Cambiar cartas</summary><div class="payment-controls">
       ${groups.length > 1 ? I18n.t`<fieldset class="payment-colors"><legend class="sr-only">Color de las cartas normales</legend><div class="payment-color-grid">${groups.map((g, i) => { const count = game.hand.filter(c => c === g.color).length, label = `${N[g.color]} · ${plural(count, "disponible")}`; return `<label class="payment-color" title="${escapeHTML(label)}"><input type="radio" name="buildColor" value="${g.color}" aria-label="${escapeHTML(label)}" ${i === 0 ? "checked" : ""}><img src="assets/cards/${g.color}.svg" alt="" draggable="false"><span class="payment-stock" aria-hidden="true">${count}</span></label>`; }).join("")}</div></fieldset>` : ""}
-      <div class="payment-wilds"><div class="wild-stock"><span class="payment-stock-card"><img src="assets/cards/wild.svg" alt="" draggable="false"><span class="payment-stock" aria-hidden="true">${game.hand.filter(c => c === "wild").length}</span></span><strong id="wildLabel">Locomotoras<span class="sr-only"> · ${plural(game.hand.filter(c => c === "wild").length, "disponible")}</span></strong></div>
-        <div class="wild-stepper" role="group" aria-labelledby="wildLabel" aria-describedby="wildHint"><button id="wildLess" type="button" aria-label="Usar una locomotora menos">−</button><output id="wildCount" aria-label="Locomotoras a utilizar">${chosen.wild}</output><button id="wildMore" type="button" aria-label="Usar una locomotora más">+</button></div>
+      <div class="payment-wilds"><div class="wild-stock"><span class="payment-stock-card"><img src="assets/cards/wild.svg" alt="" draggable="false"><span class="payment-stock" aria-hidden="true">${game.hand.filter(c => c === "wild").length}</span></span><strong id="wildLabel">Comodines<span class="sr-only"> · ${plural(game.hand.filter(c => c === "wild").length, "disponible")}</span></strong></div>
+        <div class="wild-stepper" role="group" aria-labelledby="wildLabel" aria-describedby="wildHint"><button id="wildLess" type="button" aria-label="Usar un comodín menos">−</button><output id="wildCount" aria-label="Comodines a utilizar">${chosen.wild}</output><button id="wildMore" type="button" aria-label="Usar un comodín más">+</button></div>
       </div><p id="wildHint" class="wild-hint"></p>
     </div></details>` : ""}
-    ${r?.tunnel ? "" : `<p class="build-note">${r?.ferry ? I18n.t`Incluye al menos ${r.ferry} locomotora(s) obligatoria(s) para este ferry.` : I18n.t("Pago sugerido: utiliza la menor cantidad posible de locomotoras.")}</p>`}
+    ${r?.tunnel ? "" : `<p class="build-note">${r?.ferry ? I18n.t`Comodines obligatorios para este ferry: ${r.ferry}.` : I18n.t("Pago sugerido: utiliza la menor cantidad posible de comodines.")}</p>`}
     </div>
     <div class="dialog-actions"><button id="confirmBuild" class="primary full">${r?.tunnel ? I18n.t("Revelar cartas del túnel") : I18n.t("Pagar y construir")}</button>
     <button id="cancelBuild" class="tertiary full">Cancelar</button></div>`, false, true);
@@ -1988,8 +2167,8 @@ function showBuildDialog() {
       $("wildLess").disabled = paymentIndex === 0;
       $("wildMore").disabled = paymentIndex === group.options.length - 1;
       const min = group.options[0].wild, max = group.options.at(-1).wild;
-      $("wildHint").textContent = chosen.regular === 0 ? I18n.t("Solo locomotoras: no gastarás cartas de color.")
-        : `${min === max ? I18n.t`Cantidad fija: ${min}` : I18n.t`Puedes usar de ${min} a ${max}`}.${r?.ferry ? I18n.t` Este ferry exige al menos ${r.ferry}.` : min ? I18n.t` Necesitas al menos ${min} para completar el pago.` : I18n.t(" Cada locomotora sustituye una carta de color.")}`;
+      $("wildHint").textContent = chosen.regular === 0 ? I18n.t("Solo comodines: no gastarás cartas de color.")
+        : `${min === max ? I18n.t`Cantidad fija: ${min}` : I18n.t`Puedes usar de ${min} a ${max}`}.${r?.ferry ? I18n.t` Este ferry exige al menos ${r.ferry}.` : min ? I18n.t` Necesitas al menos ${min} para completar el pago.` : I18n.t(" Cada comodín sustituye una carta de color.")}`;
     }
   };
   for (const input of document.querySelectorAll('[name="buildColor"]')) input.onchange = () => {
@@ -2022,9 +2201,11 @@ $("drawblind").onclick = () => act("draw_train", { index: -1 });
 $("drawtickets").onclick = () => act("draw_tickets");
 $("pass").onclick = () => act("pass");
 function showDialog(title, body, ticketDialog = false, dismissible = false) {
+  disposeTicketMap();
   resultMapCleanup?.(); resultMapCleanup = null;
   closeMapMenu();
   hoveredDestination = null;
+  $("overlay").onpointerdown = null;
   $("overlay").classList.remove("hidden");
   $("dialog").classList.toggle("ticket-dialog", ticketDialog);
   $("dialog").classList.remove("tunnel-dialog", "results-dialog", "build-dialog");
@@ -2043,8 +2224,10 @@ function showDialog(title, body, ticketDialog = false, dismissible = false) {
   updateDestinationSpotlight();
 }
 function closeOptionalDialog() {
-  if (!uiDialog || game?.sharedTunnel) return;
+  if (game?.sharedTunnel && dismissedTunnelId !== tunnelAttemptKey()) { dismissTunnel(); return; }
+  if (!uiDialog) return;
   if (game?.turnWaiting && game.current === seat && game.ticketOffer) return;
+  disposeTicketMap();
   const choosing = uiDialog === "tickets";
   const closingResults = uiDialog === "results";
   if (closingResults) { resultMapCleanup?.(); resultMapCleanup = null; }
@@ -2135,7 +2318,7 @@ function updateDestinationSpotlight() {
   const selection = !uiDialog && $("overlay").classList.contains("hidden") &&
     GameUI.destinationSpotlightSelection(game, hoveredDestination, allDestinationsVisible, resultMapSelection);
   boardSpotlight = selection ? {
-    routes: selection.routes || [], stationRoutes: selection.stationRoutes || [],
+    routes: selection.routes || [], completedRoutes:selection.completedRoutes, stationRoutes: selection.stationRoutes || [],
     stations: selection.stations || [], endpoints: selection.endpoints || [],
   } : null;
   syncBoard3D();
@@ -2179,137 +2362,79 @@ function updateDestinationSpotlight() {
   }
 }
 function renderTicketMap(tickets) {
-  const svg = $("ticketMap");
-  svg.replaceChildren();
-  const el = svgElements(svg);
-  drawMapBase(el, "tickets");
-  const network = el("g", { class: "ticket-network", "aria-hidden": "true" });
-  for (const r of MAP_GEOMETRY)
-    el("path", { d: r.d, fill: "none" }, network);
-  for (const [x, y] of Object.values(boardMap.cities))
-    el("circle", { cx: x, cy: y, r: 2.8 }, network);
-
-  const preview = hoveredTicket;
-  const viewing = uiDialog === "routes";
-  const retained = !viewing && game.ticketOffer ? game.tickets.map((ticket, index) => ({ ticket, i: tickets.length + index, key: `owned-${ticket.id}`, active: retainedVisible.has(ticket.id), retained: true })) : [];
-  const visible = [...tickets.map((ticket, i) => ({ ticket, i, key: i, active: ticketChoices.has(i) })), ...retained]
-    .filter(entry => entry.active || preview === entry.key || viewing || entry.retained);
-  const highlights = el("g", { class: "ticket-paths" });
-  const occupied = el("g", { class: "ticket-occupied" });
-  for (const route of game.routes.filter(r => r.owner !== null)) {
-    const owner = GameUI.routeOwner(game, route, seat), geometry = geometryFor(route.id);
-    const group = el("g", { opacity: route.owner === seat ? 1 : .3, "data-occupied-route": route.id }, occupied);
-    el("title", {}, group).textContent = `${cityName(route.a)} — ${cityName(route.b)} · ${owner.name}`;
-    el("path", { d: geometry.d, fill: "none", stroke: owner.color, "stroke-width": 11.5, opacity: .3, "stroke-linecap": "round" }, group);
-    for (const cell of geometry.cells) {
-      const slot = el("g", { transform: `translate(${cell.x} ${cell.y}) rotate(${cell.angle})` }, group);
-      drawOwnedPiece(el, slot, cell, owner, "tickets");
-    }
+  const container = $("ticketMap"); if (!container) return;
+  if (ticketMapCameraKey !== pendingChoiceKey) {
+    ticketMapCameraKey = pendingChoiceKey;
+    ticketMapCamera = { zoom: 1, center: { ...MAP_CENTER } };
+    ticketPlans.clear(); pinnedTicket = null;
   }
-  for (const [i, player] of game.players.entries()) for (const city of player.placed) {
-    const [x, y] = boardMap.cities[city], group = el("g", { transform: `translate(${x} ${y})`, opacity: i === seat ? 1 : .55, "data-preview-station": city }, occupied);
-    drawStation(el, group, GameUI.playerColor(player.color), .9, "tickets");
-    el("title", {}, group).textContent = I18n.t`Estación de ${player.name} · ${cityName(city)}`;
-  }
-  const endpoints = new Map();
-  for (const { ticket, i, key, active } of visible) {
-    const number = GameUI.destinationNumber(game, ticket.id, i), color = ticketColor(number - 1);
-    const [x, y] = boardMap.cities[ticket.a], [xx, yy] = boardMap.cities[ticket.b];
-    const strong = active || preview === key;
-    const opacity = !strong ? .25 : preview !== null && preview !== key ? .5 : 1;
-    const completed = GameUI.destinationStatus(game, ticket.id)?.completed;
-    const path = completed ? game.ticketPaths?.find(p => p.id === ticket.id) : null;
-    for (const routeId of path?.routes || []) {
-      const borrowed = path.stationRoutes.includes(routeId);
-      const trace = el("path", { d: geometryFor(routeId).d, fill: "none", stroke: borrowed ? "#c69643" : "#e7b639", "stroke-width": 15, opacity: opacity * .75, "stroke-linecap": "round", ...(borrowed ? { "stroke-dasharray": "4 4" } : {}), "data-completed-ticket": ticket.id, "data-path-route": routeId }, highlights);
-      el("title", {}, trace).textContent = borrowed ? I18n.t("Tramo prestado mediante estación") : I18n.t("Conexión completada");
-    }
-    const g = el("g", {
-      class: "ticket-connection", "data-ticket-index": i,
-      opacity,
-    });
-    el("title", {}, g).textContent =
-      I18n.t`${cityName(ticket.a)} → ${cityName(ticket.b)} · ${ticket.p} puntos`;
-    const line = { x1: x, y1: y, x2: xx, y2: yy, "stroke-linecap": "round" };
-    if (!path?.routes.length) {
-      el("line", { ...line, stroke: "#fffefa", "stroke-width": 6 }, g);
-      el("line", {
-      ...line, stroke: color, "stroke-width": 2.8,
-      "stroke-dasharray": "6 6", class: "ticket-connector",
-      }, g);
-    }
-    // A number as well as a color keeps overlapping destinations identifiable.
-    const middle = path?.routes.length ? geometryFor(path.routes[Math.floor(path.routes.length / 2)]).cells : null;
-    const mid = middle?.[Math.floor(middle.length / 2)];
-    const mx = mid?.x ?? (x + xx) / 2, my = mid?.y ?? (y + yy) / 2;
-    const marker = el("g", { class: "ticket-map-marker", transform: `translate(${mx} ${my})` }, g);
-    el("circle", { r: 11, fill: color, stroke: "#fffefa", "stroke-width": 2 }, marker);
-    el("text", { y: 4, "text-anchor": "middle", class: "ticket-map-number" }, marker).textContent = number;
-    for (const city of strong ? [ticket.a, ticket.b] : []) {
-      if (!endpoints.has(city)) endpoints.set(city, []);
-      endpoints.get(city).push({ number, completed: !!completed });
-    }
-  }
-  for (const [city, indexes] of endpoints) {
-    const [x, y] = boardMap.cities[city], name = cityName(city);
-    const g = el("g", { class: "ticket-endpoint", "data-city": city });
-    el("circle", { cx: x, cy: y, r: 5, fill: "#fffefa", stroke: "#24495a", "stroke-width": 1.3 }, g);
-    g.dataset.destinations = JSON.stringify(indexes);
-    el("circle", { cx: x, cy: y, r: 8, fill: "none", stroke: "#d5af55", "stroke-width": 2.5 }, g);
-    const offset = boardMap.labels[city] || [0, -19];
-    const radius = 8 + (indexes.length - 1) * 4;
-    el("text", {
-      x, y: y + (offset[1] > 0 ? radius + 17 : -radius - 7),
-      "text-anchor": "middle", class: "ticket-city-label",
-    }, g).textContent = name;
-  }
-  layoutTicketMapLabels();
-}
-function layoutTicketMapLabels() {
-  const svg = $("ticketMap");
-  if (!svg || !svg.clientWidth || !svg.clientHeight) return;
-  const scale = Math.max(MAP_BOUNDS.width / svg.clientWidth, MAP_BOUNDS.height / svg.clientHeight);
-  for (const marker of svg.querySelectorAll(".ticket-map-marker")) {
-    marker.querySelector("circle").setAttribute("r", 8 * scale);
-    marker.querySelector("circle").setAttribute("stroke-width", 1.5 * scale);
-    const text = marker.querySelector("text");
-    text.style.fontSize = `${10 * scale}px`;
-    text.setAttribute("y", 3.5 * scale);
-  }
-  const ox = (svg.clientWidth - MAP_BOUNDS.width / scale) / 2, oy = (svg.clientHeight - MAP_BOUNDS.height / scale) / 2;
-  const groups = [...svg.querySelectorAll(".ticket-endpoint")];
-  let badgeHeight = 0;
-  const labels = groups.map(group => {
-    group.querySelector(".destination-numbers")?.remove();
-    const key = group.dataset.city, [x, y] = boardMap.cities[key], text = group.querySelector(".ticket-city-label");
-    const badges = destinationBadgeSize(JSON.parse(group.dataset.destinations).length);
-    badgeHeight = Math.max(badgeHeight, badges.height);
-    text.style.fontSize = `${11 * scale}px`; text.style.strokeWidth = `${3 * scale}px`;
-    text.setAttribute("text-anchor", "start");
-    return { key, x: ox + (x - MAP_BOUNDS.x) / scale, y: oy + (y - MAP_BOUNDS.y) / scale, width: Math.max(text.getComputedTextLength() / scale, badges.width) };
+  const focus = hoveredTicket ?? pinnedTicket;
+  const items = tickets.map((ticket, i) => ({ ticket, key: String(i), index: i,
+    overview: ticketChoices.has(i) }));
+  if (uiDialog !== "routes" && game.ticketOffer) game.tickets.forEach(ticket => {
+    const key = `owned-${ticket.id}`;
+    if (retainedVisible.has(ticket.id) || focus === key) items.push({ ticket, key, index: 0, overview: retainedVisible.has(ticket.id) });
   });
-  const placements = boardMap.placeLabels(labels, svg.clientWidth, svg.clientHeight, [], { height: badgeHeight + 14, baseline: badgeHeight + 11 });
-  for (const place of placements) {
-    const group = groups.find(g => g.dataset.city === place.key), text = group.querySelector(".ticket-city-label");
-    const x = MAP_BOUNDS.x + (place.x + place.width / 2 - ox) * scale, y = MAP_BOUNDS.y + (place.y - oy) * scale;
-    text.setAttribute("text-anchor", "middle"); text.setAttribute("x", x);
-    text.setAttribute("y", y + (badgeHeight + 11) * scale);
-    drawDestinationBadges(svgElements(svg), group, JSON.parse(group.dataset.destinations), x, y, scale);
+  const revision = JSON.stringify([game.routes.map(r => r.owner), game.players.map(p => p.placed), game.ticketProgress, game.ticketPaths]);
+  let changed = false;
+  for (const item of items) {
+    const previous = ticketPlans.get(item.ticket.id);
+    const plan = previous?.revision === revision ? previous : { ...DestinationPlanner.plan(game, seat, item.ticket, gameRules, previous), revision };
+    if (previous && (previous.additional !== plan.additional || JSON.stringify(previous.routes) !== JSON.stringify(plan.routes))) changed = true;
+    ticketPlans.set(item.ticket.id, plan); item.plan = plan;
+    item.number = GameUI.destinationNumber(game, item.ticket.id, item.index); item.color = ticketColor(item.number - 1);
+    const row = $("dialog").querySelector(`[data-ticket-id="${CSS.escape(String(item.ticket.id))}"]`);
+    const status = row?.querySelector('.ticket-plan');
+    if (status) status.textContent = plan.reachable ? game.phase === "initial" ? I18n.t`${plan.additional} vagones` : I18n.t`${plan.additional} vagones adicionales` : I18n.t("Sin conexión disponible");
+    row?.classList.toggle('is-preview', focus === item.key);
   }
+  if (changed && $("ticketMapNotice")) $("ticketMapNotice").textContent = I18n.t("Recorrido actualizado");
+  $("ticketMapOverview").hidden = focus === null;
+  if (!ticketMapView) {
+    if (ticketMapLoadingNode === container || container.dataset.failed) return;
+    ticketMapLoadingNode = container;
+    import('./ticket-map.js').then(({ createTicketMap }) => {
+      if (ticketMapLoadingNode !== container || !container.isConnected) return;
+      const preview = key => {
+        if (hoveredTicket === key && pinnedTicket === null) return;
+        hoveredTicket = key; pinnedTicket = null; updateTicketSelection(tickets, 0);
+      };
+      ticketMapView = createTicketMap({ container, map: boardMap, network: MAP_GEOMETRY, camera: ticketMapCamera,
+        onPreview: preview, onSelect: key => { pinnedTicket = pinnedTicket === key ? null : key; hoveredTicket = null; updateTicketSelection(tickets, 0); },
+        onFailure: ticketMapFailure });
+      $("ticketMapLoading")?.remove(); renderTicketMap(tickets);
+    }).catch(ticketMapFailure);
+    return;
+  }
+  ticketMapView.update({ items, focus, overviewStrength: .5,
+    seat, cityName, changed, visualSeed: wagonSeed, routeColors: C,
+    routes: game.routes.map(({ id, owner, a, b, color, tunnel, ferry }) => ({ id, owner, a, b, color, tunnel, ferry })),
+    players: game.players.map(p => ({ color: GameUI.playerColor(p.color), wagon: p.wagon, placed: p.placed })) });
+}
+function ticketMapFailure() {
+  disposeTicketMap();
+  if ($("ticketMap")) $("ticketMap").dataset.failed = "true";
+  const status = $("ticketMapNotice"); if (status) status.textContent = I18n.t("No pudimos cargar el tablero 3D. Prueba a reintentarlo o recarga la página.");
+  const retry = $("ticketMapRetry"); if (retry) retry.hidden = false;
 }
 function updateTicketSelection(tickets, min) {
+  const reserve = $("ticketTrainReserve");
+  if (reserve && game.players[seat]) reserve.innerHTML = I18n.t`Te quedan <strong>${game.players[seat].trains}</strong> vagones disponibles`;
+  min = Number($("dialog").dataset.ticketMinimum ?? min);
   const count = ticketChoices.size;
   $("ticketCount").textContent = min ? I18n.t`${count} de ${tickets.length} seleccionados · mínimo ${min}` : I18n.t`${count} de ${tickets.length} resaltados en el mapa`;
-  if ($("keep")) $("keep").disabled = count < min;
+  if ($("keep")) $("keep").disabled = count < min || !!game.sharedTunnel;
   for (const row of $("dialog").querySelectorAll(".ticket-choice")) {
     const i = +row.dataset.ticketIndex;
     row.classList.toggle("is-selected", ticketChoices.has(i));
-    row.classList.toggle("is-preview", hoveredTicket === i);
+    row.classList.toggle("is-preview", (hoveredTicket ?? pinnedTicket) === String(i));
   }
   for (const row of $("dialog").querySelectorAll("[data-ticket-id]")) {
     const status = GameUI.destinationStatus(game, ticketIdFromDom(row.dataset.ticketId));
     row.classList.toggle("is-complete", !!status?.completed);
     row.querySelector(".ticket-complete").textContent = status?.completed ? I18n.t`✓ Completada${status.viaStation ? I18n.t(" · estación") : ""}` : "";
+    const key = row.dataset.ownedTicket === undefined ? row.dataset.ticketIndex : `owned-${row.dataset.ownedTicket}`;
+    row.classList.toggle('is-preview', (hoveredTicket ?? pinnedTicket) === key);
   }
   // Owned tickets may complete while this dialog is open. Reorder their rows,
   // never the offered tickets or their submitted indexes, and preserve focus.
@@ -2328,23 +2453,26 @@ function updateTicketSelection(tickets, min) {
   updateClocks();
 }
 function bindTicketPreview(row, key, tickets, min) {
+  key = String(key);
   // Touch can leave synthesized hover and focus behind after a tap. Neither
   // should override the checkbox. Keyboard focus remains a CSS-only outline.
   row.addEventListener("pointerenter", event => {
     if (event.pointerType !== "mouse" || !matchMedia("(any-hover: hover)").matches) return;
-    hoveredTicket = key;
+    hoveredTicket = key; pinnedTicket = null;
     updateTicketSelection(tickets, min);
   });
-  row.addEventListener("pointerleave", () => {
-    if (hoveredTicket !== key) return;
-    hoveredTicket = null;
+  row.addEventListener("pointerleave", event => {
+    if (event.pointerType !== "mouse" || (hoveredTicket !== key && pinnedTicket !== key)) return;
+    hoveredTicket = pinnedTicket = null;
     updateTicketSelection(tickets, min);
   });
   row.addEventListener("pointerdown", event => {
+    row.dataset.pointerType = event.pointerType;
     if (event.pointerType === "mouse" || hoveredTicket === null) return;
     hoveredTicket = null;
     updateTicketSelection(tickets, min);
   });
+  row.addEventListener("keydown", () => { delete row.dataset.pointerType; });
 }
 function showTicketDialog(tickets, min, viewing = false) {
   const choosing = !viewing && !!game.ticketOffer;
@@ -2367,18 +2495,23 @@ function showTicketDialog(tickets, min, viewing = false) {
     ${!viewing ? `<div class="ticket-deadline" data-countdown><strong data-clock="${choosing ? "offer" : "initial"}" data-clock-format="timer"></strong>${choosing && !waiting ? I18n.t('<button type="button" id="minimizeTickets">Ver mapa</button>') : ""}</div>` : ""}
     <div class="ticket-layout">
       <figure class="ticket-map-panel">
-        <svg id="ticketMap" viewBox="${MAP_BOUNDS.x} ${MAP_BOUNDS.y} ${MAP_BOUNDS.width} ${MAP_BOUNDS.height}" role="img" aria-label="Vista de los destinos seleccionados"></svg>
+        <div id="ticketMap" tabindex="0" role="region" aria-label="Mapa de destinos. Arrastra, pellizca o usa las flechas y los signos más y menos.">
+          <div class="ticket-map-controls"><button type="button" id="ticketZoomIn" aria-label="Acercar mapa">+</button><button type="button" id="ticketZoomOut" aria-label="Alejar mapa">−</button><button type="button" id="ticketZoomReset" aria-label="Restablecer mapa">⌖</button><button type="button" id="ticketMapOverview" hidden>Ver todos</button></div>
+          <span id="ticketMapLoading" class="ticket-map-loading">Preparando el tablero…</span>
+        </div>
+        <div class="ticket-map-footer"><span id="ticketMapNotice" role="status">Vista previa · vagones translúcidos</span><button type="button" id="ticketMapRetry" hidden>Reintentar</button></div>
       </figure>
       <div class="ticket-options">
+        ${game.players[seat] ? '<p id="ticketTrainReserve" class="ticket-train-reserve" role="status" aria-live="polite"></p>' : ''}
         <p class="ticket-options-title">${viewing ? I18n.t("Tus destinos") : I18n.t("Billetes para conservar")}</p>
-        <p class="ticket-options-hint">${viewing ? I18n.t("Toca los billetes que quieras resaltar.") : I18n.t("Toca para comparar y elegir qué conservar; confirma abajo.")}</p>
+        <p class="ticket-options-hint">${viewing ? I18n.t("Toca los billetes que quieras resaltar.") : I18n.t("Toca cualquier parte del billete para seleccionarlo o desmarcarlo.")}</p>
         <div class="ticket-collections"><div class="ticket-choices">${tickets.map((t, i) => I18n.t`
           <label class="choice ticket-choice" data-ticket-index="${i}" data-ticket-id="${escapeHTML(t.id)}">
-            <input type="checkbox" class="keep" value="${i}" ${ticketChoices.has(i) ? "checked" : ""}>
+            <input type="checkbox" class="keep" aria-label="${escapeHTML(viewing ? I18n.t`Resaltar ${cityName(t.a)} a ${cityName(t.b)}` : I18n.t`Conservar ${cityName(t.a)} a ${cityName(t.b)}`)}" value="${i}" ${ticketChoices.has(i) ? "checked" : ""}>
             <span class="ticket-number"><span class="sr-only">Destino </span>${GameUI.destinationNumber(game, t.id, i)}</span>
-            <span class="ticket-choice-text"><b>${escapeHTML(cityName(t.a))} → ${escapeHTML(cityName(t.b))}</b><small>${t.p} puntos ${t.long ? I18n.t('<span class="longtag">LARGA</span>') : ""}</small><small class="ticket-complete"></small></span>
+            <span class="ticket-choice-text ticket-inspect"><b>${escapeHTML(cityName(t.a))} → ${escapeHTML(cityName(t.b))}</b><small>${t.p} puntos ${t.long ? I18n.t('<span class="longtag">LARGA</span>') : ""}</small><small class="ticket-complete"></small><small class="ticket-plan"></small></span>
           </label>`).join("") || I18n.t('<p>Todavía no has conservado billetes.</p>')}</div>
-        ${choosing && game.tickets.length ? I18n.t`<div class="retained-heading">Tus destinos actuales <small>Solo comparar</small></div><div class="retained-choices">${game.tickets.map(t => I18n.t`<div class="retained-choice" data-ticket-id="${escapeHTML(t.id)}" data-owned-ticket="${escapeHTML(t.id)}"><button class="ticket-eye" type="button" aria-pressed="${retainedVisible.has(t.id)}" aria-label="Resaltar ${escapeHTML(cityName(t.a))} a ${escapeHTML(cityName(t.b))}">◉</button><span class="ticket-number"><span class="sr-only">Destino </span>${GameUI.destinationNumber(game, t.id)}</span><span class="ticket-choice-text"><b>${escapeHTML(cityName(t.a))} → ${escapeHTML(cityName(t.b))}</b><small>${t.p} puntos</small><small class="ticket-complete"></small></span></div>`).join("")}</div>` : ""}</div>
+        ${choosing && game.tickets.length ? I18n.t`<div class="retained-heading">Tus destinos actuales <small>Solo comparar</small></div><div class="retained-choices">${game.tickets.map(t => I18n.t`<label class="retained-choice" data-ticket-id="${escapeHTML(t.id)}" data-owned-ticket="${escapeHTML(t.id)}"><input class="ticket-eye" type="checkbox" ${retainedVisible.has(t.id) ? "checked" : ""} aria-label="Resaltar ${escapeHTML(cityName(t.a))} a ${escapeHTML(cityName(t.b))}"><span class="ticket-number"><span class="sr-only">Destino </span>${GameUI.destinationNumber(game, t.id)}</span><span class="ticket-choice-text ticket-inspect"><b>${escapeHTML(cityName(t.a))} → ${escapeHTML(cityName(t.b))}</b><small>${t.p} puntos</small><small class="ticket-complete"></small><small class="ticket-plan"></small></span></label>`).join("")}</div>` : ""}</div>
         <div class="ticket-confirm">
           <p id="ticketCount" role="status" aria-live="polite"></p>
           ${viewing ? I18n.t('<button class="secondary full" id="closeRoutes">Volver al mapa</button>') : I18n.t('<button class="primary full" id="keep" aria-describedby="ticketCount">Conservar seleccionados</button>')}
@@ -2389,6 +2522,18 @@ function showTicketDialog(tickets, min, viewing = false) {
     viewing || (choosing && !waiting),
   );
   $("dialog").dataset.waiting = String(waiting);
+  $("dialog").dataset.ticketMinimum = String(min);
+  $("ticketZoomIn").onclick = () => ticketMapView?.zoom(1);
+  $("ticketZoomOut").onclick = () => ticketMapView?.zoom(-1);
+  $("ticketZoomReset").onclick = () => ticketMapView?.reset();
+  $("ticketMapOverview").onclick = () => { pinnedTicket = hoveredTicket = null; updateTicketSelection(tickets, min); };
+  $("ticketMapRetry").onclick = () => { $("ticketMapRetry").hidden = true; delete $("ticketMap").dataset.failed; renderTicketMap(tickets); };
+  $("overlay").onpointerdown = event => {
+    if (!$("ticketMap") || event.target.closest('.ticket-choice, .retained-choice, [data-preview-key], #ticketMapOverview')) return;
+    if (hoveredTicket === null && pinnedTicket === null) return;
+    hoveredTicket = pinnedTicket = null;
+    updateTicketSelection(tickets, min);
+  };
   for (const row of $("dialog").querySelectorAll(".ticket-choice")) {
     const i = +row.dataset.ticketIndex;
     row.style.setProperty("--ticket-color", ticketColor(GameUI.destinationNumber(game, tickets[i].id, i) - 1));
@@ -2396,15 +2541,20 @@ function showTicketDialog(tickets, min, viewing = false) {
       if (e.target.checked) ticketChoices.add(i);
       else ticketChoices.delete(i);
       hoveredTicket = null;
+      pinnedTicket = e.target.checked && row.dataset.pointerType === 'touch' ? String(i) : null;
       if (!viewing) { localStorage.setItem(draftKey, JSON.stringify([...ticketChoices])); playSound(e.target.checked ? "pen" : "pen-undo"); }
       updateTicketSelection(tickets, min);
     });
     bindTicketPreview(row, i, tickets, min);
   }
   for (const row of $("dialog").querySelectorAll("[data-owned-ticket]")) {
-    const id = ticketIdFromDom(row.dataset.ownedTicket), key = `owned-${id}`, button = row.querySelector("button");
+    const id = ticketIdFromDom(row.dataset.ownedTicket), key = `owned-${id}`, button = row.querySelector(".ticket-eye");
     row.style.setProperty("--ticket-color", ticketColor(GameUI.destinationNumber(game, id) - 1));
-    button.onclick = () => { retainedVisible.has(id) ? retainedVisible.delete(id) : retainedVisible.add(id); hoveredTicket = null; button.setAttribute("aria-pressed", String(retainedVisible.has(id))); row.classList.toggle("is-highlighted", retainedVisible.has(id)); updateTicketSelection(tickets, min); };
+    button.onchange = () => {
+      button.checked ? retainedVisible.add(id) : retainedVisible.delete(id);
+      hoveredTicket = null; pinnedTicket = button.checked && row.dataset.pointerType === 'touch' ? key : null;
+      row.classList.toggle("is-highlighted", button.checked); updateTicketSelection(tickets, min);
+    };
     bindTicketPreview(row, key, tickets, min);
   }
   if ($("minimizeTickets")) $("minimizeTickets").onclick = closeOptionalDialog;
@@ -2423,7 +2573,11 @@ function showTicketDialog(tickets, min, viewing = false) {
 function renderDialog() {
   if (!game) return;
   if(replayMode){if(uiDialog==="results")showResults();else if(uiDialog==="routes")showTicketDialog(game.tickets,0,true);else $("overlay").classList.add("hidden");return;}
-  if (game.sharedTunnel) { showSharedTunnel(); return; }
+  if (game.sharedTunnel) {
+    if (observedTunnelId !== tunnelAttemptKey()) { observedTunnelId = tunnelAttemptKey(); dismissedTunnelId = null; }
+    if (dismissedTunnelId !== tunnelAttemptKey() || game.sharedTunnel.seat === seat) { showSharedTunnel(); return; }
+    if ($("dialog").classList.contains("tunnel-dialog")) $("overlay").classList.add("hidden");
+  } else { observedTunnelId = dismissedTunnelId = null; }
   const myTurn = game.current === seat;
   if (myTurn && game.turnWaiting && game.ticketOffer) { uiDialog = "tickets"; showTicketDialog(game.ticketOffer.tickets, Math.min(game.ticketOffer.tickets.length, gameRules.destinations.offerMinimum)); return; }
   if (game.phase === "finished" && !constructionBusy() && (!resultsSeen || uiDialog === "results")) { showResults(); return; }
@@ -2786,18 +2940,49 @@ $("resultContext").querySelector("button").onclick = () => {
 
 function paymentDescription(payment) {
   return [payment.regular ? I18n.t`${payment.regular} de color ${N[payment.color].toLowerCase()}` : "",
-    payment.wild ? I18n.t`${payment.wild} locomotora${payment.wild === 1 ? "" : "s"}` : ""].filter(Boolean).join(" + ");
+    payment.wild ? plural(payment.wild, "comodín") : ""].filter(Boolean).join(" + ");
 }
 function paymentIcons(payment) {
   return [[payment.color, payment.regular], ["wild", payment.wild]].filter(([, n]) => n).map(([color, n]) =>
     `<span class="payment-chip"><img src="assets/cards/${color}.svg" alt="${N[color]}" draggable="false"><strong>×${n}</strong></span>`).join('<span class="payment-plus" aria-hidden="true">+</span>');
 }
 // Presentation follows the server's shared stages; no client can skip the room clock.
+const tunnelAttemptKey = () => game?.sharedTunnel ? `${room}:${game.sharedTunnel.id}` : null;
+function dismissTunnel() {
+  if (!game?.sharedTunnel || game.sharedTunnel.seat === seat) return;
+  dismissedTunnelId = tunnelAttemptKey(); cancelTunnelMotion();
+  uiDialog = buildTarget = null;
+  $("overlay").classList.add("hidden");
+  if (compactMedia.matches) setCompactPanel("map");
+  $("mapscroll").focus({ preventScroll: true });
+  updateDestinationSpotlight(); syncTunnelBoard();
+}
+function syncTunnelBoard() {
+  const t = game?.sharedTunnel;
+  const notice = $("tunnelBoardNotice");
+  notice.hidden = !t || !$("overlay").classList.contains("hidden");
+  if (!t) { board3D?.setTunnelCards(null, cardArtwork); return; }
+  if (!notice.hidden) {
+    const rect = $("mapscroll").getBoundingClientRect(), safe = mapSafeArea(rect);
+    notice.style.left = `${rect.left + safe.x + safe.width / 2}px`;
+    notice.style.top = `${rect.top + safe.y + 8}px`;
+  }
+  const now = replayAt ?? Date.now() + serverOffset;
+  const shown = t.stage === "reveal" ? Math.max(0, Math.min(t.revealed.length, Math.floor((now - t.startedAt) / t.cardMs))) : t.revealed.length;
+  const surcharge = t.revealed.slice(0, shown).filter(c => tunnelCardMatch(c, t.paymentColor)).length;
+  const text = t.stage === "result" ? I18n.t(t.outcome === "built" ? "Túnel construido" : "Túnel no construido")
+    : I18n.t`${game.players[t.seat].name} · ${shown} de ${t.revealed.length} cartas · Suplemento: ${surcharge}`;
+  $("tunnelBoardStatus").textContent = text;
+  board3D?.setTunnelCards({ id: t.id, routeId: t.routeId, animate: !reducedMotion.matches && t.stage === "reveal",
+    cards: t.revealed.map((color, i) => ({ color: i < shown ? color : null, match: i < shown && tunnelCardMatch(color, t.paymentColor), age: now - t.startedAt - (i + 1) * t.cardMs })) }, cardArtwork);
+}
+$("viewTunnel").onclick = () => { if (!game?.sharedTunnel) return; dismissedTunnelId = null; showSharedTunnel(); syncTunnelBoard(); };
+cardArtworkReady.then(() => { if (game) syncTunnelBoard(); });
 function prepareTunnelReveal() {
   if (!game.sharedTunnel) cancelTunnelReveal();
   else if (uiDialog === "build") { uiDialog = buildTarget = null; buildSubmitting = false; }
 }
-function syncTunnelMask() { syncBoard3D(); }
+function syncTunnelMask() { syncBoard3D(); syncTunnelBoard(); }
 function cancelTunnelMotion() {
   for (const animation of tunnelReveal?.animations || []) animation.cancel();
   for (const node of tunnelReveal?.flights || []) node.remove();
@@ -2867,7 +3052,9 @@ function showSharedTunnel() {
     ${tunnelSteps(t.stage)}${result ? "" : tunnelEvidence(t)}
     <div id="tunnelTotal">${tunnelLedger(t)}</div>
     ${result ? tunnelOutcome(t, route) : ""}
-    ${t.stage === "decision" ? `<div class="dialog-turn-clock">${escapeHTML(name)} <strong data-clock="turn" data-clock-format="timer"></strong></div>` : ""}`);
+    ${t.stage === "decision" ? `<div class="dialog-turn-clock">${escapeHTML(name)} <strong data-clock="turn" data-clock-format="timer"></strong></div>` : ""}
+    ${t.seat !== seat ? `<button type="button" class="secondary full" id="dismissTunnel">${I18n.t("Volver al mapa")}</button>` : ""}`);
+  if ($("dismissTunnel")) $("dismissTunnel").onclick = dismissTunnel;
   startTunnelPresentation(t);
 }
 function updateSharedTunnel() {
@@ -3055,7 +3242,12 @@ function updateCompactStatus() {
 function updateCompactPlayer() {
   const player = game?.players[compactPlayer], detail = $("compactPlayerDetail");
   detail.classList.toggle("hidden", !player || !compactMedia.matches);
-  if (player) detail.querySelector("span").textContent = I18n.t`${player.name}${compactPlayer === seat ? I18n.t(" · Tú") : ""} — ${game.result?.find(r => r.seat === compactPlayer)?.score ?? player.score} puntos · ${displayedHandCount(compactPlayer) ?? "—"} cartas · ${player.trains} vagones · ${player.stations} estaciones${members[compactPlayer]?.autopilot ? I18n.t(" · Bot de reemplazo") : ""}`;
+  if (player) detail.querySelector("span").textContent = I18n.t`${player.name}${compactPlayer === seat ? I18n.t(" · Tú") : ""} — ${playerScore(compactPlayer)} puntos · ${displayedHandCount(compactPlayer) ?? "—"} cartas · ${player.trains} vagones · ${player.stations} estaciones${members[compactPlayer]?.autopilot ? I18n.t(" · Bot de reemplazo") : ""}`;
+  let scores=detail.querySelector('.compact-score-detail');
+  if(!scores){scores=document.createElement('div');scores.className='compact-score-detail';detail.append(scores);}
+  const open=scores.querySelector('details')?.open;
+  scores.innerHTML=player?scoreExtras(compactPlayer):'';
+  if(open&&scores.querySelector('details'))scores.querySelector('details').open=true;
 }
 $("compactPlayerDetail").querySelector("button").onclick = () => { compactPlayer = null; updateCompactPlayer(); };
 for (const button of document.querySelectorAll("[data-panel]")) button.onclick = () => setCompactPanel(compactPanel === button.dataset.panel ? "map" : button.dataset.panel);
@@ -3247,7 +3439,7 @@ $("mapscroll").addEventListener("click", (event) => {
   event.preventDefault();
   event.stopPropagation();
 }, true);
-const cameraResize = new ResizeObserver(() => { closeMapMenu(); applyZoom(); layoutHand(); if (game && $("ticketMap")) renderTicketMap(uiDialog === "routes" ? game.tickets : game.ticketOffer?.tickets || game.initial || []); });
+const cameraResize = new ResizeObserver(() => { closeMapMenu(); applyZoom(); layoutHand(); if (game && $("ticketMap") && !$("overlay").classList.contains("hidden")) renderTicketMap(uiDialog === "routes" ? game.tickets : game.ticketOffer?.tickets || game.initial || []); });
 for (const id of ["mapscroll", "gameSidebar", "handdock", "turnBanner", "compactPanel", "compactHud", "compactPlayers", "boardtools", "boardStatusActions"]) cameraResize.observe($(id));
 function updateFullscreenControl() {
   const available = !!document.fullscreenElement ||
@@ -3292,6 +3484,7 @@ window.addEventListener("keydown", (e) => {
   if (e.target.closest?.("dialog[open]")) return;
   if (e.key === "Escape") {
     if ($("sessionControls").open) { e.preventDefault(); closeGameMenu(true); }
+    else if (game?.sharedTunnel && !$("overlay").classList.contains("hidden") && $("dialog").classList.contains("tunnel-dialog")) { e.preventDefault(); dismissTunnel(); }
     else if (uiDialog) { e.preventDefault(); closeOptionalDialog(); }
     else if (!$("mapMenu").classList.contains("hidden")) {
       e.preventDefault(); closeMapMenu();
@@ -3318,6 +3511,8 @@ if (desiredRoom && localStorage.getItem(identityKey(desiredRoom))) {
 }
 initializeHome();
 account = AccountUI.create({
+  sessionChanged:syncRecoveryControls,
+  targetRoom:()=>desiredRoom,
   selection:()=>({nickname:$("nickname").value,color:preferredColor}),
   currentSeat:()=>room?{code:room,token,practice:practiceMode}:null,
   applyProfile(profile) {
@@ -3339,10 +3534,14 @@ shell = AppShell.create({
 });
 if(replayMode){
   document.body.classList.add('is-replaying');
+  document.querySelector('#handdock .docktip').textContent = I18n.t('Visible para todos en el replay');
   HistoryUI.replay(new URLSearchParams(location.search).get('id')||'',(view,recordedMembers,context)=>{
     cancelCardFlights();cancelConstruction();if(!context.animate)stopSounds();
     useMatchDefinition(view, context.definition, {replay:true});
     selected=!context.animate?context.builds?.[0]?.routeId??null:null;stationCity=!context.animate?context.builds?.[0]?.city??null:null;
+    const replayColors = LobbyUI.restoreColors(recordedMembers,view.players);
+    view = {...view,players:view.players.map((player,index)=>({...player,color:replayColors[index]}))};
+    recordedMembers = recordedMembers.map((member,index)=>({...member,color:replayColors[index]}));
     game=view;members=recordedMembers;seat=context.seat;sessionSupported=true;replayAt=context.at;spectating=seat===-1;resultsSeen=true;uiDialog=null;
     wagonSeed=context.match.code || context.match.id || '';
     displayedHistoryKey=null;document.body.classList.toggle('is-spectating',spectating);

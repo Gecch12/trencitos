@@ -1,0 +1,26 @@
+{
+  "fullNodeSuite": {
+    "passed": 645,
+    "failed": 0,
+    "durationMs": 159047.65775
+  },
+  "subsequentNodeChecks": {
+    "targeted": 27,
+    "rulesTranslationsRestoration": 15,
+    "allPassed": true,
+    "wordingAndPayments": 16
+  },
+  "browserChecks": {
+    "drawScenarios": 16,
+    "cards": true,
+    "account": true,
+    "lobby": true,
+    "replay": true
+  },
+  "limits": [
+    "Local Chrome and isolated storage only; no production deployment.",
+    "OAuth provider simulated; application cookies, account checks, HTTP and WebSocket are real.",
+    "Full suite preceded the final presentation and wording adjustments; affected checks were rerun.",
+    "Timing fixtures intentionally delay persistence; they are not production latency measurements."
+  ]
+}

@@ -410,12 +410,7 @@ producción ni dispositivos físicos. Entrega en esta rama, sin push ni desplieg
 ## Sexto corte: checkpoint visual y organización del monorepo
 
 Base `f9bbdaf` más los cambios de este corte, en el mismo worktree aislado.
-Se tomó una copia fija de Midsommar Express desde los cambios locales validados
-sobre `f41e033` del checkout principal. No se modificó ese checkout ni se importó
-el prototipo antiguo de `passenger-extreme`. La [procedencia y huellas](../qa/modular-platform-layout/visual-checkpoint.json)
-distinguen ese snapshot de una revisión Git: todavía no tenía commit en origen.
-Se integraron código, pruebas y documentación visual; las ediciones posteriores
-de otras ramas no entran automáticamente aquí.
+
 
 - `frontend/`: presentación, Three.js y assets. `shared/`: datos públicos,
   tiempos, lobby, idiomas y formato de replay realmente usados por ambos entornos.
@@ -454,14 +449,6 @@ los siguientes resultados pertenecen a esta rama:
   con **238 acciones** y reconexión; cero errores. Incluye construcción, túneles,
   destinos y estaciones. [Informe](../qa/modular-platform-layout/browser/threejs-report.json).
   Se inspeccionaron el resultado final y la captura móvil emulada.
-- `node tests/browser-hippie.cjs` y `node tests/browser-wagon-gallery.cjs`:
-  correctos en Chrome sin interfaz. Seis escenas, selección/guardado/recarga,
-  construcción de ocho vagones, animación, resaltado, reconexión, espectador y
-  replay. Galería de 21 familias en ocho tamaños con recuperación WebGL.
-  [Resultados](../qa/modular-platform-layout/visual-tests-result.json),
-  [galería](../qa/modular-platform-layout/gallery/report.json),
-  [Midsommar](../qa/modular-platform-layout/midsommar/report.json).
-  Se inspeccionaron las seis escenas y los encuadres de escritorio/móvil.
 - [Probe de entrada](../qa/modular-platform-layout/entrypoint-check.cjs): arranque
   CLI desde otro directorio, creación y guardado de sala en la raíz de una copia
   temporal y entrega de `/app.js` correctos. [Resultado](../qa/modular-platform-layout/entrypoint-result.json).

@@ -153,7 +153,7 @@ cuando no interrumpa una partida activa. Las pruebas usan su propio servidor.
   privacidad, reinicio, reservas de colores, sorteo de bots y rollback; los errores
   EISDIR del log son fallos de guardado inyectados por las pruebas.
 - `node tests/browser-refinements.cjs`: HTTP/WebSocket/Chrome reales, backend de
-  archivo temporal. Tercera locomotora y audio en móvil con mercado cerrado;
+  archivo temporal. Tercera comodín y audio en móvil con mercado cerrado;
   rotación privada persistida; H; historial con nombres duplicados, puesto propio,
   filtros, desglose con teclado, endpoint de replay, perfil y traducción inglesa.
   Nueve tamaños de 320×568 a 1920×1080, sin desbordamiento; scroll del historial

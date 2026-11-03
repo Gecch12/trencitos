@@ -3,7 +3,7 @@
 const messages = {
   TRAIN_CARD_UNAVAILABLE: "Carta inexistente.",
   NO_TRAIN_CARDS: "No hay cartas disponibles.",
-  VISIBLE_WILD_AFTER_FIRST_DRAW: "No se permite tomar una locomotora visible como segunda carta.",
+  VISIBLE_WILD_AFTER_FIRST_DRAW: "No se permite tomar un comodín visible como segunda carta.",
   ROUTE_UNAVAILABLE: "Esta ruta ya no está disponible.",
   INSUFFICIENT_TRAINS: "Te faltan vagones.",
   INVALID_PAYMENT_COLOR: "Color inválido.",

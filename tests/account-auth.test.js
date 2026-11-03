@@ -66,7 +66,7 @@ test('origin, request size, profile fields and account IDs are verified on the s
   assert.equal((await f.request('/api/account/profile',{nickname:'Evil',color:'#d45748'},{headers:{Origin:'https://evil.test'}})).status,403);
   assert.equal((await f.request('/api/account/profile',{nickname:'x'.repeat(5000),color:'#d45748'})).status,413);
   for(const input of [{nickname:'<script>',color:'#d45748'},{nickname:'Angel',color:'#123456'},{nickname:'',color:'#d45748'}]) assert.equal((await f.request('/api/account/profile',input)).status,400);
-  assert.equal((await f.request('/api/account/profile',{nickname:'Hippie',color:'#ffffff'})).status,200);
+  assert.equal((await f.request('/api/account/profile',{nickname:'Retired',color:'#ffffff'})).status,400);
   const res=await f.request('/api/account/profile',{id:'victim',nickname:'Angel',color:'#9ed7ed'});
   assert.equal(res.status,200);assert.deepEqual((await res.json()).profile,{id:'stable-account',nickname:'Angel',color:'#9ed7ed',avatar:'person',initialized:true});
   await f.request('/api/account/link',{id:'victim',code:'123456',token:'a'.repeat(48)});

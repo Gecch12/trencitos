@@ -26,6 +26,12 @@ function createAccountSeats({rooms, dispatch, sendRoom, unavailable}) {
         } else if (action === 'recover') {
           const member = r.members.find(m=>!m.bot && m.accountId===accountId);
           if (!member) reject(403,'Esta sala no está vinculada a tu cuenta.');
+          // A verified owner with the current seat credential can resume without
+          // rotating it on every load. Stale credentials still require ownership.
+          if (input.resume === true && typeof input.token === 'string' && /^[a-f0-9]{48}$/.test(input.token) &&
+              (member.tokenHash === hashToken(input.token) || member.token === input.token)) {
+            result = {code:r.code,token:input.token}; return;
+          }
           const previous = member.ws, recovery = crypto.randomBytes(24).toString('hex');
           member.token = recovery; member.tokenHash = hashToken(recovery);
           if (previous) {

@@ -7,7 +7,7 @@ const choose = (g, seat, now, indexes = [0, 1]) => E.action(g, seat, {type: "cho
 test("2–5 players choose privately in any order under one clock; last ready starts the random starter", () => {
   for (let count = 2; count <= 5; count++) {
     const g = E.newGame(Array.from({length: count}, (_,i) => `P${i}`), 1, 100);
-    assert.equal(g.events, undefined); // No premature turn bell during setup.
+    assert.equal((g.events || []).some(e => e.type === 'turn'), false); // A setup market renewal is allowed; no premature turn bell.
     const all = g.players.flatMap(p => p.pending);
     assert.equal(new Set(all.map(t => t.id)).size, count * 4);
     for (let seat = count - 1; seat >= 0; seat--) {
@@ -25,7 +25,7 @@ test("2–5 players choose privately in any order under one clock; last ready st
     }
     assert.equal(g.phase, "play"); assert.equal(g.current, 1);
     assert.equal(g.turnDeadline, 61000 + count);
-    assert.deepEqual(g.events.map(e => [e.type,e.seat]), [["turn",1]]);
+    assert.deepEqual(g.events.filter(e => e.type === 'turn').map(e => [e.type,e.seat]), [["turn",1]]);
   }
 });
 

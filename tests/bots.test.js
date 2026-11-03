@@ -40,7 +40,7 @@ test("bots choose two to four distinct initial tickets without mutating the game
   assert.equal(chooseBotAction(game, 2).type, "choose_initial");
 });
 
-test("practice bots vary between worthwhile routes and saving, conserving locomotives when building", () => {
+test("practice bots vary between worthwhile routes and saving, conserving wildcards when building", () => {
   const game = fixture([route(), route({ id: 1, a: "MAD", b: "BAR", color: "gray" })]);
   game.players[1].hand = ["red", "red", "blue", "blue", "wild", "wild"];
   const seen = new Set();
@@ -63,7 +63,7 @@ test("practice bots vary between worthwhile routes and saving, conserving locomo
   assert.ok(draws > 0 && draws < 60);
 });
 
-test("ferries require locomotives and gray routes cannot mix regular colors", () => {
+test("ferries require wildcards and gray routes cannot mix regular colors", () => {
   const game = fixture([route({ color: "gray", ferry: 1 })]);
   game.players[1].hand = ["red", "red", "blue"];
   assert.equal(chooseBotAction(game, 1, first).type, "draw_train");
@@ -93,7 +93,7 @@ test("bots respect occupied routes, trains and double-route blocking", () => {
   assert.equal(chooseBotAction(game, 1, first).type, "draw_train");
 });
 
-test("a draw turn finishes both draws and excludes a visible locomotive on the second", () => {
+test("a draw turn finishes both draws and excludes a visible wildcard on the second", () => {
   const game = fixture([]);
   game.face = ["wild", "blue"];
   Engine.action(game, 1, chooseBotAction(game, 1, first));
@@ -106,7 +106,7 @@ test("a draw turn finishes both draws and excludes a visible locomotive on the s
   assert.equal(game.players[1].hand.length, 2);
 });
 
-test("a visible locomotive ends the turn; an exhausted deck falls back to visible cards", () => {
+test("a visible wildcard ends the turn; an exhausted deck falls back to visible cards", () => {
   const game = fixture([]);
   game.deck = game.discard = [];
   game.face = ["wild", "blue"];
@@ -139,7 +139,7 @@ test("tunnel surcharge is paid only after reserving the base payment", () => {
   }
 });
 
-test("all-locomotive tunnels, including a zero surcharge, resolve legally", () => {
+test("all-wildcard tunnels, including a zero surcharge, resolve legally", () => {
   for (const surcharge of [0, 1]) {
     const game = fixture([route({ tunnel: true })]);
     game.players[1].hand = ["wild", "wild", "wild"];

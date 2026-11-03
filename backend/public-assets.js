@@ -5,11 +5,16 @@ const ROOT = path.resolve(__dirname, "..");
 // Public URLs are a transport contract, independent of the repository layout.
 // Never expose a directory wholesale: shared modules are public only if listed.
 const ASSETS = Object.freeze({
+  "/turn-history.js": ["frontend/turn-history.js", "text/javascript; charset=utf-8"],
   "/": ["frontend/index.html", "text/html; charset=utf-8"],
   "/index.html": ["frontend/index.html", "text/html; charset=utf-8"],
   "/privacy.html": ["frontend/privacy.html", "text/html; charset=utf-8"],
   "/privacy.css": ["frontend/privacy.css", "text/css; charset=utf-8"],
   "/board-3d.js": ["frontend/board-3d.js", "text/javascript; charset=utf-8"],
+  "/ticket-map.js": ["frontend/ticket-map.js", "text/javascript; charset=utf-8"],
+  "/tunnel-board.js": ["frontend/tunnel-board.js", "text/javascript; charset=utf-8"],
+  "/destination-planner.js": ["frontend/destination-planner.js", "text/javascript; charset=utf-8"],
+  "/destination-map.css": ["frontend/destination-map.css", "text/css; charset=utf-8"],
   "/wagon-renderer.js": ["frontend/wagon-renderer.js", "text/javascript; charset=utf-8"],
   "/wagon-preview.js": ["frontend/wagon-preview.js", "text/javascript; charset=utf-8"],
   "/wagon-models.mjs": ["frontend/wagon-models.mjs", "text/javascript; charset=utf-8"],
@@ -47,9 +52,6 @@ const ASSETS = Object.freeze({
   "/shell.js": ["frontend/shell.js", "text/javascript; charset=utf-8"],
   "/shell.css": ["frontend/shell.css", "text/css; charset=utf-8"],
   "/shell-icons.js": ["frontend/shell-icons.js", "text/javascript; charset=utf-8"],
-  "/hippie-model.mjs": ["frontend/hippie-model.mjs", "text/javascript; charset=utf-8"],
-  "/hippie-geometry.mjs": ["frontend/hippie-geometry.mjs", "text/javascript; charset=utf-8"],
-  "/hippie-hair.mjs": ["frontend/hippie-hair.mjs", "text/javascript; charset=utf-8"],
   "/wagon-people.mjs": ["frontend/wagon-people.mjs", "text/javascript; charset=utf-8"],
 });
 const CSP = "default-src 'self'; connect-src 'self' ws: wss: blob:; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'";

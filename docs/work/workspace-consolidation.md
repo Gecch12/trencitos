@@ -13,13 +13,8 @@ Esta decisión sustituye la recomendación anterior de abrir un worktree por fre
   Render y DigitalO»: `02b3386`, sin perder ediciones ni archivos nuevos.
 - [x] Integrar `origin/main` (`e2a5033`, lobby visual publicado) en `e9cb403`.
   El único conflicto textual era de traducciones; se conservan ambas entradas.
-- [x] Revisar el trabajo antiguo de `passenger-extreme`: Circo, Vivienda y
-  variantes de Pasajeros ya existen en el catálogo actual, con evolución posterior.
-  El prototipo Hippie de 90 personas fue reemplazado por Midsommar de 22; se
-  conserva como [estudio independiente](../../experiments/passenger-extreme/README.md),
-  con sus dependencias históricas, sin reemplazar modelos ni reglas actuales.
 - [x] Guardar cambios locales y evidencia ignorada antes de retirar carpetas.
-- [x] Validar la combinación y el estudio recuperado.
+- [x] Validar la combinación.
 - [x] Retirar los cuatro worktrees; dejar únicamente el checkout principal.
 
 ## Respaldo local
@@ -64,3 +59,34 @@ identifica exclusivamente en [Producción](../production.md): esta consolidació
 no desplegó la respuesta inmediata de cartas. La publicación posterior y su
 medición real se siguen en [Cartas](card-interactions.md) y
 [la entrega continua](continuous-delivery.md).
+
+## Limpieza posterior al sombreado · 2026-11-03
+
+Ángel pidió integrar [el sombreado de billetes](ticket-map-shading.md) en main y
+retirar worktrees sin uso, coordinando con el chat «Revisar historial y resaltado
+de la». Ese chat confirmó trabajo exclusivo en `match-history-progress`, que se
+conserva: su commit `f92948c` fue posteriormente trasladado al main local; la
+verificación de la combinación se registra en [Historial y progreso](match-history-progress.md). También se conserva
+el nuevo `south-america-proportions`, creado durante esta operación.
+
+- Sombreado trasladado desde `ticket-map-shading`: solo nueve archivos respecto
+  de su instantánea `20c1a7b`. Se verificó que los destinos coincidían con esa
+  base y que los demás archivos de main permanecían intactos por SHA-256.
+- Verificación en main: 47/47 pruebas pertinentes y siete grupos de navegador,
+  cero errores; captura de vista conjunta inspeccionada. Las pruebas usan
+  Chrome, HTTP/WebSocket y estado temporal propios.
+- Retirados `ticket-map-shading` y `destination-map-tunnels`, ambos ya integrados.
+  Antes de retirar cada carpeta se comprobó que ningún proceso la utilizaba y
+  que el contenido y estado Git seguían coincidiendo con su respaldo.
+- `.qa/worktree-cleanup-2026-11-03/` contiene archivos completos, evidencia
+  ignorada, diff y manifiestos SHA-256 de ambos worktrees; cada archivo comprimido
+  se abrió y verificó contra su manifiesto. Se excluyeron únicamente metadatos
+  `.git` y dependencias reinstalables `node_modules`. Sus ramas se conservan.
+- El mismo directorio guarda las versiones anteriores de los archivos afectados
+  en main y su QA del mapa, los informes de pruebas de la integración y
+  `cleanup.json` con los worktrees retirados y restantes.
+
+Integración local sin commit, push ni despliegue. Los servidores existentes en
+3000 y 3119 siguieron intactos durante esa operación. La posterior integración
+del historial preserva este sombreado; su evidencia y siguiente paso están en
+[Historial y progreso](match-history-progress.md).

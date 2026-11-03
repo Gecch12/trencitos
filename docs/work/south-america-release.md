@@ -33,6 +33,10 @@ colores, longitudes, ferris, túneles y puntos. El layout es independiente de la
 reglas: coordenadas ampliadas, contornos del SVG entregado y curva PNT–USH para
 separar sus casillas de Punta Arenas. Europa sigue predeterminada.
 
+La corrección posterior de proporción y del recorte de Brasil se registra en
+[Proporción y encuadre de Sudamérica](south-america-proportions.md), con su propia
+evidencia y estado de entrega. No modifica la fuente inmutable ni las reglas.
+
 La conversación de rendimiento encontró RTT de ~237 ms y un intervalo de ~195 ms
 entre mensajes lobby/state; sus causas requieren comprobación, no se atribuyen
 automáticamente al plan gratuito. También identificó persistencia global, bots
@@ -102,9 +106,6 @@ TCP_NODELAY, pero su desaparición solo podrá verificarse tras publicar.
   como usuario node, raíz de solo lectura, sin red ni dependencias de desarrollo.
 - [Replay final](../qa/south-america-release/analysis-tests-result.json): escritorio
   y móvil, público y participante, 264 pasos, sin errores de navegador.
-- [Midsommar](../qa/south-america-release/midsommar/report.json): seis modelos,
-  21 familias, tablero mixto de 225 piezas, construcción, resaltado, reconexión,
-  espectador, replay, inglés y móvil; sin errores.
 - El checkout original se preservó completo en `2ba28ac` antes de integrar. Los
   módulos visuales coinciden con esta rama; sus pruebas solo adaptan imports,
   temporización de construcción y controles compactos del replay.
@@ -121,7 +122,7 @@ Pendiente integrar main y verificar el despliegue exacto y la latencia pública.
 La fusión con `2ba28ac` conserva los módulos runtime exactamente como se probaron
 en `de2a5d2`. Se resolvieron rutas antiguas de imports, duplicados de raíz frente
 a `frontend/shared`, IDs opacos y la pausa visual. Se incorporaron dos precisiones
-documentales de main sobre el presupuesto de Pasajeros y el encuadre Midsommar.
+documentales de main sobre el presupuesto de Pasajeros.
 
 ## Ajuste tras medir producción
 

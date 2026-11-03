@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 278" role="img" aria-label="Carta ferroviaria LOCOMOTORA">
-<title>Locomotora arcoíris · comodín</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 278" role="img" aria-label="Carta ferroviaria COMODÍN">
+<title>Comodín arcoíris · comodín</title>
 <defs>
   <pattern id="engraved-paper" width="12" height="12" patternUnits="userSpaceOnUse">
     <path d="M2 3h2M3 2v2" fill="none" stroke="#fff6e4" stroke-width=".6" opacity=".14"/>
@@ -24,7 +24,7 @@
 <g id="steam-engraving" fill="none" stroke="#fff6e4" stroke-linecap="round">
   <path d="M140 118c12-7 10-18-1-20-13-2-17-11-10-18M130 113c6-6 1-12-8-14-13-3-16-13-8-20M118 96c-9-3-15-9-11-16" stroke-width="2" opacity=".7"/>
 </g>
-<g id="engraved-locomotive" stroke-linejoin="round" stroke-linecap="round">
+<g id="engraved-wildcard" stroke-linejoin="round" stroke-linecap="round">
   <path d="M28 176H159l16 17H27Z" fill="#202b32" stroke="#fff6e4" stroke-width="2.5"/>
   <path d="M35 165v-44h46v44" fill="#202b32" stroke="#fff6e4" stroke-width="3"/>
   <path d="M30 122v-7h53l5 7Z" fill="#fff6e4" stroke="#202b32" stroke-width="1.5"/>

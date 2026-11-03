@@ -15,6 +15,7 @@ const DrawIntent = (() => {
   }
   function canQueue(first, view, index) {
     return !!first && view?.revision === first.revision &&
+      !(first.index >= 0 && first.face.filter(color => color === 'wild').length >= 2) &&
       view.turnSerial === first.turnSerial && first.drawCount + 1 < first.limit &&
       first.color !== "wild" && (index < 0 || index !== first.index) &&
       (index < 0 ? view.deckCount + view.discardCount > 1 : view.face[index] !== "wild") &&

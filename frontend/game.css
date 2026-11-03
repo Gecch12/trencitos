@@ -201,7 +201,7 @@ body.is-playing {
 .game #historyEntries > div:first-child { padding-top: 0; }
 .game #historyEntries > div:last-child { border-bottom: 0; }
 .history-draw { line-height: 1.7; }
-.history-draw img { display: inline-block; width: 25px; height: 35px; object-fit: contain; vertical-align: middle; margin: -5px 0 -3px 3px; filter: drop-shadow(0 1px 1px #183e4926); }
+.history-draw img { display: inline-block; width: 18px; height: 25px; object-fit: contain; vertical-align: middle; margin: 0 0 0 3px; filter: drop-shadow(0 1px 1px #183e4926); }
 .game .history-scrollbar { position: absolute; right: 0; top: 0; bottom: 0; width: 9px; background: #e8dfcc; border-radius: 5px; cursor: pointer; touch-action: none; }
 .game #historyThumb { display: block; position: absolute; width: 9px; border: 1px solid #f6efdf; border-radius: 5px; background: #988767; cursor: grab; }
 .game .history-scrollbar:active #historyThumb { background: #6c5c42; cursor: grabbing; }
@@ -619,3 +619,28 @@ button:focus-visible, summary:focus-visible, [tabindex="0"]:focus-visible { outl
 @media(prefers-reduced-motion:reduce){.is-confirming-action #drawstats::after{animation:none;}}
 
 .construction-notice{position:absolute;left:50%;top:20%;transform:translateX(-50%);z-index:25;padding:10px 15px;border-radius:8px;background:#fff1cd;color:#34525a;box-shadow:0 3px 15px #2345;pointer-events:none;}
+
+/* One logical row per turn, wrapping naturally on small screens. */
+.game #historyEntries > .turn-history-row {display:block;line-height:1.9;overflow-wrap:anywhere;padding:9px 2px;border-bottom:1px solid #e4dfcf}
+.turn-history-row .history-draw{display:inline}.history-separator{color:#8c958c}
+.game .turn-history-row .history-avatar{display:inline-grid;vertical-align:middle;margin:0 5px 0 0}
+.turn-history-row .history-drawn-cards{white-space:nowrap}
+.turn-history-row .history-market-refresh,.turn-history-row .history-market-new{display:block}
+.history-turn-heading{font-weight:750}
+.turn-history-row .history-step{display:block;margin:5px 0 0 8px;padding:3px 0 3px 10px;border-left:2px solid #d8d2bf;line-height:1.65}
+.turn-history-row .history-system-step{padding:5px 8px 5px 10px;background:#f5f0df;border-color:#d5b675;border-radius:0 5px 5px 0}
+.turn-history-row .history-system-step[data-phase="after"]{margin-top:8px;border-top:1px solid #e4d9ba}
+.history-step-label{display:block;font-size:10px;font-weight:750;color:#806334;letter-spacing:.025em}
+.game #historyEntries > .history-system{color:#775c2b;background:#f4efdf}
+.history-system-icon{display:inline-grid;place-items:center;width:21px;height:21px;vertical-align:middle;margin-right:5px;color:#98742f}
+.history-system-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.live-bonus{display:inline-block;color:#775008;background:#fff0bd;border-radius:5px;padding:1px 5px;font-size:11px;margin-top:4px}
+.live-score-details{font-size:11px;margin-top:4px;color:#314d57;position:relative;text-align:left}
+.live-score-details summary{cursor:pointer;min-height:24px;padding:4px 0;text-decoration:underline;text-underline-offset:3px}
+.live-score-details dl{position:fixed;z-index:30;right:18px;width:260px;margin:0;background:#fffdf4;border:1px solid #d7caa8;box-shadow:0 6px 20px #173d4d26;border-radius:9px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:7px 12px;white-space:normal}
+.live-score-details dd{margin:0;font-weight:800}.live-score-details dt:last-of-type,.live-score-details dd:last-of-type{border-top:1px solid #ded6c6;padding-top:7px}
+@media(max-width:1100px),(max-height:600px){.live-score-details dl{position:static;width:auto;min-width:210px;margin:4px 0}}
+
+@media(max-width:1100px),(max-height:600px){.compact-players .live-score-details{display:none}.compact-players .live-bonus{position:absolute;top:-5px;right:1px;font-size:9px;padding:0 2px}.compact-players .scorebadge{position:relative}.game .compact-player-detail{flex-wrap:wrap;z-index:45;max-height:calc(100dvh - var(--compact-players-height) - var(--compact-bottom) - 28px);overflow:auto}.compact-score-detail{flex-basis:100%}.compact-score-detail:empty{display:none}}
+
+.live-bonus{justify-self:start;white-space:nowrap}.scorebadge:has(.live-score-details[open]){z-index:5}

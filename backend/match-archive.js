@@ -1,4 +1,5 @@
 "use strict";
+const Journal=require('./match-journal');
 const MapOptions = require("../shared/map-options");
 const {randomUUID,createHash}=require('node:crypto');
 const canonical=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
@@ -16,6 +17,9 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null,engine=Eng
     if(!room.game || room.archiveClosedAt) return;
     room.matchId ||= randomUUID();
     const g=room.game, previous=room._archiveState;
+    Journal.syncRoom(room);
+    if(!previous&&room.archiveSeq>=0)Journal.record(g,'notice',null,{text:'Grabación reanudada tras reiniciar el servidor.'},{system:true});
+    if(endReason)Journal.record(g,'ended',null,{text:endReason},{system:true});
     engine.normalize(g);
     const identity=JSON.stringify(room.members.map(m=>[m.name,m.color,!!m.bot,m.accountId||null,m.guestId||null,!!m.autopilot,!!m.bot||!!(m.ws&&!m.ws.closed)]));
     // The action observer already recorded this exact state. Staging commonly

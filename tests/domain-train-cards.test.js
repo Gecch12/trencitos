@@ -49,7 +49,7 @@ test("visible draws replace the selected slot or shrink the market when the deck
   }
 });
 
-test("visible locomotives finish the turn; blind locomotives count as one draw", () => {
+test("visible wildcards finish the turn; blind wildcards count as one draw", () => {
   const visible = Cards.decideTrainDraw(frozen(pile({ deck: ["blue"], face: ["wild"] })), { index: 0 }, context).plan;
   assert.equal(visible.endTurn, true);assert.equal(visible.drawCount, 1);
   for (const drawCount of [0,1]) {

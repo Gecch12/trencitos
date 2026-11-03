@@ -1,5 +1,5 @@
 ---
-{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"released","updated":"2026-11-03"}
+{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"worktree","updated":"2026-11-03"}
 ---
 # Cartas, pagos y limpieza de la interfaz
 
@@ -10,10 +10,10 @@ pendientes de resultados/avatar, además de las cinco propuestas sobre cartas.
 
 - [x] Historial: nombre y miniatura; carta pública para todos, robo del mazo
   visible solo al dueño y reverso para los demás, incluso en replay público.
-- [x] Renovación por tres locomotoras: brillo, abanico hacia el mazo y reparto
-  escalonado; duración actual 420 ms, movimiento reducido 120 ms, bloqueo local de robos.
-  Lecturas/reconexión no repiten; estados nuevos y cancelaciones restauran la mesa.
-- [x] Pago como suma de cartas con cantidades, actualización al usar locomotoras,
+- [x] Renovación por tres comodines: brillo, abanico hacia el mazo y reparto
+  escalonado; duración actual 1.200 ms, movimiento reducido 120 ms, bloqueo local de robos.
+  Lecturas/reconexión no repiten; estados nuevos esperan al final visual y las cancelaciones restauran la mesa.
+- [x] Pago como suma de cartas con cantidades, actualización al usar comodines,
   existencias en esquina, nombres accesibles sin texto visible redundante.
 - [x] Túnel: quitar los dos párrafos y mostrar cuántas cartas válidas faltan.
 - [x] «Ver mapa» minimiza billetes con reloj y borrador preservados.
@@ -42,12 +42,39 @@ pendientes de resultados/avatar, además de las cinco propuestas sobre cartas.
 - `node scripts/check-docs.js --base HEAD`: 38 documentos, 14 fichas correctos;
   `git diff --check` limpio.
 
-## Siguiente paso
+## Legibilidad, mano y recuperación · 2026-11-03
 
-La secuencia de recogida/revelación y envío encadenado está publicada en
-`b8e7b37`, Live a las 12:05:14 Lima. Observar la experiencia con la nueva versión;
-mediciones y límites en [Producción](../production.md). La demora al añadir bots
-queda para otra tarea, por indicación de Ángel.
+Ampliación aprobada con «implementa» después de Moti:
+
+- Robos observados con recogida, pausa y vuelo de 680 ms, separados 320 ms.
+  Los del mazo rival mantienen el reverso; los visibles conservan su color.
+- Renovación de 1.200 ms, después del vuelo que la provoca; historial público
+  con cinco miniaturas retiradas. Movimiento reducido: 120 ms.
+- Dos comodines visibles impiden preseleccionar una segunda carta tras tomar
+  una visible, hasta conocer su reemplazo. El servidor conserva su rechazo
+  de dependencias sobre una mesa renovada.
+- El robo oculto avanza mientras llega la respuesta. El giro termina antes
+  de incorporarse; no se adivinan colores ni se colocan reversos en la mano.
+- La mano conserva sus grupos y anima la distribución en 230 ms, reservando
+  el hueco de un color conocido antes del aterrizaje.
+- Terminología «comodín/comodines» en código y UI, con lectura de textos antiguos.
+- Recuperación automática por cuenta: aceptación y evidencia en [Identidad](identity.md).
+- Retiro del blanco del catálogo y de la asignación a bots; fuentes visuales
+  inactivas fuera de la entrega HTTP. Restauración con color activo disponible.
+
+Verificado localmente: suite completa **645/645** (159 s), 27 comprobaciones
+posteriores de cuenta/catálogo/HTTP y 15 de reglas, traducciones y restauración.
+Dieciséis recorridos de robos, renovación/historial con actor-rival-espectador,
+lobby con dos clientes, recuperación por cuenta y replay público/privado
+(264 pasos), todos correctos en Chrome. Las pruebas pertinentes se repitieron
+tras los últimos ajustes; no se presenta como una segunda suite completa.
+Se inspeccionaron capturas de mano, renovación y puesto recuperado.
+[Evidencia y límites](../qa/card-experience/validation.json).
+
+La prueba de preparación inicial ahora admite una renovación aleatoria sin
+confundirla con un inicio de turno; evita el fallo intermitente ya observado.
+Próximo paso: publicar esta ampliación cuando se solicite. La demora al añadir
+bots sigue fuera de este alcance, por indicación de Ángel.
 
 ## Dos intenciones y revelación durante el recorrido · 2026-11-03
 

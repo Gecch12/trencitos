@@ -1460,3 +1460,8 @@ body{background:linear-gradient(135deg,#dce6e3,#ebe7dc 60%,#d7e4e5);color:var(--
 .mapscroll { max-height: none; min-height: 0; }
 .boardtools { flex-wrap: wrap; justify-content: flex-end; }
 .board-expanded .mapscroll { height: auto; max-height: none; min-height: 0; }
+
+/* Reserve a known incoming suit before its flight lands. */
+.hand .traincard.is-arriving{visibility:hidden;pointer-events:none}
+.hand .traincard{transform-origin:top left}
+.history-market-refresh .history-draw{display:flex;gap:4px;margin-top:5px}

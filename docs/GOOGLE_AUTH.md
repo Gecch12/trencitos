@@ -132,3 +132,17 @@ El archivo se vincula por cookie privada, nunca por apodo ni por un ID enviado p
 el cliente. Logout rota la cookie. Reglas y pruebas en [historial](history-replay.md).
 Una solicitud de borrado debe revisar también las reclamaciones y los registros
 compartidos del archivo; borrar Auth no elimina automáticamente esos datos.
+
+
+## Recuperar una sala vinculada
+
+Abrir una URL de sala consulta la cuenta y recupera automáticamente su puesto.
+El navegador conserva el destino al ir al perfil e iniciar sesión. La ruta
+`/api/account/recover` acepta `resume:true` y la credencial local: si pertenece
+al puesto de esa cuenta y sigue vigente, la reutiliza; de otro modo, rota solo
+tras verificar propiedad. Invitados mantienen el acceso por credencial privada.
+No se infiere propiedad por apodo, color ni identificadores enviados por el cliente.
+Una pestaña sustituida no inicia recuperaciones automáticas en bucle. El bot
+cede al reconectar fuera de su turno; si lo está ejecutando, termina ese turno.
+Los botones de enlace privado se ocultan únicamente cuando el puesto está vinculado
+a la cuenta presente. Cerrar sesión vuelve a mostrar las opciones del invitado.

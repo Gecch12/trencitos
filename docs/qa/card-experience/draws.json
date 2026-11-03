@@ -1,0 +1,354 @@
+{
+  "at": "2026-11-03T18:25:01.614Z",
+  "checks": [
+    "Blind double click: immediate pickups, immediate dependent send, two durable draws, no duplicate flights/sounds or rival disclosure",
+    "Two visible equal-color cards retain their distinct original slots",
+    "Depleted deck rebases the queued card after the first slot is removed",
+    "Two visible wildcards block a premature second choice; third wildcard renews the market and records public history",
+    "Stale action rejects both provisional cards, restores controls and never executes the queued choice",
+    "Disconnect after send: two persisted draws, ordered same-ID retry and no replayed animation",
+    "390px mobile and reduced motion preserve pending/confirmed semantics without overflow",
+    "Delayed ACK keeps the same two-card hand through both authoritative states, without double counting",
+    "Blind card flips to a decoded color, lands once, and does not wait for delayed ACK",
+    "Resize cancels geometry while retaining both already sent commands",
+    "Server without feedback capability keeps the legacy single confirmed animation",
+    "Slow persistence holds both blind cards along their route outside the hand with a waiting label, then decoded colors land once",
+    "Older feedback-only server retains sequential revision-based sends and two reconciled flights",
+    "Two blind states before either ACK correlate exact colors to both clicks without double counts or repeated effects",
+    "A new suit reserves its landing slot; existing hand groups keep identity and move smoothly",
+    "Failed remote commit removes previews, rolls back hand and keeps play paused"
+  ],
+  "timings": [
+    {
+      "case": "QADR01",
+      "click": 0,
+      "feedbackMs": 3,
+      "frameMs": 34,
+      "confirmationMs": 654,
+      "colorRecognizableMs": 822.7999999523163,
+      "handArrivalMs": 857.1000000238419
+    },
+    {
+      "case": "QADR01",
+      "click": 1,
+      "feedbackMs": 1.2999999523162842,
+      "frameMs": 13.699999928474426,
+      "confirmationMs": 599.7999999523163,
+      "colorRecognizableMs": 763.6999999284744,
+      "handArrivalMs": 798.0999999046326
+    },
+    {
+      "case": "QADR02",
+      "click": 0,
+      "feedbackMs": 3.299999952316284,
+      "frameMs": 44.5,
+      "confirmationMs": 669.3999999761581,
+      "colorRecognizableMs": 196.20000004768372,
+      "handArrivalMs": 529.6000000238419
+    },
+    {
+      "case": "QADR02",
+      "click": 1,
+      "feedbackMs": 1.3000000715255737,
+      "frameMs": 14,
+      "confirmationMs": 613.1000000238419,
+      "colorRecognizableMs": 198.70000004768372,
+      "handArrivalMs": 565.6000000238419
+    },
+    {
+      "case": "QADR03",
+      "click": 0,
+      "feedbackMs": 3.399999976158142,
+      "frameMs": 42.59999990463257,
+      "confirmationMs": 568.2999999523163,
+      "colorRecognizableMs": 209.39999997615814,
+      "handArrivalMs": 526.0999999046326
+    },
+    {
+      "case": "QADR03",
+      "click": 1,
+      "feedbackMs": 1.399999976158142,
+      "frameMs": 13.399999976158142,
+      "confirmationMs": 512.3999999761581,
+      "colorRecognizableMs": 197.39999997615814,
+      "handArrivalMs": 564.2999999523163
+    },
+    {
+      "case": "QADR04",
+      "click": 0,
+      "feedbackMs": 3.5999999046325684,
+      "frameMs": 45,
+      "confirmationMs": 531.5999999046326,
+      "colorRecognizableMs": 208.09999990463257,
+      "handArrivalMs": 535.0999999046326
+    },
+    {
+      "case": "QADR05",
+      "click": 0,
+      "feedbackMs": 3,
+      "frameMs": 48.89999997615814
+    },
+    {
+      "case": "QADR05",
+      "click": 1,
+      "feedbackMs": 1.399999976158142,
+      "frameMs": 13.699999928474426,
+      "colorRecognizableMs": 198.5
+    },
+    {
+      "case": "QADR06",
+      "click": 0,
+      "feedbackMs": 2.799999952316284,
+      "frameMs": 40
+    },
+    {
+      "case": "QADR06",
+      "click": 1,
+      "feedbackMs": 1.399999976158142,
+      "frameMs": 13.799999952316284
+    },
+    {
+      "case": "QADR07",
+      "click": 0,
+      "feedbackMs": 2.799999952316284,
+      "frameMs": 13.399999976158142,
+      "confirmationMs": 573.8999999761581,
+      "colorRecognizableMs": 65.29999995231628,
+      "handArrivalMs": 181.79999995231628
+    },
+    {
+      "case": "QADR07",
+      "click": 1,
+      "feedbackMs": 1.2999999523162842,
+      "frameMs": 15.100000023841858,
+      "confirmationMs": 544.2999999523163,
+      "colorRecognizableMs": 64.70000004768372,
+      "handArrivalMs": 181.10000002384186
+    },
+    {
+      "case": "QADR11",
+      "click": 0,
+      "feedbackMs": 2.899999976158142,
+      "frameMs": 41.799999952316284,
+      "confirmationMs": 565,
+      "colorRecognizableMs": 211.5,
+      "handArrivalMs": 528.7999999523163
+    },
+    {
+      "case": "QADR11",
+      "click": 1,
+      "feedbackMs": 1.5,
+      "frameMs": 15,
+      "confirmationMs": 506.1999999284744,
+      "colorRecognizableMs": 198.59999990463257,
+      "handArrivalMs": 565.0999999046326
+    },
+    {
+      "case": "QADR12",
+      "click": 0,
+      "confirmationMs": 60.5,
+      "colorRecognizableMs": 377.40000009536743,
+      "handArrivalMs": 528.5
+    },
+    {
+      "case": "QADR08",
+      "click": 0,
+      "feedbackMs": 3,
+      "frameMs": 44.799999952316284
+    },
+    {
+      "case": "QADR08",
+      "click": 1,
+      "feedbackMs": 1.399999976158142,
+      "frameMs": 13.099999904632568
+    },
+    {
+      "case": "QADR10",
+      "click": 0,
+      "confirmationMs": 135.5
+    },
+    {
+      "case": "QADR13",
+      "click": 0,
+      "feedbackMs": 2.899999976158142,
+      "frameMs": 47.299999952316284,
+      "confirmationMs": 1063.8999999761581,
+      "colorRecognizableMs": 1227.1000000238419,
+      "handArrivalMs": 1261.6000000238419
+    },
+    {
+      "case": "QADR13",
+      "click": 1,
+      "feedbackMs": 1.1999999284744263,
+      "frameMs": 13.599999904632568,
+      "confirmationMs": 1005.5999999046326,
+      "colorRecognizableMs": 1181.3999999761581,
+      "handArrivalMs": 1214.2999999523163
+    },
+    {
+      "case": "QADR14",
+      "click": 0,
+      "feedbackMs": 3,
+      "frameMs": 41.299999952316284,
+      "confirmationMs": 567.2999999523163,
+      "colorRecognizableMs": 728.0999999046326,
+      "handArrivalMs": 762.5
+    },
+    {
+      "case": "QADR14",
+      "click": 1,
+      "feedbackMs": 1.3000000715255737,
+      "frameMs": 13.5,
+      "confirmationMs": 513.3999999761581,
+      "colorRecognizableMs": 681.2000000476837,
+      "handArrivalMs": 714.3999999761581
+    },
+    {
+      "case": "QADR15",
+      "click": 0,
+      "feedbackMs": 3.799999952316284,
+      "frameMs": 47.10000002384186,
+      "confirmationMs": 629.1999999284744,
+      "colorRecognizableMs": 806.3999999761581,
+      "handArrivalMs": 840.8999999761581
+    },
+    {
+      "case": "QADR15",
+      "click": 1,
+      "feedbackMs": 1.5,
+      "frameMs": 3.899999976158142,
+      "confirmationMs": 555,
+      "colorRecognizableMs": 721.0999999046326,
+      "handArrivalMs": 755
+    },
+    {
+      "case": "QADR09",
+      "click": 0,
+      "feedbackMs": 3.8000000715255737,
+      "frameMs": 42.5
+    },
+    {
+      "case": "QADR09",
+      "click": 1,
+      "feedbackMs": 1.3000000715255737,
+      "frameMs": 11.900000095367432
+    }
+  ],
+  "errors": [],
+  "server": {
+    "ok": false,
+    "storage": "supabase",
+    "rooms": 16,
+    "timingsMs": {
+      "queue": {
+        "count": 146,
+        "p50": 0.02,
+        "p95": 462.23,
+        "max": 954.66
+      },
+      "other.queue": {
+        "count": 116,
+        "p50": 0.01,
+        "p95": 0.09,
+        "max": 6.11
+      },
+      "mutation": {
+        "count": 141,
+        "p50": 5.57,
+        "p95": 9.35,
+        "max": 26.11
+      },
+      "other.mutation": {
+        "count": 112,
+        "p50": 5.05,
+        "p95": 8.41,
+        "max": 26.11
+      },
+      "delivery": {
+        "count": 140,
+        "p50": 0.01,
+        "p95": 0.46,
+        "max": 2.62
+      },
+      "other.delivery": {
+        "count": 112,
+        "p50": 0,
+        "p95": 0.35,
+        "max": 0.6
+      },
+      "total": {
+        "count": 146,
+        "p50": 8.34,
+        "p95": 547.86,
+        "max": 1032.59
+      },
+      "other.total": {
+        "count": 116,
+        "p50": 6.89,
+        "p95": 13.77,
+        "max": 30.08
+      },
+      "commit": {
+        "count": 90,
+        "p50": 2.93,
+        "p95": 541.23,
+        "max": 1024.14
+      },
+      "other.commit": {
+        "count": 63,
+        "p50": 2.88,
+        "p95": 5.83,
+        "max": 13.84
+      },
+      "draw.queue": {
+        "count": 30,
+        "p50": 0.03,
+        "p95": 552.26,
+        "max": 954.66
+      },
+      "draw.mutation": {
+        "count": 28,
+        "p50": 6.9,
+        "p95": 12.6,
+        "max": 20.26
+      },
+      "draw.commit": {
+        "count": 26,
+        "p50": 8.91,
+        "p95": 615.85,
+        "max": 1024.14
+      },
+      "draw.delivery": {
+        "count": 27,
+        "p50": 0.4,
+        "p95": 0.79,
+        "max": 2.62
+      },
+      "draw.total": {
+        "count": 30,
+        "p50": 516.44,
+        "p95": 638.68,
+        "max": 1032.59
+      },
+      "mixed.mutation": {
+        "count": 1,
+        "p50": 5.16,
+        "p95": 5.16,
+        "max": 5.16
+      },
+      "mixed.commit": {
+        "count": 1,
+        "p50": 1.54,
+        "p95": 1.54,
+        "max": 1.54
+      },
+      "mixed.delivery": {
+        "count": 1,
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      }
+    }
+  },
+  "passed": true
+}

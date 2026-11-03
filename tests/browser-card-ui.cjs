@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('nod
 const {chromium}=require('playwright'),E=require('../backend/engine'),{resultsRoom}=require('./helpers/results-preview');
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'trencitos-card-ui-'));
 Object.assign(process.env,{STATE_BACKEND:'file',STATE_FILE:path.join(temp,'state.json'),AUTH_ENABLED:'false'});
-const app=require('../backend/server'),out=path.resolve('.qa/card-ui');fs.mkdirSync(out,{recursive:true});
+const app=require('../backend/server'),out=path.resolve(process.env.QA_OUT||'.qa/card-ui');fs.mkdirSync(out,{recursive:true});
 const report={checks:[],errors:[],date:new Date().toISOString()};let browser;
 function room(code,refresh) {
  const game=E.newGame(['Angel','Rival']);
@@ -37,11 +37,12 @@ function room(code,refresh) {
  });
  await actor.locator('#drawblind').click();await actor.waitForFunction(()=>game.history.some(e=>e.draw));
  for(const p of [actor,rival,spectator])await p.waitForSelector('.history-draw img');
- assert.match(await actor.locator('.history-draw img').last().getAttribute('src'),/orange.svg/);
+ assert.match(await actor.locator('.history-draw img').last().getAttribute('src'),/back.svg/);
+ assert.equal(await actor.evaluate(()=>game.history.find(e=>e.draw).draw.color),'orange');
  for(const p of [rival,spectator])assert.match(await p.locator('.history-draw img').last().getAttribute('src'),/back.svg/);
  for(const p of [rival,spectator]){
   await p.waitForFunction(()=>observedDrawFlights.length);
-  assert.deepEqual(await p.evaluate(()=>observedDrawFlights[0]),{color:'back',duration:560});
+  assert.deepEqual(await p.evaluate(()=>observedDrawFlights[0]),{color:'back',duration:680});
  }
  assert.equal(await actor.locator('.market-refresh-layer').count(),0);
  await actor.locator('[data-market-index="0"]').click();
@@ -58,8 +59,9 @@ function room(code,refresh) {
   // Observe even the 120 ms reduced-motion crossfade without timing-sensitive polling.
   await a.evaluate(()=>{window.refreshSeen=[];new MutationObserver(()=>{const layer=document.querySelector('.market-refresh-layer');if(layer&&!window.refreshSeen.length)window.refreshSeen.push({cards:layer.children.length,disabled:[...document.querySelectorAll('#market button')].every(b=>b.disabled),durations:layer.getAnimations({subtree:true}).map(a=>a.effect.getTiming().duration)});}).observe(document.querySelector('#market'),{childList:true,subtree:true});});
   await a.locator('[data-market-index="2"]').click();await a.waitForFunction(()=>window.refreshSeen.length);
-  const seen=await a.evaluate(()=>window.refreshSeen[0]);assert.equal(seen.cards,10);assert.equal(seen.disabled,true);assert.ok(seen.durations.every(d=>d===(variant==='reduced'?120:420)));
+  const seen=await a.evaluate(()=>window.refreshSeen[0]);assert.equal(seen.cards,10);assert.equal(seen.disabled,true);assert.ok(seen.durations.every(d=>d===(variant==='reduced'?120:1200)));
   if(variant==='normal') {
+   assert.equal(await a.locator('[data-history-id^="turn:"] .history-market-refresh img').count(),5);
    await b.waitForSelector('.market-refresh-layer');
    const draws=r.game.drawSerial;await a.evaluate(()=>act('draw_train',{index:0}));assert.equal(r.game.drawSerial,draws);
    await a.waitForTimeout(250);await a.locator('#market').screenshot({path:path.join(out,'market-renewal.png'),animations:'allow'});
@@ -69,6 +71,7 @@ function room(code,refresh) {
    await a.evaluate(()=>cancelMarketRefresh());
    const index=r.game.face.findIndex(c=>c!=='wild');await a.locator(`[data-market-index="${index}"]`).click();
    await b.waitForFunction(()=>game.current===1);
+   assert.equal(await b.evaluate(()=>!!marketRefresh),true,'a newer state must not cut the observed renewal short');
   }
   await a.waitForFunction(()=>!marketRefresh);await b.waitForFunction(()=>!marketRefresh);
   assert.equal(await a.locator('.market-refresh-layer').count(),0);
@@ -77,7 +80,7 @@ function room(code,refresh) {
   await a.reload();await a.waitForFunction(()=>!!game);assert.equal(await a.locator('.market-refresh-layer').count(),0);
   await Promise.all([a,b].map(p=>p.close()));
  }
- report.checks.push('Renewal: actual third locomotive, shared animation, input lock, reduced motion, resize, newer state and reconnect');
+ report.checks.push('Renewal: actual third wildcard, shared animation, input lock, reduced motion, resize, newer state and reconnect');
  const build=room('QABULD',false);app.rooms.set(build.code,build);const p=await page(build,0);
  const route=build.game.routes.find(r=>r.color==='gray'&&r.n===2&&!r.ferry);
  await p.evaluate(routeId=>{buildTarget={routeId};uiDialog='build';showBuildDialog();},route.id);

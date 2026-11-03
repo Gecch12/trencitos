@@ -103,7 +103,7 @@ test("construction allows a tunnel with just its base cost, without reserving hy
   game.routes[0].ferry = 1;
   assert.match(UI.construction(game, 0, { routeId: 0 }).reason, /cartas suficientes/);
 });
-test("tunnel payments reserve base first, allow matching colors and prefer preserving locomotives", () => {
+test("tunnel payments reserve base first, allow matching colors and prefer preserving wildcards", () => {
   const tunnel = { color: "white", base: { color: "white", regular: 2, wild: 1 }, surcharge: 2 };
   const hand = ["white", "white", "white", "white", "wild", "wild", "wild", "red"];
   const before = [...hand];
@@ -118,7 +118,7 @@ test("tunnel payments reserve base first, allow matching colors and prefer prese
     { color: "white", regular: 1, wild: 1 },
   ]);
 });
-test("a tunnel started with only locomotives cannot pay its surcharge with colored cards", () => {
+test("a tunnel started with only wildcards cannot pay its surcharge with colored cards", () => {
   const tunnel = { color: "wild", base: { color: "wild", regular: 0, wild: 2 }, surcharge: 1 };
   assert.deepEqual(UI.tunnelPayments(["wild", "wild", "red", "red"], tunnel), []);
   assert.deepEqual(UI.tunnelPayments(["wild", "wild", "wild", "red"], tunnel), [

@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-03T18:15:51.830Z",
+  "errors": [],
+  "tests": [
+    {
+      "full": true,
+      "frames": 264,
+      "history": true,
+      "loading": true,
+      "viewpoint": true,
+      "milestones": true,
+      "stats": true,
+      "mobile": true
+    },
+    {
+      "full": false,
+      "frames": 264,
+      "history": true,
+      "loading": true,
+      "viewpoint": true,
+      "milestones": true,
+      "stats": true,
+      "mobile": true
+    }
+  ],
+  "browser": "156.0.8078.80",
+  "passed": true
+}

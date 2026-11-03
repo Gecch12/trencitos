@@ -34,7 +34,6 @@ const PLAYER_PALETTE = [
   { color: "#9ed7ed", name: "Azul hielo" },
   { color: "#71bba0", name: "Jade" },
   { color: "#6269c7", name: "Índigo" },
-  { color: "#ffffff", name: "Blanco" },
 ];
 const PLAYER_COLORS = PLAYER_PALETTE.map(({ color }) => color);
 // Compatibility facade: topology comes from the immutable map definition;

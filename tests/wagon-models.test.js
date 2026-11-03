@@ -95,7 +95,7 @@ test('passengers lean out from inside the window and have bent supporting or wav
 
 test('retired cargo models disappear while old paints keep their ownership', async () => {
   const { WAGON_STYLES, wagonStyle } = await import('../frontend/wagon-models.mjs');
-  assert.equal(WAGON_STYLES.length,21);
+  assert.equal(WAGON_STYLES.length,20);
   assert.ok(WAGON_STYLES.every(s=>!['mushrooms','crystals','candy'].includes(s.model)));
   assert.equal(wagonStyle('#71bba0',{model:'mushrooms'}).model,'dwelling');
   assert.equal(wagonStyle('#6269c7',{model:'crystals'}).model,'circus');
@@ -141,4 +141,16 @@ test('passenger compositions have round faceless heads and independent varied cl
   assert.equal(skin.size,8);assert.equal(hair.size,8);assert.equal(clothes.size,12);
   assert.equal(hairStyles.size,4);assert.equal(outfits.size,4);
   for(const mixes of perSkin.values()) {assert.ok(mixes.hair.size>=4);assert.ok(mixes.clothes.size>=4);assert.ok(mixes.styles.size>=3);}
+});
+
+test('inactive white family cannot be selected; saved seats receive distinct active colors',async()=>{
+ const Lobby=require('../shared/lobby-ui');
+ const {WAGON_STYLES,wagonStyle}=await import('../frontend/wagon-models.mjs');
+ const inactive=await import('../frontend/inactive/midsommar/model.mjs');
+ assert.equal(inactive.MIDSOMMAR_TRAIN.enabled,false);
+ assert.equal(Lobby.isColor('#ffffff'),false);
+ assert.ok(!WAGON_STYLES.some(style=>style.color==='#ffffff'));
+ assert.equal(wagonStyle('#ffffff',{model:'hippie'}).model,'passenger');
+ const colors=Lobby.restoreColors([{color:'#ffffff'},{color:'#d45748'}]);
+ assert.equal(new Set(colors).size,2);assert.ok(colors.every(Lobby.isColor));
 });

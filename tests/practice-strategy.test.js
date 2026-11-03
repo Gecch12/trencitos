@@ -89,7 +89,7 @@ test("useful visible colors beat blind draws; an unhelpful market leads to the d
   assert.ok(chooseBotAction(g, 0, last).index >= 0);
 });
 
-test("mandatory ferry locomotives are targeted, but visible locomotives never become a second draw", () => {
+test("mandatory ferry wildcards are targeted, but visible wildcards never become a second draw", () => {
   const g = fixture([route(0, "PAR", "BRU", 4, "red", { ferry: 2 })], ["red", "red", "red", "red"], [ticket("PAR", "BRU")]);
   g.face = ["red", "wild", "blue"];
   assert.equal(chooseBotAction(g, 0, first).index, 1);

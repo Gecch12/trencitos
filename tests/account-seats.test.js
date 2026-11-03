@@ -27,3 +27,13 @@ test('an account cannot acquire two seats; practice stays ephemeral',async()=>{
   const f=setup();await assert.rejects(()=>f.api('link','other-account',{code:'123456',token:'a'.repeat(48)}),{status:409});
   f.r.practice=true;await assert.rejects(()=>f.api('link','me',{code:'123456',token:'a'.repeat(48)}),{status:404});
 });
+
+test('automatic resume keeps a valid credential; stale credentials recover only for the owner',async()=>{
+ const f=setup();await f.api('link','me',{code:f.r.code,token:'a'.repeat(48)});
+ let closed=false;f.r.members[0].ws={send(){},close(){closed=true;}};
+ const same=await f.api('recover','me',{code:f.r.code,token:'a'.repeat(48),resume:true});
+ assert.equal(same.token,'a'.repeat(48));assert.equal(closed,false);
+ await assert.rejects(()=>f.api('recover','stranger',{code:f.r.code,token:same.token,resume:true}),{status:403});
+ const recovered=await f.api('recover','me',{code:f.r.code,token:'f'.repeat(48),resume:true});
+ assert.notEqual(recovered.token,same.token);assert.equal(closed,true);
+});

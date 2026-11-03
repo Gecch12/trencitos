@@ -40,10 +40,14 @@ composiciones de pago ausentes. Al cerrarse:
 | Solicitante | Sala privada | Sala pública |
 | --- | --- | --- |
 | Participante con identidad verificada | Replay completo y auditoría | Replay completo y auditoría |
-| Cualquier otra persona con el enlace | Sin acceso | Replay sin manos, destinos, ofertas ni orden de mazos |
+| Cualquier otra persona con el enlace | Sin acceso | Replay completo de juego, sin auditoría de identidad |
 
-El resultado público muestra puntos, pero no identidades de destinos privados.
-Ese filtro se aplica también al espectador en vivo al terminar. Los bots fijos y
+El replay cerrado revela los hechos registrados: manos iniciales y actuales,
+robos del mazo, destinos ofrecidos/conservados/descartados, pagos, resultados y
+orden de los mazos. `full:true` indica transparencia de juego; `canAudit` autoriza
+por separado la descarga de auditoría para participantes. No se publican IDs de
+cuenta, cookies ni credenciales. El resultado del espectador en vivo sigue
+mostrando puntos sin identidades de destinos privados, incluso al terminar. Los bots fijos y
 los reemplazos usan icono de robot; la vista espectadora no incluye el panel vacío
 de mano. Un enlace de observación caducado muestra una alerta visible en Partidas.
 
@@ -105,7 +109,7 @@ El lector usa la definición grabada aunque ese mapa ya no esté en el catálogo
 del servidor. Comprueba versión de definición y coherencia entre referencias de
 metadatos, definición y vistas; no ejecuta reglas actuales ni reconstruye datos
 desde el estado privado. Público y participantes reciben la misma definición,
-pero mantienen sus respectivas vistas y filtros de secretos. La auditoría devuelve
+y el replay cerrado hace transparentes los hechos guardados en todas las vistas. La auditoría devuelve
 los frames originales completos, con hashes intactos. El verificador de auditoría
 comprueba la cadena, no certifica legalidad histórica ni balance.
 
@@ -172,19 +176,76 @@ compartirla revela esa información de la partida cerrada.
 
 ## Interfaz e idiomas
 
-El historial en vivo muestra «nombre robó» y una miniatura por robo. `history.draw`
-conserva el origen y la carta en el estado privado; `engine.historyEntryView`
-omite el color de robos del mazo para rivales y espectadores, que ven el reverso.
-El filtro se aplica también a eventos de pasos del replay público, además de sus
-vistas. El propietario conserva sus colores tras reconectar. Los registros
-anteriores sin metadatos siguen mostrando su texto, sin inventar cartas.
-Los avatares del historial comparten las proporciones del panel y resultados;
-la repetición no reproduce avisos de cuenta atrás de los plazos archivados.
-Las variaciones decorativas de Pasajeros y Midsommar Express se reconstruyen con el código de sala,
+Las partidas nuevas incorporan `game.journal`, un registro de hechos anexados
+con ID, fecha, turno, puesto y actor histórico (humano, bot, reemplazo o reloj).
+`turnHistory` agrupa esos hechos para la vista autorizada: una fila lógica por
+turno y filas independientes para conexión, control, pausa, inicio y cierre.
+Dos robos, renovación de mesa y resolución de túnel comparten su fila; la oferta
+de destinos conserva el turno de origen aunque se confirme durante otro turno.
+Las cantidades recibidas, conservadas y descartadas son públicas. Las identidades
+de destinos, cartas iniciales y colores robados del mazo quedan solo en la vista
+del dueño durante la partida. Las ofertas y descartes nuevos guardan sus
+identidades para el replay cerrado; las grabaciones anteriores solo revelan lo
+que realmente contienen. Los hitos privados usan IDs independientes para no dejar huecos que
+revelen actividad privada en la secuencia pública.
+
+El registro incluye cartas reveladas, base, extra exigido/pagado y desenlace del
+túnel, incluso extra cero, desistimiento y tiempo agotado; pagos de rutas y
+estaciones, reciclados, pases, acciones automáticas, conexiones, cambios de
+control, pausa por ausencia total, reanudación, última ronda y cierre. Los
+cambios de destinos cumplidos son privados; el liderazgo del camino largo es
+público. Reconexión y toma de control son hechos independientes. El actor queda
+fijado al actuar, no se deduce del ocupante actual del puesto.
+
+El historial visible nuevo conserva la partida completa, sin el límite de 25
+mensajes del registro legado `logs/history`. Estos campos antiguos siguen
+existiendo para compatibilidad. Al continuar una partida anterior, se conservan
+sus mensajes disponibles y se muestra registro parcial; no se inventan turnos
+ni cartas anteriores. El replay utiliza las perspectivas grabadas y completa
+su información visible con los hechos del estado y diario originales, sin
+recalcular jugadas ni alterar hashes:
+el paso actual muestra solo lo ya ocurrido, y las filas futuras se distinguen.
+La repetición no reproduce avisos de cuenta atrás de plazos archivados.
+
+`replay-state.diff` anexa índices de `journal`, `turnHistory` y sus listas de
+hechos cuando crecen. Usa las mismas operaciones v1 y conserva compatibilidad
+con snapshots/diferencias anteriores; evita copiar el prefijo entero en cada
+paso. No modifica archivos ni hashes guardados. El registro del estado, vistas,
+mazos y elecciones reales continúa siendo la autoridad de la reproducción.
+
+La renovación conserva `before/after` en el diario y también en
+`history.marketRefresh` para clientes anteriores. Se registra después del robo
+causante, dentro de su turno, sin duplicar un aviso de sistema. Las nuevas
+reposiciones `market_refill` registran la carta que ocupó el hueco. La secuencia
+de cada robo conserva reciclado, carta tomada, reposición y renovación en su
+orden causal, con `drawNumber` y `endsTurn`. La UI usa subsecciones: una renovación
+intermedia queda entre robos y una posterior al último se identifica como
+«Después del robo». Los registros anteriores no inventan reposiciones ausentes. Los avatares del
+historial conservan las proporciones del panel y el actor histórico.
+
+La presentación omite el número de turno y la etiqueta redundante «Bot»;
+conserva «Bot de reemplazo» y «Automático por tiempo». Los iconos de persona y
+robot quedan centrados en su círculo. Los robos muestran «Robó» y miniaturas de
+18 × 25 px; los robos consecutivos se agrupan si no hay hechos intermedios.
+En vivo el mazo usa reverso incluso para quien robó; el servidor conserva su
+color en la vista propia y lo filtra para rivales/espectadores. En replay todos
+los POV muestran los colores reales guardados, incluidas las manos iniciales
+rivales y las elecciones de billetes.
+
+Cada cambio de líderes del camino más largo se presenta como aviso del sistema
+con trofeo, separado inmediatamente después de la jugada que lo provocó. El
+texto distingue liderazgo y empate, con el bono provisional por jugador.
+`TurnHistory.displayRows` aplica esta separación al historial y al replay sin
+modificar el diario, los IDs de eventos ni las perspectivas ya grabadas; cada
+aviso sigue enlazando al paso donde ocurrió.
+
+Las variaciones decorativas de Pasajeros se reconstruyen con el código de sala,
 puesto, ruta y celda. Cada ruta recorre tandas barajadas de seis sin repeticiones
 internas ni entre el final e inicio de tandas; no se guardan variantes ni
 personajes en los pasos. El
-catálogo visual puede evolucionar sin migrar la grabación.
+catálogo visual puede evolucionar sin migrar la grabación. El blanco retirado
+se sustituye por un color activo libre en copias para presentación; los frames
+y hashes archivados no se reescriben.
 
 Perfil → Historial filtra todas/en curso/completadas/abandonadas y presenta filas
 compactas con fecha, puesto, jugadores, duración, estado y replay; dos líneas
@@ -198,8 +259,10 @@ y Express, compartiendo puesto en empate exacto. No expone IDs de propiedad.
 Resumen cuenta los estados por separado. `/replay?id=UUID`
 reutiliza el tablero, mano y resultados, sin conexión de juego ni envío de acciones.
 Tiene inicio/final, pasos, búsqueda por acción, barra de posición, pausa y velocidades
-0,5×, 1×, 2×, 4× y 8×. Los participantes pueden elegir cualquier perspectiva y consultar
-cartas/destinos del paso; la vista pública recibe únicamente su proyección.
+0,5×, 1×, 2×, 4× y 8×. Todo visitante autorizado puede elegir cualquier
+perspectiva y consultar cartas, destinos, mazos y descartes del paso. La
+vista general conserva el tablero y el historial completo, sin asignar una mano
+propia al observador.
 
 El cliente recibe la definición reconstruida de cada paso junto a su vista.
 Usa los nombres de ciudades guardados incluso en el panel privado, y conserva
@@ -239,9 +302,10 @@ no en `server.js`. Las pruebas SQL usan PGlite y las de OAuth un proveedor simul
 ## Análisis por paso y controles compactos
 
 `GET /api/history/:id?analysis=1` añade una lista `analysis`, alineada con los
-frames. La respuesta ordinaria y la auditoría conservan sus cuerpos anteriores.
+frames. La auditoría conserva los frames originales; la respuesta de juego
+añade `canAudit` y `knowledge` con los mazos guardados.
 Cada paso contiene recursos públicos, rutas construidas, longitud del camino más
-largo y líderes empatados. Solo participantes reciben cantidades/puntos de destinos
+largo y líderes empatados. Todo visitante autorizado recibe cantidades/puntos de destinos
 completados y pendientes y una proyección «Puntuación si terminara ahora».
 Los destinos se leen de `ticketProgress` grabado, que ya incluye la asignación de
 estaciones histórica; la longitud usa `longestTrail` sobre las rutas de ese paso.

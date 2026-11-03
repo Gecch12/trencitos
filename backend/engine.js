@@ -11,6 +11,8 @@ const Destinations=require('../game/domain/destinations');
 const Stations=require('../game/domain/stations');
 const Network=require('../game/domain/network');
 const Scoring=require('../game/domain/scoring');
+const Journal=require('./match-journal');
+const {createLiveScore}=require('../game/queries/live-score');
 const LegacyScoring=require('../game/compat/legacy-scoring');
 const TrainCards=require('../game/domain/train-cards');
 const LegacyTiming=require('../game/compat/legacy-timing');
@@ -70,12 +72,18 @@ function normalize(g,now=Date.now()){
 }
 function fail(message){throw new Error(message)}
 // Preserve legacy pile containers between draws; recycling/renewal replaces them.
-function applyCardPiles(g,plan){
+function applyCardPiles(g,plan,recordRefresh=true){
+ const recycledCount=g.discard.length;
  for(const key of ['deck','discard','face']){
   if(key==='face'?plan.refresh:plan.recycled)g[key]=plan.piles[key];
   else g[key].splice(0,g[key].length,...plan.piles[key]);
  }
- if(plan.refresh)event(g,'market_refresh',null,plan.refresh);
+ if(plan.recycled&&!plan.sequence)Journal.record(g,'recycled',g.phase==='initial'?null:Journal.actorSeat(g,g.current),{count:recycledCount});
+ if(plan.refresh){event(g,'market_refresh',null,plan.refresh);if(recordRefresh)noteMarketRefresh(g,plan.refresh);}
+}
+function noteMarketRefresh(g,refresh,record=true){
+ if(record)Journal.record(g,'market_refresh',g.phase==='initial'?null:Journal.actorSeat(g,g.current),refresh);
+ note(g,'Mesa renovada: aparecieron 3 comodines.',null,{marketRefresh:refresh});
 }
 function draw(g){const plan=TrainCards.drawCard(g,cardContext(g));applyCardPiles(g,plan);return plan.card}
 function recycleDiscards(g){if(g.discard.length)applyCardPiles(g,TrainCards.recycleDiscards(g,cardContext(g)))}
@@ -86,7 +94,8 @@ function newGame(names,first=0,now=Date.now(),timing=null,options={}){
  const decision=Setup.prepareGame({names,first},{map:{tickets:context.tickets.map(t=>({...t}))},rules:context.rules.setup,random});
  if(!decision.ok)throw legacyError(decision.error);
  const g={schemaVersion:MATCH_SCHEMA_VERSION,...references,phase:'initial',current:first,first,initialDone:0,...decision.plan,routes:context.routes.map(r=>({...r,owner:null})),
- discard:[],face:[],finalRemaining:null,lastTrigger:null,drawCount:0,pending:null,logs:[],result:null};
+ discard:[],face:[],finalRemaining:null,lastTrigger:null,drawCount:0,pending:null,logs:[],result:null,journal:[],journalSerial:0};
+ Journal.record(g,'setup',null,{first,players:names.length},{system:true,at:now});
  if(timing)g.timing=GameTiming.normalize(timing);
  actionRandom.set(g,random);
  try{refill(g);startTurn(g,now);return g}finally{actionRandom.delete(g)}
@@ -107,9 +116,11 @@ function note(g,msg,seat=null,details={}){
  const history=historyEntries(g);g.logSerial=(g.logSerial||0)+1;
  g.logs.unshift(msg);g.logs=g.logs.slice(0,25);
  g.history=[{id:g.logSerial,text:msg,seat,...(message?{message}:{}),...details},...history].slice(0,25);
+ if(seat===null&&!details.marketRefresh)Journal.record(g,'notice',null,{text:msg,...(message?{message}:{})},{system:true});
 }
 function assertTurn(g,seat){if(!Number.isInteger(seat)||seat!==g.current)fail('No es tu turno.')}
 function next(g,now=Date.now()){
+ if(Journal.enabled(g)&&g.phase==='play'&&!g.journal?.some(e=>e.turn===g.turnSerial))Journal.record(g,'no_action',g.current,{}, {turn:g.turnSerial,at:now});
  const plan=Turn.planNextTurn(g,{now,rules:turnRules(g)});Object.assign(g,plan.changes);
  if(plan.finalRoundStarted)note(g,'¡Última ronda! Todos tienen un turno final, incluido quien la activó.');
  if(plan.finish){finish(g);return}
@@ -132,18 +143,21 @@ function decideClaim(g,seat,msg,r){
 function action(g,seat,msg,{now=Date.now(),random=crypto.randomInt}={}){
  if(now<g.construction?.until)fail('Espera a que termine la construcción.');
  const previous=actionRandom.get(g);actionRandom.set(g,random);
- try{expire(g,now,random);const serial=g.turnSerial;applyAction(g,seat,msg,now);if(g.turnSerial!==serial&&g.players[seat])g.players[seat].missedTurns=0;recycleDiscards(g);recorded(g,seat,msg)}
+ try{expire(g,now,random);const serial=g.turnSerial;Journal.within(g,{turn:serial,seat,now},()=>{applyAction(g,seat,msg,now);if(g.turnSerial!==serial&&g.players[seat])g.players[seat].missedTurns=0;recycleDiscards(g);recorded(g,seat,msg)});}
  finally{if(previous)actionRandom.set(g,previous);else actionRandom.delete(g)}
 }
 function settleOffer(g,seat,selection,finalize=true,now=Date.now()){
  const p=g.players[seat],decision=Destinations.decideOfferChoice(p,selection,{rules:rulesFor(g).destinations});
  if(!decision.ok)throw legacyError(decision.error);
- const {kept,returned}=decision.plan;p.tickets.push(...kept);g.shortDeck.push(...returned);p.offer=null;
+ const {kept,returned}=decision.plan;const offer=p.offer;
+ Journal.record(g,'tickets_kept',seat,{received:offer.tickets.length,kept:kept.length,discarded:returned.length,tickets:kept,offeredTickets:offer.tickets,discardedTickets:returned},{turn:offer.journalTurn});
+ p.tickets.push(...kept);g.shortDeck.push(...returned);p.offer=null;journalMilestones(g,seat,offer.journalTurn);
  note(g,I18n.message`${p.name} conservó ${kept.length} billete(s) de destino.`,seat);
  if(finalize&&g.phase==='play'&&g.current===seat&&g.turnWaiting)startTurn(g,now);
  if(finalize&&g.phase==='closing'&&!g.players.some(p=>p.offer))finish(g);
 }
-function applyAction(g,seat,msg,now=Date.now()){const value=applyActionImpl(g,seat,msg,now);if(expiring.has(g))recorded(g,seat,msg,true);return value}
+function applyAction(g,seat,msg,now=Date.now()){return Journal.within(g,{turn:g.turnSerial,seat,now,automatic:expiring.has(g)},()=>{
+ const value=applyActionImpl(g,seat,msg,now);if(expiring.has(g))recorded(g,seat,msg,true);return value;});}
 function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='string'||!Number.isInteger(seat)||!g.players[seat])fail('Acción incorrecta.');const p=g.players[seat];
  if(g.phase==='finished')fail('La partida terminó.');
  if(tunnelBusy(g)||(g.phase==='tunnel'&&g.pending?.stage&&msg.type==='keep_tickets'))fail('Espera a que termine el túnel.');
@@ -155,6 +169,7 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
   if(msg.type!=='choose_initial')fail('Selecciona primero los billetes iniciales.');
   const decision=Destinations.decideInitialChoice(g,{seat,indexes:msg.indexes},{rules:rulesFor(g).destinations});
   if(!decision.ok)throw legacyError(decision.error);
+  Journal.record(g,'initial',seat,{received:p.pending.length,kept:decision.plan.kept.length,discarded:p.pending.length-decision.plan.kept.length,tickets:decision.plan.kept,offeredTickets:p.pending,discardedTickets:p.pending.filter(t=>!decision.plan.kept.some(k=>k.id===t.id)),hand:p.hand,handCount:p.hand.length},{system:true});
   p.tickets.push(...decision.plan.kept);p.pending=[];g.initialDone=decision.plan.initialDone;
   if(decision.plan.startPlay){g.phase='play';g.current=g.first;note(g,'¡Partida iniciada!');startTurn(g,now)}
   return;
@@ -173,6 +188,8 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
    awardRoute(g,seat,r);note(g,I18n.message`${p.name} completó el túnel ${cityName(g,r.a)} — ${cityName(g,r.b)}.`,seat);
   }else note(g,I18n.message`${p.name} desistió del túnel.`,seat);
   g.discard.push(...t.revealed);
+  Journal.record(g,'tunnel_result',seat,{routeId:t.routeId,outcome:plan.build?'built':'declined',reason:plan.pendingChanges.reason,extra:plan.pendingChanges.extra||null,points:plan.build?rulesFor(g).routePoints[requireRoute(g,t.routeId).n]:0});
+  if(plan.build)journalMilestones(g,seat);
   if(!expiring.has(g))p.missedTurns=0;Object.assign(t,plan.pendingChanges);g.turnDeadline=null;
   return;
  }
@@ -180,12 +197,15 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
  if(msg.type==='draw_train'){
   const decision=TrainCards.decideTrainDraw(g,{index:msg.index},cardContext(g));
   if(!decision.ok)throw legacyError(decision.error);
-  const plan=decision.plan,c=plan.card;applyCardPiles(g,plan);p.hand.push(c);g.drawCount=plan.drawCount;
+  const plan=decision.plan,c=plan.card;applyCardPiles(g,plan,false);p.hand.push(c);g.drawCount=plan.drawCount;
   // Store the accepted draw once. Views redact blind colors for every other seat.
   g.drawSerial=(g.drawSerial||0)+1;
   g.lastDraw={id:g.drawSerial,seat,index:msg.index,color:c};
   event(g,'draw',seat,{index:msg.index,color:c});
+  for(const fact of plan.sequence)Journal.record(g,fact.type,seat,{...fact.data,drawNumber:plan.drawCount,endsTurn:plan.endTurn});
+  if(!g.deck.length&&!g.discard.length)Journal.record(g,'deck_empty',seat);
   note(g,I18n.message`${p.name} robó una carta de tren.`,seat,{draw:{index:msg.index,color:c}});
+  if(plan.refresh)noteMarketRefresh(g,plan.refresh,false);
   if(plan.endTurn)next(g,now);return;
  }
  if(g.drawCount>0)fail('Debes terminar de robar cartas.');
@@ -193,38 +213,41 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
   const r=routeById(g,msg.routeId),decision=decideClaim(g,seat,msg,r);
   if(!decision.ok)throw legacyError(decision.error);
   const {payment:base,length,points,kind}=decision.plan,color=base.color;
-  if(kind==='build'){spend(g,p,base);awardRoute(g,seat,r,length,points);note(g,I18n.message`${p.name} tomó ${cityName(g,r.a)} — ${cityName(g,r.b)} (+${points}).`,seat);next(g,now);return}
+  if(kind==='build'){spend(g,p,base);awardRoute(g,seat,r,length,points);Journal.record(g,'build',seat,{routeId:r.id,a:r.a,b:r.b,points,payment:base});journalMilestones(g,seat);note(g,I18n.message`${p.name} tomó ${cityName(g,r.a)} — ${cityName(g,r.b)} (+${points}).`,seat);next(g,now);return}
   const revealed=[];for(let i=0;i<3;i++){const c=draw(g);if(c)revealed.push(c)}
   g.phase='tunnel';g.pending=Tunnel.beginTunnel({routeId:r.id,base,revealed,turnDeadline:g.turnDeadline,
    offerDeadlines:g.players.map(player=>player.offer?player.offer.deadline:null)},{now,rules:rulesFor(g).tunnel});
   g.turnDeadline=null;
   event(g,'tunnel_reveal',seat,{routeId:r.id,paymentColor:color,base:{...base},surcharge:g.pending.surcharge,revealed:[...revealed]});
   g.pending.revealId=g.eventSerial;
+  Journal.record(g,'tunnel',seat,{routeId:r.id,a:r.a,b:r.b,base,revealed,surcharge:g.pending.surcharge});
   // The room clock advances the shared reveal, including zero-surcharge tunnels.
   return;
  }
  if(msg.type==='draw_tickets'){
   const decision=Destinations.planOffer({offer:p.offer,shortDeck:g.shortDeck,offerSerial:g.offerSerial,turnDeadline:g.turnDeadline},{now,rules:destinationRules(g)});
   if(!decision.ok)throw legacyError(decision.error);
-  p.offer=decision.plan.offer;g.offerSerial=p.offer.id;g.shortDeck.splice(0,decision.plan.takeCount);
+  p.offer={...decision.plan.offer,journalTurn:g.turnSerial};g.offerSerial=p.offer.id;
+  Journal.record(g,'tickets_offer',seat,{received:p.offer.tickets.length,tickets:p.offer.tickets});g.shortDeck.splice(0,decision.plan.takeCount);
   event(g,'tickets',seat);note(g,I18n.message`${p.name} está eligiendo nuevos billetes.`,seat);next(g,now);return;
  }
  if(msg.type==='station'){
   const decision=Stations.decideStation(stationState(g,seat),{cityId:msg.city,color:msg.color,wildCount:msg.wildCount},stationContext(g));
   if(!decision.ok)throw legacyError(decision.error);
   const {cityId,payment}=decision.plan;
-  spend(g,p,payment);p.stations--;p.placed.push(cityId);event(g,'build',seat,{city:cityId});note(g,I18n.message`${p.name} construyó una estación en ${cityName(g,cityId)}.`,seat);next(g,now);return;
+  spend(g,p,payment);p.stations--;p.placed.push(cityId);
+  Journal.record(g,'station',seat,{city:cityId,payment});journalMilestones(g,seat);event(g,'build',seat,{city:cityId});note(g,I18n.message`${p.name} construyó una estación en ${cityName(g,cityId)}.`,seat);next(g,now);return;
  }
  if(msg.type==='pass'){
   // Passing is only permitted when no other move is possible.
   if(canDrawMore(g)||(!p.offer&&g.shortDeck.length)||possibleClaim(g,seat)||possibleStation(g,seat))fail('Todavía puedes realizar una acción.');
-  next(g,now);return;
+  Journal.record(g,'pass',seat);next(g,now);return;
  }
  fail('Acción no reconocida.');
 }
 // Absolute deadlines survive refresh/reconnection. Tick once per current turn;
 // a server restart never fast-forwards an entire absent game's turns.
-function expire(g,now=Date.now(),random=randomFor(g)){const previous=actionRandom.get(g);actionRandom.set(g,random);expiring.add(g);try{return expireImpl(g,now,random)}finally{expiring.delete(g);if(previous)actionRandom.set(g,previous);else actionRandom.delete(g)}}
+function expire(g,now=Date.now(),random=randomFor(g)){const previous=actionRandom.get(g);actionRandom.set(g,random);expiring.add(g);try{return Journal.within(g,{turn:g.turnSerial,seat:g.current,now,automatic:true},()=>expireImpl(g,now,random))}finally{expiring.delete(g);if(previous)actionRandom.set(g,previous);else actionRandom.delete(g)}}
 function expireImpl(g,now=Date.now(),random=crypto.randomInt){
  if(now<g.construction?.until)return false;
  normalize(g,now);let changed=false;
@@ -237,6 +260,7 @@ function expireImpl(g,now=Date.now(),random=crypto.randomInt){
     p.missedTurns=0;awardRoute(g,seat,r);
     note(g,I18n.message`${p.name} tomó túnel ${cityName(g,r.a)} — ${cityName(g,r.b)} (+${rulesFor(g).routePoints[r.n]}).`,seat);
     Object.assign(t,plan.pendingChanges);
+    Journal.record(g,'tunnel_result',seat,{routeId:t.routeId,outcome:'built',extra:t.extra,points:rulesFor(g).routePoints[r.n]},{actor:g.journalRoom?.members?.[seat]?.actor||'player'});journalMilestones(g,seat);
    }
    recorded(g,seat,{type:'tunnel_revealed'},true);return true;
   }
@@ -262,6 +286,7 @@ function expireImpl(g,now=Date.now(),random=crypto.randomInt){
   }
   return true;
  }
+ Journal.record(g,'timeout',seat);
  note(g,I18n.message`${g.players[seat].name}: tiempo agotado.`,seat);
  g.players[seat].missedTurns=(g.players[seat].missedTurns||0)+1;
  if(g.phase==='tunnel')applyAction(g,seat,{type:'decline_tunnel'},now);
@@ -295,10 +320,26 @@ function finish(g,force=false,{random=randomFor(g)}={}){
  g.phase='finished';const {map,owners}=LegacyScoring.projectBoard(g),state={owners,players:g.players.map(LegacyScoring.projectPlayer)};
  g.result=Scoring.scoreMatch(state,{map,rules:rulesFor(g).scoring}).map(result=>LegacyScoring.legacyResult(result,g.players[result.seat]));
  note(g,'Partida finalizada. ¡Resultados calculados!')}
-const destinationDetails=createDestinationDetails();
+const destinationDetails=createDestinationDetails(),liveScore=createLiveScore();
+function journalMilestones(g,actorSeat,turn) {
+ if(!Journal.enabled(g))return;
+ const progress=g.players.map((_,seat)=>destinationDetails(g,seat).progress.filter(t=>t.completed).map(t=>t.id));
+ const old=g.journalProgress||g.players.map(()=>[]);
+ progress.forEach((ids,seat)=>{
+  const added=ids.filter(id=>!old[seat]?.includes(id)),removed=(old[seat]||[]).filter(id=>!ids.includes(id));
+  if(added.length||removed.length)Journal.record(g,'destinations',actorSeat,{privateSeat:seat,completed:added,pending:removed},{turn});
+ });
+ g.journalProgress=progress;
+ const leaders=liveScore(g,-1,rulesFor(g).scoring,destinationDetails).players.flatMap((p,i)=>p.bonus?[i]:[]);
+ if(JSON.stringify(leaders)!==JSON.stringify(g.journalLeaders||[]))Journal.record(g,'longest',actorSeat,{leaders,points:rulesFor(g).scoring.expressPoints},{turn});
+ g.journalLeaders=leaders;
+}
 function view(g,seat,{now=Date.now()}={}){
+ if(!Number.isInteger(seat)||seat < -1||seat>=g.players.length)throw new RangeError('Puesto inválido.');
  const context=contextFor(g);
  return MatchView.projectMatch(g,seat,{now,tunnelCardMs:context.rules.tunnel.cardMs,destinationDetails,
+  scoreProgress:liveScore(g,seat,context.rules.scoring,destinationDetails),
+  turnHistory:Journal.project(g,seat),
   references:{mapRef:context.mapRef,rulesRef:context.rulesRef}});
 }
 const definition=g=>projectDefinition(contextFor(g));

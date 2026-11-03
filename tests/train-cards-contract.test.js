@@ -42,7 +42,7 @@ test("renewal precedes the accepted draw, keeps public evidence, and hidden colo
 });
 
 test("rejected draws do not change piles, counters, events, observers or randomness", () => {
-  for (const [index, pattern] of [[99,/Carta inexistente/], ["0",/Carta inexistente/], [-1,/No hay cartas/], [0,/locomotora visible/]]) {
+  for (const [index, pattern] of [[99,/Carta inexistente/], ["0",/Carta inexistente/], [-1,/No hay cartas/], [0,/comodín visible/]]) {
     const g = ready();g.deck = [];g.discard = [];g.face = ["wild"];g.drawCount = 1;
     const before = structuredClone(g), observed = [];E.observe(g, event => observed.push(event));
     assert.throws(() => E.action(g, 0, { type: "draw_train", index }, { now: 100, random: forbidden }), pattern);

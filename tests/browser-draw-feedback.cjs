@@ -13,6 +13,7 @@ const peers=[];
 function fixture(code,{refresh=false,depleted=false}={}){
  const game=E.newGame(['Actor','Rival'],0,Date.now(),{turnSeconds:90,initialSeconds:90,ticketExtraSeconds:30});
  const cards=[...game.deck,...game.face,...game.players.flatMap(p=>p.hand)];
+ game.logs=[];game.history=[];game.events=[];game.eventSerial=0;
  game.players.forEach(p=>{p.hand=[];p.pending=[];p.tickets=[];});
  const take=color=>{const i=cards.indexOf(color);assert.ok(i>=0);return cards.splice(i,1)[0];};
  game.face=(refresh?['wild','wild','red','blue','green']:['red','red','blue','green','yellow']).map(take);
@@ -83,7 +84,11 @@ async function clicks(f,first,second){
  }
  if(choices.every(i=>i<0)) {
   assert.equal(await f.page.locator('#handCount').innerText(),`${f.before} cartas`);
-  assert.equal(await f.page.locator('.draw-flight-pending').count(),choices.length,'blind pickups stay near the deck until their actual colors arrive');
+  assert.equal(await f.page.locator('.draw-flight-pending').count(),choices.length,'blind pickups remain outside the hand until their actual colors arrive');
+  await f.page.evaluate(()=>{
+   const source=document.querySelector('#drawblind').getBoundingClientRect(),card=document.querySelector('.draw-flight-pending').getBoundingClientRect();
+   drawAudit.approached=Math.abs(card.x-source.x)>80||Math.abs(card.y-source.y)>80;
+  });
  }
 
 }
@@ -129,6 +134,8 @@ async function close(f){await f.context.close();f.rival.close();await app.drain(
   for (const timing of report.timings.filter(t=>t.case===f.room.code)) {
    assert.ok(timing.colorRecognizableMs>0&&timing.colorRecognizableMs<=timing.handArrivalMs,JSON.stringify(timing));
   }
+  const routeProgress = await f.page.evaluate(()=>drawAudit.approached);
+  assert.equal(routeProgress,true,'blind cards visibly travel before receiving their color');
   report.checks.push('Blind double click: immediate pickups, immediate dependent send, two durable draws, no duplicate flights/sounds or rival disclosure');await close(f);
  }
  {
@@ -146,11 +153,14 @@ async function close(f){await f.context.close();f.rival.close();await app.drain(
   report.checks.push('Depleted deck rebases the queued card after the first slot is removed');
  }
  {
-  const f=await open('QADR04',{refresh:true});await clicks(f,2,3);await done(f,1);
-  assert.equal(await f.page.evaluate(()=>drawAudit.sent.length),2);
-  assert.match(await f.page.locator('#toast').innerText(),/Elige tu segunda carta/);
+  const f=await open('QADR04',{refresh:true});await clicks(f,2);
+  assert.equal(await f.page.locator(button(3)).isDisabled(),true);
+  await f.page.evaluate(()=>act('draw_train',{index:3}));
+  assert.equal(await f.page.evaluate(()=>drawAudit.sent.length),1);
+  await done(f,1);
+  assert.equal(await f.page.locator('[data-history-id^="turn:"] .history-market-refresh img').count(),5);
   await f.page.waitForFunction(()=>!marketRefresh);assert.equal(await f.page.locator('.draw-flight').count(),0);await close(f);
-  report.checks.push('Three locomotives renew the market and cancel the old queued choice');
+  report.checks.push('Two visible wildcards block a premature second choice; third wildcard renews the market and records public history');
  }
  {
   const f=await open('QADR05');f.room.revision++;
@@ -249,7 +259,7 @@ async function close(f){await f.context.close();f.rival.close();await app.drain(
   assert.equal(await f.page.locator('#hand .suit-back').count(),0);
   await f.page.screenshot({path:path.join(out,'slow-blind-desktop.png'),animations:'allow'});
   await done(f,2);await close(f);
-  report.checks.push('Slow persistence leaves both blind pickups beside the deck with a waiting label, then decoded colors land once');
+  report.checks.push('Slow persistence holds both blind cards along their route outside the hand with a waiting label, then decoded colors land once');
  }
  {
   const f=await open('QADR14');await f.page.evaluate(()=>{
@@ -293,6 +303,22 @@ async function close(f){await f.context.close();f.rival.close();await app.drain(
   await f.page.evaluate(()=>releaseDrawAcks());await f.page.waitForFunction(()=>!pendingAction);
   assert.equal(await f.page.evaluate(()=>drawAudit.flights.length),2);await recordTimings(f);
   await close(f);report.checks.push('Two blind states before either ACK correlate exact colors to both clicks without double counts or repeated effects');
+ }
+ {
+  const f=await open('QADR16');
+  await f.page.evaluate(()=>{
+   window.handBefore=new Map([...document.querySelectorAll('#hand .traincard')].map(card=>[card.querySelector('img').dataset.cardColor,card]));
+   window.handShiftSeen=false;
+   const sample=()=>{if([...handBefore.values()].some(card=>card.getAnimations().some(animation=>animation.playState==='running')))handShiftSeen=true;
+    if(!handShiftSeen)requestAnimationFrame(sample);};requestAnimationFrame(sample);
+  });
+  await f.page.locator(button(0)).click();
+  await f.page.waitForFunction(()=>!pendingAction&&cardFlights.size===0);
+  assert.equal(await f.page.evaluate(()=>[...handBefore].every(([color,node])=>node===document.querySelector('#hand .suit-'+color))),true);
+  assert.equal(await f.page.evaluate(()=>handShiftSeen),true);
+  assert.equal(await f.page.locator('#hand .suit-red .cardcount').textContent(),'×1');
+  await f.page.locator('#hand').screenshot({path:path.join(out,'new-suit-hand.png')});
+  report.checks.push('A new suit reserves its landing slot; existing hand groups keep identity and move smoothly');await close(f);
  }
  {
   const f=await open('QADR09');await clicks(f,-1,1);api.fail=true;release();release=null;

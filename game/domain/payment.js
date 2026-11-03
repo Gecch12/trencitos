@@ -5,7 +5,7 @@ function planPayment(hand, { color, quantity, wildNeeded = 0, wildCount }, { col
   if (!Number.isInteger(quantity) || quantity < 1) return null;
   if (color === "wild") {
     if (hand.filter(c => c === "wild").length < quantity) return null;
-    // An all-locomotive choice fixes the composition, even for legacy callers
+    // An all-wildcard choice fixes the composition, even for legacy callers
     // that also send a wildCount. Preserve that public payment contract.
     return { color: "wild", regular: 0, wild: quantity };
   }

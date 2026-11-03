@@ -37,9 +37,9 @@ test('private replay, public projection, active secrecy and completed point sour
  assert.equal(own.match.status,'completed');
  for(const s of own.match.scores){assert.equal(s.score,s.route+s.destination+s.stations+s.express);assert.ok(s.details.destinations.length);}
  for(let step=0;step<outside.frames.length;step++){
-  const data=Replay.at(outside.frames,step);assert.equal(data.views.length,1);assert.deepEqual(data.views[0].hand,[]);assert.deepEqual(data.views[0].tickets,[]);assert.equal(data.views[0].initial,null);
-  assert.ok(!outside.frames[step].action);
-  for(const r of data.views[0].result||[]){assert.deepEqual(r.tickets,[]);assert.deepEqual(r.details.destinations,[]);}
+  const data=Replay.at(outside.frames,step);assert.equal(data.views.length,3);assert.deepEqual(data.views[0].hand,[]);assert.deepEqual(data.views[0].tickets,[]);assert.equal(data.views[0].initial,null);
+  assert.deepEqual(outside.frames[step].action,own.frames[step].action);
+  for(const r of data.views[0].result||[]){assert.ok(r.tickets.length);assert.ok(r.details.destinations.length);}
  }
  await assert.rejects(()=>archive.replay({},room.matchId,true),e=>e.status===403);
  const privateFixture=fixture('private');privateFixture.archive.capture(privateFixture.room,'Abandono');privateFixture.archive.commit(privateFixture.archive.prepare());
@@ -55,19 +55,19 @@ test('verified account merge preserves existing histories, is idempotent, and bl
  assert.throws(()=>archive.claim('a'.repeat(64),'account-b'),e=>e.status===409);
  assert.equal((await archive.replay({accountId:'account-a'},room.matchId)).full,true);
 });
-test('public replay redacts blind thumbnails from frame events as well as projected history',async()=>{
+test('closed replay reveals blind thumbnails in every perspective and frame',async()=>{
  const {archive,room,save}=fixture('public');
  for(const seat of [0,1])Engine.action(room.game,seat,{type:'choose_initial',indexes:[0,1]});
  const color=room.game.deck.at(-1);Engine.action(room.game,0,{type:'draw_train',index:-1});save();
  archive.capture(room,'Abandono');archive.commit(archive.prepare());
  const publicReplay=await archive.replay({},room.matchId),own=await archive.replay({guestId:'a'.repeat(64)},room.matchId);
  assert.ok(publicReplay.frames.flatMap(f=>f.events).some(e=>e.draw));
- for(const e of publicReplay.frames.flatMap(f=>f.events).filter(e=>e.draw))assert.deepEqual(e.draw,{index:-1});
+ for(const e of publicReplay.frames.flatMap(f=>f.events).filter(e=>e.draw))assert.deepEqual(e.draw,{index:-1,color});
  const data=Replay.at(publicReplay.frames,publicReplay.frames.length-1);
- assert.deepEqual(data.views[0].history.find(e=>e.draw).draw,{index:-1});
+ assert.deepEqual(data.views[0].history.find(e=>e.draw).draw,{index:-1,color});
  const ownData=Replay.at(own.frames,own.frames.length-1);
  assert.deepEqual(ownData.views[1].history.find(e=>e.draw).draw,{index:-1,color});
- assert.deepEqual(ownData.views[2].history.find(e=>e.draw).draw,{index:-1});
+ assert.deepEqual(ownData.views[2].history.find(e=>e.draw).draw,{index:-1,color});
 });
 test('guest ownership uses an unguessable cookie, not the nickname; cookie is HttpOnly',()=>{
  const headers={},req={headers:{'x-forwarded-proto':'https'}},res={getHeader:k=>headers[k],setHeader:(k,v)=>headers[k]=v};
@@ -105,7 +105,7 @@ test('remote frame pages are loaded only after closed-game authorization',async(
  record.visibility='private';await assert.rejects(()=>archive.replay({},room.matchId),e=>e.status===404);assert.equal(reads,0);
  record.visibility='public';await assert.rejects(()=>archive.replay({},room.matchId,true),e=>e.status===403);assert.equal(reads,0);
  record.status='active';await assert.rejects(()=>archive.replay({},room.matchId),e=>e.status===409);assert.equal(reads,0);
- record.status='abandoned';assert.equal((await archive.replay({},room.matchId)).full,false);assert.equal(reads,1);
+ record.status='abandoned';assert.equal((await archive.replay({},room.matchId)).full,true);assert.equal(reads,1);
 });
 test('completed archive is sealed before later disconnects and room expiry',async()=>{
  const {archive,room,save}=fixture();Engine.finish(room.game,true);save();

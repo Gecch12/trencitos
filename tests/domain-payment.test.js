@@ -4,7 +4,7 @@ const { planPayment, reservePayment } = require("../game/domain/payment");
 const rules = Object.freeze({ colors: Object.freeze(["red", "blue", "copper"]) });
 const plan = (hand, options) => planPayment(Object.freeze(hand), options, rules);
 
-test("payments use the injected palette and a single suit with optional locomotives", () => {
+test("payments use the injected palette and a single suit with optional wildcards", () => {
   assert.deepEqual(plan(["copper", "wild", "blue"], {color:"copper",quantity:2}), {color:"copper",regular:1,wild:1});
   assert.equal(plan(["red", "blue"], {color:"red",quantity:2}), null);
   assert.equal(plan(["green", "green"], {color:"green",quantity:2}), null);
@@ -25,7 +25,7 @@ test("invalid quantities and explicit wildcard counts are rejected without coerc
   for (const wildCount of [-1, 1.5, "1", null, NaN, 3]) assert.equal(plan(hand, {color:"red",quantity:2,wildCount}), null);
 });
 
-test("an all-locomotive choice fixes its count and never borrows regular cards", () => {
+test("an all-wildcard choice fixes its count and never borrows regular cards", () => {
   assert.deepEqual(plan(["wild", "wild", "red"], {color:"wild",quantity:2,wildCount:0}), {color:"wild",regular:0,wild:2});
   assert.equal(plan(["wild", "red"], {color:"wild",quantity:2}), null);
 });

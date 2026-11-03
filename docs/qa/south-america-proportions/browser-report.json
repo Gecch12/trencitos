@@ -1,0 +1,83 @@
+{
+  "checks": [
+    "Lobby selects Sudamérica over WebSocket; complete portrait silhouette fits SVG viewBox",
+    "Initial tickets render the shared corrected board, focus endpoints and zoom independently; phone/tablet keep controls work",
+    "Clicking the curved Arica–Uyuni slot opens the correct route; real claim reaches server and renders its four wagons",
+    "Full coast, 300 slots and SVG/WebGL alignment verified at desktop/phone/tablet; reconnect retains construction"
+  ],
+  "errors": [],
+  "measurements": [
+    {
+      "name": "thumbnail",
+      "inside": true,
+      "ratio": 0.7145997610513739
+    },
+    {
+      "name": "desktop",
+      "coast": {
+        "left": 484.3021380486082,
+        "right": 982.1994749947559,
+        "top": 46.78499999999999,
+        "bottom": 674.535
+      },
+      "width": 1728,
+      "height": 963,
+      "maxAlignmentError": 2.2737367544323206e-13,
+      "ratio": 0.7931458971663046,
+      "slots": 300,
+      "overflow": false,
+      "wagons": 0
+    },
+    {
+      "name": "board-1728",
+      "coast": {
+        "left": 484.3021380486082,
+        "right": 982.1994749947559,
+        "top": 46.78499999999999,
+        "bottom": 674.535
+      },
+      "width": 1728,
+      "height": 963,
+      "maxAlignmentError": 2.2737367544323206e-13,
+      "ratio": 0.7931458971663046,
+      "slots": 300,
+      "overflow": false,
+      "wagons": 4
+    },
+    {
+      "name": "board-390",
+      "coast": {
+        "left": 72.31293103448277,
+        "right": 368.7948275862069,
+        "top": 192.91770474563717,
+        "bottom": 566.7226977626516
+      },
+      "width": 390,
+      "height": 844,
+      "maxAlignmentError": 1.1718571004216928e-13,
+      "ratio": 0.7931458971663046,
+      "slots": 300,
+      "overflow": false,
+      "wagons": 4
+    },
+    {
+      "name": "board-768",
+      "coast": {
+        "left": 146.43003460686418,
+        "right": 671.9883347166867,
+        "top": 136.0508333333333,
+        "bottom": 798.6758333333332
+      },
+      "width": 768,
+      "height": 1024,
+      "maxAlignmentError": 1.6077746776921858e-13,
+      "ratio": 0.7931458971663046,
+      "slots": 300,
+      "overflow": false,
+      "wagons": 4
+    }
+  ],
+  "date": "2026-11-03T19:17:12.596Z",
+  "browser": "156.0.8078.80",
+  "passed": true
+}

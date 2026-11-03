@@ -53,15 +53,14 @@ export function createWagonPreview({ container, onFailure, train = false, galler
   }
   function frameCamera(w, h, count = 1) {
     const sideView = train && !mobile?.matches;
-    const crowded = wagonStyle(currentColor).model === 'hippie';
-    if (sideView) { camera.position.set(0, -80, crowded?7.5:5.2); camera.lookAt(0, 0, crowded?7.5:5.2); }
-    else { camera.position.set(24, -38, 29); camera.lookAt(0, 0, crowded?6.5:4); }
+    if (sideView) { camera.position.set(0, -80, 5.2); camera.lookAt(0, 0, 5.2); }
+    else { camera.position.set(24, -38, 29); camera.lookAt(0, 0, 4); }
     shadow.visible = !sideView;
     const columns = Math.min(count, w < 600 ? 2 : 3);
     const halfHeight = gallery ? Math.max(Math.ceil(count / columns) * 12 + 2, columns * 27 * h / w / 2)
       : sideView
-      ? Math.max(crowded?8.4:6.2, (count * WAGON_SPACING + 3) * h / w / 2)
-      : Math.max(crowded?12:9.2, 15 * h / w);
+      ? Math.max(6.2, (count * WAGON_SPACING + 3) * h / w / 2)
+      : Math.max(9.2, 15 * h / w);
     camera.top = halfHeight; camera.bottom = -halfHeight;
     camera.left = -halfHeight * w / h; camera.right = halfHeight * w / h;
     camera.updateProjectionMatrix();
@@ -75,7 +74,6 @@ export function createWagonPreview({ container, onFailure, train = false, galler
       renderer.setSize(w, h, false);
       let count = 1;
       const detail = !train && h>=240 ? 'high' : 'low';
-      wagons.setCrowdDetail(detail);
       if (train) {
         count = mobile?.matches ? Math.min(1, items.length) : items.length;
         if (!count) return;

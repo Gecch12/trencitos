@@ -74,7 +74,11 @@
     "backend/bot-runner.js",
     "supabase/005_checkpoint_delta.sql",
     "frontend/room-map-picker.js",
-    "frontend/room-setup.css"
+    "frontend/room-setup.css",
+    "frontend/destination-planner.js",
+    "frontend/ticket-map.js",
+    "frontend/tunnel-board.js",
+    "frontend/destination-map.css"
   ],
   "domain.md": [
     "game/application/automatic-play.js",
@@ -421,19 +425,6 @@
     "shared/",
     "Dockerfile"
   ],
-  "work/hippie-train.md": [
-    "frontend/hippie-model.mjs",
-    "frontend/hippie-geometry.mjs",
-    "frontend/hippie-hair.mjs",
-    "frontend/wagon-people.mjs",
-    "frontend/wagon-models.mjs",
-    "frontend/wagon-renderer.js",
-    "frontend/wagon-preview.js",
-    "shared/data.js",
-    "shared/translations.js",
-    "tests/hippie-model.test.js",
-    "tests/browser-hippie.cjs"
-  ],
   "work/modular-platform-maps.md": [
     "game/maps/",
     "backend/maps.js",
@@ -505,11 +496,7 @@
     "tests/peer-output.test.js"
   ],
   "work/workspace-consolidation.md": [
-    "AGENTS.md",
-    "experiments/passenger-extreme/",
-    "scripts/preview-passenger-extreme.cjs",
-    "tests/passenger-extreme.test.js",
-    "tests/browser-passenger-extreme.cjs"
+    "AGENTS.md"
   ],
   "work/continuous-delivery.md": [
     ".github/workflows/ci.yml",
@@ -517,5 +504,15 @@
     "package.json",
     "tests/browser-room-setup.cjs",
     "tests/browser-draw-feedback.cjs"
+  ],
+  "work/destination-map-tunnels.md": [
+    "frontend/destination-planner.js",
+    "frontend/ticket-map.js",
+    "frontend/tunnel-board.js",
+    "frontend/destination-map.css",
+    "frontend/app.js",
+    "frontend/board-3d.js",
+    "tests/destination-planner.test.js",
+    "tests/browser-destination-map.cjs"
   ]
 }

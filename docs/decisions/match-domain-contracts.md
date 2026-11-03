@@ -30,7 +30,7 @@ para conectar destinos o calcular Express. **Casilla** representa una unidad de
 longitud/pieza, no un agregado persistido. **Puesto** identifica al participante
 dentro de una partida; no es una cuenta. **Oferta** es una elección pendiente de
 destinos con ID y vencimiento propios. **Pago** es una composición de un color
-y locomotoras, distinta del color del vagón del jugador.
+y comodines, distinta del color del vagón del jugador.
 
 Una intersección dibujada sin ciudad no crea conectividad. Las estaciones toman
 prestada una vía para destinos conforme al reglamento, sin cambiar su propietario.
@@ -376,7 +376,7 @@ transiciones de túnel/turno, creación, destinos, estaciones y puntuación; sol
 entonces se declara completada la fase 2.
 
 Compatibilidad de pago: en vía de color, el motor usa el color de la vía salvo
-petición de pagar todo con locomotoras; en gris usa el color elegido. Omitir
+petición de pagar todo con comodines; en gris usa el color elegido. Omitir
 `wildCount` permite al motor calcular la composición mínima legal. Conservar
 ambos comportamientos en el puente; no exigir campos nuevos a bots/clientes.
 
@@ -388,7 +388,7 @@ un checkpoint revisado del trabajo visual; cada worktree mantiene sus propios do
 
 | Frontera | Evidencia antes de extraer / aceptación posterior |
 | --- | --- |
-| Construcción normal/ferri | [Contrato de construcción](../../tests/route-claim-contract.test.js): todas las vías no túnel con pago mínimo, locomotora adicional y solo locomotoras; compara mano, dueño, puntos, turno y las 110 cartas. |
+| Construcción normal/ferri | [Contrato de construcción](../../tests/route-claim-contract.test.js): todas las vías no túnel con pago mínimo, comodín adicional y solo comodines; compara mano, dueño, puntos, turno y las 110 cartas. |
 | Dobles y rechazo | Mismo contrato: 2–5 jugadores, prohibición de ambas vías al mismo dueño, rechazos sin cambio/azar antes del vencimiento. |
 | Túneles | Contrato nuevo para todas las vías túnel sin suplemento; [túnel compartido](../../tests/shared-tunnel.test.js) cubre pagos, desistimiento, plazos, privacidad y recuperación; [reciclado](../../tests/recycling.test.js) cubre conservación y reserva. |
 | Vencimiento | Contrato nuevo conserva robos automáticos cuando una construcción tardía se rechaza. Las pruebas futuras distinguen transición de reloj y comando rechazado. |

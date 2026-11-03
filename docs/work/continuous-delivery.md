@@ -81,3 +81,9 @@ y autorizarla solo para `trencitos`. Después, comprobar que el repo aparece en
 **Git Provider**, asociarlo al servicio/Blueprint existente si hace falta y
 validar un push funcional: CI aprobado → despliegue automático Live. Verificar
 también que un push exclusivamente documental no genere otro despliegue.
+
+
+La regresión de navegador incluye también `browser-card-ui.cjs` (renovación e
+historial público) y `browser-account-resume.cjs` (cuentas simuladas con protocolo
+real), junto al lobby y los dieciséis casos de `browser-draw-feedback.cjs`.
+Sus salidas de CI se conservan bajo `.qa/ci/` en el artefacto existente.

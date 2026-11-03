@@ -121,23 +121,19 @@ test("pinch survives SVG capture transfer, suppresses clicks and allows the next
   assert.equal(g.context.mapCenter.x, beforeDrag - 20);
 });
 
-test("ticket preview is mouse-only; touch and keyboard focus cannot stick a deselected route", () => {
-  const handlers = new Map();
-  const row = { addEventListener: (type, handler) => handlers.set(type, handler) };
-  const context = vm.createContext({ I18n: require("../shared/i18n"), hoveredTicket: null, matchMedia: () => ({ matches: true }), updateTicketSelection() {} });
-  vm.runInContext(source.slice(source.indexOf("function bindTicketPreview("), source.indexOf("function showTicketDialog(")), context);
-  context.bindTicketPreview(row, 2, [], 1);
-  handlers.get("pointerenter")({ pointerType: "touch" });
-  assert.equal(context.hoveredTicket, null);
-  assert.equal(handlers.has("focusin"), false);
-  assert.equal(handlers.has("mouseenter"), false);
-  handlers.get("pointerenter")({ pointerType: "mouse" });
-  assert.equal(context.hoveredTicket, 2);
-  handlers.get("pointerdown")({ pointerType: "touch" });
-  assert.equal(context.hoveredTicket, null);
-  context.matchMedia = () => ({ matches: false });
-  handlers.get("pointerenter")({ pointerType: "mouse" });
-  assert.equal(context.hoveredTicket, null);
+test("ticket hover is mouse-only and clears on mouse exit without introducing a second toggle", () => {
+  const handlers=new Map(),row={dataset:{},addEventListener:(type,handler)=>handlers.set(type,handler)};
+  const context=vm.createContext({pinnedTicket:null,hoveredTicket:null,matchMedia:()=>({matches:true}),updateTicketSelection(){}});
+  vm.runInContext(source.slice(source.indexOf("function bindTicketPreview("),source.indexOf("function showTicketDialog(")),context);
+  context.bindTicketPreview(row,2,[],1);
+  handlers.get('pointerenter')({pointerType:'touch'});assert.equal(context.hoveredTicket,null);
+  assert.equal(handlers.has('click'),false);assert.equal(handlers.has('focusin'),false);
+  handlers.get('pointerenter')({pointerType:'mouse'});assert.equal(context.hoveredTicket,'2');
+  handlers.get('pointerleave')({pointerType:'mouse'});assert.equal(context.hoveredTicket,null);
+  context.pinnedTicket='2';handlers.get('pointerleave')({pointerType:'touch'});assert.equal(context.pinnedTicket,'2');
+  handlers.get('pointerdown')({pointerType:'touch'});assert.equal(row.dataset.pointerType,'touch');
+  handlers.get('keydown')();assert.equal(row.dataset.pointerType,undefined);
+  context.matchMedia=()=>({matches:false});handlers.get('pointerenter')({pointerType:'mouse'});assert.equal(context.hoveredTicket,null);
 });
 
 test("fullscreen control is hidden unless the document and method both support it", () => {
@@ -163,11 +159,11 @@ test("destination overview includes only kept tickets and their completed privat
     ticketPaths: [{ id: 1, routes: [12], stationRoutes: [12], stations: [{ city: "A", seat: 0 }] }] };
   const before = JSON.stringify(game);
   assert.deepEqual(UI.destinationSpotlightSelection(game, null, true), {
-    endpoints: ["A", "B", "C"], routes: [12], stationRoutes: [12], stations: [{ city: "A", seat: 0 }], overview: true,
+    endpoints: ["A", "B", "C"], routes: [12], completedRoutes:[12], stationRoutes: [12], stations: [{ city: "A", seat: 0 }], overview: true,
     destinations: [{ id: 1, a: "A", b: "B", number: 1, completed: true }, { id: 2, a: "B", b: "C", number: 2, completed: false }],
   });
   assert.deepEqual(UI.destinationSpotlightSelection(game, 1, true), {
-    endpoints: ["A", "B"], routes: [12], stationRoutes: [12], stations: [{ city: "A", seat: 0 }],
+    endpoints: ["A", "B"], routes: [12], completedRoutes:[12], stationRoutes: [12], stations: [{ city: "A", seat: 0 }],
     destinations: [{ id: 1, a: "A", b: "B", number: 1, completed: true }],
   });
   assert.equal(UI.destinationSpotlightSelection(game, null, false), null);
@@ -183,7 +179,7 @@ test("destination overview includes only kept tickets and their completed privat
 
 test("closing routes clears transient preview, selects Map on mobile and preserves explicit overview", () => {
   for (const mobile of [true, false]) {
-    let focused = null, updated = 0;
+    let focused = null, updated = 0, disposed = 0;
     const hidden = new Set();
     const context = vm.createContext({ I18n: require("../shared/i18n"),
       uiDialog: "routes", game: {}, seat: 0, compactMedia: { matches: mobile }, compactPanel: "destinations",
@@ -192,6 +188,7 @@ test("closing routes clears transient preview, selects Map on mobile and preserv
       $: () => ({ classList: { add: value => hidden.add(value) } }),
       document: { querySelector: () => ({ focus() { focused = "map"; } }) },
       updateDestinationSpotlight() { updated++; },
+      disposeTicketMap() { disposed++; },
     });
     context.setCompactPanel = panel => { context.compactPanel = panel; };
     vm.runInContext(source.slice(source.indexOf("function closeOptionalDialog("), source.indexOf("function openRoutes(")), context);
@@ -210,6 +207,7 @@ test("closing routes clears transient preview, selects Map on mobile and preserv
     context.closeOptionalDialog();
     assert.equal(context.uiDialog, "tickets");
     assert.equal(updated, 1);
+    assert.equal(disposed, 1, "mandatory ticket maps must stay mounted");
   }
 });
 

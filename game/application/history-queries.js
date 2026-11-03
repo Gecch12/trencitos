@@ -38,17 +38,19 @@ function createHistoryQueries({ repository }) {
     if (record.schemaVersion !== 1) throw fail(409, "Esta versión de repetición no está disponible.");
     if (audit && !full) throw fail(403, "Solo los participantes pueden descargar la auditoría.");
     hasDefinitionHeader(record);
-    return {record,full};
+    // Closing the match makes game information transparent to everyone who
+    // can open it. Private-match access and identity-bearing audits stay gated.
+    return {record,full:true,canAudit:full};
   }
   async function replay(identity,id,audit=false,includeAnalysis=false){
-    const {record,full}=await authorizedRecord(identity,id,audit);
+    const {record,full,canAudit}=await authorizedRecord(identity,id,audit);
     const frames=record.frames||await repository.frames(id,record.steps);
-    return projectReplay({...record,frames},{full,audit,includeAnalysis});
+    return projectReplay({...record,frames},{full,canAudit,audit,includeAnalysis});
   }
   async function replayStream(identity,id,audit=false,includeAnalysis=false){
-    const {record,full}=await authorizedRecord(identity,id,audit);
+    const {record,full,canAudit}=await authorizedRecord(identity,id,audit);
     const source=record.frames||(repository.iterateFrames?repository.iterateFrames(id,record.steps):await repository.frames(id,record.steps));
-    return streamReplay(record,{full,audit,includeAnalysis},source);
+    return streamReplay(record,{full,canAudit,audit,includeAnalysis},source);
   }
   return { list, replay, replayStream };
 }

@@ -42,7 +42,7 @@ test("station availability precedes payment errors and rejected plans leave inpu
   assert.equal(Stations.canBuildStation({ remainingStations: 2, hand: ["wild","wild"], occupiedCities: new Set(["LIM",0,"0"]) }, stationContext), false);
 });
 
-test("explicit station payments cannot mix colors or demand unavailable locomotives", () => {
+test("explicit station payments cannot mix colors or demand unavailable wildcards", () => {
   const state = freeze({ remainingStations: 2, hand: ["copper","copper"], occupiedCities: new Set() });
   for (const command of [{ cityId: "LIM", color: "unknown" }, { cityId: "LIM", color: "copper", wildCount: 1 }])
     assert.equal(Stations.decideStation(state, command, stationContext).ok, false);

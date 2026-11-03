@@ -3,7 +3,9 @@
 const ReplayState = (() => {
   function diff(before, after, path = [], changes = []) {
     if (JSON.stringify(before) === JSON.stringify(after)) return changes;
-    if (!before || !after || typeof before !== 'object' || typeof after !== 'object' || (Array.isArray(before)!==Array.isArray(after)) || (Array.isArray(before)&&before.length!==after.length)) {
+    const appendJournal=Array.isArray(before)&&Array.isArray(after)&&after.length>before.length&&
+      (['journal','turnHistory'].includes(path.at(-1))||path.includes('turnHistory')&&path.at(-1)==='events');
+    if (!before || !after || typeof before !== 'object' || typeof after !== 'object' || (Array.isArray(before)!==Array.isArray(after)) || (Array.isArray(before)&&before.length!==after.length&&!appendJournal)) {
       changes.push({path,value:after}); return changes;
     }
     for (const key of Object.keys(before)) if (!Object.hasOwn(after,key)) changes.push({path:[...path,key],remove:true});

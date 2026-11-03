@@ -26,3 +26,11 @@ test('language survives a new browser document and storage failure keeps the def
  const first=vm.createContext(context());vm.runInContext(fs.readFileSync(require.resolve('../shared/i18n'),'utf8'),first);assert.equal(first.document.documentElement.lang,'en');
  vm.runInContext("I18n.select('es')",first);const second=vm.createContext(context());vm.runInContext(fs.readFileSync(require.resolve('../shared/i18n'),'utf8'),second);assert.equal(second.document.documentElement.lang,'es');
 });
+
+test('legacy card-name templates use wildcard terminology without changing runtime names',()=>{
+ assert.equal(I18n.t('Locomotoras'),'Comodines');
+ const message=I18n.message`${'Locomotora'} robó una carta de tren.`;
+ assert.equal(I18n.format(message),'Locomotora robó una carta de tren.');
+ I18n.select('en');assert.equal(I18n.t('Locomotora'),'Wildcard');
+ assert.equal(I18n.t('Mesa renovada: aparecieron 3 comodines.'),'Market renewed: 3 wildcards appeared.');
+});

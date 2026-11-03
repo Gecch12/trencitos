@@ -45,7 +45,8 @@ let browser;
   assert.equal(room.game.current,0);assert.equal(room.game.routes[route.id].owner,null);
   for(const p of [actor,rival,spectator]) {
    assert.equal(await p.locator('#tunnelSequence').count(),1);assert.equal(await p.locator('#skipTunnelReveal').count(),0);
-   assert.doesNotMatch(await p.locator('#dialog').innerText(),/Revelamos hasta|Sin coste adicional|Volver al mapa/);
+   assert.doesNotMatch(await p.locator('#dialog').innerText(),/Revelamos hasta|Sin coste adicional/);
+   assert.equal(await p.locator('#dismissTunnel').count(),p===actor?0:1);
   }
   // A direct command cannot bypass the modal or consume the following turn.
   await rival.evaluate(()=>send({type:'action',action:{type:'draw_train',index:-1}}));

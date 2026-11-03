@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="board-3d.css" />
     <link rel="stylesheet" href="shell.css" />
     <link rel="stylesheet" href="room-setup.css" />
+      <link rel="stylesheet" href="destination-map.css">
   </head>
   <body>
     <a href="#lobby" class="skip-link">Saltar al contenido</a>
@@ -179,8 +180,8 @@
                     <button id="copyRecovery" type="button" data-icon="key">Copiar enlace de recuperación</button>
                     <small>Es privado: quien lo tenga podrá jugar en tu puesto. No es una invitación.</small>
                     <button id="rotateRecovery" type="button" data-icon="refresh">Cambiar enlace de recuperación</button>
-                    <button id="reclaimControl" class="hidden" type="button">Recuperar control</button>
                   </section>
+                  <button id="reclaimControl" class="hidden" type="button">Recuperar control</button>
                   <button id="leaveRoom" class="menu-leave" type="button" data-icon="exit">Abandonar partida</button>
                   <button id="leaveWatch" class="menu-leave" type="button" hidden data-icon="exit">Dejar de observar</button>
                 </div>
@@ -264,6 +265,7 @@
         <strong id="compactClock" class="turn-clock" data-clock="turn" data-clock-format="timer"></strong>
       </section>
     </div>
+    <div id="tunnelBoardNotice" class="tunnel-board-notice" hidden><span id="tunnelBoardStatus" role="status"></span><button type="button" id="viewTunnel">Ver túnel</button></div>
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
     <div id="overlay" class="overlay hidden">
       <div class="dialog" id="dialog" role="dialog" aria-modal="true"></div>
@@ -292,6 +294,7 @@
     <script src="match-presentation.js"></script>
     <script src="game-timing.js"></script>
     <script src="game-ui.js"></script>
+    <script src="turn-history.js"></script>
     <script src="draw-intent.js"></script>
     <script src="lobby-ui.js"></script>
     <script src="board-camera.js"></script>
@@ -300,6 +303,7 @@
     <script src="replay-state.js"></script><script src="history-ui.js"></script>
     <script src="room-map-picker.js"></script>
     <script src="shell.js"></script>
+    <script src="destination-planner.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

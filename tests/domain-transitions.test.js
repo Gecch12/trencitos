@@ -114,7 +114,7 @@ test("zero surcharge builds once, then the result has its full interval even aft
   assert.deepEqual(run(Tunnel.advanceTunnel, { tunnel: result }, 5091), { kind: "close", offerDeadlines: [null, 5141, 5091] });
 });
 
-test("automatic supplement uses only unreserved cards, including necessary locomotives", () => {
+test("automatic supplement uses only unreserved cards, including necessary wildcards", () => {
   const tunnel = decision();
   const result = run(Tunnel.decideTunnel, { tunnel, hand: ["copper", "copper", "wild"] }, 500, { type: "pay" });
   assert.equal(result.ok, true);assert.equal(result.plan.build, true);
@@ -140,7 +140,7 @@ test("explicit supplement choice is respected and cannot double spend a reserved
   }
 });
 
-test("all-locomotive base and supplement remain collectively affordable", () => {
+test("all-wildcard base and supplement remain collectively affordable", () => {
   const tunnel = { ...decision(), color: "wild", base: { color: "wild", regular: 0, wild: 2 } };
   const paid = run(Tunnel.decideTunnel, { tunnel, hand: ["wild", "wild", "wild"] }, 500, { type: "pay" });
   assert.equal(paid.ok, true);assert.deepEqual(paid.plan.pendingChanges.extra, { color: "wild", regular: 0, wild: 1 });

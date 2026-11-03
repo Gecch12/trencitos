@@ -1,6 +1,5 @@
 import { passengerPerson, visualHash } from './wagon-people.mjs';
 export { passengerPerson } from './wagon-people.mjs';
-import { HIPPIE_VARIANTS, hippieBodyParts } from './hippie-model.mjs';
 
 // Public presentation only. Model, owner paint and finish are independent.
 export const WAGON_STYLES = Object.freeze([
@@ -24,12 +23,10 @@ export const WAGON_STYLES = Object.freeze([
   { color: '#9ed7ed', model: 'boat', label: 'Lancha' },
   { color: '#71bba0', model: 'dwelling', label: 'Vivienda' },
   { color: '#6269c7', model: 'circus', label: 'Circo' },
-  { color: '#ffffff', model: 'hippie', label: 'Midsommar Express' },
 ].map(style => Object.freeze({ finish: 'paint', ...style })));
 
 const CLASSIC_VARIANTS = Object.freeze([Object.freeze({ id: 'classic', label: 'Clásico' })]);
 const WAGON_VARIANTS = Object.freeze({
-  hippie: HIPPIE_VARIANTS,
   passenger: Object.freeze([
     ['classic', 'Clásico'], ['solo', 'Una persona'], ['duo', 'Dos personas'],
     ['trio', 'Tres personas'], ['lean', 'Apoyado'], ['wave', 'Saludando'],
@@ -87,7 +84,7 @@ export function wagonStyle(color, customization = {}) {
   const base = WAGON_STYLES.find(s => s.color === canonical || s.paint === canonical) || WAGON_STYLES[0];
   const model = WAGON_STYLES.some(s => s.model === customization.model) ? customization.model : base.model;
   const finish = ['paint', 'gold'].includes(customization.finish) ? customization.finish : base.finish;
-  return { model, finish, color: base.paint || color || base.color };
+  return { model, finish, color: base.paint || (color === '#ffffff' ? base.color : color) || base.color };
 }
 
 // Model-space quaternion taking the vertical axis to a limb/body direction.
@@ -106,7 +103,6 @@ function rotatePoint([x, y, z], [qx, qy, qz, qw]) {
 // Normalized primitives; coordinates are longitudinal X, width Y, height Z.
 // Paint is resolved by the renderer, so changing a model never changes ownership.
 export function wagonParts(model, { variant = 'classic', cast = 0 } = {}) {
-  if (model === 'hippie') return hippieBodyParts(wagonParts('passenger')); // crowd is a separate baked batch
   const parts = [];
   const add = (shape, xyz, size, color = 'paint', material = 'paint', rotation) => parts.push({ shape, xyz, size, color, material, ...(rotation && { rotation }) });
   const box = (xyz, size, color, material) => add('box', xyz, size, color, material);

@@ -72,13 +72,13 @@ especiales son una beta para pruebas de juego; los datos fuente se conservan en
   La configuración se guarda en sala y partida, solo cambia antes del inicio y
   se conserva en la revancha. El directorio anuncia el turno real de la sala.
 - **Jugador:** puesto, nombre, color, mano privada, destinos y piezas. Empieza con
-  45 vagones, 3 estaciones y 4 cartas. Veintiún colores seleccionables de jugador no equivalen a
+  45 vagones, 3 estaciones y 4 cartas. Veinte colores seleccionables de jugador no equivalen a
   los ocho colores de cartas/rutas. El lobby reserva colores únicos; iniciada la
   partida quedan fijos. Ver [lobby-ui.js](../shared/lobby-ui.js) y [pruebas](../tests/lobby-server.test.js).
   La clave persistida de color es estable; cambiar su pintura visible no cambia
   el propietario, la reserva del lobby ni los colores de cartas/pagos.
-  Blanco (`#ffffff`) incorpora la familia Midsommar Express; se reserva como cualquier
-  otro color, también para bots. No añade reglas ni cartas nuevas.
+  Blanco (`#ffffff`) está retirado. Al restaurar una sala se sustituye por un
+  color activo libre tanto en miembros como jugadores; los perfiles usan un color activo.
   Rosa (`#edadd0`) solo se conserva al restaurar puestos anteriores; no se acepta
   para nuevos jugadores ni selecciones. Su presentación pasa a Pasajeros.
   Al añadir un bot, el servidor sortea uniformemente entre los colores libres,
@@ -94,11 +94,11 @@ especiales son una beta para pruebas de juego; los datos fuente se conservan en
 - **Red:** 47 ciudades y 101 rutas, con 300 casillas. Una ruta tiene extremos,
   longitud, color, posibles túnel/ferri y propietario. La geometría no cambia su
   coste ni conectividad.
-- **Mazos:** 12 cartas por cada uno de ocho colores y 14 locomotoras (110 total);
+- **Mazos:** 12 cartas por cada uno de ocho colores y 14 comodines (110 total);
   40 billetes cortos y 6 largos. Mesa de hasta cinco cartas.
 - La vista rival expone cantidades, piezas y vías públicas, nunca mano, oferta
   privada ni orden de mazo. Los efectos no deben filtrar un robo oculto.
-  Esto incluye miniaturas del historial y eventos del replay público: el robo
+  Durante la partida, esto incluye miniaturas del historial: el robo
   de una carta visible muestra su cara; el del mazo muestra el reverso a los demás.
 
 ## Fases y turno
@@ -118,14 +118,14 @@ el robo; no se puede cambiar a construcción.
 
 | Acción | Regla |
 | --- | --- |
-| Cartas | Hasta dos. Locomotora visible como primera termina el turno; como segunda está prohibida. Locomotora del mazo cuenta como una carta. |
-| Ruta | Paga su longitud con un color y locomotoras; ruta gris admite cualquier color único. Necesita vagones disponibles. |
-| Ferri | El pago incluye al menos las locomotoras señaladas. |
-| Túnel | Revela hasta tres cartas; cada coincidencia de color o locomotora añade coste. Pago íntegramente con locomotoras solo coincide con locomotoras. |
+| Cartas | Hasta dos. Comodín visible como primera termina el turno; como segunda está prohibida. Comodín del mazo cuenta como una carta. |
+| Ruta | Paga su longitud con un color y comodines; ruta gris admite cualquier color único. Necesita vagones disponibles. |
+| Ferri | El pago incluye al menos los comodines señalados. |
+| Túnel | Revela hasta tres cartas; cada coincidencia de color o comodín añade coste. Pago íntegramente con comodines solo coincide con comodines. |
 | Decisión del túnel | Reserva pago base al calcular disponibilidad. Sin suplemento se construye automáticamente; con suplemento paga o desiste. Desistir conserva la mano y consume turno. |
 | Ruta doble | Un jugador no toma ambos carriles; con 2–3 jugadores solo puede ocuparse uno. |
 | Nuevos destinos | Ofrece hasta tres cortos, conserva al menos uno y devuelve rechazados al mazo corto. La elección recibe el tiempo restante del turno más 15 o 30 s configurados; el siguiente jugador continúa. Si vuelve su turno sin confirmar, espera antes de comenzar su tiempo completo. |
-| Estación | Una por ciudad; costes sucesivos 1/2/3 cartas de un color, con locomotoras permitidas. Máximo tres por jugador. |
+| Estación | Una por ciudad; costes sucesivos 1/2/3 cartas de un color, con comodines permitidas. Máximo tres por jugador. |
 | Pasar | Solo cuando no existe ninguna otra acción legal. |
 
 Las partidas iniciadas sin `timing` conservan los relojes anteriores de 60 s
@@ -133,13 +133,19 @@ y la oferta independiente de 60 s. Nunca se reemplazan plazos existentes.
 `ticketOffer.duration` conserva la duración original para dibujar la barra
 correctamente al recargar o durante una pausa.
 
+Una construcción aceptada publica una señal temporal de presentación. Mientras
+está activa se rechazan acciones y se conserva el tiempo disponible de turno y
+ofertas de billetes. Su duración incluye sombreado, colocación y restauración de
+iluminación, según `shared/game-timing.js`; los túneles aprovechan su pausa de
+resultado sin sumar otra. Reducir movimiento solo cambia la presentación local.
+
 El túnel tiene etapas persistidas `reveal`, `decision` y `result`, coordinadas
 por el servidor. La revelación muestra una carta cada 700 ms y deja 700 ms tras
 la última. Congela el tiempo restante del constructor; la decisión lo reanuda.
 Solo el constructor puede pagar/desistir. El resultado se mantiene 3000 ms antes
-de avanzar turno o calcular el cierre final. Durante todo el modal se congelan
-ofertas de destinos y se rechazan sus confirmaciones; al cerrar recuperan el
-tiempo restante. Bots y humanos cumplen la misma secuencia. Las cartas reveladas,
+de avanzar turno o calcular el cierre final. Durante todo el intento compartido se congelan
+ofertas de destinos y se rechazan sus confirmaciones; al terminar el intento recuperan el
+tiempo restante. Ocultar el modal como observador no altera esos plazos. Bots y humanos cumplen la misma secuencia. Las cartas reveladas,
 ruta, color usado y suplemento son públicos. Desde UI 8 también se publica la
 composición de la base comprometida y, solo al construir, el extra efectivamente
 pagado. El resto de la mano y las opciones de pago son privados. El resultado
@@ -155,7 +161,7 @@ anterior entra en decisión compartida sin reiniciar su reloj.
 
 - **Reciclado inmediato:** los descartes de cada evento resuelto se barajan de
   vuelta al mazo. Las cartas reveladas de un túnel pendiente esperan su resolución.
-  Si hay tres locomotoras visibles, se renueva la mesa; el motor evita bucles
+  Si hay tres comodines visibles, se renueva la mesa; el motor evita bucles
   cuando no existen suficientes cartas normales. [Pruebas](../tests/recycling.test.js).
 - Al acabar un turno con dos vagones o menos, todos reciben un turno adicional,
   incluido quien disparó la última ronda. Las ofertas pendientes se resuelven
@@ -170,6 +176,17 @@ anterior entra en decisión compartida sin reiniciar su reloj.
   existente de conceder Express a todos si todos tienen recorrido de longitud 0.
 - Desempates: puntuación, destinos completados, puntos de estaciones sin usar y
   Express. Puede haber varios ganadores si persiste el empate.
+
+Durante la partida, `scoreProgress` separa puntos públicos de información propia.
+El marcador personal suma construcción, destinos cumplidos y Express provisional;
+los demás solo ven construcción más Express provisional. Un desglose propio
+muestra penalizaciones pendientes y estaciones sin usar para «Si terminara ahora».
+El bono provisional se actualiza con la red y se comparte en empate; no hay líder
+provisional con longitud cero; el desglose de cierre sí incluye el bono que
+correspondería en ese caso. Esto no cambia la regla histórica del resultado
+final en una partida sin construcciones. Ninguna proyección incrementa `player.score`:
+la liquidación final sigue calculándose una sola vez. Las estaciones usan la
+asignación conjunta del dominio, también cuando nuevos destinos cambian esa asignación.
 
 El desglose de resultados guardados conserva sus totales, clasificación,
 ganadores y asignaciones. Si faltaba el detalle, se reconstruyen sus recorridos
@@ -207,3 +224,7 @@ progreso parcial y no cuentan como resultados completados. Desconexión breve no
 es abandono. Acceso de invitados/cuentas, privacidad y retención se definen en
 [el contrato de historial](history-replay.md). Esa autoridad se aplica a todos los
 modos; un mapa futuro no puede omitir validación, filtrado ni grabación.
+
+El replay de una partida cerrada revela toda la información de juego registrada
+a cualquiera que tenga acceso a esa grabación. La propiedad sigue protegiendo
+partidas privadas y auditorías; véase [historial/replay](history-replay.md).

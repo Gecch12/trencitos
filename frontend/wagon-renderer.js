@@ -1,7 +1,5 @@
 import * as THREE from './vendor/three.module.js';
 import { WAGON_STYLES, PASSENGER_VARIANTS, PASSENGER_CAST_COUNT, wagonAppearance, wagonParts, wagonStyle } from './wagon-models.mjs';
-import { HIPPIE_TRAIN, HIPPIE_VARIANTS, hippieCrowdParts } from './hippie-model.mjs';
-import { bakeHippieCrowd } from './hippie-geometry.mjs';
 
 // Immutable part templates are shared by all preview and board renderers.
 let sharedTemplates;
@@ -17,38 +15,6 @@ function getTemplates() {
 
 // Share batches across colors and models. No mesh per wagon, no perpetual animation.
 export function createWagonRenderer({ renderer, instances, put, capacity = 300 }) {
-  let crowdDetail = 'low';
-  const crowdBatches = new Map();
-  const crowdMaterial = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:.86, metalness:0 });
-  // The same destination-highlight tint as ordinary wagon parts, applied after
-  // vertex colours. A per-instance value keeps mixed highlighted routes batched.
-  crowdMaterial.onBeforeCompile = shader => {
-    shader.uniforms.hippieMuted = { value:new THREE.Color('#bbd6d9') };
-    shader.vertexShader = 'attribute float crowdFade; varying float vCrowdFade;\n' + shader.vertexShader;
-    shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvCrowdFade = crowdFade;');
-    shader.fragmentShader = 'varying float vCrowdFade; uniform vec3 hippieMuted;\n' + shader.fragmentShader;
-    shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = vCrowdFade < 0.0 ? diffuseColor.rgb * 0.28 : mix(diffuseColor.rgb, hippieMuted, vCrowdFade);');
-  };
-  crowdMaterial.customProgramCacheKey = () => 'hippie-crowd-fade-v1';
-  function drawCrowd(cell, faded, appearance) {
-    const variant = HIPPIE_VARIANTS.some(v=>v.id===appearance.variant) ? appearance.variant : HIPPIE_VARIANTS[0].id;
-    const key = `${variant}:${crowdDetail}`;
-    if (!crowdBatches.has(key)) {
-      const geometry = bakeHippieCrowd(hippieCrowdParts({variant,detail:crowdDetail}),crowdDetail);
-      // Reflect into the board's Y axis before instancing, including winding.
-      // Negative instance scales are unsupported; all instances keep positive scale.
-      geometry.scale(1,-1,1);
-      const indices = geometry.index.array;
-      for (let i=0;i<indices.length;i+=3) [indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];
-      geometry.index.needsUpdate=true;
-      geometry.name=`hippie-crowd:${key}`;
-      geometry.setAttribute('crowdFade',new THREE.InstancedBufferAttribute(new Float32Array(capacity),1));
-      crowdBatches.set(key,instances(geometry,capacity,crowdMaterial));
-    }
-    const mesh=crowdBatches.get(key),fade=mesh.geometry.getAttribute('crowdFade');
-    fade.setX(mesh.count,faded==='dim'?-1:faded?.72:0);fade.needsUpdate=true;
-    put(mesh,cell.x,cell.y,0,cell.angle,1,1,1,'#ffffff');
-  }
   const shapes = {
     box: new THREE.BoxGeometry(1, 1, 1),
     wheel: new THREE.CylinderGeometry(.5, .5, 1, 10),
@@ -342,6 +308,7 @@ export function createWagonRenderer({ renderer, instances, put, capacity = 300 }
     if (role === 'shade') color.multiplyScalar(.58);
     if (role === 'trim' && !gold) color.lerp(new THREE.Color('#ecedd9'), .28);
     if (faded === 'dim') color.multiplyScalar(.28);
+    else if (typeof faded === 'number') color.multiplyScalar(1 - .72 * faded);
     else if (faded) color.lerp(muted, .72);
     colors.set(key, color); return color;
   }
@@ -355,11 +322,8 @@ export function createWagonRenderer({ renderer, instances, put, capacity = 300 }
       const [x, y, z] = part.xyz;
       put(batches.get(`${part.shape}:${material}`), cell.x + x * cos - y * sin, cell.y + x * sin + y * cos, z, cell.angle, ...part.size, paintFor(style, part.color, faded), part.rotation);
     }
-    if (style.model === 'hippie') drawCrowd(cell,faded,appearance);
     return { model: style.model, ...appearance };
   }
   return { draw,
-    setCrowdDetail(detail) { crowdDetail=detail==='high'?'high':'low'; },
-    crowdStats() { return [...crowdBatches].filter(([,m])=>m.count).map(([key,m])=>({key,count:m.count,people:m.count*Object.values(HIPPIE_TRAIN.people).reduce((sum,n)=>sum+n,0)})); },
-    dispose() { crowdBatches.forEach(m=>m.geometry.dispose());crowdBatches.clear();crowdMaterial.dispose();environment.dispose(); Object.values(shapes).forEach(g => g.dispose()); Object.values(materials).forEach(m => m.dispose()); } };
+    dispose() { environment.dispose(); Object.values(shapes).forEach(g => g.dispose()); Object.values(materials).forEach(m => m.dispose()); } };
 }

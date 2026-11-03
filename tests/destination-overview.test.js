@@ -59,15 +59,17 @@ test("endpoint badges wrap shared cities, retain double-digit numbers and differ
   assert.equal(nodes.filter(n => n.tag === "rect")[1].attrs.fill, "color-9");
 });
 
-test("an authoritative claim changes the overview from endpoints to the exact completed connection", () => {
+test("an authoritative claim adds gold to the completed connection while keeping owned tracks highlighted", () => {
   const game = E.newGame(["A", "B", "C", "D"]); game.phase = "play";
   game.players[0].tickets = [E.TICKETS.find(t => t.id === 15)];
   for (const id of [20, 16, 11]) game.routes[id].owner = 0;
   game.players[0].hand = ["green", "green"];
-  assert.deepEqual(UI.destinationSpotlightSelection(E.view(game, 0), null, true).routes, []);
+  const before=UI.destinationSpotlightSelection(E.view(game, 0), null, true);
+  assert.deepEqual(before.routes, [11,16,20]);assert.deepEqual(before.completedRoutes, []);
   E.action(game, 0, { type: "claim", routeId: 6, color: "green", wildCount: 0 });
   const own = UI.destinationSpotlightSelection(E.view(game, 0), null, true);
   assert.deepEqual(own.routes, [20, 16, 11, 6]);
+  assert.deepEqual(own.completedRoutes, [20, 16, 11, 6]);
   assert.equal(own.destinations[0].number, 1);
   assert.equal(own.destinations[0].completed, true);
   assert.equal(UI.destinationSpotlightSelection(E.view(game, 1), null, true), null);

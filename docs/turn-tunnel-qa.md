@@ -5,7 +5,7 @@ Verificado localmente el 31 de octubre de 2026. Sin despliegue ni cambios en cue
 ## Comportamiento
 
 - Un único indicador de turno se reubica entre escritorio y HUD compacto. Muestra acción pendiente, contador `mm:ss`, progreso y urgencia a 10/5 segundos. La elección de billetes conserva su plazo independiente.
-- La construcción propone el pago válido con menos locomotoras, muestra las cartas y permite cambiar a otra combinación válida. El servidor sigue validando y cobrando el pago.
+- La construcción propone el pago válido con menos comodines, muestra las cartas y permite cambiar a otra combinación válida. El servidor sigue validando y cobrando el pago.
 - Los gestos conservan el punto del mapa bajo el centro de los dedos al escalar y desplazar; al levantar un dedo continúa el arrastre. Zoom máximo 6×; etiquetas de 15 px hasta 2,5× y crecimiento posterior limitado a 24 px.
 - La pestaña Robar avisa «1 pendiente» cuando corresponde, sin abrirse sola ni reproducir sonidos repetitivos. Movimiento reducido elimina el pulso.
 - El servidor registra las cartas realmente reveladas en un evento privado para quien construye. El cliente revela una cada 700 ms; no vuelve a sortear ni cambia el plazo. Si hay menos cartas disponibles, solo muestra las existentes.
@@ -18,7 +18,7 @@ Verificado localmente el 31 de octubre de 2026. Sin despliegue ni cambios en cue
 
 - Estados del indicador y recordatorio del segundo robo.
 - Anclaje del gesto combinado, límites y escala de etiquetas.
-- Túneles con suplemento, sin suplemento, pago exclusivo con locomotoras y mazo con solo dos cartas; evento único y plazo sin extensión.
+- Túneles con suplemento, sin suplemento, pago exclusivo con comodines y mazo con solo dos cartas; evento único y plazo sin extensión.
 - Secuencia de temporizadores a 700 ms; construcción diferida exactamente una vez; omisión, cancelación y continuidad al volver el siguiente turno.
 
 `node --check` en app.js, engine.js y game-ui.js; `git diff --check` sin errores.
@@ -28,7 +28,7 @@ Verificado localmente el 31 de octubre de 2026. Sin despliegue ni cambios en cue
 Se usaron `tests/helpers/responsive-preview.js` y partidas de QA sin datos reales. Algunas salas tienen 10 minutos deliberadamente para permitir inspección; producción conserva 60 segundos.
 
 - Chromium: 320×568, 390×844, 844×390, 768×1024, 1024×768 y 1440×900, sin desbordamiento horizontal. Navegación compacta oculta en escritorio, contador de 28/30 px.
-- Pago normal con alternativa: 3 naranjas + 1 locomotora, ruta otorgada por el servidor. Estación construida en tablet: contador 3 → 2.
+- Pago normal con alternativa: 3 naranjas + 1 comodín, ruta otorgada por el servidor. Estación construida en tablet: contador 3 → 2.
 - Túnel sin suplemento: 0/1/2/3 cartas visibles a aproximadamente 0/0,7/1,4/2,1 s; siguiente turno ya activo en el servidor; efecto de construcción después del mensaje de éxito.
 - Túnel con suplemento: 3 cartas reales, suplemento 2, mismo deadline antes y después de la revelación, mano 6 → 2 al confirmar.
 - Insuficiencia: pago deshabilitado; desistir conserva las 3 cartas y no ocupa la ruta.
@@ -48,7 +48,7 @@ Capturas locales de QA en `.playwright-mcp/`: `turn-build-desktop.png`, `turn-bu
 - Regresión automatizada: regreso de turno entre cartas y durante el resultado, movimiento reducido desde el inicio y a mitad, omisión manual, mazo corto/vacío, cancelación y conservación del deadline.
 - Chromium móvil 390×844, sala aislada: los tres rivales completaron sus turnos mediante WebSocket y el turno volvió a los 168 ms. Las cartas aparecieron a los 749/1452/2155 ms; «Sin coste adicional» a los 2856 ms. Las tres coincidían con el evento del servidor: rojo, negro, azul. Mano 6 → 4, ruta adjudicada una sola vez.
 - Chromium móvil con movimiento reducido: las tres cartas y el resultado visibles, cero animaciones, cierre manual correcto y sin desbordamiento horizontal.
-- Chromium escritorio 1440×900 con suplemento: blanco, negro y locomotora; suplemento 2, deadline intacto, mano 6 → 2 tras confirmar y ruta adjudicada. Sin desbordamiento horizontal.
+- Chromium escritorio 1440×900 con suplemento: blanco, negro y comodín; suplemento 2, deadline intacto, mano 6 → 2 tras confirmar y ruta adjudicada. Sin desbordamiento horizontal.
 - Captura: `/private/tmp/ferrovia-tunnel-zero-mobile.png`. Verificación local; sin despliegue.
 
 ## Límites

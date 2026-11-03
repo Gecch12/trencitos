@@ -18,14 +18,14 @@ function drawEvent(game, seat) {
 
 // Input is already normalized. Select authorized fields before copying; the
 // result owns all its objects and never repairs clocks or stored score details.
-function projectMatch(game, seat, { now, tunnelCardMs, destinationDetails, references }) {
+function projectMatch(game, seat, { now, tunnelCardMs, destinationDetails, references, scoreProgress, turnHistory }) {
   if (!Number.isInteger(seat) || seat < -1 || seat >= game.players.length) throw new RangeError("Puesto inválido.");
   const spectator = seat === -1, own = seat === game.current;
   const player = spectator ? { hand: [], tickets: [], pending: [], offer: null } : game.players[seat];
   const details = spectator ? { progress: [], paths: [] } : destinationDetails(game, seat);
   const tunnel = game.pending;
   return structuredClone({
-    spectator, uiVersion: 9, definitionVersion: 1, ...references, timing: game.timing || null, serverNow: now,
+    spectator, uiVersion: 10, definitionVersion: 1, ...references, timing: game.timing || null, serverNow: now,
     turnDeadline: game.turnDeadline, turnSerial: game.turnSerial, turnWaiting: Boolean(game.turnWaiting),
     initialDeadline: game.initialDeadline, initialReadyCount: game.players.filter(p => !p.pending.length).length,
     waitingDeadline: game.turnWaiting ? game.players[game.current].offer?.deadline : null,
@@ -51,6 +51,7 @@ function projectMatch(game, seat, { now, tunnelCardMs, destinationDetails, refer
       cardMs: tunnelCardMs, turnRemaining: tunnel.turnRemaining, offerRemaining: tunnel.offerRemaining[seat] ?? null,
     } : null,
     tunnel: own && game.phase === "tunnel" ? tunnel : null, finalRemaining: game.finalRemaining,
+    turnHistory, historyPartial:!!game.journalPartial, scoreProgress,
     logs: game.logs, history: historyEntries(game).map(entry => historyEntryView(entry, seat)),
     result: game.phase === "finished" ? game.result : null,
   });

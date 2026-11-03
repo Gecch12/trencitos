@@ -1,6 +1,6 @@
 "use strict";
 const AccountUI = (() => {
-  function create({selection,applyProfile,currentSeat}) {
+  function create({selection,applyProfile,currentSeat,targetRoom=()=>null,sessionChanged=()=>{}}) {
     const el = id=>document.getElementById(id);
     let profile=null, enabled=false, timer=null, saving=Promise.resolve(), linked='', binding='';
     let editing=0, loading=true, stopped=false, accountKnown=false;
@@ -23,6 +23,7 @@ const AccountUI = (() => {
       el('accountRetry').hidden=true;
       el('accountRetry').textContent=I18n.t('Reintentar guardado');
       el('accountRooms').replaceChildren();
+      sessionChanged();
       el('accountLabel').textContent=profile?I18n.t('Tu cuenta'):I18n.t('Juega como invitado o guarda tu perfil');
     }
     async function listRooms() {
@@ -68,12 +69,14 @@ const AccountUI = (() => {
       const stamp=profile.id+':'+seat.code+':'+seat.token;
       if (linked===stamp || binding===stamp) return;
       binding=stamp;
-      try { await api('/link',{code:seat.code,token:seat.token}); linked=stamp; }
+      try { await api('/link',{code:seat.code,token:seat.token}); linked=stamp; sessionChanged(); }
       catch(error) { message(error.message); }
       finally { if(binding===stamp) binding=''; }
     }
     el('googleLogin').onclick=async()=>{
       el('googleLogin').disabled=true; message(I18n.t('Abriendo Google…'));
+      const returnRoom=currentSeat()?.code || targetRoom() || new URLSearchParams(location.search).get('room');
+      if (LobbyUI.isJoinCode(returnRoom)) sessionStorage.setItem('rr-account-return-room',returnRoom);
       try { const result=await api('/google',{}); location.assign(result.url); }
       catch(error) {message(error.message);el('googleLogin').disabled=!enabled;}
     };
@@ -122,7 +125,21 @@ const AccountUI = (() => {
         message(I18n.t('Perfil guardado en este dispositivo.'));
       }
     }
-    return {changed,linkSeat,ready,updateNickname,listRooms};
+    function ownsCurrentSeat() {
+      const seat=currentSeat();
+      return !!profile && !!seat && linked===profile.id+':'+seat.code+':'+seat.token;
+    }
+    async function resumeSeat(code,token) {
+      await ready;
+      if (!accountKnown) throw Error(I18n.t('No pudimos comprobar tu cuenta. Reintenta la conexión para entrar en la sala.'));
+      if (!profile) return null;
+      const {rooms}=await api('/rooms');
+      if (!rooms.some(room=>room.code===code)) return null;
+      const recovered=await api('/recover',{code,token,resume:true});
+      linked=profile.id+':'+code+':'+recovered.token;
+      sessionChanged(); return recovered;
+    }
+    return {changed,linkSeat,ready,updateNickname,listRooms,resumeSeat,ownsCurrentSeat};
   }
   return {create};
 })();

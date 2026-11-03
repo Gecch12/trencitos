@@ -90,11 +90,6 @@ Revisa el estado Git y cambios de otros chats antes de escribir. Las ramas
 históricas conservadas no son copias activas ni trabajo pendiente.
 La [consolidación](work/workspace-consolidation.md) conserva procedencia y respaldos.
 
-El estudio anterior de 90 pasajeros permanece aislado en
-`experiments/passenger-extreme/`. `npm run preview:extreme` abre un servidor
-estático de loopback en el puerto 3138 (`PORT` permite cambiarlo), sin cargar
-el juego ni almacenamiento. No forma parte del catálogo ni del servidor público.
-
 Para ejecutar un servidor de pruebas desde la carpeta principal, con puerto y
 estado propios (crea primero `.qa/`):
 
@@ -157,6 +152,13 @@ detén el proceso y copia juntos `STATE_FILE`, `STATE_FILE.bak` si existe y todo
 el manifiesto ya no incluye los pasos de las repeticiones. No borres esa carpeta
 para reducir el tamaño del estado. El contrato de confirmación y recuperación
 está en [historial/replay](history-replay.md).
+
+Si el arranque indica que no se pudo leer el estado ni su copia, el error muestra
+la causa de cada lectura. Una repetición incompleta identifica el `.jsonl` y los
+bytes o pasos esperados/disponibles. Conserva el conjunto antes de repararlo:
+no se debe vaciar el estado ni reducir sus contadores para forzar el arranque.
+Una recuperación parcial debe verificar los hashes disponibles, conservar el
+estado válido de la sala y señalar explícitamente el salto en la grabación.
 
 El estado de cada partida usa su propio `schemaVersion:1` con referencias exactas
 de mapa y reglamento. La carga valida y migra copias de los formatos legados antes
@@ -223,3 +225,7 @@ y `handArrivalMs` el frame de incorporación con imágenes cargadas. Las última
 dos mediciones sustituyen al antiguo criterio de reversos presentes en la mano.
 Se usa `requestAnimationFrame`, no una captura física de pantalla ni una medida
 de producción. La latencia retenida en la prueba no representa la de Render.
+
+
+Los respaldos de estado preexistentes conservados durante la limpieza visual
+están en `.qa/state-backups/preexisting-2026-11-02/`, fuera de Git y de la entrega.

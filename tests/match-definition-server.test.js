@@ -49,7 +49,7 @@ for (const kind of ["file", "supabase"]) test(`${kind} HTTP history serves store
         const response = await http(`/api/history/${record.id}`, own); assert.equal(response.status, 200);
         const replay = await response.json(), state = Replay.at(replay.frames, replay.frames.length - 1);
         assert.deepEqual(replay.match.mapRef, mapRef); assert.deepEqual(state.definition, record.frames[0].snapshot.definition);
-        assert.equal(state.views.length, own ? 3 : 1); assert.equal(state.game, undefined);
+        assert.equal(state.views.length, 3); assert.equal(state.game, undefined);
         if (!own) { assert.deepEqual(state.views[0].hand, []); assert.deepEqual(state.views[0].tickets, []); }
       }
       assert.equal((await http(`/api/history/${record.id}/audit`)).status, 403);

@@ -12,18 +12,23 @@ function readArchive(file, archive) {
   for (const [id, record] of Object.entries(archive.matches)) {
     const { frameStore, ...match } = record;
     if (!frameStore || !Number.isSafeInteger(frameStore.bytes) || frameStore.bytes < 0 || !Number.isSafeInteger(frameStore.count) || frameStore.count < 0) throw Error("Archivo de repetición inválido");
-    const fd = fs.openSync(archivePath(file, id), "r");
-    const data = Buffer.alloc(frameStore.bytes);
+    const target = archivePath(file, id), fd = fs.openSync(target, "r");
+    let data;
     try {
+      const actual = fs.fstatSync(fd).size;
+      if (actual < frameStore.bytes)
+        throw Object.assign(Error(`Repetición incompleta: ${target}; se esperaban ${frameStore.bytes} bytes y hay ${actual}.`), { code: "INCOMPLETE_REPLAY" });
+      data = Buffer.alloc(frameStore.bytes);
       let read = 0;
       while (read < data.length) {
         const n = fs.readSync(fd, data, read, data.length - read, read);
-        if (!n) throw Error("Repetición incompleta");
+        if (!n) throw Object.assign(Error(`Repetición incompleta: ${target}; se esperaban ${data.length} bytes y se leyeron ${read}.`), { code: "INCOMPLETE_REPLAY" });
         read += n;
       }
     } finally { fs.closeSync(fd); }
     match.frames = data.toString("utf8").split("\n").filter(Boolean).map(line => JSON.parse(line));
-    if (match.frames.length !== frameStore.count) throw Error("Repetición incompleta");
+    if (match.frames.length !== frameStore.count)
+      throw Object.assign(Error(`Repetición incompleta: ${target}; se esperaban ${frameStore.count} pasos y hay ${match.frames.length}.`), { code: "INCOMPLETE_REPLAY" });
     matches[id] = match;
   }
   return { matches, claims: archive.claims };
@@ -60,7 +65,13 @@ function loadState(file) {
       return {rooms:[],archive:{matches:{},claims:{}}};
     }
     try { const saved = read(file + ".bak"); console.error("Recuperando partidas desde la copia de seguridad."); return saved; }
-    catch (backupError) { if(backupError.code==="UNSUPPORTED_STORAGE_VERSION")throw backupError;throw new Error("No se pudo leer el estado ni su copia. Se conservan los archivos para recuperación."); }
+    catch (backupError) {
+      if (backupError.code === "UNSUPPORTED_STORAGE_VERSION") throw backupError;
+      // JSON parser messages can include private save contents. Report the
+      // location and type of failure, never a fragment of the stored payload.
+      const detail = cause => cause instanceof SyntaxError ? "JSON inválido." : cause.message;
+      throw Object.assign(new Error(`No se pudo leer el estado ni su copia. Se conservan los archivos para recuperación.\nEstado (${file}): ${detail(error)}\nCopia (${file}.bak): ${detail(backupError)}`), { code: "STATE_LOAD_FAILED" });
+    }
   }
 }
 function loadRooms(file) { const data=loadState(file); return Array.isArray(data)?data:data.rooms; }

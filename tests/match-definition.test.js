@@ -86,7 +86,7 @@ test("stored definitions support replay without a registered map or access to th
   for (const who of [{}, identity]) {
     const result = await archive.replay(who, record.id), state = Replay.at(result.frames, result.frames.length - 1);
     assert.deepEqual(state.definition.mapRef, mapRef); assert.equal(state.game, undefined);
-    assert.equal(state.views.length, who === identity ? 3 : 1);
+    assert.equal(state.views.length, 3);
     assert.deepEqual(state.definition.map.tickets, original.frames[0].snapshot.definition.map.tickets);
     assert.ok(state.views.every(view => view.mapRef.id === mapRef.id));
     if (who !== identity) { assert.deepEqual(state.views[0].hand, []); assert.deepEqual(state.views[0].tickets, []); }
@@ -96,11 +96,12 @@ test("stored definitions support replay without a registered map or access to th
   assert.deepEqual(record, original); assert.throws(() => E.contextFor(room.game), { code: "UNKNOWN_MAP_VERSION" });
 });
 
-test("original Europe public, participant and audit responses retain their frozen hashes", async () => {
+test("legacy Europe reveals recorded facts while the source and audit retain their frozen hashes", async () => {
   const record = freeze(structuredClone(legacy.record)), archive = archiveFor(record), before = structuredClone(record);
   for (const [name, who, audit] of [["public", {}, false], ["participant", { guestId: "legacy-a" }, false], ["audit", { guestId: "legacy-a" }, true]]) {
     const result = await archive.replay(who, record.id, audit);
-    assert.equal(hash(result), legacy.responsesSha256[name]);
+    if (audit) assert.equal(hash(result), legacy.responsesSha256[name]);
+    else {assert.equal(result.full,true);assert.equal(Replay.at(result.frames,0).views.length,record.frames[0].snapshot.views.length);}
     if (audit) { assert.equal(verifyAudit(result).integrity, true); assert.deepEqual(result.frames, record.frames); }
     else assert.ok(!Replay.at(result.frames, 0).definition);
   }

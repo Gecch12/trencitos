@@ -65,7 +65,7 @@ function liveRoom() {
   await actor.locator('[data-market-index="2"]').click();
   for(const p of [actor,observer]){await p.waitForFunction(()=>renewals.length===1);await p.waitForTimeout(100);assert.equal(await p.evaluate(()=>renewals.length),1);}
   assert.equal(await observer.locator('.market-refresh-layer').count(),0);
-  report.checks.push('H toggles the button state, ignores typing/repeats; private link rotation persists; actual third locomotive sounds once with the mobile market closed');
+  report.checks.push('H toggles the button state, ignores typing/repeats; private link rotation persists; actual third wildcard sounds once with the mobile market closed');
   const samples=await actor.evaluate(async()=>{
     const previous=soundContext,offline=new OfflineAudioContext(1,24000,24000);
     soundContext=new Proxy(offline,{get(target,key){if(key==='state')return 'running';const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;}});

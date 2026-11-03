@@ -41,10 +41,11 @@ Mejoras solicitadas del juego:
 
 - [Controles de mesa y sala](table-controls.md).
 - [Circo, Vivienda y variantes de Pasajeros](wagon-variants.md).
-- [Midsommar Express](hippie-train.md): familia blanca y checkpoint visual revisado.
 
 - [Inteligencia de bots de práctica](practice-ai.md).
 - [Billetes, túneles compartidos y resultados](game-flow-ui.md).
+- [Mapas de billetes en vivo y túneles sobre el tablero](destination-map-tunnels.md).
+- [Sombreado y foco del mapa de billetes](ticket-map-shading.md).
 - [Miniaturas, renovación de cartas y pagos visuales](card-interactions.md).
 - [Rendimiento del selector de vagones](wagon-preview-performance.md).
 
@@ -53,3 +54,7 @@ Los hitos viven dentro de la ficha hasta necesitar una entrega independiente;
 entonces usa `parent` y `depends_on`, según [el método](../maintenance.md).
 
 - [Lobby con tarjetas de mapas y vagón compacto](room-map-cards.md).
+- [Proporción y encuadre de Sudamérica](south-america-proportions.md).
+
+- [Historial completo, H y puntos propios](match-history-progress.md).
+- [Foco temporal, replay transparente y reinicio de partidas](replay-transparency-reset.md).

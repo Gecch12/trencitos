@@ -4,7 +4,11 @@ const I18n = (() => {
   const spanish = {Rooms:'Partidas',Play:'Jugar',More:'Más',Profile:'Perfil',Game:'Juego',Community:'Comunidad',Company:'Empresa','Patch Notes':'Notas de actualización',Language:'Idioma',Rules:'Reglas',FAQ:'Preguntas frecuentes',Creators:'Creadores',Tournaments:'Torneos','Join Discord':'Unirse a Discord',About:'Acerca de',Careers:'Trabaja con nosotros',Privacy:'Privacidad',Account:'Cuenta',Friends:'Amigos',History:'Historial',Overview:'Resumen','Open Rooms':'Partidas abiertas',Spectate:'Observar','Create Room':'Crear partida','Join Room':'Unirse a una partida','Follow us':'Síguenos','Edit Profile':'Editar perfil','Visible en Open Rooms. La partida se podrá observar.':'Visible en Partidas abiertas. La partida se podrá observar.'};
   let language = 'es';
   try { if (typeof document !== 'undefined' && globalThis.localStorage?.getItem('rr-language') === 'en') language = 'en'; } catch {}
-  const normalize = value => String(value).replace(/\s+/g, ' ').trim();
+  // Normalize pre-rename message templates only; interpolated player data stays opaque.
+  const normalize = value => String(value).replace(/\blocomotoras?\b/gi, word => (word[0] === 'L' ? 'C' : 'c') + (word.toLowerCase().endsWith('s') ? 'omodines' : 'omodín')).replace(/\b(una|la|las) (comodín|comodines)\b/gi, (_, article, noun) => {
+    const word = {una:'un',la:'el',las:'los'}[article.toLowerCase()];
+    return (article[0] === article[0].toUpperCase() ? word[0].toUpperCase()+word.slice(1) : word) + ' ' + noun;
+  }).replace(/\s+/g, ' ').trim();
   const interpolate = (text, values) => text.replace(/\{(\d+)\}/g, (whole, i) => i < values.length ? String(values[i] ?? '') : whole);
   function message(strings, ...values) { return { key: strings.reduce((s, part, i) => s + (i ? `{${i-1}}` : '') + part, ''), values }; }
   function phrase(source) {

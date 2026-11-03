@@ -1,5 +1,14 @@
 # Producción
 
+## Operación de datos · 2026-11-03, 15:52 (Lima)
+
+Se completó el reinicio de partidas autorizado: respaldo privado de 48 partidas
+y 5.083 frames, seguido de vaciado del historial activo y del checkpoint de salas.
+Se conservaron cuentas, perfiles y vínculos de invitados. Render se suspendió y
+reanudó sobre el mismo commit publicado; salud posterior correcta con Supabase y
+cero salas. No se publicó código nuevo. Procedimiento, recuperación y evidencia
+en [la ficha del reinicio](work/replay-transparency-reset.md#reinicio-de-producción-completado).
+
 ## Versión actual · 2026-11-03, 12:05 (Lima)
 
 - Código `b8e7b3726f846db6aa7630a2bc4976b5a3156c5c`, en `origin/main`.
@@ -104,7 +113,7 @@
 - [Verificación HTTP](qa/room-setup/production-http.json): 45 recursos públicos
   idénticos al código y siete rutas privadas con 404. Chrome en producción:
   sala de QA privada, Sudamérica confirmada mediante tarjeta y seis variantes
-  de Midsommar visibles en el diálogo, sin errores de consola. La sala temporal
+  de una familia visibles en el diálogo, sin errores de consola. La sala temporal
   se cerró después de comprobar. [Captura](qa/room-setup/production-desktop.png) y
   [colección](qa/room-setup/production-collection.png).
 - El checkout local de `main` tenía cambios concurrentes de otro trabajo.

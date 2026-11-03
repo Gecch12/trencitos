@@ -109,5 +109,4 @@ body:not(.is-playing) > .top { flex-shrink: 0; }
 .account-rooms { display: flex; flex-wrap: wrap; gap: 8px; }
 .account-rooms:not(:empty) { margin-top: 10px; }
 
-/* Keep the selected mark legible on the pure-white Hippie Train swatch. */
 .color-options button[data-color="#ffffff"] > span { color:#193b49; text-shadow:none; }

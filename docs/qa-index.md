@@ -29,3 +29,7 @@ El resultado de una ejecución nueva se registra en su ficha de trabajo.
 Los nombres antiguos Ferrovía y sus conteos de pruebas pertenecen a esas
 iteraciones. Pruebas pendientes en dispositivos reales y despliegue se siguen en
 [calidad](work/quality.md).
+
+
+- [Experiencia de cartas y recuperación de puesto](qa/card-experience/validation.json):
+  comprobaciones locales de la ampliación de noviembre; [alcance](work/card-interactions.md).

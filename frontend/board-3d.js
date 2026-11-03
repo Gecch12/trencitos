@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import { createWagonRenderer } from './wagon-renderer.js';
 import { wagonRouteAppearances, wagonStyle } from './wagon-models.mjs';
+import { createTunnelBoard } from './tunnel-board.js';
 
 // A presentation adapter only. No transport, rule engine or hidden game state.
 export function createBoard3D({ container, map, network, onFailure }) {
@@ -67,6 +68,23 @@ export function createBoard3D({ container, map, network, onFailure }) {
     mesh.setMatrixAt(i, dummy.matrix); mesh.setColorAt(i, color.set(tint));
   }
   const wagons = createWagonRenderer({ renderer, scene, instances, put });
+  let previewWagons = null, previewCount = 0;
+  function ghostRenderer() {
+    if (!previewWagons) {
+      const materials = new Map();
+      previewWagons = createWagonRenderer({ renderer, put, instances(geometry, capacity, source) {
+        if (!materials.has(source)) {
+          const material = source.clone(); material.transparent = true; material.opacity = .56; material.depthWrite = false;
+          material.onBeforeCompile = source.onBeforeCompile; material.customProgramCacheKey = source.customProgramCacheKey;
+          materials.set(source, material);
+        }
+        const mesh = instances(geometry, capacity, materials.get(source));
+        mesh.userData.preview = true;
+        return mesh;
+      } });
+    }
+    return previewWagons;
+  }
   // Ground markings live in this depth-tested scene, below trains/stations.
   const basic = () => new THREE.MeshBasicMaterial();
   const slotShape = new THREE.Shape();
@@ -125,18 +143,21 @@ export function createBoard3D({ container, map, network, onFailure }) {
         }
       }, flush() { rgba.needsUpdate = true; } };
   }
-  const ownership = ribbons(11.5,.02), connections = ribbons(17,.06);
+  const ownership = ribbons(11.5,.02), connections = ribbons(17,.06), gold = ribbons(18,.07), halo = ribbons(25,.04);
+  const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   const targets = new Map(), animations = new Map();
   let boardKey = '', pieceCount = 0, stationCount = 0, modelCounts = {}, bandCount = 0;
-  let spotlightRoutes = [], borrowedRoutes = [], freeCells = 0;
+  let spotlightRoutes = [], borrowedRoutes = [], completedRoutes = [], freeCells = 0;
   let selection = { route: null, city: null };
   let frame = 0, disposed = false, dimensions = '', draws = 0;
+  let layoutKey = '', shadingTransition = null, shadingStrength = 0, spotlightStrength = 0;
+  const tunnelBoard = createTunnelBoard({ scene, map, network, invalidate });
   const samples = [];
   function target(key, cell, draw) {
     const before = meshes.map(mesh => mesh.count); draw();
     const ranges = targets.get(key) || [];
     meshes.forEach((mesh,i) => {
-      const first=before[i] || 0; // a Hippie batch may be created lazily by draw()
+      const first=before[i] || 0;
       if (mesh.count > first) ranges.push({mesh, first, count:mesh.count-first, cell});
     });
     targets.set(key, ranges);
@@ -151,30 +172,68 @@ export function createBoard3D({ container, map, network, onFailure }) {
     }
     animation.lastCell = Math.max(0,...animation.parts.map(p=>p.cell));
   }
-  let passengerAppearances = [], hippieAppearances = [];
+  let passengerAppearances = [];
+  function shadingSnapshot() {
+    // Positions stay fixed during a focus change. Only interpolate the color
+    // buffers, not thousands of wagon matrices. Ghosts may move to a new path.
+    const attributes = new Map();
+    for (const mesh of meshes) if (!mesh.userData.preview && mesh.instanceColor)
+      attributes.set(mesh.instanceColor, mesh.instanceColor.array.slice(0, mesh.count * 3));
+    for (const layer of [ownership, connections, gold, halo]) {
+      const attribute = layer.mesh.geometry.getAttribute('color');
+      attributes.set(attribute, attribute.array.slice());
+    }
+    return { attributes, plane: plane.material.color.clone(), background: renderer.getClearColor(new THREE.Color()), strength: shadingStrength };
+  }
+  function advanceShading(now) {
+    if (!shadingTransition) return false;
+    const { before, after, started, duration } = shadingTransition;
+    const progress = matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : THREE.MathUtils.clamp((now - started) / duration, 0, 1);
+    const blend = progress * progress * (3 - 2 * progress);
+    for (const [attribute, end] of after.attributes) {
+      const start = before.attributes.get(attribute);
+      if (!start || start.length !== end.length) continue;
+      for (let i = 0; i < end.length; i++) attribute.array[i] = start[i] + (end[i] - start[i]) * blend;
+      attribute.needsUpdate = true;
+    }
+    plane.material.color.lerpColors(before.plane, after.plane, blend);
+    renderer.setClearColor(color.lerpColors(before.background, after.background, blend));
+    shadingStrength = before.strength + (after.strength - before.strength) * blend;
+    if (progress === 1) shadingTransition = null;
+    return !!shadingTransition;
+  }
   function update({ routes, players, visualSeed = '', hiddenRoute = null, highlight = null, spotlight = null,
-    selectedRoute = null, selectedCity = null, routeColors = {} }) {
+    selectedRoute = null, selectedCity = null, routeColors = {}, preview = null, transitionMs = spotlight?.transitionMs || 0 }) {
     // Only public board fields and the local client's authorized path selection.
-    const key = JSON.stringify({ routes, players, visualSeed, hiddenRoute, highlight, spotlight, selectedRoute, selectedCity, routeColors });
+    const key = JSON.stringify({ routes, players, visualSeed, hiddenRoute, highlight, spotlight, selectedRoute, selectedCity, routeColors, preview });
     if (key === boardKey || disposed) return;
-    boardKey = key; pieceCount = stationCount = bandCount = freeCells = 0; modelCounts = {};
-    passengerAppearances = []; hippieAppearances = [];
+    const nextLayout = JSON.stringify({ routes, players, visualSeed, hiddenRoute, highlight, selectedRoute, selectedCity, routeColors });
+    const duration = Math.max(0, Math.min(1000, transitionMs));
+    const before = layoutKey === nextLayout && duration && !matchMedia('(prefers-reduced-motion: reduce)').matches ? shadingSnapshot() : null;
+    layoutKey = nextLayout; shadingTransition = null;
+    spotlightStrength = spotlight ? THREE.MathUtils.clamp(spotlight.strength ?? 1, 0, 1) : 0;
+    shadingStrength = spotlightStrength;
+    boardKey = key; pieceCount = stationCount = bandCount = freeCells = previewCount = 0; modelCounts = {};
+    passengerAppearances = [];
     selection = {route:selectedRoute,city:selectedCity};
-    targets.clear(); ownership.clear(); connections.clear();
+    targets.clear(); ownership.clear(); connections.clear(); gold.clear(); halo.clear();
     for (const mesh of meshes) mesh.count = 0;
     spotlightRoutes = [...(spotlight?.routes || [])]; borrowedRoutes = [...(spotlight?.stationRoutes || [])];
+    completedRoutes=(spotlight?.completedRoutes||[]).filter(id=>id!==hiddenRoute);
+    const complete=new Set(completedRoutes);
     const litRoutes = new Set(spotlightRoutes), litCities = new Set(spotlight?.endpoints || []);
+    const projected = new Set(preview?.routes || []);
     for (const route of routes) if (litRoutes.has(route.id)) { litCities.add(route.a); litCities.add(route.b); }
     for (const station of spotlight?.stations || []) litCities.add(station.city);
-    const tint = (hex, faded) => faded === 'dim' ? new THREE.Color(hex).multiplyScalar(.28)
+    const tint = (hex, faded) => typeof faded === 'number' ? new THREE.Color(hex).multiplyScalar(1 - .72 * faded)
       : faded ? new THREE.Color(hex).lerp(new THREE.Color('#bbd6d9'), .72) : hex;
-    plane.material.color.set(spotlight ? '#73868d' : '#ffffff');
-    renderer.setClearColor(spotlight ? '#536c77' : '#bbd6d9');
+    plane.material.color.set('#ffffff').lerp(new THREE.Color('#73868d'), spotlightStrength);
+    renderer.setClearColor(new THREE.Color('#bbd6d9').lerp(new THREE.Color('#536c77'), spotlightStrength));
     for (const route of routes) {
       const geometry = geometryById.get(route.id); if (!geometry) continue;
       const owner = route.id === hiddenRoute ? null : route.owner;
       const player = owner === null ? null : players[owner];
-      const faded = spotlight ? (litRoutes.has(route.id) ? false : 'dim') : highlight !== null && owner !== highlight;
+      const faded = spotlight ? (litRoutes.has(route.id) ? false : spotlightStrength) : highlight !== null && owner !== highlight;
       if (player) {
         ownership.set(route.id, tint(player.color, faded), .32); bandCount++;
         const appearances = wagonRouteAppearances(wagonStyle(player.color,player.wagon).model,`${visualSeed}:${owner}:${route.id}`,geometry.cells.length);
@@ -182,7 +241,6 @@ export function createBoard3D({ container, map, network, onFailure }) {
           target(`route:${route.id}`, index, () => {
             const piece = wagons.draw(cell, player, faded, appearances[index]);
             if (piece.model === 'passenger') passengerAppearances.push({route:route.id,index,variant:piece.variant,cast:piece.cast});
-            if (piece.model === 'hippie') hippieAppearances.push({route:route.id,index,variant:piece.variant});
             modelCounts[piece.model] = (modelCounts[piece.model] || 0) + 1; pieceCount++;
           });
         }
@@ -198,13 +256,19 @@ export function createBoard3D({ container, map, network, onFailure }) {
           if (index < (route.ferry || 0)) put(ferryMarks,cell.x,cell.y,.22,cell.angle,1,1,1,tint('#405351',faded));
           freeCells++;
         }
+        if (projected.has(route.id) && preview.player) {
+          const ghost = ghostRenderer(), player = preview.player;
+          const appearances = wagonRouteAppearances(wagonStyle(player.color, player.wagon).model, `${visualSeed}:preview:${route.id}`, geometry.cells.length);
+          geometry.cells.forEach((cell, i) => { ghost.draw(cell, player, faded, appearances[i]); previewCount++; });
+        }
       }
-      if (litRoutes.has(route.id) && route.id !== hiddenRoute) connections.set(route.id,'#ffe08a',.7,borrowedRoutes.includes(route.id));
+      if(complete.has(route.id)){gold.set(route.id,'#ffd766',.9,borrowedRoutes.includes(route.id));halo.set(route.id,'#ffbd39',.3,borrowedRoutes.includes(route.id));}
+      else if (litRoutes.has(route.id) && route.id !== hiddenRoute) connections.set(route.id,spotlight?.completedRoutes&&!spotlight.activeRoutes?.includes(route.id)?'#7cd7e4':'#ffe08a',.7,borrowedRoutes.includes(route.id));
       else if (route.id === selectedRoute) connections.set(route.id,'#eeb84a',.65);
     }
     for (const [city,[x,y]] of Object.entries(map.cities)) {
       const owner = players.findIndex(p => p.placed.includes(city));
-      const faded = spotlight ? (litCities.has(city) ? false : 'dim') : highlight !== null && owner >= 0 && owner !== highlight;
+      const faded = spotlight ? (litCities.has(city) ? false : spotlightStrength) : highlight !== null && owner >= 0 && owner !== highlight;
       if (owner < 0 || selectedCity === city) {
         const radius = owner >= 0 ? 11.5 : 6.6;
         put(cityDiscs,x,y,.23,0,radius,radius,1,tint('#fffdf1',faded));
@@ -217,32 +281,38 @@ export function createBoard3D({ container, map, network, onFailure }) {
         put(doors,x,y+6.1,3.8,0,4,.3,7.5,tint('#fff3d6',faded)); stationCount++;
       });
     }
-    ownership.flush(); connections.flush();
+    ownership.flush(); connections.flush();gold.flush();halo.flush();
     for (const mesh of meshes) {
       mesh.visible = mesh.count > 0; mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     }
     for (const animation of animations.values()) bindAnimation(animation);
+    if (before) {
+      shadingTransition = { before, after: shadingSnapshot(), started: performance.now(), duration };
+      advanceShading(shadingTransition.started);
+    }
     invalidate();
   }
-  function animateConstruction(event, onComplete, {delay=0,duration=500}={}) {
+  function animateConstruction(event, onComplete, {delay=0,duration=500,hideDuringDelay=false}={}) {
     const key = event.routeId !== undefined ? `route:${event.routeId}` : `city:${event.city}`;
     if (disposed || !targets.has(key)) return false;
-    const animation = {key,started:performance.now(),onComplete,maxLift:0,delay,duration};
+    const animation = {key,started:performance.now(),onComplete,maxLift:0,delay,duration,hideDuringDelay,visible:!hideDuringDelay};
     bindAnimation(animation); animations.set(key,animation); invalidate(); return true;
   }
-  const animatedMatrix = new THREE.Matrix4();
+  const animatedMatrix = new THREE.Matrix4(), hiddenScale = new THREE.Vector3(0, 0, 0);
   function advanceAnimations(now) {
     const callbacks = [];
     for (const animation of animations.values()) {
       const elapsed = now - animation.started - animation.delay, stagger = Math.min(animation.duration * .16,animation.lastCell * animation.duration * .036);
       animation.maxLift = 0;
+      animation.visible = !animation.hideDuringDelay || elapsed >= 0;
       for (const part of animation.parts) {
         const delay = animation.lastCell ? stagger * part.cell / animation.lastCell : 0;
         const progress = THREE.MathUtils.clamp((elapsed-delay)/(animation.duration-stagger),0,1);
         const lift = 18 * (1-progress) ** 3;
         animation.maxLift = Math.max(animation.maxLift,lift);
         animatedMatrix.copy(part.base); animatedMatrix.elements[14] += lift;
+        if (!animation.visible) animatedMatrix.scale(hiddenScale);
         part.mesh.setMatrixAt(part.index,animatedMatrix); part.mesh.instanceMatrix.needsUpdate = true;
       }
       if (elapsed >= animation.duration) { animations.delete(animation.key); if (animation.onComplete) callbacks.push(animation.onComplete); }
@@ -261,15 +331,18 @@ export function createBoard3D({ container, map, network, onFailure }) {
     frame = requestAnimationFrame(now => {
       frame = 0;
       if (disposed || document.hidden) return;
-      const callbacks = advanceAnimations(now), start = performance.now();
+      const callbacks = advanceAnimations(now), cardsMoving = tunnelBoard.advance(now), shadingMoving = advanceShading(now), start = performance.now();
+      const pulse=reducedMotion.matches?1:.78+.22*Math.sin(now/650);
+      gold.mesh.material.opacity=pulse;halo.mesh.material.opacity=pulse*.8;
       renderer.render(scene, camera); draws++;
       samples.push(performance.now() - start); if (samples.length > 240) samples.shift();
       callbacks.forEach(callback => callback());
-      if (animations.size) invalidate();
+      if (animations.size || cardsMoving || shadingMoving || completedRoutes.length&&!reducedMotion.matches) invalidate();
     });
   }
   function visibility() { if (document.hidden) cancelAnimations(); else invalidate(); }
   document.addEventListener('visibilitychange', visibility);
+  reducedMotion.addEventListener('change',invalidate);
   function resize(view) {
     if (disposed) return;
     const w = container.clientWidth, h = container.clientHeight;
@@ -285,23 +358,24 @@ export function createBoard3D({ container, map, network, onFailure }) {
     camera.updateProjectionMatrix(); camera.updateMatrixWorld(); invalidate();
   }
   return {
-    resize, update, animateConstruction, cancelAnimations,
+    resize, update, animateConstruction, cancelAnimations, setTunnelCards: tunnelBoard.update,
     project(x, y, z = 0) {
       const p = new THREE.Vector3(x, -y, z).project(camera);
       return { x: (p.x + 1) * container.clientWidth / 2, y: (1 - p.y) * container.clientHeight / 2 };
     },
-    stats() { return { selection: {...selection}, freeCells, ownershipBands: bandCount, spotlightRoutes: [...spotlightRoutes], borrowedRoutes: [...borrowedRoutes],
-      animations: [...animations.values()].map(a=>({key:a.key,maxLift:a.maxLift})), revision: THREE.REVISION, draws, wagons: pieceCount, models: { ...modelCounts }, passengers: passengerAppearances.map(p=>({...p})), stations: stationCount, samples: [...samples], calls: renderer.info.render.calls,
-      hippies:hippieAppearances.map(p=>({...p})),crowds:wagons.crowdStats(),
+    stats() { return { selection: {...selection}, freeCells, previewWagons: previewCount, tunnelCards: tunnelBoard.stats(), ownershipBands: bandCount, spotlightRoutes: [...spotlightRoutes], completedRoutes:[...completedRoutes], goldOpacity:gold.mesh.material.opacity, borrowedRoutes: [...borrowedRoutes],
+      spotlightStrength, shadingStrength, shadingAnimating: !!shadingTransition,
+      animations: [...animations.values()].map(a=>({key:a.key,maxLift:a.maxLift,visible:a.visible})), revision: THREE.REVISION, draws, wagons: pieceCount, models: { ...modelCounts }, passengers: passengerAppearances.map(p=>({...p})), stations: stationCount, samples: [...samples], calls: renderer.info.render.calls,
       triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, pixelRatio: renderer.getPixelRatio() }; },
     dispose() {
-      disposed = true; animations.clear(); cancelAnimationFrame(frame);
+      disposed = true; shadingTransition = null; animations.clear(); cancelAnimationFrame(frame); tunnelBoard.dispose();
       document.removeEventListener('visibilitychange', visibility);
+      reducedMotion.removeEventListener('change',invalidate);
       renderer.domElement.removeEventListener('webglcontextlost', lost);
       const geometries = new Set(), materials = new Set();
       scene.traverse(node => { if (node.geometry) geometries.add(node.geometry); if (node.material) materials.add(node.material); if (node.isInstancedMesh) node.dispose(); });
       geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose());
-      wagons.dispose(); texture.dispose(); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove();
+      wagons.dispose(); previewWagons?.dispose(); texture.dispose(); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove();
     },
   };
 }

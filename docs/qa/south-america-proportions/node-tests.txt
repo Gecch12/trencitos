@@ -1,0 +1,46 @@
+✔ initial proposal minimizes wagons, independently of ticket points or geometric distance (2.004042ms)
+✔ new tickets prefer existing track; live occupation recalculates without mutating state (0.312834ms)
+✔ parallel lane rules distinguish small and large tables and never bypass an own lane (0.104375ms)
+✔ a station borrows one incident route, never two; two placed stations may borrow two (0.125917ms)
+✔ station suggestions retain loans already completing kept tickets (0.099708ms)
+✔ equal-cost live alternatives retain a still valid preview, with numeric or string IDs (0.184584ms)
+✔ completed tickets use the authoritative private path with zero new wagons (0.094917ms)
+✔ one engine resolves simultaneous Europe and two exact map versions without global selection (7.110875ms)
+✔ Europe route IDs keep their meaning after rows move; string IDs are not numeric positions (3.030958ms)
+✔ serialized opaque-ID tunnel resolves by identity: zero surcharge (3.448625ms)
+✔ serialized opaque-ID tunnel resolves by identity: paid surcharge (3.5125ms)
+✔ ferries and parallel restrictions use opaque IDs and corridors for every player count (2.328959ms)
+✔ stations, borrowed paths, final scores and private queries use the match's own cities and tickets (3.190417ms)
+✔ unknown or incomplete references reject commands, queries and closure before changing a game (2.915125ms)
+✔ unusable definitions and insufficient destinations fail before consuming setup randomness (1.593208ms)
+✔ explicit Europe references preserve its legacy route/ticket representation and cloned lookup (0.608834ms)
+✔ versioned Europe and its frozen numeric bridge preserve every legacy city, route and ticket (2.45725ms)
+✔ reordering definitions leaves legacy IDs, route order and deterministic deck order unchanged (0.818333ms)
+✔ the Europe bridge cannot silently accept a different map, version, missing ID or duplicate (2.486667ms)
+✔ browser classic scripts and Node deliver identical legacy data without server modules (2.572208ms)
+✔ complete seeded setups retain their pre-extraction content apart from explicit version references (2.564792ms)
+✔ cartography preserves every city, route ID and train count without mutating rules (7.460709ms)
+✔ all 300 slots have identical dimensions, follow their path tangents and fit inside the water bounds (1.953084ms)
+✔ train slots do not overlap, including parallel tracks and crowded city approaches (24.52825ms)
+✔ tracks never pass through an unrelated city and terminate at their own endpoints (10.708416ms)
+✔ constant-screen-size labels remain separated and contained at desktop fit sizes (22.076917ms)
+✔ client context resolves opaque IDs and names independently of array order and keeps contexts isolated (17.477334ms)
+✔ only an entirely legacy replay uses the frozen Europe fallback; current missing or incompatible data fail (17.03525ms)
+✔ client refuses ambiguous DOM identities, missing coordinates and mismatched route data (1.258958ms)
+✔ client payment and pass hints use the supplied rule values without granting authority (0.681167ms)
+✔ extracted Europe geometry preserves the frozen layout and stable double lanes (28.988333ms)
+✔ browser classic scripts load the client read model without backend imports (14.810709ms)
+✔ compact live messages reuse only a definition with identical version references (6.231208ms)
+South America four bots: {"steps":265,"actions":{"choose_initial":4,"draw_train":167,"claim":60,"station":7,"decline_tunnel":4,"draw_tickets":4,"keep_tickets":4,"pay_tunnel":1},"turns":166,"scores":[{"name":"Jaguar","score":128,"longest":23,"winner":true},{"name":"Cóndor","score":117,"longest":32,"winner":false},{"name":"Llama","score":88,"longest":23,"winner":false},{"name":"Capibara","score":42,"longest":11,"winner":false}]}
+✔ South America has a portrait silhouette and its entire coast fits with water margins (1.871417ms)
+✔ South America preserves every supplied identity, rule and ticket, with no Europe index bridge (4.12125ms)
+✔ South America slots do not overlap and avoid unrelated cities, including the southern ferries (58.988459ms)
+✔ four South America bots finish naturally, preserving resources through restore and scoring (4880.489042ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5081.271666

@@ -41,8 +41,8 @@ async function visibleLayout(page,label){
   await page.reload();await page.waitForFunction(()=>roomMapRef.id==='south-america'&&wagonPreview);
   assert.equal(await page.locator('[data-map-id="south-america"]').getAttribute('aria-checked'),'true');
   report.checks.push('Arrow/Home keyboard navigation and reconnect preserve authoritative choice');
-  await page.locator('#roomColors [data-color="#ffffff"]').click();
-  await page.waitForFunction(()=>document.querySelector('#wagonPreview').dataset.model==='hippie'&&!pendingRoomColor&&!colorRequest);
+  await page.locator('#roomColors [data-color="#d45748"]').click();
+  await page.waitForFunction(()=>document.querySelector('#wagonPreview').dataset.model==='passenger'&&!pendingRoomColor&&!colorRequest);
   await visibleLayout(page,'desktop');
   await page.locator('#openWagonCollection').click();await page.waitForFunction(()=>wagonCollection);
   assert.equal(await page.locator('#wagonCollectionStage [data-variant]').count(),6);

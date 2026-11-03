@@ -12,7 +12,6 @@ Evidencia, integración y límites en [la ficha del tablero](work/board-3d.md).
 | `backend/` | Transporte HTTP/WebSocket, composición, fachada `Engine`, bots, identidad y almacenamiento. |
 | `shared/` | Datos públicos de Europa, paleta/lobby, tiempos permitidos, idiomas y formato de replay usados en ambos entornos. |
 | `game/` | Dominio, aplicación, consultas, validación de mapas y adaptadores extraídos. Dominio/aplicación siguen sin depender del navegador o del transporte. |
-| `experiments/` | Estudios históricos aislados del runtime; [prototipo de 90 pasajeros](../experiments/passenger-extreme/README.md) con dependencias visuales congeladas. No se sirve desde el juego ni se incluye en Docker. |
 | `scripts/`, `tests/`, `supabase/`, `docs/` | Herramientas, verificaciones, migraciones SQL y contexto documental. |
 
 El [arranque raíz](../server.js) delega en [backend/server.js](../backend/server.js).
@@ -100,8 +99,8 @@ admiten esas referencias. Toda partida nueva lleva `schemaVersion:1`, `mapRef`
 y `rulesRef`; los valores predeterminados son Europa v1 y `europe-classic@1`.
 Al pedir una referencia explícita, la otra toma su valor inicial conocido.
 Referencias incompletas, inválidas o desconocidas producen error, sin recurrir
-a Europa. Los repartos congelados siguen coincidiendo al retirar únicamente
-esos tres campos añadidos; la fixture histórica no se reescribió.
+a Europa. Los repartos congelados siguen coincidiendo al retirar las referencias
+y los metadatos añadidos del diario; la fixture histórica no se reescribió.
 
 Construcción y ambas resoluciones de túnel buscan con `routeById`, por igualdad
 estricta: reordenar vías no cambia el objetivo; el número `0` y la cadena `"0"`
@@ -129,7 +128,7 @@ del mazo. Los módulos del backend permanecen fuera de los recursos HTTP públic
 | --- | --- |
 | `map` | Ciudades `{id,name}`, corredores `{id,cityIds}`, vías `{id,corridorId,a,b,n,color,tunnel,ferry}` y billetes `{id,a,b,p,long}`. |
 | `rules` | Colores, puntos por longitud, capacidades, umbral de dobles, recursos/reparto e inventario inicial, límites de mercado/destinos, costes de estación, umbral final y parámetros de puntuación. |
-| `game` público | Añade `definitionVersion:1`, `mapRef` y `rulesRef`; conserva `uiVersion:9` y el resto de la vista autorizada. |
+| `game` público | Añade `definitionVersion:1`, `mapRef` y `rulesRef`; `uiVersion:10` incluye el historial filtrado y la puntuación propia. |
 | Mensaje `state` | `{type:"state", definition, game}`. Toda entrega, incluida reconexión/recuperación, contiene la definición completa. |
 
 Esta proyección usa los mismos IDs y filas que las vistas: Europa conserva
@@ -193,7 +192,7 @@ del estado persistido sobre las filas legadas: cabecera explícita y validación
 contra el contexto, sin convertir aún la propiedad a una tabla separada.
 Es independiente de `version:2` del manifiesto local, `schema_version:1` del RPC,
 la revisión de checkpoint/sala, `schemaVersion:1` del archivo de replay y
-`uiVersion:9` y `definitionVersion:1` de las vistas. No requiere cambios SQL;
+`uiVersion:10` y `definitionVersion:1` de las vistas. No requiere cambios SQL;
 la definición pública es una ampliación independiente del estado persistido.
 
 `Engine.restoreState(game)` devuelve una copia validada y con cabecera. Acepta
@@ -276,12 +275,14 @@ presentación; pagos, turnos y reglas consumen exclusivamente el estado autoriza
 
 La recogida dura 150 ms y el recorrido propio apunta a 520 ms desde su inicio,
 con separación mínima de 110 ms entre inicios de dos cartas. Una carta oculta
-espera junto al mazo si el guardado tarda; después de 850 ms muestra «Robando
-carta». Al recibir el color, lo decodifica, gira durante 180 ms y termina un
-viaje de al menos 260 ms. Si la respuesta es lenta, el tiempo total crece: la
+avanza parte del recorrido mientras espera el guardado; después de 850 ms muestra
+«Robando carta». Al recibir el color, lo decodifica, gira durante 180 ms y termina
+un tramo final de al menos 190 ms. Reserva el hueco de ese color y desplaza
+los grupos existentes de la mano en 230 ms, conservando sus nodos. Si la respuesta es lenta, el tiempo total crece: la
 animación no garantiza ocultar toda la latencia. Movimiento reducido usa recogida
 de 40 ms, fundido de 100 ms y giro instantáneo. Los vuelos confirmados de otros
-jugadores duran 560 ms y conservan reversos para los robos privados rivales.
+jugadores duran 680 ms, con pausa de lectura y separación de 320 ms. Los robos
+privados rivales conservan el reverso.
 
 Las ilustraciones públicas se cargan y decodifican una vez en la página como
 imágenes retenidas con URL `blob:` local; la CSP permite cargarlas y leerlas en
@@ -293,7 +294,7 @@ Con la capacidad nueva, la primera solicitud lleva `chainDraws:true`; la segunda
 sale al clic, con ID propio, revisión original y `after` apuntando al primer ID.
 El servidor las ejecuta en su cola serial y valida el recibo del primer robo,
 puesto, revisión, turno, cantidad de robos y posiciones originales. No acepta
-una tercera carta, locomotora visible como segundo robo ni reutilizar la primera
+una tercera carta, comodín visible como segundo robo ni reutilizar la primera
 posición visible. Una renovación invalida la segunda elección aunque reaparezca
 el mismo color; el agotamiento ajusta el índice de una carta intacta desplazada.
 No se predicen colores ocultos ni se confirma antes del commit durable.
@@ -528,8 +529,9 @@ para consultas internas. Los frames locales se reutilizan sin modificarlos.
 `replay-view.js` proyecta resúmenes y reconstruye las vistas guardadas; no ejecuta
 el motor ni adapta frames antiguos. Listado, eventos, acciones y auditoría son
 copias: su consumidor no puede modificar el archivo ni sus hashes. Las respuestas
-conservan permisos y formato: participantes de una partida cerrada acceden a todas
-sus perspectivas; terceros solo al replay público. El contrato de identidad,
+conservan el control de acceso a partidas privadas y auditorías. Todo visitante
+autorizado de un replay cerrado accede a todas sus perspectivas y hechos de juego
+registrados; `canAudit` se decide por identidad, independientemente de `full`. El contrato de identidad,
 acceso y datos publicados está en [historial/replay](history-replay.md).
 
 ## Extracción gradual del dominio
@@ -572,7 +574,7 @@ al devolver resultados conserva el formato legado y las referencias de billetes.
 clasificación: `routeAdjustment` conserva diferencias históricas de puntuación.
 
 `train-cards.js` prepara robos, reciclado y renovación sobre una copia de las
-pilas. Recibe tamaño de mercado, umbral de locomotoras, cartas por turno y azar;
+pilas. Recibe tamaño de mercado, umbral de comodines, cartas por turno y azar;
 devuelve pilas, carta obtenida, señal de fin de turno y evidencia de renovación.
 Conserva el muestreo condicionado del mercado y su salida finita cuando no hay
 cartas normales suficientes. La fachada aplica las pilas con las referencias
@@ -629,7 +631,7 @@ Alcance y pruebas en
   de tamaño legible. `placeLabels` admite prioridades, posiciones previas,
   longitud máxima de guía y ocultación de colisiones; estas opciones son optativas
   y solo se activan en 3D. Foco/selección preceden a destinos y secundarios.
-- Mano, cartas, menús, pagos y mapas de detalle conservan HTML/SVG 2D.
+- Mano, cartas, menús, pagos y mapas de resultados conservan HTML/SVG 2D.
   Protocolo UI 7 añade miniaturas del historial y eventos `market_refresh` con
   las cinco cartas públicas anteriores y nuevas. El cliente anima la renovación
   durante 940 ms (fundido de 180 ms con movimiento reducido), bloqueando solo los
@@ -640,8 +642,8 @@ Alcance y pruebas en
   animación ni de la visibilidad del panel. Una única fuente de audio contiene
   la recogida, barajado y reparto, por lo que M cancela toda la secuencia.
   Los túneles usan `sharedTunnel` (protocolo UI 8): la etapa y los tiempos vienen
-  del motor. El cliente dibuja las cartas por timestamp y no puede cerrar ni
-  adelantar la secuencia. La ruta se adjudica al resolver, nunca antes de revelar.
+  del motor. El cliente dibuja las cartas por timestamp y no puede adelantar la secuencia
+  del servidor. Los observadores pueden ocultar su modal durante todo ese intento. La ruta se adjudica al resolver, nunca antes de revelar.
   El modal mantiene reserva, revelación, decisión y resultado; el desglose separa
   base, extra y total. El motor guarda el extra cobrado y la marca de inicio del
   resultado. El cliente anima el pago y los vagones o la devolución de la base;
@@ -649,16 +651,51 @@ Alcance y pruebas en
   Ocultar, redimensionar o desconectar cancela las copias volantes y deja el
   resumen estático; movimiento reducido conserva el mismo resultado sin vuelos.
   El color de los vagones del modal se asigna por CSSOM, respetando la CSP.
-  `animateConstruction` traslada las matrices de las piezas aceptadas durante
-  500 ms; los eventos existentes evitan repeticiones al reconectar. Solo renderiza
-  continuamente durante esa caída, con cancelación/restauración al ocultar,
-  redimensionar o desconectar y respeto de movimiento reducido.
+  `animateConstruction` conserva las matrices, altura, curva, desfase y duración
+  de 500 ms de la colocación existente. Su inicio espera los 500 ms de sombreado,
+  ocultando solo las nuevas piezas durante esa espera. Tras aterrizar y la pausa
+  existente de 150 ms, restaura iluminación en 350 ms; respeta el highlight vigente.
+  `board-3d.js` admite interpolar hasta un spotlight nulo mediante `transitionMs`
+  independiente del objetivo. Los eventos evitan repeticiones al reconectar.
+  Renderiza continuamente durante los efectos, con cancelación/restauración al
+  ocultar, redimensionar o desconectar y respeto de movimiento reducido.
 - El resaltado principal entrega a Three solo IDs de rutas, extremos y estaciones
   de la selección autorizada del cliente. Atenúa el contexto y conserva los mismos
   vagones y colores; `destinationSpotlight` solo contiene etiquetas e indicadores,
   sin clonar vagones/estaciones SVG. No entrega manos ni billetes al renderizador.
+- `destination-planner.js` calcula propuestas sobre la proyección autorizada: coste
+  cero para vías propias y préstamos de estaciones colocadas; longitud para vías
+  libres; exclusión de bloqueos por dobles. La búsqueda incorpora el uso de cada
+  estación y respeta préstamos de destinos ya completados. Conserva alternativas
+  previas de igual coste; no modifica estado, puntuación ni decisiones del motor.
+  Las propuestas son por destino, no una optimización conjunta de toda la oferta.
+- `ticket-map.js` monta `createBoard3D` en el modal con cámara, gestos y ciclo de
+  vida propios. Three dibuja la red y vagones proyectados translúcidos; SVG añade
+  solo blancos de inspección, números y etiquetas de extremos. Las construcciones
+  confirmadas invalidan los cálculos sin recrear el diálogo ni sus selecciones.
+  La vista conjunta usa la mitad del ensombrecimiento y muestra solo los billetes
+  marcados, además de los destinos actuales activados para comparar. Sin selección
+  no entrega spotlight, rutas proyectadas ni etiquetas especiales. Cada tarjeta
+  es un label de su casilla nativa: texto, número y espacio libre cambian la misma
+  selección. Hover inspecciona sin seleccionar; el toque que selecciona enfoca el
+  billete. Salir con ratón o tocar fuera limpia el foco individual y vuelve al
+  conjunto seleccionado, sin conservar un foco fijado anterior.
+  El adaptador interpola colores durante 180 ms entre focos sobre una geometría
+  estable, sin reconstruir matrices por fotograma. Omite la transición con
+  movimiento reducido y al cambiar la geometría. La previsualización del modal
+  conserva su representación existente. Los nombres y propuestas permanecen legibles.
+  El controlador se libera al cerrar o sustituir el modal y restaura su cámara
+  al reabrir la misma oferta. Si WebGL falla, conserva los controles de elección
+  y permite reintentar la vista.
+- `tunnel-board.js` coloca hasta tres cartas como planos sobre el tablero junto
+  a la vía, buscando espacio sin vías o ciudades. Usa el arte existente y la
+  cámara principal. `syncTunnelBoard` comparte el timestamp de `sharedTunnel`
+  con el modal, oculta caras todavía no reveladas y no reinicia la secuencia al
+  minimizar o reabrir. El aviso permite volver al detalle sin mover la cámara;
+  la preferencia de ocultar pertenece al intento y al cliente. Solo el constructor
+  conserva el modal obligatorio. La pausa y el cambio de turno siguen en el motor.
 - Los 21 colores seleccionables tienen una familia propia; jade lleva Vivienda
-  e índigo Circo; blanco lleva Midsommar Express. Hongos, Cristales y Confitería se retiraron. Rosa conserva su
+  e índigo Circo. Hongos, Cristales y Confitería se retiraron. Rosa conserva su
   clave en partidas anteriores y usa Pasajeros; no se ofrece a nuevas selecciones.
   Pasajeros tiene seis composiciones: clásico, una/dos/tres personas, apoyado y
   saludo. Cabezas esféricas suaves sin rasgos faciales, cuatro peinados y cuatro
@@ -698,38 +735,17 @@ Alcance y pruebas en
   El resaltado atenúa todas las piezas. Tolvas, bloques y bobinas huecas usan
   geometrías compartidas; las bobinas separan acero satinado, capas y cinchos.
   Tablero y preview orientan la luz hemisférica al eje vertical Z.
-- Midsommar Express usa [hippie-model.mjs](../frontend/hippie-model.mjs) para seis escenas
-  deterministas, ropa, poses y decoración vegetal. Las actividades colocan los
-  instrumentos y objetos en las manos; la pareja de baile comparte dos puntos
-  de contacto en coordenadas del vagón. Poste, arco y utilería pertenecen al
-  mismo lote que las personas. [wagon-people.mjs](../frontend/wagon-people.mjs) comparte
-  la selección original de piel/pelo con Pasajeros, sin cambiar sus semillas.
-  [hippie-geometry.mjs](../frontend/hippie-geometry.mjs) y
-  [hippie-hair.mjs](../frontend/hippie-hair.mjs) combinan las 22 personas y los adornos de cada variante
-  en una geometría con colores por vértice. El renderizador crea sus lotes solo
-  cuando se usan; no reserva miles de instancias por personaje o prenda.
-  El tablero usa detalle bajo; previews individuales de al menos 240 px usan
-  alto. Ambos conservan cantidad, identidad, poses, blanco de la ropa y siluetas.
-  La reflexión Y corrige también el orden de índices, sin escalas negativas de
-  instancia. Un atributo por instancia aplica el mismo resaltado que al cuerpo.
-  Los lotes creados durante una construcción entran en sus rangos animados,
-  aterrizando con el vagón. El tamaño extra lateral y alto se verifica en su
-  prueba de integración; no sustituye las huellas de las demás familias.
-  La clave técnica `hippie` y los seis IDs se conservan por compatibilidad;
-  el nombre visible es Midsommar Express. Contratos y evidencia en
-  [la ficha de la familia](work/hippie-train.md).
 - Renderizado WebGL bajo demanda y DPR máximo 2. Sin selector ni retorno a 2D;
   se ignoran preferencias/enlaces antiguos de vista. Si falla WebGL, se oculta el
   mapa y se ofrece reintentar 3D, sin modificar sala ni estado del juego.
 - [wagon-preview.js](../frontend/wagon-preview.js) comparte `createWagonRenderer` con el
   tablero. Lobby y práctica muestran una pieza estable en vista 3/4, con nombre
   y enlace al detalle. La colección se crea al abrir su diálogo: las seis variantes
-  de Pasajeros/Midsommar Express se distribuyen en tres columnas (dos en pantallas
+  de Pasajeros se distribuyen en tres columnas (dos en pantallas
   pequeñas), dentro de un solo canvas lateral. Familias sin variantes muestran
   su único diseño y el enlace «Ver detalle». Se conservan IDs, geometría y modelos
   del tablero; la colección no cambia el orden de vagones en las rutas.
-  Midsommar eleva el foco para incluir las personas del techo. Los nombres de las
-  variantes están disponibles al lector de pantalla. Escape/cierre libera la
+  Los nombres de las variantes están disponibles al lector de pantalla. Escape/cierre libera la
   escena de la colección y devuelve el foco; salir del lobby o jugar libera ambas
   vistas. `ResizeObserver` actualiza encuadres; renderizado bajo demanda y DPR 2.
   El modo de tren conectado sigue disponible para catálogos QA, sin usarse en el lobby.
@@ -899,7 +915,12 @@ aceptadas antes de grabar/publicar. Se guardan inicio/fin y objetivo, se conserv
 los presupuestos de turno/oferta y el motor rechaza acciones durante la señal.
 Los túneles ya tienen pausa de resultado y no suman otra. Three.js consume la
 señal visual sin decidir propiedad ni pagos. La recuperación desplaza señal y
-plazos juntos. Foco temporal y spotlight de destinos se combinan y restauran.
+plazos juntos. La señal dura 1.500 ms (500 de sombreado, 500 de movimiento,
+150 de pausa existente y 350 de restauración). Un spotlight de destinos o
+resaltado de jugador activo se combina con el foco temporal de construcción:
+la ruta rival se ilumina durante la colocación y vuelve al sombreado en 350 ms.
+`sharedTunnel.routeId` mantiene el foco desde la revelación hasta el resultado;
+un resultado construido enlaza con la colocación sin perderlo.
 
 `frontend/replay-ui.js` controla exclusivamente carga, perspectivas, navegación,
 velocidad e historial de la grabación. `history-ui.js` conserva listado/perfil.
@@ -934,3 +955,51 @@ El protocolo compacto 2 agrupa mensajes consecutivos en un único frame JSON
 se reciben juntos, evitando la demora entre frames observada tras el proxy. La
 versión 1 sigue deduplicando sin envoltorio; clientes sin negociación conservan
 el protocolo original. Ningún mensaje se agrupa antes de aceptar el commit.
+
+
+## Presentación de robos y entrada por cuenta
+
+`draw-intent.js` limita la preselección cuando una reposición visible puede renovar
+la mesa. La autoridad continúa en `player-action.js`, que invalida dependencias
+tras `market_refresh`. `app.js` solapa el recorrido oculto con la confirmación,
+conserva nodos por color y anima su nueva posición; el color real se decodifica
+antes del giro y la entrada a la mano. La renovación registra historial público
+y su animación espera el vuelo causante en cada navegador.
+
+`account-ui.js` resuelve el puesto de la cuenta antes del primer join a una sala.
+`account-seats.js` verifica propiedad antes de reutilizar o rotar la credencial.
+Las reconexiones de una página usan su credencial actual; una sesión sustituida
+no reclama repetidamente el puesto. El retorno de Google conserva la sala deseada.
+
+
+## Historial de turnos y progreso en vivo
+
+[match-journal.js](../backend/match-journal.js) conserva hechos del motor,
+contexto del turno y proyección por puesto. La captura de archivo reconcilia
+conexiones/control antes de generar las vistas, usando el mismo checkpoint.
+Las consultas no mutan ese registro. Las simulaciones hipotéticas del bot se
+marcan en un `WeakSet` para omitir el diario y sus cálculos; esa exclusión no es
+un campo de red ni una opción del jugador, y no afecta partidas reales.
+
+[live-score.js](../game/queries/live-score.js) calcula las longitudes en servidor,
+con caché por contenido de cada red propia: una construcción no recalcula los
+caminos de rivales cuya red sigue igual. La búsqueda exacta del dominio reutiliza
+estados ciudad/vías usadas y limita por la longitud alcanzable y por los extremos
+impares. Cada vía omitida puede corregir como máximo dos extremos impares;
+esa cota evita explorar combinaciones que no mejorarían el mejor recorrido. Destinos y estaciones reutilizan la consulta
+autoritativa existente. `scoreProgress.own` solo existe para el destinatario;
+`scoreProgress.players` contiene exclusivamente datos públicos. `match-view.js`
+recibe `turnHistory` ya filtrado del adaptador y lo copia, sin publicar el diario
+privado ni importar el registrador de eventos.
+
+[turn-history.js](../frontend/turn-history.js) presenta las filas en partida y
+replay con texto seguro y miniaturas. `game-ui.js` distingue `routes` (todos los
+tramos propios en H) y `completedRoutes` (caminos de destinos cumplidos).
+Three.js usa cintas por lotes para el resaltado azul claro y dos capas doradas
+para conexiones completas; solo anima su opacidad mientras el modo está activo,
+la pestaña visible y no se solicita reducir movimiento. No añade un renderizador
+ni efectos globales de posprocesamiento.
+
+El selector de billetes muestra `game.players[seat].trains` en un bloque fijo
+fuera de `.ticket-collections`, actualizado junto con la selección. Representa
+la reserva física actual, independiente de la estimación de cada destino.

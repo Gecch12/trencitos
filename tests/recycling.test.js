@@ -65,12 +65,12 @@ test("visible draw replaces only its slot; rejected draws and reads never shuffl
   assert.deepEqual(g.face, ["red", "wild", "purple", "blue", "yellow"]);
   assert.deepEqual(g.players[0].hand, ["green"]);
   const before = structuredClone(g);
-  assert.throws(() => E.action(g, 0, { type: "draw_train", index: 1 }), /locomotora/);
+  assert.throws(() => E.action(g, 0, { type: "draw_train", index: 1 }), /comodín/);
   for (let i = 0; i < 10; i++) E.view(g, i % 2);
   assert.deepEqual(g, before);
   assert.equal(random.mock.callCount(), 0);
 });
-test("three visible locomotives recycle without losing cards, including impossible markets", () => {
+test("three visible wildcards recycle without losing cards, including impossible markets", () => {
   for (const regular of [0, 1, 2, 3, 8]) for (let iteration = 0; iteration < 30; iteration++) {
     const g = state(); g.face = Array(5).fill("wild");
     g.deck = [...Array(regular).fill("blue"), ...Array(4).fill("wild")];

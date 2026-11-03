@@ -13,7 +13,7 @@ Implementación y avance viven exclusivamente en [las fichas](../work/README.md)
 - Fondo del avatar conserva el color del jugador. Se consideran accesorios,
   tono de la personita y placa/emblema rectangular de compañía. La subida de
   fotos no está aprobada: privacidad/moderación siguen por definir.
-- Locomotoras vapor/clásica/moderna como cosmético independiente: descartadas
+- Comodines vapor/clásica/moderna como cosmético independiente: descartadas
   por falta de utilidad en la experiencia actual. No reabrir sin nueva evidencia.
 - Ambientes como set coherente: tablero/mapa visual + reversos y piezas/sonidos
   compatibles. Un tema visual no cambia red, reglas ni equilibrio. Un mapa con
@@ -34,7 +34,7 @@ Implementación y avance viven exclusivamente en [las fichas](../work/README.md)
   dorada y su texto de acabado metálico; las claves guardadas siguen siendo compatibles.
   Se aprueban siete familias adicionales con siluetas propias: grúa, vino, tractores,
   cemento, fruta, flores y lancha. No se reabre la propuesta
-  descartada de locomotoras independientes ni se agregan reglas de mercancías.
+  descartada de comodines independientes ni se agregan reglas de mercancías.
 - Previsualizar el vagón real al elegir color antes de jugar, en práctica y sala.
   Eliminar símbolos geométricos de puesto en toda la interfaz; nombre, color y
   modelo identifican al jugador, incluido el fondo del avatar.

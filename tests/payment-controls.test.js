@@ -86,7 +86,7 @@ test("actual dialog stepper reaches all-wild once, reverses safely and submits t
   assert.deepEqual(JSON.parse(JSON.stringify(d.sent)), [{ type: "claim", routeId: 0, color: "wild", wildCount: 2 }]);
 });
 
-test("changing color resets to its minimum valid locomotives and ferry bounds cannot be bypassed", () => {
+test("changing color resets to its minimum valid wildcards and ferry bounds cannot be bypassed", () => {
   const route = { id: 0, a: "PAR", b: "BRU", color: "gray", n: 3, ferry: 1, owner: null };
   const d = dialog(["red", "red", "blue", "wild", "wild", "wild"], route);
   assert.equal(d.nodes.wildCount.textContent, 1);

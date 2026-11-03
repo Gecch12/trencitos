@@ -74,17 +74,19 @@ test("muted sound blocks cards, construction and bells before creating any audio
   assert.equal(sound.resumes(), 0);
 });
 
-test("market renewal sounds once per fresh event even with no visible market, and never replays on reconnect", () => {
+test("market renewal sounds offscreen, delegates visible and queued sound to their animation, and never replays on reconnect", () => {
   const played=[],animated=[];
   const context=vm.createContext({document:{hidden:false},lastEffectId:null,waitingForGameStart:false,
-    marketRefresh:null,playSound:kind=>played.push(kind),animateMarketRefresh:()=>animated.push(true)});
+    marketRefresh:null,pendingMarketRefreshes:[],playSound:kind=>played.push(kind),animateMarketRefresh:()=>animated.push(true)});
   vm.runInContext(source.slice(source.indexOf("function prepareEffects("),source.indexOf("// Small original synthesized effects")),context);
   const update=id=>context.playEffects(context.prepareEffects({events:[{type:'market_refresh',id}]}));
   update(1);assert.equal(played.length,0); // Existing snapshot, including reconnection.
   update(2);update(2);assert.deepEqual(played,['shuffle']);assert.equal(animated.length,0);
-  context.marketRefresh={id:3};update(3);assert.deepEqual(played,['shuffle','shuffle']);assert.equal(animated.length,1);
-  context.document.hidden=true;update(4);context.document.hidden=false;update(4);
-  assert.equal(played.length,2);
+  context.marketRefresh={id:3};update(3);update(3);assert.deepEqual(played,['shuffle']);assert.equal(animated.length,1);
+  context.pendingMarketRefreshes.push({id:4});update(4);
+  assert.equal(played.length,1);assert.equal(animated.length,1);
+  context.document.hidden=true;update(5);context.document.hidden=false;update(5);
+  assert.equal(played.length,1);assert.equal(animated.length,1);
 });
 
 test("H shares the highlight action and excludes editing, modifiers, repeats and both kinds of dialog", () => {

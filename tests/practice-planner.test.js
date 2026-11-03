@@ -16,7 +16,7 @@ function fixture(routes, hand, tickets = []) {
   return g;
 }
 
-test("joint allocation spends every card once, including mandatory ferry locomotives", () => {
+test("joint allocation spends every card once, including mandatory ferry wildcards", () => {
   const routes = [route(0, "PAR", "BRU", 4, "red", { ferry: 1 }), route(1, "BRU", "AMS", 4, "red", { ferry: 1 })];
   const counts = P.countCards(["red", "red", "red", "wild"]);
   assert.equal(P.allocation(routes, counts).shortage, 4);
@@ -85,7 +85,7 @@ test("saves a reserve before attempting a tunnel with no spare payment cards", (
   assert.equal(chooseBotAction(g, 0, first).type, "claim");
 });
 
-test("declines an affordable surcharge that consumes locomotives needed for a valuable ferry", () => {
+test("declines an affordable surcharge that consumes wildcards needed for a valuable ferry", () => {
   const g = fixture([route(0, "MAD", "BAR", 1, "blue", { tunnel: true }), route(1, "PAR", "AMS", 4, "red", { ferry: 2 })],
     ["blue", "red", "red", "wild", "wild"], [ticket("PAR", "AMS", 20)]);
   g.phase = "tunnel"; g.pending = { routeId: 0, color: "blue", surcharge: 2, base: { color: "blue", regular: 1, wild: 0 }, revealed: ["wild", "wild", "red"] };

@@ -137,8 +137,8 @@ function chooseDraw(game, candidates, target, counts, random) {
       const suit = primary ? target.color : c.color;
       if (missing(c.route, suit, after) < missing(c.route, suit, counts)) {
         const mandatory = color === "wild" && c.route.ferry > counts.wild;
-        // A visible locomotive costs both draws. Prefer the needed regular card
-        // unless the ferry specifically requires a locomotive.
+        // A visible wildcard costs both draws. Prefer the needed regular card
+        // unless the ferry specifically requires a wildcard.
         value = Math.max(value, (primary ? 12 : c.benefit ? 6 : 3) * (color === "wild" && !mandatory ? .55 : 1));
       }
     }

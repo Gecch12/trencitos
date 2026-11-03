@@ -41,7 +41,7 @@ test("access decisions happen before remote frame reads for private, active, uns
   }
   const missing = createHistoryQueries({ repository: { records: async () => ({ matches: [], claims: {} }), frames: () => assert.fail("unauthorized read") } });
   await assert.rejects(missing.replay({}, "missing"), error => error.status === 404);
-  assert.equal((await f.queries.replay({}, f.record.id)).full, false);assert.equal(f.reads(), 1);
+  assert.equal((await f.queries.replay({}, f.record.id)).full, true);assert.equal(f.reads(), 1);
 });
 
 test("identity claims revoke guest ownership; nicknames and bot identities cannot grant participant access", async () => {
@@ -58,21 +58,21 @@ test("identity claims revoke guest ownership; nicknames and bot identities canno
   await assert.rejects(f.queries.replay({ accountId: "account-b" }, f.record.id), error => error.status === 404);
 });
 
-test("closed participants retain all recorded seats; public replay strips private actions, draws and final destinations", async () => {
-  const f = fixture(), outside = await f.queries.replay({}, f.record.id), own = await f.queries.replay({ guestId: "guest-a" }, f.record.id);
-  assert.equal(own.full, true);assert.equal(outside.full, false);
-  assert.ok(own.frames.some(frame => frame.action));
-  const last = Replay.at(own.frames, own.frames.length - 1);
-  assert.ok(last.views[2].hand.length > 0);assert.ok(last.views[2].tickets.length > 0);
-  for (let step = 0; step < outside.frames.length; step++) {
-    const data = Replay.at(outside.frames, step), frame = outside.frames[step];
-    assert.equal(data.game, undefined);assert.equal(data.views.length, 1);assert.equal(frame.action, undefined);
-    const view = data.views[0];assert.deepEqual(view.hand, []);assert.deepEqual(view.tickets, []);
-    for (const event of frame.events.filter(e => e.draw)) assert.equal(event.draw.color, undefined);
-    for (const row of view.result || []) { assert.deepEqual(row.tickets, []);assert.deepEqual(row.details.destinations, []); }
+test("all authorized viewers receive transparent closed replays without identity credentials", async () => {
+  const f=fixture(),outside=await f.queries.replay({},f.record.id),own=await f.queries.replay({guestId:"guest-a"},f.record.id);
+  assert.equal(outside.full,true);assert.equal(outside.canAudit,false);assert.equal(own.canAudit,true);
+  assert.deepEqual(outside.frames,own.frames);assert.deepEqual(outside.match,own.match);
+  for(let step=0;step<outside.frames.length;step++){
+    const data=Replay.at(outside.frames,step);
+    assert.equal(data.game,undefined);assert.equal(data.views.length,3);
+    assert.ok(data.views[1].hand.length>0);assert.ok(data.views[2].hand.length>0);
+    assert.ok(Array.isArray(data.knowledge.deck));
+    for(const view of data.views)for(const event of view.turnHistory.flatMap(row=>row.events).filter(e=>e.type==='draw'))assert.ok(event.data.color);
   }
-  assert.ok(outside.match.scores.every(score => score.details === undefined && score.tickets === undefined));
-  assert.ok(outside.match.players.every(p => !p.guestId && !p.accountId));
+  const last=Replay.at(outside.frames,outside.frames.length-1);
+  assert.ok(last.views[0].result.every(score=>score.details.destinations.length));
+  assert.ok(outside.match.players.every(p=>!p.guestId&&!p.accountId));
+  assert.doesNotMatch(JSON.stringify(outside),/guest-a|guest-b|tokenHash/);
 });
 
 test("list, full replay and audit return detached data without mutating metadata, frames or hashes", async () => {

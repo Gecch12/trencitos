@@ -4,7 +4,7 @@ const {construction}=require('../../shared/game-timing');
 // results already pause every clock; their existing interval includes this cue.
 function pauseForConstruction(game,event,now){
  if(!event||event.type!=='build'||game.construction?.id===event.id)return;
- const duration=construction.focusMs+construction.flightMs+construction.holdMs;
+ const duration=construction.focusMs+construction.flightMs+construction.holdMs+construction.restoreMs;
  game.construction={id:event.id,seat:event.seat,startedAt:now,until:now+duration,...(event.routeId===undefined?{city:event.city}:{routeId:event.routeId})};
  if(game.phase==='tunnel'&&game.pending?.stage==='result')return;
  if(Number.isFinite(game.turnDeadline))game.turnDeadline+=duration;

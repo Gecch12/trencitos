@@ -71,7 +71,7 @@ las reglas: desistir conserva las cartas y consume el turno.
 Evidencia de la ampliación:
 
 - `node tests/browser-tunnel-outcomes.cjs`: seis recorridos HTTP/WebSocket en
-  Chrome (cero extra, pago mixto, solo locomotoras, desistimiento voluntario,
+  Chrome (cero extra, pago mixto, solo comodines, desistimiento voluntario,
   insuficiencia y timeout), tres clientes, recibo exacto, relojes, reconexión en
   resultado, móvil/horizontal, inglés y movimiento reducido. Sin errores de consola.
 - `node tests/browser-flow-ui.cjs`: regresión de túneles, billetes y resultados

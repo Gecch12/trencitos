@@ -1,4 +1,5 @@
 "use strict";
+const Journal=require('./match-journal');
 const { MATCH_SCHEMA_VERSION } = require("../game/compat/match-state");
 const LIMITS = Object.freeze({ candidates: 3, samples: 2, ownTurns: 3, actionsPerBranch: 48 });
 const randomStream = seed => max => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return Math.floor(seed / 4294967296 * max); };
@@ -55,12 +56,13 @@ function sampleWorld(g, seat, known, random, retired = new Set()) {
     return { name: `Sample ${i}`, color: rules.colors[i], trains: p.trains, stations: p.stations,
       placed: [...p.placed], score: p.score || 0, hand: hands[i], tickets, pending: [], offer: null };
   });
-  return { schemaVersion: MATCH_SCHEMA_VERSION, mapRef: { ...context.mapRef }, rulesRef: { ...context.rulesRef },
+  const world = { schemaVersion: MATCH_SCHEMA_VERSION, mapRef: { ...context.mapRef }, rulesRef: { ...context.rulesRef },
     phase: "play", current: seat, first: seat, initialDone: players.length, players,
     routes: g.routes.map(r => ({ ...r })), face: [...g.face], deck: unseen.splice(0, g.deckCount),
     discard: unseen.splice(0, g.discardCount), shortDeck: shuffled(ticketPool.filter(t => !t.long), random).slice(0, g.ticketDeckCount),
     drawCount: 0, finalRemaining: g.finalRemaining, lastTrigger: null, pending: null, logs: [], result: null,
     turnSerial: g.turnSerial || 1, turnSeat: seat, turnClockPhase: "play", turnWaiting: false, turnDeadline: rules.turn.turnMs };
+  Journal.silence(world);return world;
 }
 function settleTunnel(game, seat) {
   const t = game.pending, counts = P.afterPayment(P.countCards(game.players[seat].hand), t.base);

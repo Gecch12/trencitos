@@ -1,5 +1,5 @@
 ---
-{"id":"history-replay","status":"validated","parent":null,"depends_on":["navigation-rooms","identity"],"branch":"main","delivery":"released","updated":"2026-11-02"}
+{"id":"history-replay","status":"validated","parent":null,"depends_on":["navigation-rooms","identity"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Historial, repetición, idiomas y ajustes de observación
 
@@ -9,6 +9,40 @@ Implementación autorizada después del análisis con `$moti`. Contrato canónic
 Refinamiento local de 2026-11-02: historial compacto y puesto del usuario por
 identidad, registrado y verificado en [Controles de mesa y sala](table-controls.md).
 La entrega histórica de abajo no incluye todavía este refinamiento.
+
+## Reparación local del arranque · 2026-11-03
+
+En `main` sobre `350b193` más los cambios locales existentes, el manifiesto y
+su `.bak` esperaban 224 pasos (27.883.190 bytes) de una partida activa; el archivo
+disponible contenía 206 pasos completos (25.232.240 bytes). Los 206 hashes eran
+válidos y la sala conservaba un estado válido posterior. No se pudo determinar
+la causa del desacuerdo entre manifiesto y archivo.
+
+- Se preservaron y comprobaron por SHA-256 los 38 archivos originales en
+  `.qa/state-recovery-2026-11-03/original/`. Las otras 35 grabaciones pasaron la
+  auditoría completa de hashes y cierre.
+- La recuperación conserva el prefijo íntegro y el estado guardado de la sala,
+  añade un snapshot con aviso explícito del salto y marca la grabación parcial.
+  No inventa los movimientos ausentes ni reescribe pasos históricos.
+- El cargador conserva su rechazo de archivos dañados, pero ahora informa el
+  archivo y los tamaños esperados/disponibles. Los errores JSON no muestran
+  fragmentos privados del guardado.
+- Node **22.16.0**: **41/41** pruebas de almacenamiento, checkpoints, archivo y
+  restauración. Evidencia local en `.qa/state-recovery-2026-11-03/`.
+- `npm start` con ese Node y una copia aislada en puerto 3128: inicio correcto,
+  `/` y `/healthz` con HTTP 200, una sala restaurada y ping/pong WebSocket.
+  La sala vacía espera la reconexión de un participante antes de admitir
+  espectadores, como exige el contrato existente. El servidor de prueba se cerró.
+- Recuperación instalada en `room-state.json`, su `.bak` y el único `.jsonl`
+  afectado. Se comprobó que no hubo cambios desde el respaldo, que los archivos
+  instalados coinciden con los preparados y que las otras 35 grabaciones siguen
+  intactas. La sala (salvo referencias del replay), identidades y reclamaciones
+  se conservaron exactamente. Documentación y `git diff --check` correctos.
+
+Este ajuste y la recuperación son locales; no forman parte de la publicación
+histórica de esta ficha. Siguiente paso: iniciar normalmente con `npm start` y
+reconectar desde la sesión del jugador; conservar el respaldo para investigar
+el origen del desacuerdo sin perder evidencia.
 
 ## Aceptación
 

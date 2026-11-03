@@ -1,5 +1,5 @@
 ---
-{"id":"identity","status":"active","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"released","updated":"2026-10-31"}
+{"id":"identity","status":"active","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"worktree","updated":"2026-11-03"}
 ---
 # Identidad persistente
 
@@ -77,3 +77,21 @@ el perfil. Sesión dejada iniciada al usuario. Capturas de esta comprobación so
 No se usó una segunda cuenta ni otro dispositivo.
 La revisión automática inicial bloqueó la selección entre varias cuentas; se
 continuó únicamente después de recibir autorización específica del usuario.
+
+
+## Entrada automática a un puesto vinculado · 2026-11-03
+
+Ampliación aprobada: abrir la URL de la sala recupera el puesto de la cuenta
+verificada, aunque este navegador carezca de credencial local. Login conserva
+la sala de destino. La recuperación reutiliza la credencial vigente; una antigua
+se rota solo tras comprobar propiedad. La pestaña sustituida detiene reconexiones.
+El bot devuelve automáticamente el control al reconectar, respetando el límite
+existente del turno en curso. Los enlaces privados se ocultan solo después de
+verificar la vinculación; «Recuperar control» sigue disponible por separado.
+
+Verificado con proveedor local simulado, cookies reales del servidor y WebSocket:
+login conserva la sala, nueva sesión recupera sin almacenamiento local, el bot
+cede fuera de turno, la recarga reutiliza la credencial y retomar explícitamente
+desde la pestaña anterior no provoca alternancia automática. Invitados no adquieren
+el puesto ajeno. [Informe](../qa/card-experience/account.json).
+No se ha publicado esta ampliación ni repetido OAuth real de Google.

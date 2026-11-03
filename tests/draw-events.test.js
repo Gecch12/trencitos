@@ -10,7 +10,7 @@ test("blind draw color is private to its recipient in every seat's serialized vi
   E.action(g, 0, { type: "draw_train", index: -1 });
   for (let seat = 0; seat < 5; seat++) {
     const view = JSON.parse(JSON.stringify(E.view(g, seat)));
-    assert.equal(view.uiVersion, 9);
+    assert.equal(view.uiVersion, 10);
     assert.deepEqual(view.drawEvent, { id: 1, seat: 0, index: -1, ...(seat === 0 ? { color } : {}) });
     assert.equal(view.lastDraw, undefined);
     assert.ok(view.players.every(p => p.hand === undefined));

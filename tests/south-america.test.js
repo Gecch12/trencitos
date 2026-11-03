@@ -7,6 +7,21 @@ const layout=require("../frontend/layouts/south-america-v3.3-beta");
 const Map=require("../frontend/map-layout").createLayout(layout);
 const ref={id:"south-america",version:"3.3-beta"};
 const routes=definition.routes.map(r=>({...r,n:r.length})),network=Map.createNetwork(routes);
+const coast = layout.land.flatMap(d => Array.from(d.matchAll(/(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g), m => [Number(m[1]), Number(m[2])]));
+
+test("South America has a portrait silhouette and its entire coast fits with water margins", () => {
+  const xs = coast.map(p => p[0]), ys = coast.map(p => p[1]);
+  const width = Math.max(...xs) - Math.min(...xs), height = Math.max(...ys) - Math.min(...ys);
+  // The illustrated reference is around 0.73 wide/high. Allow stylization and
+  // the small Panama extension, both in the flat thumbnail and tilted board.
+  const ratio = width / height, projected = ratio / require('../frontend/board-camera').compression;
+  assert.ok(ratio >= .65 && ratio <= .76, `flat silhouette ${ratio}`);
+  assert.ok(projected >= .7 && projected <= .82, `tilted silhouette ${projected}`);
+  for (const [x, y] of coast) {
+    assert.ok(x >= Map.bounds.x + 30 && x <= Map.bounds.x + Map.bounds.width - 30, `coast x=${x}`);
+    assert.ok(y >= Map.bounds.y + 30 && y <= Map.bounds.y + Map.bounds.height - 30, `coast y=${y}`);
+  }
+});
 
 function corners(cell) {
   const a = cell.angle * Math.PI / 180, cos = Math.cos(a), sin = Math.sin(a);

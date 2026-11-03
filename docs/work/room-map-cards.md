@@ -61,5 +61,5 @@ la [consolidación](workspace-consolidation.md) registra el resultado y
 
 La comprobación remota confirmó 45 recursos idénticos y siete rutas privadas
 con 404. En Chrome se creó una sala privada de QA, se eligió Sudamérica por
-tarjeta y se abrieron las seis variantes de Midsommar; cierre normal y sin
+tarjeta y su colección de variantes; cierre normal y sin
 errores de consola. [Captura publicada](../qa/room-setup/production-desktop.png).

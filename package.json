@@ -1,7 +1,7 @@
 {
   "name": "trencitos",
   "version": "0.6.1-beta",
-  "description": "Original-asset browser railway game with private authoritative WebSocket rooms for 2–5 players",
+  "description": "Original-asset browser railway game with private authoritative WebSocket rooms for 2\u20135 players",
   "private": true,
   "engines": {
     "node": ">=20"
@@ -10,8 +10,7 @@
     "start": "node server.js",
     "test": "node --test tests/*.test.js",
     "test:ci": "node --test --test-concurrency=1 tests/*.test.js",
-    "test:board3d": "node tests/browser-threejs.cjs",
-    "preview:extreme": "node scripts/preview-passenger-extreme.cjs"
+    "test:board3d": "node tests/browser-threejs.cjs"
   },
   "license": "UNLICENSED",
   "dependencies": {

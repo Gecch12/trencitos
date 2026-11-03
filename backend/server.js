@@ -56,7 +56,7 @@ function restoreLoaded(data) {
       if (r.game) Engine.normalize(r.game);
       r.emptySince = Date.now();
       const colors = LobbyUI.restoreColors(r.members, r.game?.players);
-      r.members.forEach((m, i) => { m.color = colors[i]; m.ws = null; m.disconnectedAt = Date.now(); });
+      r.members.forEach((m, i) => { m.color = colors[i]; if (r.game) r.game.players[i].color = colors[i]; m.ws = null; m.disconnectedAt = Date.now(); });
       live.push(r);
     }
   }

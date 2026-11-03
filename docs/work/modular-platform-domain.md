@@ -127,7 +127,7 @@ Base: `7a0fddc` más los cambios de esta entrega.
   entregar las decisiones al dominio.
 
 Se reprodujo y corrigió un fallo previo del suplemento automático: con dos
-cartas rojas reservadas como base y una locomotora restante, el motor calculaba
+cartas rojas reservadas como base y un comodín restante, el motor calculaba
 el extra sobre la mano completa, gastaba las rojas y fallaba con «Descuadre de
 mano». Ahora calcula y gasta exactamente el extra disponible tras reservar la
 base. Un pago explícito imposible se rechaza sin mutación. Es una corrección
@@ -344,9 +344,9 @@ Base: `ab159b3` más los cambios de esta entrega.
   copias privadas de las pilas, recibe azar explícito y devuelve planes sin
   consultar reloj, transporte, datos de Europa ni estado global.
 - Tamaño de mercado, umbral de renovación y número de cartas por turno se
-  suministran como reglas. La locomotora visible consume el turno y solo puede
+  suministran como reglas. La comodín visible consume el turno y solo puede
   tomarse como primera carta; la oculta cuenta como una. El agotamiento puede
-  terminar el turno antes del límite, incluso si solo quedan locomotoras visibles.
+  terminar el turno antes del límite, incluso si solo quedan comodines visibles.
 - El muestreo condicionado conserva la distribución y orden de consumo de azar
   anteriores. Si no existe mercado completo válido, reparte una sola vez tras
   reciclar, sin bucle de reintentos. Los revelados de un túnel pendiente siguen

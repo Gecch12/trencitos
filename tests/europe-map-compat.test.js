@@ -34,11 +34,12 @@ test("browser classic scripts and Node deliver identical legacy data without ser
   assert.deepEqual(JSON.parse(json),baseline.data);
 });
 
-test("complete seeded setups retain their pre-extraction content apart from explicit version references",()=>{
+test("complete seeded setups retain their pre-extraction content apart from version references and journal metadata",()=>{
   for(const count of [2,3,4,5]){
     let seed=500+count;const random=max=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return Math.floor(seed/4294967296*max);};
     const game=E.newGame(Array.from({length:count},(_,i)=>`P${i}`),1,123,null,{random});
-    const {schemaVersion,mapRef,rulesRef,...legacy}=game;
+    const {schemaVersion,mapRef,rulesRef,journal,journalSerial,journalPrivateSerial,...legacy}=game;
+    assert.equal(journal[0].type,'setup');assert.equal(journal[0].at,123);assert.equal(journalSerial,journal.length);assert.deepEqual(journalPrivateSerial,[]);
     assert.equal(schemaVersion,1);assert.deepEqual(mapRef,{id:"europe",version:"1"});assert.deepEqual(rulesRef,{id:"europe-classic",version:"1"});
     assert.equal(crypto.createHash("sha256").update(JSON.stringify(legacy)).digest("hex"),baseline.setupSha256[count]);
   }

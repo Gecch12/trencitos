@@ -99,7 +99,7 @@ test('zero-surcharge receipt has an explicit zero extra and never charges twice'
   E.expire(g,g.pending.until);assert.deepEqual(g.players[0].hand,hand);
 });
 
-test('automatic supplement reserves the base before selecting and spending locomotives',()=>{
+test('automatic supplement reserves the base before selecting and spending wildcards',()=>{
   const g=setup();g.players[0].hand=['red','red','wild'];
   E.expire(g,g.pending.until);
   E.action(g,0,{type:'pay_tunnel'},{now:18000});

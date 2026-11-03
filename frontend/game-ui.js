@@ -105,9 +105,10 @@ const GameUI = (() => {
     const destinations = tickets.map(t => ({ id: t.id, a: t.a, b: t.b,
       number: destinationNumber(game, t.id), completed: !!destinationStatus(game, t.id)?.completed }));
     const paths = destinations.filter(t => t.completed).flatMap(t => game.ticketPaths?.filter(p => p.id === t.id) || []);
-    const routes = [...new Set(paths.flatMap(p => p.routes || []))];
+    const completedRoutes = [...new Set(paths.flatMap(p => p.routes || []))];
+    const routes = [...new Set([...completedRoutes,...(all?(game.routes||[]).filter(r=>r.owner===game.seat).map(r=>r.id):[])])];
     const own = new Set(paths.flatMap(p => (p.routes || []).filter(id => !p.stationRoutes?.includes(id))));
-    return { endpoints: [...new Set(tickets.flatMap(t => [t.a, t.b]))], destinations, routes,
+    return { endpoints: [...new Set(tickets.flatMap(t => [t.a, t.b]))], destinations, routes, completedRoutes,
       stationRoutes: [...new Set(paths.flatMap(p => p.stationRoutes || []))].filter(id => !own.has(id)),
       stations: [...new Map(paths.flatMap(p => p.stations || []).map(s => [`${s.seat}:${s.city}`, s])).values()],
       ...(!ticket ? { overview: true } : {}) };
@@ -123,7 +124,7 @@ const GameUI = (() => {
     if (wild >= cost && cost >= ferry) options.push({ color: "wild", wild: cost, regular: 0 });
     return options.sort((a, b) => a.wild - b.wild);
   }
-  // Group the same legal payments by ordinary card color. A pure-locomotive
+  // Group the same legal payments by ordinary card color. A pure-wildcard
   // payment is the final step in each group, not another set of duplicate radios.
   // Only existing options are exposed: ferry minima and hand limits stay intact.
   function paymentGroups(options) {

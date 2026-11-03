@@ -123,3 +123,31 @@ test('truncated replay tails fall back to the last complete prefix', t => {
   assert.equal(restored.rooms[0].revision, 0);
   assert.equal(restored.archive.matches[f.id].frames.length, 1);
 });
+test('unrecoverable replay truncation identifies the file and expected bytes without rewriting it', t => {
+  const f = archiveFixture(t);
+  saveRooms(f.file, f.rooms, f.archive);
+  saveRooms(f.file, f.rooms, f.archive);
+  const expected = fs.statSync(f.log).size;
+  fs.truncateSync(f.log, expected - 3);
+  const before = [f.file, f.file + '.bak', f.log].map(file => fs.readFileSync(file));
+  assert.throws(() => loadState(f.file), error => {
+    assert.equal(error.code, 'STATE_LOAD_FAILED');
+    assert.ok(error.message.includes(f.log));
+    assert.ok(error.message.includes(`se esperaban ${expected} bytes y hay ${expected - 3}`));
+    assert.ok(error.message.includes(`Estado (${f.file})`));
+    assert.ok(error.message.includes(`Copia (${f.file}.bak)`));
+    return true;
+  });
+  assert.deepEqual([f.file, f.file + '.bak', f.log].map(file => fs.readFileSync(file)), before);
+});
+test('corrupt JSON diagnostics never expose fragments of private save contents', t => {
+  const f = fixture(t), secret = 'private-recovery-credential';
+  fs.writeFileSync(f.file, secret);
+  fs.writeFileSync(f.file + '.bak', secret);
+  assert.throws(() => loadState(f.file), error => {
+    assert.equal(error.code, 'STATE_LOAD_FAILED');
+    assert.match(error.message, /JSON inválido/);
+    assert.ok(!error.message.includes(secret));
+    return true;
+  });
+});
