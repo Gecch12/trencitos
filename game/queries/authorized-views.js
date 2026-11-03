@@ -35,7 +35,7 @@ function createAuthorizedViews({ engine, now, isPublic, capacity, normalizeTimin
       mapRef: room.game?.mapRef || room.mapRef,
       host: seat === (room.hostSeat ?? 0), started: !!room.game, practice: !!room.practice,
       visibility: isPublic(room) ? "public" : "private", maxPlayers: capacity(room),
-      timing: normalizeTiming(room.timing), sessionVersion: 1,
+      timing: normalizeTiming(room.timing), sessionVersion: 1, drawFeedbackVersion: 1,
       members: room.members.map((m, i) => ({ name: m.name, color: m.color, connected: connected(m), bot: !!m.bot,
         host: i === (room.hostSeat ?? 0), autopilot: !!m.autopilot, reclaim: !!m.reclaim, seat: i })),
     });

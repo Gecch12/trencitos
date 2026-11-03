@@ -30,6 +30,7 @@ const ASSETS = Object.freeze({
   "/map-layout.js": ["frontend/map-layout.js", "text/javascript; charset=utf-8"],
   "/game-timing.js": ["shared/game-timing.js", "text/javascript; charset=utf-8"],
   "/game-ui.js": ["frontend/game-ui.js", "text/javascript; charset=utf-8"],
+  "/draw-intent.js": ["frontend/draw-intent.js", "text/javascript; charset=utf-8"],
   "/game.css": ["frontend/game.css", "text/css; charset=utf-8"],
   "/responsive.css": ["frontend/responsive.css", "text/css; charset=utf-8"],
   "/lobby.css": ["frontend/lobby.css", "text/css; charset=utf-8"],

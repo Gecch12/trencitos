@@ -28,9 +28,10 @@ test("file receipts survive reconnection/restart and roll back atomically withou
   // A migrated ID has no payload to recover. Do not invent a fingerprint for it.
   room.members[seat].actionIds = ["legacy-command-01"];
   const command = { type: "action", id: "durable-draw-001", revision: room.revision, action: { type: "draw_train", index: -1 } };
-  original.send(command);await original.next("ack", m => m.id === command.id);
+  original.send(command);const accepted=await original.next("ack", m => m.id === command.id);
   const savedMember = loadState(process.env.STATE_FILE).rooms.find(r => r.code === la.code).members[seat];
-  assert.deepEqual(savedMember.actionReceipts, [{ id: command.id, fingerprint: fingerprintAction(command.action) }]);
+  assert.deepEqual(savedMember.actionReceipts, [{ id: command.id, fingerprint: fingerprintAction(command.action), drawEventId: accepted.drawEventId }]);
+  assert.equal(room.game.events.find(e=>e.id===accepted.drawEventId).type,"draw");
   assert.deepEqual(savedMember.actionIds, ["legacy-command-01", command.id]);
   const reconnected = await client();
   reconnected.send({ type: "join", code: la.code, token: credentials[seat].token });
@@ -45,7 +46,7 @@ test("file receipts survive reconnection/restart and roll back atomically withou
   }
   const current = restored[seat], before = structuredClone(room.game), revision = room.revision, hash = room.archiveHash, seq = room.archiveSeq;
   current.send({ ...command, revision: -1, action: { index: -1, type: "draw_train" } });
-  await current.next("ack", m => m.id === command.id);
+  assert.deepEqual(await current.next("ack", m => m.id === command.id),accepted);
   current.send({ ...command, action: { type: "draw_tickets" } });
   const conflict = await current.next("error", m => m.code === "COMMAND_ID_CONFLICT");
   assert.doesNotMatch(JSON.stringify(conflict), /fingerprint|sha256|draw_train/);

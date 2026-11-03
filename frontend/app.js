@@ -24,6 +24,8 @@ let sock = null,
   stationCity = null,
   attempted = false;
 let sessionReplaced = false, storagePaused = false, pendingAction = null, resendPending = false, sessionSupported = false;
+let pendingDraw = null, queuedDraw = null, deferredDrawEffects = [], drawFeedbackEpoch = 0;
+let drawFeedbackSupported = false;
 let homeMode = "create", homeBusy = false, lobbyStarted = false;
 let preferredColor = localStorage.getItem("rr-color");
 // The preview follows the latest click; profile/room colors stay authoritative.
@@ -247,6 +249,7 @@ function resetToLobby(message = "", preserveIdentity = false) {
   host = practiceMode = attempted = false;
   lobbyStarted = homeBusy = false;
   pendingAction = null; storagePaused = false;
+  document.body.classList.remove("is-confirming-action");
   $("sessionControls").open = false;
   $("sessionNotice").classList.add("hidden");
   selected = stationCity = null;
@@ -329,6 +332,8 @@ function connect() {
       } else cancelRoomColor();
       homeBusy = false; syncHomeAvailability();
       pendingAction = null;document.body.classList.remove("is-confirming-action");
+      cancelDrawFeedback();
+      if (game) renderMarket();
       if (desiredWatch && !room) { desiredWatch=''; shell.watchUnavailable(); return; }
       if (!room && ["CODE_TAKEN", "INVALID_CODE", "ROOM_NOT_FOUND"].includes(m.code)) {
         attempted = false;
@@ -354,6 +359,8 @@ function connect() {
     }
     if (m.type === "session_replaced") {
       sessionReplaced = true; pendingAction = null;
+      cancelDrawFeedback();document.body.classList.remove("is-confirming-action");
+      if (game) renderMarket();
       cancelRoomColor();
       notice(I18n.t("Esta partida está abierta en otra pestaña. Aquí no tienes el control."), "takeOver");
       updateCompactStatus();
@@ -361,6 +368,7 @@ function connect() {
     }
     if (m.type === "storage") {
       storagePaused = m.paused;
+      if (storagePaused) { cancelDrawFeedback(); if (game) renderMarket(); }
       if (storagePaused) cancelRoomColor();
       syncHomeAvailability();
       if (storagePaused) notice(m.requiresRestart
@@ -374,6 +382,7 @@ function connect() {
       if (pendingAction?.id === m.id) {
         if (["choose_initial", "keep_tickets"].includes(pendingAction.action.type)) playSound("pen-sign");
         pendingAction = null;document.body.classList.remove("is-confirming-action");
+        confirmDrawFeedback(m);
         if(game)renderMarket();
       }
       return;
@@ -408,6 +417,7 @@ function connect() {
       host = m.host;
       practiceMode = !!m.practice;
       sessionSupported = m.sessionVersion >= 1;
+      drawFeedbackSupported = m.drawFeedbackVersion === 1;
       $("privateSession").hidden = spectating || practiceMode || !sessionSupported;
       $("leaveRoom").hidden = spectating;
       $("reclaimControl").classList.toggle("hidden", !members[seat]?.autopilot);
@@ -670,17 +680,31 @@ $("leaveRoom").onclick = () => {
   if (practiceMode) { if (game?.phase === "finished" || confirm(I18n.t("¿Abandonar esta partida de práctica?"))) send({type:"leave_test"}); return; }
   if (spectating || !game || game.phase === "finished" || confirm(I18n.t("¿Salir de la partida? Un bot tomará tu puesto. Si todos salen, la partida se abandonará tras 60 segundos sin conexiones."))) send({ type: "leave" });
 };
-function act(type, other = {}) {
+function act(type, other = {}, preparedDraw = null) {
   if(constructionBusy())return;
   if (type === "draw_train" && marketRefresh) return;
   if(replayMode)return;
   if (spectating) return;
   if (sessionReplaced || storagePaused || members[seat]?.autopilot) { error(I18n.t("No tienes el control de este puesto.")); return; }
-  if (pendingAction) return;
   if (sock?.readyState !== WebSocket.OPEN) { error(I18n.t("Sin conexión.")); return; }
+  if (pendingAction) {
+    if (type === "draw_train" && pendingDraw && !queuedDraw &&
+        DrawIntent.canQueue(pendingDraw.intent, game, other.index)) {
+      queuedDraw = { intent: DrawIntent.create(game, seat, other.index, gameRules.trainCards.drawsPerTurn) };
+      queuedDraw.flight = startDrawFeedback(queuedDraw.intent, true);
+      renderMarket();
+    }
+    return;
+  }
+  if (queuedDraw && !preparedDraw) return;
   // Let an already running older server finish its games before it is restarted.
   if (!sessionSupported) { send({ type: "action", action: { type, ...other } }); return; }
   const id = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join("");
+  if (type === "draw_train" && drawFeedbackSupported) {
+    const intent = DrawIntent.create(game, seat, other.index, gameRules.trainCards.drawsPerTurn);
+    if (!intent) return;
+    pendingDraw = { intent, id, flight: preparedDraw?.flight || startDrawFeedback(intent) };
+  }
   pendingAction = { type: "action", id, revision: game.revision, action: { type, ...other } };
   document.body.classList.add("is-confirming-action");
   renderMarket();
@@ -689,8 +713,10 @@ function act(type, other = {}) {
 function amIUp() {
   return !constructionBusy() && !sessionReplaced && !storagePaused && sock?.readyState === WebSocket.OPEN && !members[seat]?.autopilot && game && game.current === seat && game.phase === "play" && !game.turnWaiting;
 }
-function drawAllowed() {
-  return !pendingAction && !marketRefresh && amIUp() && game.drawCount < gameRules.trainCards.drawsPerTurn;
+function drawAllowed(index) {
+  if (marketRefresh || !amIUp() || queuedDraw) return false;
+  if (pendingAction) return !!pendingDraw && DrawIntent.canQueue(pendingDraw.intent, game, index);
+  return !!DrawIntent.create(game, seat, index, gameRules.trainCards.drawsPerTurn);
 }
 function colorCard(c, count, click, disabled) {
   const b = document.createElement(click ? "button" : "div");
@@ -839,8 +865,9 @@ function renderMarket() {
   const visibleCards = Array.from({ length: gameRules.trainCards.marketSize }, (_, i) => {
     const c = game.face[i];
     if (!c) { const empty = document.createElement("div"); empty.className = "empty-market-slot"; empty.setAttribute("aria-label", I18n.t("Sin carta disponible")); return empty; }
-    const card = colorCard(c, null, () => act("draw_train", { index: i }), !drawAllowed() || (c === "wild" && game.drawCount === 1));
+    const card = colorCard(c, null, () => act("draw_train", { index: i }), !drawAllowed(i));
     card.dataset.marketIndex = i;
+    card.classList.toggle("draw-reserved", [pendingDraw, queuedDraw].some(draw => draw?.intent.index === i && draw.intent.revision === game.revision));
     card.title = I18n.t`Robar ${N[c]}${c === "wild" ? I18n.t(" · Consume los dos robos; no puede ser tu segunda carta") : ""}`;
     card.setAttribute("aria-label", card.title);
     return card;
@@ -848,7 +875,7 @@ function renderMarket() {
   $("market").classList.toggle("market-refreshing", !!marketRefresh);
   $("market").replaceChildren(...visibleCards, blindDeck, ...(marketRefresh?.layer ? [marketRefresh.layer] : []));
   $("drawblind").disabled =
-    !drawAllowed() || game.deckCount + game.discardCount === 0;
+    !drawAllowed(-1);
 }
 function renderHistory() {
   if (replayMode) return;
@@ -961,6 +988,10 @@ function playEffects(events) {
   let drawDelay = 0;
   for (const event of events) {
     if (event.type === "draw") {
+      if (pendingDraw && event.seat === seat && event.id > pendingDraw.intent.eventFloor) {
+        deferredDrawEffects.push(event);
+        continue;
+      }
       const timer = setTimeout(() => {
         effectTimers.delete(timer);
         if (document.hidden || game?.phase === "finished") return;
@@ -1169,11 +1200,79 @@ function animateMarketRefresh() {
   });
   current.timer = setTimeout(() => { if (marketRefresh === current) cancelMarketRefresh(); }, duration);
 }
-function cancelCardFlights() {
+function removeCardFlight(flight) {
+  if (!flight) return;
+  flight.animations.forEach(a => a.cancel()); flight.node.remove(); cardFlights.delete(flight);
+}
+function cancelDrawFeedback(preservePending = false) {
+  drawFeedbackEpoch++;
+  removeCardFlight(pendingDraw?.flight);removeCardFlight(queuedDraw?.flight);
+  queuedDraw = null;
+  if (preservePending && pendingDraw) pendingDraw.flight = null;
+  else { pendingDraw = null; deferredDrawEffects = []; }
+}
+function startDrawFeedback(intent, queued = false) {
+  const source = intent.index < 0 ? $("drawblind") : $("market").querySelector(`[data-market-index="${intent.index}"]`);
+  const start = source?.getBoundingClientRect(), hand = $("hand").getBoundingClientRect();
+  if (!start?.width || document.hidden) return null;
+  const node = document.createElement("div"), face = document.createElement("div"), img = document.createElement("img");
+  node.className = "draw-flight draw-flight-pending";
+  node.setAttribute("aria-hidden", "true");
+  Object.assign(node.style, { left: `${start.x}px`, top: `${start.y}px`, width: `${start.width}px`, height: `${start.height}px` });
+  face.className = "draw-flight-face";img.src = `assets/cards/${intent.color || "back"}.svg`;img.alt = "";
+  face.appendChild(img);node.appendChild(face);document.body.appendChild(node);
+  const target = hand.width ? hand : $("handCount").getBoundingClientRect();
+  const dx = target.x + target.width / 2 + (queued ? 20 : -20) - start.x - start.width / 2;
+  const dy = target.y + target.height / 2 - start.y - start.height / 2;
+  const transform = `translate(${dx}px,${dy}px) scale(.65)`;
+  const motion = reducedMotion.matches
+    ? node.animate([{ opacity: .6 }, { opacity: 1 }], { duration: 80, fill: "forwards" })
+    : node.animate([{ transform: "translate(0,0) scale(1)" }, { transform }],
+      { duration: 320, easing: "cubic-bezier(.22,.65,.28,1)", fill: "forwards" });
+  if (reducedMotion.matches) node.style.transform = transform;
+  const flight = { node, img, animations: [motion], motion };cardFlights.add(flight);
+  // The acknowledgement is deliberately silent: this is the single pick-up sound.
+  playSound("card");
+  return flight;
+}
+function landDrawFeedback(flight, event) {
+  if (!flight || !cardFlights.has(flight)) return;
+  flight.node.classList.remove("draw-flight-pending");
+  if (N[event.color]) flight.img.src = `assets/cards/${event.color}.svg`;
+  flight.motion.finished.then(() => {
+    if (!cardFlights.has(flight)) return;
+    const fade = flight.node.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, fill: "forwards" });
+    flight.animations.push(fade);fade.onfinish = () => removeCardFlight(flight);
+  }).catch(() => {}); // Resize, navigation and disconnect cancel the visual only.
+}
+function confirmDrawFeedback(ack) {
+  if (!pendingDraw || pendingDraw.id !== ack.id) return;
+  const first = pendingDraw, queued = queuedDraw;
+  const event = DrawIntent.confirmedEvent(first.intent, game, ack.drawEventId);
+  const next = queued && DrawIntent.rebase(first.intent, queued.intent, game, ack.drawEventId);
+  const deferred = deferredDrawEffects;deferredDrawEffects = [];pendingDraw = null;
+  if (event) landDrawFeedback(first.flight, event);else removeCardFlight(first.flight);
+  playEffects(deferred.filter(e => e.id !== event?.id));
+  if (!queued) return;
+  const epoch = drawFeedbackEpoch, revision = game.revision;
+  queueMicrotask(() => {
+    if (epoch !== drawFeedbackEpoch || queuedDraw !== queued) return;
+    queuedDraw = null;
+    if (next && game.revision === revision && !pendingAction && !marketRefresh && amIUp()) {
+      act("draw_train", { index: next.index }, queued);
+    } else {
+      removeCardFlight(queued.flight);
+      toast(I18n.t("La mesa cambió. Elige tu segunda carta."));
+      renderMarket();
+    }
+  });
+}
+function cancelCardFlights(preservePending = false) {
+  cancelDrawFeedback(preservePending);
   cancelMarketRefresh();
   for (const timer of effectTimers) clearTimeout(timer);
   effectTimers.clear();
-  for (const flight of cardFlights) { flight.animations.forEach(a => a.cancel()); flight.node.remove(); }
+  for (const flight of [...cardFlights]) removeCardFlight(flight);
   cardFlights.clear();
 }
 function animateCardFlight(event) {
@@ -1280,10 +1379,10 @@ function cancelConstruction() {
   }
   constructionFlights.clear();
 }
-document.addEventListener("visibilitychange", () => { if (document.hidden) { cancelCardFlights(); cancelConstruction(); cancelTunnelMotion(); stopSounds(); } else updateSharedTunnel(); });
+document.addEventListener("visibilitychange", () => { if (document.hidden) { cancelCardFlights(true); cancelConstruction(); cancelTunnelMotion(); stopSounds(); } else { updateSharedTunnel(); if (game) renderMarket(); } });
 reducedMotion.addEventListener("change", () => { if (reducedMotion.matches) cancelConstruction(); });
-window.addEventListener("resize", () => { cancelCardFlights(); cancelConstruction(); cancelTunnelMotion(); });
-reducedMotion.addEventListener("change", () => { cancelCardFlights(); cancelConstruction(); cancelTunnelMotion(); });
+window.addEventListener("resize", () => { cancelCardFlights(true); cancelConstruction(); cancelTunnelMotion(); if (game) renderMarket(); });
+reducedMotion.addEventListener("change", () => { cancelCardFlights(true); cancelConstruction(); cancelTunnelMotion(); if (game) renderMarket(); });
 function layoutHand() {
   const cards = [...$("hand").querySelectorAll(".traincard")];
   if (!cards.length) return;

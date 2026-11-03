@@ -228,7 +228,8 @@ manteniendo los frames/hashes previos y sus vistas. Contrato en [historial](hist
 
 Navegador → mensaje WebSocket → sesión/puesto y validación del servidor →
 caso de uso de jugada humana → motor de reglas → persistencia atómica de sala y archivo → vista filtrada para cada jugador
-→ renderizado. La animación representa una acción aceptada; no la confirma.
+→ renderizado. El robo tiene una presentación provisional desde el clic; solo el
+estado y ACK posteriores al guardado confirman mano, mercado y turno.
 Los túneles conservan en `pending` su etapa, vencimiento y tiempos congelados;
 `Engine.deadlines` alimenta la alarma de sala y excluye ofertas pausadas. Los
 controladores de bots esperan revelación/resultado; las simulaciones de estrategia
@@ -259,6 +260,37 @@ de elementos visuales. Deduplica cada segundo del plazo y sintetiza clics
 alternos. Excluye ofertas pausadas por túneles y turnos sin decisión, además
 de silencio, pestaña oculta, desconexión, guardado pausado, piloto automático,
 espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
+
+### Respuesta provisional al robar
+
+El lobby anuncia `drawFeedbackVersion:1`. `frontend/draw-intent.js` conserva una
+elección sobre la vista pública/propia, sin modificar mano, mazos ni reglas.
+`app.js` inicia movimiento y sonido al clic; un robo oculto viaja boca abajo. La
+marca discontinua distingue una carta pendiente. Los contadores e historial
+siguen esperando el estado autorizado. Un cliente conectado a un servidor sin
+esta capacidad mantiene la animación posterior a la confirmación.
+
+Solo hay un comando enviado y, como máximo, una segunda elección local. No se
+encola otra carta si la primera visible es locomotora, ya se gastó un robo, no
+hay cartas suficientes o se elige la misma posición visible. Tras confirmar,
+la segunda elección se revalida con la revisión y el turno recibidos. Una
+renovación cancela la elección aunque reaparezca el mismo color; al agotarse el
+mazo se ajusta el índice de una carta intacta desplazada hacia la izquierda.
+No se adivina la identidad de una carta nueva ni se adelanta el segundo comando.
+
+El caso de uso guarda `drawEventId` en el recibo idempotente junto a su huella.
+El ACK lo entrega únicamente al actor y después del mismo commit que sala y
+archivo. El cliente concilia la vista previa con ese evento y omite su segunda
+animación/sonido. Una repetición del comando conserva el identificador incluso
+tras reiniciar. El campo es aditivo: recibos históricos y clientes previos siguen
+siendo válidos; no cambia el formato de los eventos públicos ni revela colores.
+
+Rechazo, guardado pausado, pérdida del puesto y desconexión retiran las vistas
+previas y descartan la elección aún no enviada. La reconexión conserva el ID del
+comando enviado para recuperarlo sin robar otra carta. Resize, pestaña oculta y
+cambio de movimiento reducido cancelan geometría y elección local; conservan la
+correlación del primer comando para no repetir su efecto cuando llegue el ACK.
+La construcción de rutas conserva su comportamiento autoritativo actual.
 
 ## Mapa de componentes
 
@@ -329,8 +361,10 @@ transporte. Detalle y trabajo pendiente en [fase 3](work/modular-platform-applic
 ### Recibos de comandos
 
 `member.actionIds` conserva el orden de los últimos 128 IDs aceptados;
-`member.actionReceipts` añade `{id, fingerprint}` únicamente para los comandos
-aceptados por la implementación nueva. La pertenencia al miembro de esa sala
+`member.actionReceipts` añade `{id, fingerprint, drawEventId?}` únicamente para los
+comandos aceptados por la implementación nueva; `drawEventId` es la referencia
+opcional al evento del robo para conciliar su presentación provisional.
+La pertenencia al miembro de esa sala
 acota el recibo a partida/puesto; una revancha crea miembros nuevos. Se calcula
 la huella antes de ejecutar, y se registra después de una acción exitosa junto
 con el incremento de revisión. Acciones rechazadas o sin ID no crean recibos.

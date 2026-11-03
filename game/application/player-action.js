@@ -21,7 +21,7 @@ function createPlayerActionHandler({ engine, stageRoom, storagePaused, now, rand
       const receipt = member.actionReceipts?.find(entry => entry.id === commandId);
       if (receipt && receipt.fingerprint !== fingerprintAction(action)) return reject("COMMAND_ID_CONFLICT");
       stageRoom(room);
-      return { status: "duplicate", commandId };
+      return { status: "duplicate", commandId, ...(receipt?.drawEventId !== undefined ? { drawEventId: receipt.drawEventId } : {}) };
     }
     if (!room.practice && engine.expire(room.game, now(), random)) {
       room.revision = (room.revision || 0) + 1;
@@ -37,6 +37,7 @@ function createPlayerActionHandler({ engine, stageRoom, storagePaused, now, rand
       return reject("STALE_ACTION");
     }
     const fingerprint = commandId ? fingerprintAction(action) : undefined;
+    const eventFloor = room.game.eventSerial || 0;
     try {
       engine.action(room.game, seat, action, { now: now(), random });
     } catch (error) {
@@ -45,13 +46,16 @@ function createPlayerActionHandler({ engine, stageRoom, storagePaused, now, rand
       return reject("GAME_ACTION_REJECTED", error.message);
     }
     room.revision = (room.revision || 0) + 1;
+    const drawEvent = action?.type === "draw_train" && room.game.events?.find(event =>
+      event.id > eventFloor && event.type === "draw" && event.seat === seat && event.index === action.index);
+    const feedback = drawEvent ? { drawEventId: drawEvent.id } : {};
     if (commandId) {
       member.actionIds = [...(member.actionIds || []), commandId].slice(-128);
       member.actionReceipts = [...(member.actionReceipts || []).filter(entry =>
-        entry.id !== commandId && member.actionIds.includes(entry.id)), { id: commandId, fingerprint }];
+        entry.id !== commandId && member.actionIds.includes(entry.id)), { id: commandId, fingerprint, ...feedback }];
     }
     if (!stageRoom(room)) return reject("ACTION_NOT_SAVED");
-    return { status: "accepted", commandId };
+    return { status: "accepted", commandId, ...feedback };
   };
 }
 

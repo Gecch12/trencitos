@@ -43,3 +43,17 @@ test('a failed batched commit restores every candidate room and emits no partial
  await Promise.all([0,1].map(i=>q.run(()=>{rooms[i]++;q.dirty();q.defer(()=>sent.push(i));})));
  assert.deepEqual(rooms,[0,0]);assert.deepEqual(sent,[]);assert.equal(failures,1);
 });
+
+test('timings separate draws/builds/bots and label shared batches without leaking command data',async()=>{
+ let clock=0;const samples=[];
+ const q=createDurableQueue({batchSize:16,capture:()=>null,restore:()=>{},now:()=>clock,
+  measure:(name,ms)=>samples.push([name,ms]),commit:async()=>{clock+=100;},onFailure:e=>{throw e;}});
+ await q.run(()=>{clock+=5;q.dirty();},'draw');
+ assert.ok(samples.some(([name,ms])=>name==='draw.commit'&&ms===100));
+ assert.ok(samples.some(([name,ms])=>name==='draw.total'&&ms===105));
+ samples.length=0;
+ await Promise.all(['build','bot','private-command-id'].map(kind=>q.run(()=>{clock++;q.dirty();},kind)));
+ assert.ok(samples.some(([name])=>name==='mixed.commit'));
+ for(const kind of ['build','bot','other'])assert.ok(samples.some(([name])=>name===`${kind}.total`));
+ assert.ok(!samples.some(([name])=>name.includes('private-command')));
+});

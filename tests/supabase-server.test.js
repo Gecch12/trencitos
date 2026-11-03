@@ -110,14 +110,15 @@ test('a lost commit response retries storage, not the player action or its histo
   const command = { type: 'action', id: 'lost-response-draw', revision, action: { type: 'draw_train', index: -1 } };
   const start = api.calls.length;
   api.lostResponses = 1;
-  peer.send(command);await peer.next('ack', message => message.id === command.id);
+  peer.send(command);const accepted = await peer.next('ack', message => message.id === command.id);
   const commits = api.calls.slice(start).filter(call => call.method === 'ferrovia_save_checkpoint_v2');
   assert.equal(commits.length, 2);assert.equal(commits[0].body.p_commit, commits[1].body.p_commit);
   assert.deepEqual(commits[0].body, commits[1].body);
   assert.equal(f.room.game.players[seat].hand.length, hand + 1);assert.equal(f.room.revision, revision + 1);
   const saved = api.state.rooms.find(room => room.code === f.la.code);
   assert.equal(saved.members[seat].actionIds.filter(id => id === command.id).length, 1);
-  assert.deepEqual(saved.members[seat].actionReceipts, [{ id: command.id, fingerprint: fingerprintAction(command.action) }]);
+  assert.deepEqual(saved.members[seat].actionReceipts, [{ id: command.id, fingerprint: fingerprintAction(command.action), drawEventId: accepted.drawEventId }]);
+  assert.equal(f.room.game.events.find(e=>e.id===accepted.drawEventId).seat, seat);
   const frames = structuredClone(api.state.matches[f.room.matchId].frames);
   peer.send(command);await peer.next('ack', message => message.id === command.id);
   assert.deepEqual(api.state.matches[f.room.matchId].frames, frames);
@@ -132,7 +133,7 @@ test('a lost commit response retries storage, not the player action or its histo
     await c.next('lobby');await c.next('state');reconnected.push(c);
   }
   const room = app.rooms.get(f.la.code), before = structuredClone(room.game), digest = room.archiveHash;
-  reconnected[seat].send(command);await reconnected[seat].next('ack', message => message.id === command.id);
+  reconnected[seat].send(command);assert.deepEqual(await reconnected[seat].next('ack', message => message.id === command.id), accepted);
   reconnected[seat].send({ ...command, action: { type: 'draw_tickets' } });
   await reconnected[seat].next('error', message => message.code === 'COMMAND_ID_CONFLICT');
   assert.deepEqual(room.game, before);assert.equal(room.archiveHash, digest);

@@ -112,7 +112,7 @@ const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, rest
     }
   },
 }) : null;
-const dispatch = job => stopping ? undefined : durable ? durable.run(() => { if (!stopping) job(); }) : job();
+const dispatch = (job, kind) => stopping ? undefined : durable ? durable.run(() => { if (!stopping) job(); }, kind) : job();
 const sendRoom = createRoomStager({ repository: rooms, engine: Engine, history: archive, checkpoint,
   now: () => Date.now(), storagePaused: () => storageFailureAt !== null,
   watchRoom: watchRecording, reconcileRoom: room => multiplayer.reconcile(room), queueViews: queueRoomViews,
@@ -127,7 +127,7 @@ const submitPlayerAction = createPlayerActionHandler({ engine: Engine, stageRoom
   storagePaused: () => storageFailureAt !== null, now: () => Date.now(), random: max => crypto.randomInt(max), fingerprintAction });
 const automaticPlay = createLegacyAutomaticPlay({ stageRoom: sendRoom });
 const botPlanner = require("./bot-planner").createBotPlanner({measure:metrics.record});
-const runBot = require("./bot-runner").createBotRunner({planner:botPlanner,dispatch,automaticPlay,active:()=>!stopping,stageRoom:sendRoom,engine:Engine,
+const runBot = require("./bot-runner").createBotRunner({planner:botPlanner,dispatch:job=>dispatch(job,'bot'),automaticPlay,active:()=>!stopping,stageRoom:sendRoom,engine:Engine,
   schedule:room=>{if(room.practice)practice.sync(room);else{roomBots.sync(room);multiplayer.sync(room);}},
   onError:()=>console.error("Bot planning deferred; room will retry.")});
 const practice = createPracticeController({ rooms, sendRoom, automaticPlay, runBot, dispatch, blocked:()=>storageFailureAt!==null, onRemove: room => { clocks.cancel(room); archive.capture(room,"Práctica cerrada."); return persist(); } });
@@ -329,7 +329,9 @@ function createPeer(socket) {
       if (opcode !== 1) return peer.close();
       try {
         const message = JSON.parse(pay.toString("utf8"));
-        dispatch(() => { if (!peer.closed) onMessage(peer, message); });
+        const kind = message?.type === "action" ? message.action?.type === "draw_train" ? "draw" :
+          ["claim", "station", "pay_tunnel"].includes(message.action?.type) ? "build" : "other" : "other";
+        dispatch(() => { if (!peer.closed) onMessage(peer, message); }, kind);
       } catch (e) {
         peer.send({ type: "error", message: "Mensaje mal formado." });
       }

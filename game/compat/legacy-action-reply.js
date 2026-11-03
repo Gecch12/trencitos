@@ -11,7 +11,8 @@ const errors = {
 };
 
 function actionReply(result) {
-  if (result.status === "accepted" || result.status === "duplicate") return { type: "ack", id: result.commandId };
+  if (result.status === "accepted" || result.status === "duplicate") return { type: "ack", id: result.commandId,
+    ...(result.drawEventId !== undefined ? { drawEventId: result.drawEventId } : {}) };
   if (result.status !== "rejected") throw new Error(`Unknown action status: ${result.status}`);
   const error = result.error.code === "GAME_ACTION_REJECTED"
     ? { message: result.error.legacyMessage } : errors[result.error.code];

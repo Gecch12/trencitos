@@ -20,6 +20,7 @@
     "package.json",
     "frontend/app.js",
     "frontend/game-ui.js",
+    "frontend/draw-intent.js",
     "frontend/board-3d.js",
     "frontend/board-camera.js",
     "frontend/map-layout.js",

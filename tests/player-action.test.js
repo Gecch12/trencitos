@@ -24,7 +24,8 @@ test("a player command stages game, revision and bounded per-seat receipt before
   const f = fixture(), before = f.room.game.players[0].hand.length;
   f.room.members[0].actionIds = Array.from({ length: 128 }, (_, i) => `previous-${i}`);
   const command = structuredClone(draw), result = f.submit(f.room, 0, command);
-  assert.deepEqual(result, { status: "accepted", commandId: draw.commandId });
+  const drawEventId = f.room.game.events.findLast(e => e.type === "draw").id;
+  assert.deepEqual(result, { status: "accepted", commandId: draw.commandId, drawEventId });
   assert.deepEqual(command, draw);
   assert.equal(f.room.game.players[0].hand.length, before + 1);
   assert.equal(f.room.revision, 11);assert.equal(f.stages.length, 1);
@@ -32,7 +33,8 @@ test("a player command stages game, revision and bounded per-seat receipt before
   assert.equal(f.room.members[0].actionIds.length, 128);
   assert.equal(f.room.members[0].actionIds[0], "previous-1");
   assert.equal(f.room.members[0].actionIds.at(-1), draw.commandId);
-  assert.deepEqual(f.room.members[0].actionReceipts, [{ id: draw.commandId, fingerprint: fingerprintAction(draw.action) }]);
+  assert.deepEqual(f.room.members[0].actionReceipts, [{ id: draw.commandId, fingerprint: fingerprintAction(draw.action), drawEventId }]);
+  assert.deepEqual(actionReply(result), { type: "ack", id: draw.commandId, drawEventId });
   assert.equal(f.room.members[1].actionIds, undefined);
   assert.equal(f.room.game.deck.length + f.room.game.face.length + f.room.game.discard.length + f.room.game.players.flatMap(p => p.hand).length, 110);
 });
@@ -63,11 +65,12 @@ test("a legacy duplicate keeps its receipt semantics without expiring, checking 
 });
 
 test("new receipts accept identical reordered actions but reject reused IDs before clocks, control or randomness", () => {
-  const f = fixture();f.submit(f.room, 0, draw);
+  const f = fixture(), accepted = f.submit(f.room, 0, draw);
   f.context.time = f.room.game.turnDeadline + 1;f.room.members[0].autopilot = true;f.context.paused = true;
   f.context.random = () => { throw Error("retry consumed randomness"); };
   const before = structuredClone(f.room);
-  assert.equal(f.submit(f.room, 0, { ...draw, expectedRevision: -999, action: { index: -1, type: "draw_train" } }).status, "duplicate");
+  assert.deepEqual(f.submit(f.room, 0, { ...draw, expectedRevision: -999, action: { index: -1, type: "draw_train" } }),
+    { ...accepted, status: "duplicate" });
   assert.equal(f.stages.length, 2);
   for (const action of [{ type: "draw_train", index: 0 }, { type: "pass" }, null, undefined]) {
     assert.equal(code(f.submit(f.room, 0, { ...draw, action })), "COMMAND_ID_CONFLICT");

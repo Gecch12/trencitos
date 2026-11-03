@@ -1,6 +1,7 @@
 "use strict";
 // Spanish source messages and their English translations. Values are never translated.
 const Translations = {
+  "La mesa cambió. Elige tu segunda carta.": "The market changed. Choose your second card.",
   "Ya construiste todas tus estaciones": "You have built all your stations",
   "{0} cartas visibles y mazo oculto": "{0} face-up cards and blind deck",
   "{0} de {1} robos usados": "{0} of {1} draws used",

@@ -187,3 +187,17 @@ cantidad, mediana, p95 y máximo en milisegundos. No contiene identidades,
 credenciales, comandos ni datos de partida. El health ordinario conserva su forma.
 La duración de entrega mide encolado local, no RTT del navegador. Para comparar
 latencia real se miden envío y recepción en el mismo reloj del cliente.
+
+La cola remota también publica grupos `draw.*`, `build.*`, `bot.*` y `other.*`.
+Cola/total corresponden a cada trabajo; mutación/commit/entrega corresponden al
+lote. Un lote de tipos diferentes usa `mixed.*` para esas fases compartidas,
+sin atribuir todo su coste a un robo. Las etiquetas proceden de una lista fija,
+no de IDs, nombres ni payloads. Los rechazos también cuentan como trabajos;
+estos agregados no sustituyen una medición de clic a confirmación del cliente.
+
+`node tests/browser-draw-feedback.cjs` prueba el recorrido completo en Chrome
+con HTTP/WebSocket locales y el adaptador remoto conectado a un doble en memoria
+(`fixture.supabase.co` se intercepta; no se conecta a Supabase real). Retiene el
+guardado para comprobar feedback inmediato, dos robos, renovación, agotamiento,
+rechazo, fallo y reconexión. Escribe métricas y capturas en `.qa/draw-feedback/`.
+La medición de frame usa `requestAnimationFrame`, no una captura física de pantalla.

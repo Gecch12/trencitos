@@ -232,6 +232,8 @@ body.is-playing {
 .draw-flight-face { position: absolute; inset: 0; transform-style: preserve-3d; }
 .draw-flight img { width: 100%; height: 100%; position: absolute; inset: 0; border-radius: 7px; backface-visibility: hidden; box-shadow: 0 5px 12px #102d3938; }
 .draw-flight .draw-flight-front { transform: rotateY(180deg); }
+.draw-flight-pending img { outline: 2px dashed #b89c62; outline-offset: 3px; }
+.game #market .draw-reserved { opacity: .25; }
 .game .map-menu {
   position: absolute; z-index: 6; width: 270px; padding: 16px;
   background: #fffcf5; border: 1px solid #c2b793; border-radius: 12px;
@@ -609,7 +611,7 @@ button:focus-visible, summary:focus-visible, [tabindex="0"]:focus-visible { outl
 }
 
 .is-confirming-action #drawstats::after { content:"…"; display:inline-block; margin-left:5px; font-weight:bold; animation:command-pending 700ms ease-in-out infinite; }
-.is-confirming-action .market button { cursor:progress; }
+.is-confirming-action .market button:disabled { cursor:progress; }
 @keyframes command-pending { 50%{opacity:.35;} }
 @media(prefers-reduced-motion:reduce){.is-confirming-action #drawstats::after{animation:none;}}
 

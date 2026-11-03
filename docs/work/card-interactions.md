@@ -1,5 +1,5 @@
 ---
-{"id":"card-interactions","status":"done","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"released","updated":"2026-11-02"}
+{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
 ---
 # Cartas, pagos y limpieza de la interfaz
 
@@ -11,7 +11,7 @@ pendientes de resultados/avatar, además de las cinco propuestas sobre cartas.
 - [x] Historial: nombre y miniatura; carta pública para todos, robo del mazo
   visible solo al dueño y reverso para los demás, incluso en replay público.
 - [x] Renovación por tres locomotoras: brillo, abanico hacia el mazo y reparto
-  escalonado; duración 940 ms, movimiento reducido 180 ms, bloqueo local de robos.
+  escalonado; duración actual 420 ms, movimiento reducido 120 ms, bloqueo local de robos.
   Lecturas/reconexión no repiten; estados nuevos y cancelaciones restauran la mesa.
 - [x] Pago como suma de cartas con cantidades, actualización al usar locomotoras,
   existencias en esquina, nombres accesibles sin texto visible redundante.
@@ -44,10 +44,48 @@ pendientes de resultados/avatar, además de las cinco propuestas sobre cartas.
 
 ## Siguiente paso
 
-Implementación publicada junto con UI 8 y el desenlace del túnel. Recargar
-producción para recibirla. El servidor local habitual no se reinició; hacerlo
-al terminar la partida activa. La emulación móvil no equivale a un dispositivo
-físico.
+Publicar y medir respuesta inmediata en producción como entrega separada.
+El cambio nuevo está validado en este checkout; la publicación histórica de las
+mejoras anteriores no certifica su despliegue. El servidor local habitual y las
+partidas de producción no se modificaron.
+
+## Respuesta inmediata al clic · 2026-11-03
+
+Ampliación aprobada con «implementa» tras el análisis Moti de la demora de cartas.
+
+- [x] Carta visible o reverso del mazo inicia movimiento/sonido al pulsar, sin
+  adelantar mano, contadores, turno ni secretos. Conciliación con ACK/evento,
+  sin un segundo vuelo/sonido al confirmar.
+- [x] Hasta una segunda elección local mientras se guarda la primera; envío
+  con nueva revisión, identidad de posición conservada y cancelación al renovar.
+- [x] Rechazo, desconexión, fallo de guardado, resize y movimiento reducido;
+  reintento idempotente y recibo durable con `drawEventId`.
+- [x] Métricas separadas para robos, construcción, bots y lotes mixtos. El
+  guardado sigue siendo obligatorio; no se promete reducir su RTT con esta UI.
+- [x] Completar regresión y revisión final.
+- [ ] Publicar y medir en el entorno real como entrega separada, sin presentar
+  medidas locales como cifras de Render.
+
+Verificación final: `node tests/browser-draw-feedback.cjs`, diez recorridos Chrome
+con doble remoto y guardado retenido, sin errores del navegador. En 18 clics,
+creación del feedback entre 0,9 y 2,7 ms y siguiente rAF entre 13,0 y 46,7 ms.
+Las confirmaciones medidas en los casos aceptados llegaron entre 494,6 y 646,2 ms
+con guardado retenido por la prueba: la espera no retrasa el movimiento inicial.
+Capturas de escritorio y móvil 390×844 inspeccionadas. Informe regenerable en
+`.qa/draw-feedback/report.json`; los tiempos incluyen carga local de QA, no son
+una promesa para todos los dispositivos. Se distinguen feedback y confirmación.
+
+23 pruebas de intención/recibos/cola y 40 de persistencia, proyecciones, assets y
+transporte aprobadas. `tests/browser-card-ui.cjs` también pasó su recorrido
+previo completo (actor/rival/espectador, renovación, pagos y móvil).
+
+La suite amplia ejecutó 637 pruebas: 636 pasaron y una esperaba el recibo sin el
+nuevo campo opcional. Se actualizó esa aserción para comprobar el evento y su
+conservación tras reinicio; la repetición dirigida de ese archivo y proyecciones
+pasó 7/7. No quedaron fallos pendientes; no se presenta como una segunda suite
+amplia. Logs amplios en `.qa/draw-feedback/node-tests.txt`. Comprobador documental
+y `git diff --check` correctos. Este cambio no adelanta construcciones de rutas
+ni modifica reglas, SQL, planes de hosting o el servidor real.
 
 ## Entrega en producción · 2026-11-02
 
