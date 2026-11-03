@@ -1,0 +1,58 @@
+#1 [internal] load build definition from Dockerfile
+#1 sha256:d503c28a7fc4910538cfd0922bdd7784ee0f11ef5f37398e784474bb435ead03
+#1 transferring dockerfile: 74B 0.0s done
+#1 DONE 0.1s
+
+#2 [internal] load .dockerignore
+#2 sha256:3b05a1c29d40da7cb485f99f6694354c51896ce8db88b69131553b834d9e604a
+#2 transferring context: 70B
+#2 transferring context: 72B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:22-alpine
+#3 sha256:ea040a8ae8d48010beeae405e35e2010b014bb438d42def3e578fd4426535172
+#3 DONE 1.5s
+
+#4 [1/8] FROM docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914
+#4 sha256:76e893960c7e132a8e4d8391f236b95d5b4eb1e14793410b466179771adda06e
+#4 DONE 0.0s
+
+#6 [internal] load build context
+#6 sha256:742b722a1929a60aa6be1b278f91127ecc5386f6b15f5f5eacd9f1e9366d2a4d
+#6 transferring context: 58.84kB 0.0s done
+#6 DONE 0.0s
+
+#7 [3/8] COPY package.json package-lock.json ./
+#7 sha256:3fc9181360f28c7d40289c83a3b48ea9e2a1fa661ab6e51b22234856836ab279
+#7 CACHED
+
+#5 [2/8] WORKDIR /app
+#5 sha256:fd19c84f89e7a8fbaff4b9f028749d46a1a4c1d9b42eb3a401b0949cd6cbad19
+#5 CACHED
+
+#8 [4/8] RUN npm ci --omit=dev --ignore-scripts
+#8 sha256:bff8b7473530069f27e4108d41e3a87271a6c1e663c0432c24dca08c9a482807
+#8 CACHED
+
+#9 [5/8] COPY --chown=node:node *.js *.mjs *.css *.html ./
+#9 sha256:945e6148431542ff07aa301457e5f2e1f7c32c544b55bf8bd2f116331123c700
+#9 DONE 0.1s
+
+#10 [6/8] COPY --chown=node:node game ./game
+#10 sha256:0bc29e6d19f890b286e3b5721f2ca3ad1c38c7ed8f3f72a2c1fe6d90564cedb6
+#10 DONE 0.0s
+
+#11 [7/8] COPY --chown=node:node assets ./assets
+#11 sha256:07402e396a0f1dce212962be3d4b24aabc736880462b0441ab02eb95ab01669e
+#11 DONE 0.0s
+
+#12 [8/8] RUN mkdir -p /data && chown node:node /data
+#12 sha256:1af193274d70cfbe97b45ca409cedd0573a9ba718fb2306c506ea2e9ebe93fdc
+#12 DONE 0.2s
+
+#13 exporting to image
+#13 sha256:e8c613e07b0b7ff33893b694f7759a10d42e180f2b4dc349fb57dc6b71dcab00
+#13 exporting layers 0.0s done
+#13 writing image sha256:01ba25f666ff8f099ea45d04aff12e814b45f011a3d73462363643886967c5ac done
+#13 naming to docker.io/library/trencitos-application-views done
+#13 DONE 0.1s

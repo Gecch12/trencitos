@@ -192,9 +192,12 @@ final hoy llamado `safePublic`; `Engine.view(g,-1)` aislado no basta para ese ca
 
 El sexto corte de fase 2 materializa `projectMatch` y `Engine.normalize`. La
 fachada conserva `view` y su reloj predeterminado, con `{now}` opcional; la consulta
-recibe el tiempo explícito y devuelve copias. La composición de `safePublic` sigue
-en servidor/archivo hasta reorganizar la capa de aplicación. Contrato de carga y
-límites implementados en [arquitectura](../architecture.md).
+recibe el tiempo explícito y devuelve copias. El cuarto corte de fase 3 reúne
+lobby, estado y grabación en `authorized-views.js`, incluida la composición de
+`safePublic`. `history-queries.js` decide el acceso antes de cargar pasos remotos y
+`replay-view.js` devuelve copias de las proyecciones ya grabadas, sin adaptar
+frames antiguos. Transporte conserva la identidad y el permiso de observación
+en vivo. Contrato implementado en [arquitectura](../architecture.md).
 
 ## Repositorios y confirmación durable
 
@@ -224,9 +227,9 @@ forma síncrona; remoto confirma una vez al final del trabajo en la cola global.
 `stageRoom=true` sigue significando preparado, no confirmación remota. El outbox
 permanece en transporte/cola. Detalle en [arquitectura](../architecture.md).
 
-El registro de mapas versionados, la búsqueda por identidad de partida y la
-centralización de lecturas autorizadas continúan en sus cortes posteriores;
-este puerto mínimo no los da por implementados.
+El registro de mapas versionados y la búsqueda por identidad de partida
+continúan pendientes; este puerto mínimo no los da por implementados. Las
+lecturas autorizadas se centralizan en el cuarto corte, descrito arriba.
 
 Orden para una petición válida: autenticar y validar sobre → comprobar duplicado
 → resolver vencimientos → comprobar control/revisión → decidir jugada → preparar
@@ -323,7 +326,7 @@ un checkpoint revisado del trabajo visual; cada worktree mantiene sus propios do
 | Núcleo extraído | [Políticas de construcción](../../tests/domain-route-claim.test.js) y suites `domain-*`: IDs desordenados/de cadena, contexto inyectado, rechazo sin mutar y ejecución sin reloj/azar/red ambientales. Las suites de contratos contrastan el comportamiento vía fachada. |
 | Mapas/versiones, pendiente de fase 4 | Europa y mapa mínimo simultáneos, orden de vías permutado, estaciones/túneles/bots/replay con IDs opacos; guardados legados y versiones desconocidas. |
 | Consultas y carga explícita | [Consultas](../../tests/match-queries.test.js) sobre estados congelados sin alias ni mutación; [carga legada](../../tests/legacy-load-server.test.js) normaliza antes de persistir/publicar; [archivo](../../tests/match-archive.test.js) conserva hashes y privacidad. |
-| Aplicación, pendiente de fase 3 | Mantener contratos de guardado incierto, deduplicación y elecciones simultáneas al separar los casos de uso. El filtro público de resultados sigue compuesto en servidor/archivo; la consulta del motor por sí sola no sustituye `safePublic`. |
+| Aplicación, fase 3 activa | Jugadas humanas/automáticas y checkpoint preservan guardado incierto, deduplicación y elecciones simultáneas. [Vistas](../../tests/authorized-views.test.js), [historial](../../tests/history-queries.test.js) e [integración HTTP/WebSocket](../../tests/history-server.test.js) comprueban permisos, filtro público común y copias sin alterar el archivo. Pendientes: huellas de comandos y organización de interfaz. |
 
 Las pruebas de fase 1 caracterizaron el motor de esa base. La implementación y
 evidencia de las políticas/consultas posteriores viven en la [fase de dominio](../work/modular-platform-domain.md).

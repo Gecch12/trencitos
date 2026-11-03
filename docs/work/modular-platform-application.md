@@ -21,7 +21,7 @@ otros worktrees ni se publica en Render.
 - [x] Extraer el caso de jugada humana, conservar protocolo y comprobar reintentos/rollback.
 - [x] Separar entradas automáticas y coordinar vencimientos, bots y práctica desde aplicación.
 - [x] Separar preparación/confirmación/publicación y definir puertos de repositorio/commit conjuntos con historial.
-- [ ] Centralizar vistas autorizadas de jugador/espectador, conservando privacidad de replay.
+- [x] Centralizar vistas autorizadas de jugador/espectador, conservando privacidad de replay.
 - [ ] Introducir recibos con huella de comando y compatibilidad de los 128 IDs legados.
 - [ ] Integrar un checkpoint revisado de vagones antes de mover archivos visuales.
 - [ ] Separar responsabilidades de frontend/backend en código y verificar empaquetado.
@@ -246,10 +246,86 @@ con simuladores, Docker usa red externa deshabilitada y el navegador emulación
 móvil; no se acredita producción ni dispositivos físicos. Entrega aislada en
 esta rama, sin integrar otros worktrees, push ni despliegue.
 
+## Cuarto corte: consultas y vistas autorizadas
+
+Base `2962ff7` más los cambios de esta entrega. El servidor y el archivo comparten
+[authorized-views.js](../../game/queries/authorized-views.js) para lobby, estado y
+grabación, ensamblado por el [adaptador legado](../../game/compat/legacy-authorized-views.js).
+La vista pública incluye el filtro adicional de resultados; la grabación elimina
+el reloj volátil. El transporte conserva sesión/puesto, permiso de observar,
+credencial del destinatario y envío/outbox. Las consultas no normalizan ni guardan
+la partida; la captura sigue normalizando explícitamente antes de proyectar.
+
+[history-queries.js](../../game/application/history-queries.js) reúne las decisiones
+de acceso al historial/replay mediante un puerto de metadatos/reclamaciones y
+otro de carga de pasos. [replay-view.js](../../game/queries/replay-view.js) usa las
+proyecciones guardadas y devuelve copias de resúmenes, acciones, eventos y auditoría.
+Consultar ya no añade frames a los metadatos recibidos ni permite modificar el
+archivo a través de sus respuestas. No se recalculan reglas ni hashes antiguos.
+Se preservan rutas HTTP, sobres WebSocket y entradas `archive.list`/`archive.replay`.
+Los contratos y responsabilidades viven en [arquitectura](../architecture.md) y
+[historial/replay](../history-replay.md).
+
+## Evidencia del cuarto corte
+
+- [Vistas autorizadas](../../tests/authorized-views.test.js): seis pruebas sobre
+  credencial del destinatario, manos/ofertas/robos privados, túneles públicos,
+  resultados filtrados, salidas independientes del estado, grabación sin reloj
+  volátil, sobre de recuperación y ejecución con dependencias inyectadas.
+- [Consultas de historial](../../tests/history-queries.test.js): cuatro pruebas
+  de autorización antes de cargar pasos remotos, invitado/cuenta y reclamaciones,
+  cierre/versión/auditoría, perspectivas de participantes, filtro público y copias
+  de respuestas sin alterar metadatos, estados ni integridad de hashes.
+- [Integración HTTP/WebSocket](../../tests/history-server.test.js): una sala pública
+  recorre elección, robo ciego, observación y cierre; el replay público coincide
+  con la vista final en vivo, los participantes reciben todas las perspectivas y
+  solo ellos pueden descargar auditoría. La prueba privada conserva reinicio y
+  deduplicación. Integración enfocada con directorio, carga antigua, multijugador
+  y Supabase simulado: **29/29**, sin fallos ni omisiones.
+- Suite completa, Node `v25.6.1`: **519/519**, sin fallos ni omisiones,
+  `node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js`.
+  Incluye las once pruebas nuevas de este corte.
+  [Resultado y huellas](../qa/modular-application-views/node-tests-result.json),
+  [TAP](../qa/modular-application-views/node-tests.tap).
+
+- `QA_PORT=0 npm run test:board3d`: **aprobado**, Chrome `156.0.8078.80`.
+  Ocho recorridos de interacción, nueve combinaciones de viewport/zoom y partida
+  completa de cuatro jugadores con **264 acciones**, reconexión y cero errores.
+  Incluye 68 intentos de construcción, pagos/desistimientos de túnel, cuatro
+  estaciones y cinco ofertas/confirmaciones de destinos.
+  [Resultado](../qa/modular-application-views/browser-tests-result.json),
+  [reporte](../qa/modular-application-views/browser/threejs-report.json).
+  Se inspeccionaron [resultado final](../qa/modular-application-views/browser/threejs-finished.png)
+  y [móvil emulado](../qa/modular-application-views/browser/threejs-mobile.png).
+- Docker `linux/arm64`, Node `v22.23.4`: arranque, `healthz`, UID 1000 y estado
+  escribible correctos; **3/3** pruebas HTTP/WebSocket sobre código empaquetado
+  en la repetición aislada. Los cuatro módulos nuevos se incluyen en la imagen y
+  sus URLs devuelven 404. [Construcción](../qa/modular-application-views/docker-build.txt),
+  [resultado](../qa/modular-application-views/docker-result.json),
+  [TAP](../qa/modular-application-views/docker-tests.tap).
+  La primera ejecución coincidió con suite/navegador y tuvo **2/3**: la prueba
+  existente de práctica agotó una espera de 10 s. Se conserva el
+  [fallo inicial](../qa/modular-application-views/docker-first-tests.tap) y su
+  [resultado](../qa/modular-application-views/docker-first-result.json).
+  No se modificó la prueba ni su timeout; la repetición pasó sobre la misma
+  imagen. La causa del timeout no queda demostrada por esta repetición.
+- `node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
+  Revisados arquitectura, contratos, dominio, historial, operación y fichas
+  afectadas. Las evidencias anteriores conservan su alcance histórico;
+  `docs/qa/threejs-*` se restauró sin cambios. Las huellas de fuentes y logs
+  coinciden con los archivos finales de este corte.
+
+Validación del 2026-11-02 (Lima). Cuarto corte aceptado localmente; fase 3 sigue
+activa. Se conservan reglas, estrategia, Europa y presentación. Supabase/SQL se
+prueban con simuladores, Docker sin red externa y móvil mediante emulación; no
+se acredita producción ni dispositivos físicos. Entrega aislada en esta rama,
+sin integrar otros worktrees, push ni despliegue.
+
 ## Siguiente corte
 
-Centralizar proyecciones autorizadas de jugador/espectador para sala, partida
-y replay, conservando el filtro público adicional y la privacidad de datos
-ajenos. Mantener transporte/outbox separados de esas consultas. Los recibos
-con huella y la organización de frontend/backend continúan después; antes de
-mover archivos visuales corresponde integrar un checkpoint revisado de vagones.
+Introducir recibos con huella de comando: distinguir un reintento idéntico de
+la reutilización del mismo ID con otra acción, conservando compatibilidad con
+los 128 IDs legados por puesto y confirmación conjunta de revisión/recibo/historial.
+Verificar reconexión, reinicio, guardado incierto y rollback. Después continúa la
+organización de frontend/backend; antes de mover archivos visuales corresponde
+integrar un checkpoint revisado de vagones.

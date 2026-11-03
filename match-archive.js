@@ -4,27 +4,10 @@ const canonical=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Arra
 const frameHash=frame=>createHash('sha256').update(canonical(frame)).digest('hex');
 const Engine=require('./engine'),Replay=require('./replay-state'),I18n=require('./i18n');
 const fail=(status,message)=>Object.assign(Error(message),{status});
-function safePublic(view) {
-  const result=structuredClone(view);
-  // Final scores are public; the identities of private tickets stay private.
-  if(result.result) for(const row of result.result){row.tickets=[];row.individualTickets=[];row.stationRoutes=[];if(row.details) row.details.destinations=[];}
-  return result;
-}
-function participantSeat(record, identity, claims) {
-  return record.players.findIndex(p=>!p.bot && (identity.accountId && (p.accountId===identity.accountId || claims[p.guestId]===identity.accountId) || identity.guestId && p.guestId===identity.guestId && !claims[p.guestId]));
-}
-const participant = (record, identity, claims) => participantSeat(record, identity, claims) >= 0;
-function placement(record, seat) {
-  if (record.status !== 'completed') return null;
-  const own = record.scores.find(s => s.seat === seat), keys = ['score','completed','stations','express'];
-  if (!own || record.scores.some(s => s.partial || keys.some(key => !Number.isFinite(s[key])))) return null;
-  // Same tie-break order as Engine.finish; exact ties share a position.
-  return 1 + record.scores.filter(s => {
-    for (const key of keys) if (s[key] !== own[key]) return s[key] > own[key];
-    return false;
-  }).length;
-}
-function createMatchArchive({saved={matches:{},claims:{}},remote=null}={}) {
+const { safePublic } = require('./game/queries/authorized-views');
+const { createLegacyAuthorizedViews } = require('./game/compat/legacy-authorized-views');
+const { createHistoryQueries, participant } = require('./game/application/history-queries');
+function createMatchArchive({saved={matches:{},claims:{}},remote=null,projections=createLegacyAuthorizedViews()}={}) {
   let state=saved, pending=new Map();
   function capture(room,endReason=null) {
     // Closure seals the recording. Later disconnects or room expiry must not
@@ -33,13 +16,7 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null}={}) {
     room.matchId ||= randomUUID();
     const g=room.game, previous=room._archiveState;
     Engine.normalize(g);
-    const members=room.members.map(m=>({name:m.name,color:m.color,bot:!!m.bot,autopilot:!!m.autopilot,connected:!!m.bot||!!(m.ws&&!m.ws.closed)}));
-    // Remove volatile serverNow from the recorded projections; retain deadlines
-    // and authoritative timestamps to reproduce clocks at each recorded step.
-    const views=[-1,...g.players.map((_,i)=>i)].map(seat=>{
-      const view=Engine.view(g,seat);delete view.serverNow;
-      return seat===-1?safePublic(view):view;
-    });
+    const {members,views}=projections.recording(room);
     const next=structuredClone({game:g,views,members});
     const changes=previous?Replay.diff(previous,next):[];
     const old=pending.get(room.matchId)||{frames:[]};
@@ -87,7 +64,7 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null}={}) {
   async function records(identity,id) {
     if(remote) return remote.readArchive(identity,id);
     if(id){const record=state.matches[id];return {matches:record?[record]:[],claims:state.claims};}
-    return {matches:Object.values(state.matches).filter(r=>participant(r,identity,state.claims)),claims:state.claims};
+    return {matches:Object.values(state.matches),claims:state.claims};
   }
   async function bootstrap(rooms) {
     const ids=[...rooms.values()].map(r=>r.matchId).filter(Boolean);
@@ -96,36 +73,7 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null}={}) {
       record.status='abandoned';record.closedAt=Date.now();record.endReason='La sala caducó sin reconexión.';
     }
   }
-  async function list(identity) {
-    const {matches,claims}=await records(identity,null);
-    return matches.filter(r=>participant(r,identity,claims)).sort((a,b)=>b.startedAt-a.startedAt).map(r=>{
-      const ownSeat=participantSeat(r,identity,claims);
-      return {...summary(r,true),ownSeat,rank:placement(r,ownSeat)};
-    });
-  }
-  function summary(r,own) {
-    return {...r,frames:undefined,players:r.players.map(({name,color,bot})=>({name,color,bot})),scores:r.scores.map(score=>own?score:{seat:score.seat,route:score.route,score:score.score,partial:score.partial,winner:score.winner})};
-  }
-  async function replay(identity,id,audit=false) {
-    const {matches,claims}=await records(identity,id),record=matches[0];
-    if(!record)throw fail(404,'Esta repetición no está disponible.');
-    const own=participant(record,identity,claims);
-    if(!own&&record.visibility!=='public')throw fail(404,'Esta repetición no está disponible.');
-    if(record.status==='active')throw fail(409,'La repetición estará disponible cuando la partida se cierre.');
-    if(record.schemaVersion!==1)throw fail(409,'Esta versión de repetición no está disponible.');
-    if(audit&&!own)throw fail(403,'Solo los participantes pueden descargar la auditoría.');
-    if(!record.frames)record.frames=await remote.readFrames(id,record.steps);
-    if(audit)return {match:summary(record,true),frames:record.frames};
-    let state=null,previous=null;
-    const frames=record.frames.map(frame=>{
-      state=frame.snapshot?structuredClone(frame.snapshot):Replay.apply(state,frame.changes);
-      const projected={members:state.members,views:own?state.views:[state.views[0]]};
-      const data=frame.seq%32===0||!previous?{snapshot:projected}:{changes:Replay.diff(previous,projected)};previous=projected;
-      // Actions can contain private selections; only participants receive them.
-      return {seq:frame.seq,at:frame.at,events:own?frame.events:frame.events.map(entry=>Engine.historyEntryView(entry,-1)),...(own?{action:frame.action}:{}),...data};
-    });
-    return {match:summary(record,own),full:own,frames};
-  }
-  return {bootstrap,capture,claim,list,replay,snapshot,rollback,get pending(){return [...pending.values()]},get state(){return state},prepare:()=>applyPending(state),commit(next){if(next)state=next;pending.clear();},restore(next){state=next;pending.clear();}};
+  const queries=createHistoryQueries({repository:{records,frames:(id,steps)=>remote.readFrames(id,steps)}});
+  return {bootstrap,capture,claim,list:queries.list,replay:queries.replay,snapshot,rollback,get pending(){return [...pending.values()]},get state(){return state},prepare:()=>applyPending(state),commit(next){if(next)state=next;pending.clear();},restore(next){state=next;pending.clear();}};
 }
 module.exports={createMatchArchive,safePublic,participant,frameHash};

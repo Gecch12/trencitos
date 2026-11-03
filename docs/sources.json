@@ -37,7 +37,8 @@
     "shell.js",
     "shell.css",
     "shell-icons.js",
-    "game-timing.js"
+    "game-timing.js",
+    "match-archive.js"
   ],
   "domain.md": [
     "game/application/automatic-play.js",
@@ -146,7 +147,13 @@
     "tests/match-archive.test.js",
     "tests/archive-sql.test.js",
     "tests/history-server.test.js",
-    "tests/i18n.test.js"
+    "tests/i18n.test.js",
+    "game/application/history-queries.js",
+    "game/queries/authorized-views.js",
+    "game/queries/replay-view.js",
+    "game/compat/legacy-authorized-views.js",
+    "tests/authorized-views.test.js",
+    "tests/history-queries.test.js"
   ],
   "work/table-controls.md": [
     "game-timing.js",
@@ -279,6 +286,11 @@
     "supabase-store.js",
     "tests/checkpoint-application.test.js",
     "tests/room-store.test.js",
-    "tests/supabase-store.test.js"
+    "tests/supabase-store.test.js",
+    "game/queries/",
+    "game/compat/legacy-authorized-views.js",
+    "match-archive.js",
+    "tests/authorized-views.test.js",
+    "tests/history-queries.test.js"
   ]
 }

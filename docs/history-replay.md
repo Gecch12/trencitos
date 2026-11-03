@@ -52,6 +52,19 @@ verificado. La unión es idempotente, conserva el historial previo de la cuenta 
 rechaza apropiación por otra. Una identidad ya reclamada no da acceso anónimo;
 logout rota la cookie. Los enlaces privados de puesto siguen siendo independientes.
 
+La composición de vistas de lobby, partida y grabación vive en
+[authorized-views.js](../game/queries/authorized-views.js), compartida por servidor
+y archivo. El transporte verifica sesión y permiso de observar la sala; la
+consulta no toma una identidad ni un puesto enviados por el cliente como prueba
+de acceso.
+
+[history-queries.js](../game/application/history-queries.js) aplica propiedad,
+reclamaciones, visibilidad, cierre y versión antes de solicitar pasos remotos.
+[replay-view.js](../game/queries/replay-view.js) construye resúmenes y respuestas
+con las perspectivas guardadas. También listado, acciones, eventos y auditoría
+se devuelven como copias, sin permitir cambios del archivo desde una consulta.
+El puente público `archive.list`/`archive.replay` y las rutas HTTP se conservan.
+
 ## Grabación y almacenamiento
 
 [match-archive.js](../match-archive.js) recibe observaciones del motor y conserva
@@ -161,7 +174,7 @@ secciones futuras.
 ## Verificación y auditoría local
 
 ```sh
-node --test tests/match-archive.test.js tests/archive-sql.test.js tests/history-server.test.js tests/account-auth.test.js tests/i18n.test.js
+node --test tests/authorized-views.test.js tests/history-queries.test.js tests/match-archive.test.js tests/archive-sql.test.js tests/history-server.test.js tests/account-auth.test.js tests/i18n.test.js
 node scripts/verify-match-audit.js /ruta/a/trencitos-partida.json
 node tests/helpers/history-preview.js
 ```

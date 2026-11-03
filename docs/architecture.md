@@ -58,6 +58,8 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Costes de estación y asignación conjunta de vías prestadas | [stations.js](../game/domain/stations.js): `decideStation`, `canBuildStation`, `assignStations` |
 | Conectividad, caminos de destino y recorrido más largo | [network.js](../game/domain/network.js): `connected`, `connectionPath`, `longestTrail` |
 | Puntuación, clasificación y desglose | [scoring.js](../game/domain/scoring.js): `scoreMatch`, `rankResults`, `resultDetails`, `destinationDetails`; [puente legado](../game/compat/legacy-scoring.js) |
+| Lobby, estado y grabación con proyección común por puesto | [authorized-views.js](../game/queries/authorized-views.js): `createAuthorizedViews`; [composición legada](../game/compat/legacy-authorized-views.js) |
+| Acceso al historial y proyección de replay guardado | [history-queries.js](../game/application/history-queries.js): `createHistoryQueries`; [replay-view.js](../game/queries/replay-view.js): `projectSummary`, `projectReplay` |
 | Vistas copiadas por puesto e historial filtrado | [match-view.js](../game/queries/match-view.js): `projectMatch`, `historyEntryView` |
 | Normalización explícita de partidas antiguas | [engine.js](../engine.js): `normalize`; [legacy-timing.js](../game/compat/legacy-timing.js): `planTiming`; [legacy-scoring.js](../game/compat/legacy-scoring.js): `completeResults` |
 | Ciudades, rutas, billetes y paleta | [data.js](../data.js) |
@@ -153,7 +155,7 @@ invoca `checkpoint.commit()` una vez, con todos los cambios acumulados.
 | `repository.get(code)`, `repository.values()` | El `Map` de salas existente satisface el puerto; conserva identidad mutable y búsqueda por código. Todavía no es el repositorio objetivo por `matchId`. |
 | `committer.prepare(repository)` | Produce `{rooms, archive}` sin escribir ni aceptar historial. Copia los DTOs persistibles de sala, incluidos revisión y recibos; excluye sockets, tokens sin hash y salas de práctica. |
 | `committer.commit(batch)` | Guarda conjuntamente sala e historial y solo después acepta el historial pendiente. Es síncrono para archivo; devuelve promesa para remoto. |
-| `queueViews`, `queueDirectory` | El transporte construye y serializa mensajes autorizados. `peer.send` los entrega en archivo o los retiene en el outbox remoto hasta el commit. |
+| `queueViews`, `queueDirectory` | El transporte obtiene DTOs de las consultas autorizadas y serializa los mensajes. `peer.send` los entrega en archivo o los retiene en el outbox remoto hasta el commit. |
 
 El lote local contiene el archivo completo preparado, con frames ya confirmados
 compartidos como datos inmutables: no se copian ni serializan de nuevo. El lote
@@ -168,8 +170,41 @@ serializada; no se intercalan nuevas mutaciones de aplicación. Supabase mantien
 ID de commit, reintento del mismo cuerpo y exclusión de escritores. Un error
 remoto restaura runtime/historial y descarta el outbox; un error de entrega tras
 confirmar no revierte datos guardados. No se introducen escrituras por partida
-en paralelo. Los snapshots de rollback, sesiones, vistas y envío efectivo aún
-viven en servidor/cola; la centralización de proyecciones es el siguiente corte.
+en paralelo. Los snapshots de rollback, sesiones y envío efectivo aún viven en servidor/cola;
+las proyecciones se consultan mediante el módulo común descrito a continuación.
+
+## Consultas autorizadas
+
+`createAuthorizedViews` reúne los DTOs de lobby, estado y grabación. Recibe motor,
+reloj, capacidad, política de visibilidad y normalización de ajustes como
+funciones; `legacy-authorized-views.js` ensambla las dependencias existentes.
+No normaliza la partida, cambia plazos, guarda ni envía mensajes. El servidor
+resuelve el puesto autenticado y comprueba que la sala admita espectadores antes
+de consultar; la proyección valida el rango del puesto, pero no autentica una
+sesión por sí sola.
+
+El lobby publica miembros mediante una lista explícita de campos. Solo el
+transporte puede suministrar el token del destinatario; la consulta no extrae
+credenciales del resto de la sala. `state` añade revisión/pausa al resultado de
+`Engine.view`; la vista pública compone siempre `safePublic` para ocultar destinos
+y préstamos privados del resultado final. El sobre de recuperación conserva su
+forma anterior. Todos los objetos devueltos quedan separados del estado fuente.
+
+`recording` usa el mismo filtro por puesto y elimina `serverNow` antes de grabar.
+`match-archive.js` conserva captura, diferencias, hashes y almacenamiento, y
+expone `list`/`replay` como puentes a `createHistoryQueries`. Este caso de consulta
+recibe la identidad verificada y un repositorio de lectura con dos operaciones:
+`records(identity, id)` aporta metadatos/reclamaciones; `frames(id, steps)` carga
+los pasos remotos solo después de comprobar propiedad, visibilidad, cierre,
+versión y permiso de auditoría. Los frames locales ya cargados se reutilizan como
+entrada, sin modificarlos.
+
+`replay-view.js` proyecta resúmenes y reconstruye las vistas guardadas; no ejecuta
+el motor ni adapta frames antiguos. Listado, eventos, acciones y auditoría son
+copias: su consumidor no puede modificar el archivo ni sus hashes. Las respuestas
+conservan permisos y formato: participantes de una partida cerrada acceden a todas
+sus perspectivas; terceros solo al replay público. El contrato de identidad,
+acceso y datos publicados está en [historial/replay](history-replay.md).
 
 ## Extracción gradual del dominio
 

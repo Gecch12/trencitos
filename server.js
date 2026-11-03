@@ -7,11 +7,12 @@ const Engine = require("./engine");
 const { createPlayerActionHandler } = require("./game/application/player-action");
 const { actionReply } = require("./game/compat/legacy-action-reply");
 const { createLegacyAutomaticPlay } = require("./game/compat/legacy-automatic-play");
+const { createLegacyAuthorizedViews } = require("./game/compat/legacy-authorized-views");
 const { createCheckpointHandler } = require("./game/application/checkpoint");
 const { createRoomStager } = require("./game/application/room-stage");
 const { createFileCheckpointCommitter, createRemoteCheckpointCommitter } = require("./game/infrastructure/checkpoint-committer");
 const GameTiming = require("./game-timing");
-const {createMatchArchive,safePublic}=require("./match-archive");
+const {createMatchArchive}=require("./match-archive");
 const {guestId,ensureGuest}=require("./guest-identity");
 const LobbyUI = require("./lobby-ui");
 const { createPracticeController } = require("./practice");
@@ -50,7 +51,8 @@ function restoreLoaded(data) {
   }
 }
 const initialState=remoteStore?null:loadState(STORE);
-const archive=createMatchArchive({remote:remoteStore,saved:initialState?.archive});
+const projections = createLegacyAuthorizedViews();
+const archive=createMatchArchive({remote:remoteStore,saved:initialState?.archive,projections});
 if (!remoteStore) restoreLoaded(Array.isArray(initialState)?initialState:initialState.rooms);
 let storageFailureAt = null;
 const committed = new WeakMap();
@@ -94,7 +96,7 @@ const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, rest
     for (const peer of peers) {
       peer.send({ type: "storage", paused: true, requiresRestart: true });
       peer.send({ type: "error", code: "STORAGE_FAILED", message: "No se pudo confirmar el guardado. La partida está pausada; reinicia el servidor y reconecta para recuperar el estado guardado." });
-      if (peer.room?.game) peer.send({ type: "state", game: { ...Engine.view(peer.room.game, peer.seat), revision: peer.room.revision || 0, storagePaused: true } });
+      if (peer.room?.game) peer.send(projections.state(peer.room, peer.seat, { storagePaused: true, includeEarlyFinish: false }));
     }
   },
 }) : null;
@@ -383,32 +385,9 @@ function watchRecording(r) {
 function queueRoomViews(r) {
   r.members.forEach((m, i) => {
     if (!m.ws || m.ws.closed) return;
-    m.ws.send({
-      type: "lobby",
-      matchId:r.matchId,
-      code: r.code,
-      seat: i,
-      token: m.ws.token || m.token,
-      host: i === (r.hostSeat ?? 0),
-      started: !!r.game,
-      practice: !!r.practice,
-      visibility: Directory.isPublic(r) ? "public" : "private",
-      maxPlayers: Directory.capacity(r), timing: GameTiming.normalize(r.timing),
-      sessionVersion: 1,
-      members: r.members.map((x, j) => ({
-        name: x.name,
-        color: x.color,
-        connected: !!x.bot || !!(x.ws && !x.ws.closed),
-        bot: !!x.bot,
-        host: j === (r.hostSeat ?? 0),
-        autopilot: !!x.autopilot,
-        reclaim: !!x.reclaim,
-        seat: j,
-      })),
-    });
+    m.ws.send(projections.lobby(r, i, { token: m.ws.token || m.token }));
     m.ws.send({ type: "storage", paused: storageFailureAt !== null, requiresRestart: !!remoteStore });
-    if (r.game) m.ws.send({ type: "state", game: { ...Engine.view(r.game, i), earlyFinish: !!r.earlyFinish,
-      revision: r.revision || 0, storagePaused: storageFailureAt !== null } });
+    if (r.game) m.ws.send(projections.state(r, i, { storagePaused: storageFailureAt !== null }));
   });
   for (const peer of peers) if (peer.watching === r) sendSpectator(peer, r);
 }
@@ -420,10 +399,8 @@ function sendSpectator(peer, r) {
   if (!Directory.isPublic(r) || !r.game) {
     peer.watching = null; peer.send({ type: "room_closed", message: "Esta partida ya no está disponible para observar." }); return;
   }
-  peer.send({ type: "lobby", code: r.code, seat: -1, spectator: true, host: false, started: true,
-    sessionVersion: 1, visibility: "public", maxPlayers: Directory.capacity(r), timing: GameTiming.normalize(r.timing),
-    members: r.members.map(m => ({ name: m.name, color: m.color, bot: !!m.bot, connected: !!m.bot || !!(m.ws && !m.ws.closed), autopilot: !!m.autopilot })) });
-  peer.send({ type: "state", game: { ...safePublic(Engine.view(r.game, -1)), revision: r.revision || 0, storagePaused: storageFailureAt !== null } });
+  peer.send(projections.lobby(r, -1));
+  peer.send(projections.state(r, -1, { storagePaused: storageFailureAt !== null }));
 }
 function deny(peer, msg, code) {
   peer.send({ type: "error", message: msg, code });
