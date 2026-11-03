@@ -251,7 +251,8 @@ contenido puede desplazarse en alturas pequeñas. Marcar/desmarcar billetes usa
 una envolvente continua; la firma conserva la secuencia de trazos original.
 
 Las cuatro métricas de cada jugador usan la vista pública del motor, incluido
-`handCount`; no se reciben manos rivales para contar cartas. `playerAvatar` y
+`handCount`; el contador propio añade los robos provisionales aún pendientes.
+No se reciben manos rivales para contar cartas. `playerAvatar` y
 los estilos comunes de `.player-avatar` mantienen las proporciones del símbolo
 en panel, historial, resultados y clasificación, aunque cambie el círculo.
 
@@ -265,11 +266,24 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 ### Respuesta provisional al robar
 
 El lobby anuncia `drawFeedbackVersion:1`. `frontend/draw-intent.js` conserva una
-elección sobre la vista pública/propia, sin modificar mano, mazos ni reglas.
-`app.js` inicia movimiento y sonido al clic; un robo oculto viaja boca abajo. La
-marca discontinua distingue una carta pendiente. Los contadores e historial
-siguen esperando el estado autorizado. Un cliente conectado a un servidor sin
-esta capacidad mantiene la animación posterior a la confirmación.
+elección sobre la vista pública/propia, sin modificar `game.hand`, mazos ni reglas.
+`renderHand` deriva una mano de presentación: suma las cartas visibles elegidas
+a su grupo y contador al clic; los robos ocultos forman un grupo de reversos sin
+color anticipado. El contador propio del panel de jugadores sigue esa presentación.
+Un punto y `aria-busy` distinguen cantidades pendientes; el historial, pagos,
+turnos y reglas consumen exclusivamente el estado autorizado. Un servidor sin
+esta capacidad conserva la animación posterior a la confirmación.
+
+El vuelo dura 180 ms (fundido de 80 ms con movimiento reducido) y termina en el
+grupo de la mano sin esperar el ACK. Si llega antes, se revela/reorienta hacia
+el color confirmado durante el mismo vuelo, sin añadir otra duración ni sonido.
+Si llega después, se sustituye el reverso en la mano directamente. Los recursos
+gráficos se precargan sin solicitar identidades futuras del mazo.
+
+La revisión y los eventos evitan contar una carta dos veces cuando el estado
+llega antes del ACK. La segunda vista previa solo permanece si puede revalidarse
+contra ese estado; renovación, cambio de turno o revisión inesperada la retiran.
+Las actualizaciones sin cambios en la mano conservan sus elementos DOM.
 
 Solo hay un comando enviado y, como máximo, una segunda elección local. No se
 encola otra carta si la primera visible es locomotora, ya se gastó un robo, no
@@ -292,6 +306,14 @@ comando enviado para recuperarlo sin robar otra carta. Resize, pestaña oculta y
 cambio de movimiento reducido cancelan geometría y elección local; conservan la
 correlación del primer comando para no repetir su efecto cuando llegue el ACK.
 La construcción de rutas conserva su comportamiento autoritativo actual.
+
+`game/queries/destination-details.js` conserva, en un `WeakMap` por partida, la
+última conectividad y resultados privados por asiento. Las claves incluyen
+identidad/extremos/longitud/propietario y orden de las vías, estaciones colocadas
+y todos los valores de los billetes. Robar cartas o actualizar relojes reutiliza
+el cálculo; construir, cambiar destinos y restaurar otro tablero lo invalidan.
+`MatchView` sigue clonando la vista autorizada, sin exponer referencias de caché.
+No cambia la persistencia ni se publica ningún estado antes del commit.
 
 ## Mapa de componentes
 

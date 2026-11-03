@@ -1,6 +1,9 @@
 "use strict";
 // Spanish source messages and their English translations. Values are never translated.
 const Translations = {
+  "Robando carta": "Drawing a card",
+  "Robando {0} carta(s)": "Drawing {0} card(s)",
+  "{0} carta(s) pendiente(s) de confirmación": "{0} card(s) awaiting confirmation",
   "La mesa cambió. Elige tu segunda carta.": "The market changed. Choose your second card.",
   "Sudamérica": "South America",
   "Pruebas": "Testing",

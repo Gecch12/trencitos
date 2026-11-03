@@ -1,7 +1,7 @@
 "use strict";
 
 // A local choice describes only information already visible to this player.
-// It never changes the hand, deck, turn or authoritative market.
+// It never changes the authoritative hand, deck, turn or market.
 const DrawIntent = (() => {
   function create(view, seat, index, limit = 2) {
     if (!view || view.phase !== "play" || view.current !== seat || view.turnWaiting ||
@@ -40,6 +40,18 @@ const DrawIntent = (() => {
     const next = create(view, first.seat, index, first.limit);
     return next && next.color === queued.color ? next : null;
   }
-  return { create, canQueue, confirmedEvent, rebase };
+  // Present choices only while their source snapshot is valid. A state can arrive
+  // before its ACK: stop adding the first card as soon as that state includes it,
+  // and retain the second preview only if its original slot still survives.
+  function pending(view, first, queued) {
+    if (!first || !view || view.phase !== 'play' || view.current !== first.seat ||
+        view.turnSerial !== first.turnSerial || view.turnWaiting) return [];
+    if (view.revision === first.revision)
+      return [first, ...(queued && canQueue(first, view, queued.index) ? [queued] : [])];
+    const event = view.events?.find(e => e.id > first.eventFloor && e.type === 'draw' &&
+      e.seat === first.seat && e.index === first.index);
+    return queued && event && rebase(first, queued, view, event.id) ? [queued] : [];
+  }
+  return { create, canQueue, confirmedEvent, rebase, pending };
 })();
 if (typeof module !== "undefined" && module.exports) module.exports = DrawIntent;

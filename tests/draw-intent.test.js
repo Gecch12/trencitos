@@ -34,3 +34,15 @@ test('depletion rebases the same untouched slot; renewal, another revision and a
   assert.equal(Draw.rebase(first,queued,after,99),null);
   assert.equal(Draw.rebase(first,queued,{...after,events:[{id:1,type:'draw',seat:1,index:0}]},1),null);
 });
+test('hand previews contain only known colors or unknown backs, never double count a confirmed state', () => {
+  const game=view(), first=Draw.create(game,0,0), queued=Draw.create(game,0,-1);
+  const before=structuredClone(game);
+  assert.deepEqual(Draw.pending(game,first,queued).map(i=>i.color),['red',null]);
+  const after=next(first,{face:['orange','red','blue','wild','green']});
+  assert.deepEqual(Draw.pending(after,first,queued),[queued],'state arrives before ACK');
+  assert.deepEqual(Draw.pending(after,first,null),[]);
+  for(const changed of [{revision:12},{turnSerial:8},{current:1},{turnWaiting:true},{phase:'finished'},
+    {events:[...after.events,{id:2,type:'market_refresh'}]}, {events:[]}])
+    assert.deepEqual(Draw.pending({...after,...changed},first,queued),[]);
+  assert.deepEqual(game,before);
+});

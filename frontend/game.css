@@ -232,7 +232,8 @@ body.is-playing {
 .draw-flight-face { position: absolute; inset: 0; transform-style: preserve-3d; }
 .draw-flight img { width: 100%; height: 100%; position: absolute; inset: 0; border-radius: 7px; backface-visibility: hidden; box-shadow: 0 5px 12px #102d3938; }
 .draw-flight .draw-flight-front { transform: rotateY(180deg); }
-.draw-flight-pending img { outline: 2px dashed #b89c62; outline-offset: 3px; }
+.game .hand .traincard.is-pending .cardcount { border-color: #bd995c; }
+.game .hand .traincard.is-pending::after { content: ""; position: absolute; right: 5px; bottom: 5px; width: 7px; height: 7px; border-radius: 50%; background: #e5bf73; box-shadow: 0 0 0 2px #fffaf0; }
 .game #market .draw-reserved { opacity: .25; }
 .game .map-menu {
   position: absolute; z-index: 6; width: 270px; padding: 16px;

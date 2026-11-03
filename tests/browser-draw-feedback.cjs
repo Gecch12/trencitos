@@ -36,12 +36,17 @@ async function open(code,options={}){
  await page.waitForFunction(()=>game?.phase==='play'&&!!board3D);await page.evaluate(()=>document.fonts.ready);await app.drain();
  if(options.mobile)await page.locator('[data-panel="cards"]').click();
  await page.evaluate(()=>{
-  window.drawAudit={sent:[],clicks:[],flights:[],sounds:[],acks:[]};
+  window.drawAudit={sent:[],clicks:[],flights:[],sounds:[],acks:[],handFrames:[],states:[]};
   sock.addEventListener('message',event=>{const value=JSON.parse(event.data);for(const m of value.type==='batch'?value.messages:[value])
     if(m.type==='ack')drawAudit.acks.push({id:m.id,at:performance.now()});});
   const send=sock.send.bind(sock);sock.send=data=>{const m=JSON.parse(data);if(m.type==='action')drawAudit.sent.push({...m,at:performance.now()});send(data);};
   const sound=playSound;playSound=kind=>{drawAudit.sounds.push(kind);sound(kind);};
-  document.addEventListener('click',event=>{if(event.target.closest('#market button'))drawAudit.clicks.push(performance.now());},true);
+  document.addEventListener('click',event=>{if(event.target.closest('#market button')){
+   const index=drawAudit.clicks.push(performance.now())-1;
+   requestAnimationFrame(()=>drawAudit.handFrames.push({index,at:performance.now(),
+    count:Number(document.getElementById('handCount').textContent.match(/\d+/)[0]),
+    groups:[...document.querySelectorAll('#hand .traincard')].map(card=>({color:card.className.match(/suit-(\w+)/)[1],count:Number(card.querySelector('.cardcount').textContent.replace(/\D/g,''))}))}));
+  }},true);
   new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes){
    if(node.classList?.contains('draw-flight')){
     const sample={at:performance.now(),src:node.querySelector('img')?.getAttribute('src'),pending:node.classList.contains('draw-flight-pending')};
@@ -59,11 +64,20 @@ async function clicks(f,first,second){
  assert.equal(await f.page.evaluate(()=>game.hand.length),f.before,'unconfirmed hand is unchanged');
  assert.equal(api.state.rooms.find(r=>r.code===f.room.code).game.players[0].hand.length,f.before,'no premature durable change');
  assert.equal(await f.page.evaluate(()=>drawAudit.sent.length),1,'only first command crosses the socket');
- assert.equal(await f.page.locator('.draw-flight-pending').count(),second===undefined?1:2);
+ const choices=[first,...(second===undefined?[]:[second])];
+ assert.equal(await f.page.locator('.draw-flight').count(),0,'pickup ends without waiting for persistence');
+ assert.equal(await f.page.locator('#handCount').innerText(),`${f.before+choices.length} cartas`);
+ assert.equal(await f.page.locator('#hand').getAttribute('aria-busy'),'true');
+ const {hand,face}=await f.page.evaluate(()=>({hand:game.hand,face:game.face}));
+ const expected={};for(const color of [...hand,...choices.map(i=>i<0?'back':face[i])])expected[color]=(expected[color]||0)+1;
+ const actual=await f.page.locator('#hand .traincard').evaluateAll(nodes=>Object.fromEntries(nodes.map(n=>[n.className.match(/suit-(\w+)/)[1],Number(n.querySelector('.cardcount').textContent.replace(/\D/g,''))])));
+ assert.deepEqual(actual,Object.fromEntries(Object.entries(expected).filter(([,count])=>count>0)),'visible cards join the correct hand group; hidden draws remain backs');
  const audit=await f.page.evaluate(()=>drawAudit);
  for(let i=0;i<audit.clicks.length;i++){
-  const timing={case:f.room.code,click:i,feedbackMs:audit.flights[i].at-audit.clicks[i],frameMs:audit.flights[i].frameAt-audit.clicks[i]};
-  report.timings.push(timing);assert.ok(timing.feedbackMs<50,JSON.stringify(timing));
+  const hand=audit.handFrames.find(frame=>frame.index===i);
+  const timing={case:f.room.code,click:i,feedbackMs:audit.flights[i].at-audit.clicks[i],frameMs:audit.flights[i].frameAt-audit.clicks[i],handFrameMs:hand.at-audit.clicks[i]};
+  report.timings.push(timing);assert.ok(timing.feedbackMs<100&&timing.handFrameMs<100,JSON.stringify(timing));
+  assert.ok(hand.count>=f.before+i+1&&hand.count<=f.before+choices.length,'first painted frame already contains the pending hand');
  }
 }
 async function done(f,count){
@@ -72,6 +86,9 @@ async function done(f,count){
  await f.page.waitForFunction(()=>cardFlights.size===0);await app.drain();
  assert.equal(f.room.game.players[0].hand.length,f.before+count);
  assert.equal(api.state.rooms.find(r=>r.code===f.room.code).game.players[0].hand.length,f.before+count);
+ assert.equal(await f.page.locator('#handCount').innerText(),`${f.before+count} cartas`);
+ assert.equal(await f.page.locator('#hand .is-pending').count(),0);
+ assert.equal(await f.page.locator('#hand .suit-back').count(),0);
  const audit=await f.page.evaluate(()=>drawAudit);
  for(let i=0;i<audit.sent.length;i++){
   const ack=audit.acks.find(a=>a.id===audit.sent[i].id),timing=report.timings.find(t=>t.case===f.room.code&&t.click===i);
@@ -84,7 +101,8 @@ async function close(f){await f.context.close();f.rival.close();await app.drain(
  browser=await chromium.launch({channel:'chrome',headless:true,args:process.env.CI?['--enable-unsafe-swiftshader']:[]});
  {
   const f=await open('QADR01');await clicks(f,-1,-1);
-  assert.ok((await f.page.locator('.draw-flight img').evaluateAll(images=>images.map(i=>i.src))).every(src=>src.endsWith('/back.svg')));
+  assert.equal(await f.page.locator('#hand .suit-back .cardcount').textContent(),'×2');
+  assert.ok((await f.page.evaluate(()=>drawAudit.flights)).every(f=>f.src.endsWith('/back.svg')));
   await f.page.evaluate(()=>act('draw_train',{index:-1}));
   assert.equal(await f.page.evaluate(()=>drawAudit.sent.length),1);
   await f.page.screenshot({path:path.join(out,'pending-desktop.png'),animations:'allow'});
@@ -96,7 +114,9 @@ async function close(f){await f.context.close();f.rival.close();await app.drain(
   report.checks.push('Blind double click: immediate backs, bounded queue, two durable draws, no duplicate flights/sounds or rival disclosure');await close(f);
  }
  {
-  const f=await open('QADR02');await clicks(f,0,1);await done(f,2);
+  const f=await open('QADR02');await clicks(f,0,1);
+  await f.page.screenshot({path:path.join(out,'pending-visible-desktop.png'),animations:'allow'});
+  await done(f,2);
   assert.deepEqual(await f.page.evaluate(()=>drawAudit.sent.map(m=>m.action.index)),[0,1]);
   assert.equal(f.room.game.players[0].hand.slice(-2).join(','),'red,red');
   assert.equal(await f.page.evaluate(()=>drawAudit.flights.length),2);await close(f);
@@ -124,6 +144,7 @@ async function close(f){await f.context.close();f.rival.close();await app.drain(
  {
   const f=await open('QADR06');await clicks(f,-1,1);
   await f.page.evaluate(()=>sock.close());await f.page.waitForFunction(()=>sock.readyState===WebSocket.CLOSED);
+  assert.equal(await f.page.locator('#handCount').innerText(),`${f.before} cartas`);
   release();release=null;
   await f.page.waitForFunction(n=>sock.readyState===WebSocket.OPEN&&!pendingAction&&game.hand.length===n,f.before+1);
   await app.drain();assert.equal(f.room.game.players[0].hand.length,f.before+1);
@@ -133,15 +154,61 @@ async function close(f){await f.context.close();f.rival.close();await app.drain(
  }
  {
   const f=await open('QADR07',{mobile:true,reduced:true});await clicks(f,0,2);
-  const bounds=await f.page.locator('.draw-flight').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom};}));
+  const bounds=await f.page.locator('#hand .traincard').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom};}));
   assert.ok(bounds.every(r=>r.x>=0&&r.y>=0&&r.right<=390&&r.bottom<=844),JSON.stringify(bounds));
   await f.page.screenshot({path:path.join(out,'pending-mobile-reduced.png'),animations:'allow'});
   await done(f,2);assert.equal(await f.page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await close(f);
   report.checks.push('390px mobile and reduced motion preserve pending/confirmed semantics without overflow');
  }
  {
+  const f=await open('QADR11');
+  await f.page.evaluate(()=>{
+   const receive=sock.onmessage;
+   sock.onmessage=event=>{
+    const value=JSON.parse(event.data),messages=value.type==='batch'?value.messages:[value];
+    for(const message of messages){
+     const single={data:JSON.stringify(message)};
+     if(message.type==='ack')setTimeout(()=>receive(single),180);
+     else {receive(single);if(message.type==='state')drawAudit.states.push({hand:game.hand.length,count:document.getElementById('handCount').textContent});}
+    }
+   };
+  });
+  await clicks(f,0,1);await done(f,2);
+  const states=await f.page.evaluate(()=>drawAudit.states);
+  assert.ok(states.some(s=>s.hand===f.before+1));
+  assert.ok(states.every(s=>s.count===`${f.before+2} cartas`),'state before ACK neither doubles the first card nor drops the queued preview');
+  await close(f);report.checks.push('Delayed ACK keeps the same two-card hand through both authoritative states, without double counting');
+ }
+ {
+  const f=await open('QADR12');
+  await f.page.evaluate(()=>{
+   const receive=sock.onmessage;let ack;
+   window.releaseDrawAck=()=>receive({data:JSON.stringify(ack)});
+   sock.onmessage=event=>{
+    const value=JSON.parse(event.data);
+    for(const m of value.type==='batch'?value.messages:[value]){
+     if(m.type==='ack')ack=m;
+     else {receive({data:JSON.stringify(m)});if(m.type==='state')drawAudit.revealImages=[...document.querySelectorAll('.draw-flight img')].map(img=>img.getAttribute('src'));}
+    }
+   };
+  });
+  await f.page.locator('#drawblind').click();
+  await f.page.waitForFunction(n=>pendingAction&&game.hand.length===n,f.before+1);
+  assert.equal(await f.page.locator('#hand .suit-back').count(),0);
+  assert.equal(await f.page.locator('#hand .suit-orange .cardcount').textContent(),'×2');
+  assert.ok((await f.page.evaluate(()=>drawAudit.revealImages)).every(src=>src.endsWith('/orange.svg')),'authoritative state reveals even an in-flight back without waiting for ACK');
+  await f.page.evaluate(()=>releaseDrawAck());
+  await f.page.waitForFunction(()=>!pendingAction);
+  await f.page.waitForFunction(()=>cardFlights.size===0);
+  assert.equal(await f.page.evaluate(()=>drawAudit.sounds.filter(s=>s==='card').length),1);
+  await close(f);report.checks.push('Fast blind reveal joins its actual color group without an extra animation or sound');
+ }
+ {
   const f=await open('QADR08');await clicks(f,-1,1);
-  await f.page.setViewportSize({width:1100,height:850});release();release=null;
+  await f.page.setViewportSize({width:1100,height:850});
+  await f.page.waitForFunction(()=>queuedDraw===null);
+  assert.equal(await f.page.locator('#handCount').innerText(),`${f.before+1} cartas`);
+  release();release=null;
   await f.page.waitForFunction(n=>!pendingAction&&game.hand.length===n,f.before+1);
   assert.equal(await f.page.evaluate(()=>queuedDraw),null);assert.equal(await f.page.locator('.draw-flight').count(),0);await close(f);
   report.checks.push('Resize cancels provisional geometry and unsent choice without replaying the confirmed flight');
@@ -159,6 +226,8 @@ async function close(f){await f.context.close();f.rival.close();await app.drain(
   const f=await open('QADR09');await clicks(f,-1,1);api.fail=true;release();release=null;
   await f.page.waitForFunction(()=>storagePaused&&!pendingAction);
   assert.equal(await f.page.evaluate(()=>game.hand.length),f.before);assert.equal(await f.page.locator('.draw-flight').count(),0);
+  assert.equal(await f.page.locator('#handCount').innerText(),`${f.before} cartas`);
+  assert.equal(await f.page.locator('#hand .is-pending').count(),0);
   assert.equal(await f.page.evaluate(()=>queuedDraw),null);assert.equal(await f.page.locator('#drawblind').isDisabled(),true);
   api.fail=false;await close(f);report.checks.push('Failed remote commit removes previews, rolls back hand and keeps play paused');
  }

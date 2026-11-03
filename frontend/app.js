@@ -12,6 +12,8 @@ const N = {
   purple: I18n.t("Morado"),
   wild: I18n.t("Locomotora"),
 };
+// Cache artwork, never the hidden deck order. Revealing a draw needs no new asset.
+for (const color of [...Object.keys(N), "back"]) { const image = new Image(); image.src = `assets/cards/${color}.svg`; }
 let sock = null,
   game = null,
   seat = -1,
@@ -481,6 +483,7 @@ function connect() {
       selected = null;
       stationCity = null;
       render();
+      revealPendingDraw();
       if (game.phase === "finished") cancelCardFlights();
       playEffects(effects);
       return;
@@ -715,7 +718,8 @@ function act(type, other = {}, preparedDraw = null) {
     if (type === "draw_train" && pendingDraw && !queuedDraw &&
         DrawIntent.canQueue(pendingDraw.intent, game, other.index)) {
       queuedDraw = { intent: DrawIntent.create(game, seat, other.index, gameRules.trainCards.drawsPerTurn) };
-      queuedDraw.flight = startDrawFeedback(queuedDraw.intent, true);
+      renderHand();
+      queuedDraw.flight = startDrawFeedback(queuedDraw.intent);
       renderMarket();
     }
     return;
@@ -727,7 +731,9 @@ function act(type, other = {}, preparedDraw = null) {
   if (type === "draw_train" && drawFeedbackSupported) {
     const intent = DrawIntent.create(game, seat, other.index, gameRules.trainCards.drawsPerTurn);
     if (!intent) return;
-    pendingDraw = { intent, id, flight: preparedDraw?.flight || startDrawFeedback(intent) };
+    pendingDraw = { intent, id, flight: preparedDraw?.flight || null };
+    renderHand();
+    if (!preparedDraw) pendingDraw.flight = startDrawFeedback(intent);
   }
   pendingAction = { type: "action", id, revision: game.revision, action: { type, ...other } };
   document.body.classList.add("is-confirming-action");
@@ -767,6 +773,57 @@ function colorCard(c, count, click, disabled) {
     b.onclick = click;
   }
   return b;
+}
+function pendingHandDraws() {
+  return DrawIntent.pending(game, pendingDraw?.intent, queuedDraw?.intent);
+}
+function displayedHandCount(index) {
+  return index === seat ? game.hand.length + pendingHandDraws().length : game.players[index].handCount;
+}
+function renderHand() {
+  if (!game) return;
+  const pending = pendingHandDraws(), colors = [...gameRules.colors, "wild", "back"];
+  const groups = colors.map(color => ({ color,
+    confirmed: game.hand.filter(c => c === color).length,
+    pending: pending.filter(draw => (draw.color || "back") === color).length,
+  }));
+  const hand = $("hand"), key = JSON.stringify([I18n.language, groups]);
+  if (hand._cardsKey !== key) {
+    hand._cardsKey = key;
+    hand.replaceChildren();
+    for (const group of groups) {
+      const count = group.confirmed + group.pending;
+      if (!count) continue;
+      const card = colorCard(group.color, count, null, false);
+      if (group.color === "back") {
+        card.querySelector("img").alt = I18n.t("Robando carta");
+        card.setAttribute("aria-label", I18n.t`Robando ${count} carta(s)`);
+        card.title = card.getAttribute("aria-label");
+      }
+      card.classList.toggle("is-pending", group.pending > 0);
+      if (group.pending) {
+        card.setAttribute("aria-busy", "true");
+        const label = I18n.t`${group.pending} carta(s) pendiente(s) de confirmación`;
+        card.title = `${card.title} · ${label}`;
+        card.setAttribute("aria-label", `${card.getAttribute("aria-label")} · ${label}`);
+      }
+      hand.appendChild(card);
+    }
+    if (!hand.children.length) hand.innerHTML = I18n.t('<span class="smallmuted">Aún no tienes cartas de tren.</span>');
+  }
+  const count = game.hand.length + pending.length;
+  $("handCount").textContent = I18n.t`${count} cartas`;
+  hand.setAttribute("aria-busy", String(pending.length > 0));
+  const ownMetric = $("scores").querySelector(`[data-player="${seat}"] [data-metric="cards"]`);
+  if (ownMetric) {
+    const label = `${I18n.t("Cartas en mano")}: ${count}`;
+    ownMetric.querySelector("strong").textContent = count;
+    ownMetric.title = label; ownMetric.setAttribute("aria-label", label);
+    const player = game.players[seat];
+    ownMetric.closest("[data-player]").setAttribute("aria-label", I18n.t`${player.name}. ${game.result?.find(r => r.seat === seat)?.score ?? player.score} puntos, ${count} cartas, ${player.trains} vagones, ${player.stations} estaciones. Enfoca para resaltar sus rutas.`);
+  }
+  layoutHand();
+  updateCompactPlayer();
 }
 function playerAvatar(index, compact = false) {
   const member = members[index];
@@ -826,13 +883,7 @@ function render() {
   $("initialStatusText").textContent = I18n.t`${game.initialReadyCount}/${game.players.length} listos · ${game.players[seat]?.initialReady ? I18n.t("Puedes explorar el mapa mientras esperas") : I18n.t("Todos eligen a la vez")}`;
   $("viewResults").classList.toggle("hidden", game.phase !== "finished");
   if (game.phase === "closing") $("roundStatus").innerHTML = I18n.t('Últimos billetes <span data-clock="closing"></span>');
-  $("hand").innerHTML = "";
-  for (const c of [...gameRules.colors, "wild"]) {
-    let n = game.hand.filter((x) => x === c).length;
-    if (n) $("hand").appendChild(colorCard(c, n, null, false));
-  }
-  if (!game.hand.length) $("hand").innerHTML = I18n.t('<span class="smallmuted">Aún no tienes cartas de tren.</span>');
-  $("handCount").textContent = I18n.t`${game.hand.length} cartas`;
+  renderHand();
   $("ticketTotal").textContent = game.tickets.length;
   renderDestinations();
   layoutHand();
@@ -1234,40 +1285,59 @@ function cancelDrawFeedback(preservePending = false) {
   queuedDraw = null;
   if (preservePending && pendingDraw) pendingDraw.flight = null;
   else { pendingDraw = null; deferredDrawEffects = []; }
+  renderHand();
 }
-function startDrawFeedback(intent, queued = false) {
+function startDrawFeedback(intent) {
   const source = intent.index < 0 ? $("drawblind") : $("market").querySelector(`[data-market-index="${intent.index}"]`);
   const start = source?.getBoundingClientRect(), hand = $("hand").getBoundingClientRect();
   if (!start?.width || document.hidden) return null;
   const node = document.createElement("div"), face = document.createElement("div"), img = document.createElement("img");
-  node.className = "draw-flight draw-flight-pending";
+  node.className = "draw-flight";
   node.setAttribute("aria-hidden", "true");
   Object.assign(node.style, { left: `${start.x}px`, top: `${start.y}px`, width: `${start.width}px`, height: `${start.height}px` });
   face.className = "draw-flight-face";img.src = `assets/cards/${intent.color || "back"}.svg`;img.alt = "";
   face.appendChild(img);node.appendChild(face);document.body.appendChild(node);
-  const target = hand.width ? hand : $("handCount").getBoundingClientRect();
-  const dx = target.x + target.width / 2 + (queued ? 20 : -20) - start.x - start.width / 2;
+  const card = $("hand").querySelector(`.suit-${intent.color || "back"}`)?.getBoundingClientRect();
+  const target = card?.width ? card : hand.width ? hand : $("handCount").getBoundingClientRect();
+  const dx = target.x + target.width / 2 - start.x - start.width / 2;
   const dy = target.y + target.height / 2 - start.y - start.height / 2;
-  const transform = `translate(${dx}px,${dy}px) scale(.65)`;
+  const transform = `translate(${dx}px,${dy}px) scale(${card?.width ? card.width / start.width : .65})`;
   const motion = reducedMotion.matches
-    ? node.animate([{ opacity: .6 }, { opacity: 1 }], { duration: 80, fill: "forwards" })
-    : node.animate([{ transform: "translate(0,0) scale(1)" }, { transform }],
-      { duration: 320, easing: "cubic-bezier(.22,.65,.28,1)", fill: "forwards" });
+    ? node.animate([{ opacity: .5 }, { opacity: 0 }], { duration: 80, fill: "forwards" })
+    : node.animate([{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform, opacity: 0 }],
+      { duration: 180, easing: "cubic-bezier(.22,.65,.28,1)", fill: "forwards" });
   if (reducedMotion.matches) node.style.transform = transform;
-  const flight = { node, img, animations: [motion], motion };cardFlights.add(flight);
+  const flight = { node, img, animations: [motion], motion, started: performance.now() };cardFlights.add(flight);
+  motion.finished.then(() => removeCardFlight(flight)).catch(() => {});
   // The acknowledgement is deliberately silent: this is the single pick-up sound.
   playSound("card");
   return flight;
 }
 function landDrawFeedback(flight, event) {
   if (!flight || !cardFlights.has(flight)) return;
-  flight.node.classList.remove("draw-flight-pending");
   if (N[event.color]) flight.img.src = `assets/cards/${event.color}.svg`;
-  flight.motion.finished.then(() => {
-    if (!cardFlights.has(flight)) return;
-    const fade = flight.node.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, fill: "forwards" });
-    flight.animations.push(fade);fade.onfinish = () => removeCardFlight(flight);
-  }).catch(() => {}); // Resize, navigation and disconnect cancel the visual only.
+  if (reducedMotion.matches) return;
+  const target = $("hand").querySelector(`.suit-${event.color}`)?.getBoundingClientRect();
+  if (!target?.width) return;
+  const node = flight.node, style = getComputedStyle(node), from = style.transform, opacity = style.opacity;
+  const width = parseFloat(node.style.width), height = parseFloat(node.style.height);
+  const dx = target.x + target.width / 2 - parseFloat(node.style.left) - width / 2;
+  const dy = target.y + target.height / 2 - parseFloat(node.style.top) - height / 2;
+  flight.motion.cancel();
+  const motion = node.animate([{ transform: from, opacity },
+    { transform: `translate(${dx}px,${dy}px) scale(${target.width / width})`, opacity: 0 }],
+    { duration: Math.max(0, 180 - (performance.now() - flight.started)), easing: "ease-out", fill: "forwards" });
+  flight.motion = motion; flight.animations.push(motion);
+  motion.finished.then(() => removeCardFlight(flight)).catch(() => {});
+}
+function revealPendingDraw() {
+  if (!pendingDraw) return;
+  const intent = pendingDraw.intent;
+  const event = game.events?.find(e => e.type === "draw" && e.id > intent.eventFloor &&
+    e.seat === intent.seat && e.index === intent.index);
+  if (!event || pendingDraw.revealedEventId === event.id) return;
+  pendingDraw.revealedEventId = event.id;
+  landDrawFeedback(pendingDraw.flight, event);
 }
 function confirmDrawFeedback(ack) {
   if (!pendingDraw || pendingDraw.id !== ack.id) return;
@@ -1275,9 +1345,10 @@ function confirmDrawFeedback(ack) {
   const event = DrawIntent.confirmedEvent(first.intent, game, ack.drawEventId);
   const next = queued && DrawIntent.rebase(first.intent, queued.intent, game, ack.drawEventId);
   const deferred = deferredDrawEffects;deferredDrawEffects = [];pendingDraw = null;
-  if (event) landDrawFeedback(first.flight, event);else removeCardFlight(first.flight);
+  if (event) { if (first.revealedEventId !== event.id) landDrawFeedback(first.flight, event); }
+  else removeCardFlight(first.flight);
   playEffects(deferred.filter(e => e.id !== event?.id));
-  if (!queued) return;
+  if (!queued) { renderHand(); return; }
   const epoch = drawFeedbackEpoch, revision = game.revision;
   queueMicrotask(() => {
     if (epoch !== drawFeedbackEpoch || queuedDraw !== queued) return;
@@ -1288,6 +1359,7 @@ function confirmDrawFeedback(ack) {
       removeCardFlight(queued.flight);
       toast(I18n.t("La mesa cambió. Elige tu segunda carta."));
       renderMarket();
+      renderHand();
     }
   });
 }
@@ -2901,7 +2973,7 @@ function updateCompactStatus() {
 function updateCompactPlayer() {
   const player = game?.players[compactPlayer], detail = $("compactPlayerDetail");
   detail.classList.toggle("hidden", !player || !compactMedia.matches);
-  if (player) detail.querySelector("span").textContent = I18n.t`${player.name}${compactPlayer === seat ? I18n.t(" · Tú") : ""} — ${game.result?.find(r => r.seat === compactPlayer)?.score ?? player.score} puntos · ${player.handCount ?? "—"} cartas · ${player.trains} vagones · ${player.stations} estaciones${members[compactPlayer]?.autopilot ? I18n.t(" · Bot de reemplazo") : ""}`;
+  if (player) detail.querySelector("span").textContent = I18n.t`${player.name}${compactPlayer === seat ? I18n.t(" · Tú") : ""} — ${game.result?.find(r => r.seat === compactPlayer)?.score ?? player.score} puntos · ${displayedHandCount(compactPlayer) ?? "—"} cartas · ${player.trains} vagones · ${player.stations} estaciones${members[compactPlayer]?.autopilot ? I18n.t(" · Bot de reemplazo") : ""}`;
 }
 $("compactPlayerDetail").querySelector("button").onclick = () => { compactPlayer = null; updateCompactPlayer(); };
 for (const button of document.querySelectorAll("[data-panel]")) button.onclick = () => setCompactPanel(compactPanel === button.dataset.panel ? "map" : button.dataset.panel);

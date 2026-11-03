@@ -88,7 +88,7 @@ Las pruebas automáticas usan una simulación de la Data API; estos pasos valida
 
 1. Abre `https://TU-SERVICIO.onrender.com/healthz`. Debe devolver 200 y `{"ok":true,"storage":"supabase",…}`.
 2. En dos navegadores crea y comienza una sala **normal**, no una sala de pruebas. Conserva los enlaces privados de recuperación.
-3. Elige destinos y roba una carta. Comprueba que el contador de mano aumenta después de confirmarse.
+3. Elige destinos y roba una carta. Comprueba que la mano y su contador responden desde el clic: color conocido o reverso provisional. Tras confirmarse, el reverso revela el color y la cantidad no vuelve a incrementarse; un rechazo retira la incorporación provisional.
 4. Desde Supabase, verifica que `ferrovia_checkpoint.version` aumenta. No compartas el contenido de `rooms`: incluye manos, mazo y destinos secretos.
 5. Reinicia manualmente el servicio en Render. Reconecta los navegadores dentro de los 60 segundos posteriores al arranque: mismo código, puesto, mano, rutas y elección pendiente. Los contadores conservan el tiempo pendiente, descontando el tiempo jugado, no el de caída.
 6. Repite con dos o tres salas simultáneas. Las salas con bots de práctica son efímeras intencionalmente y no sirven para probar persistencia.

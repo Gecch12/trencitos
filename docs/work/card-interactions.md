@@ -1,5 +1,5 @@
 ---
-{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"released","updated":"2026-11-03"}
+{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
 ---
 # Cartas, pagos y limpieza de la interfaz
 
@@ -44,9 +44,42 @@ pendientes de resultados/avatar, además de las cinco propuestas sobre cartas.
 
 ## Siguiente paso
 
-Medir respuesta inmediata en un navegador de producción. El cambio está
-publicado y su protocolo/recursos fueron verificados; esa comprobación no mide
-la latencia real del clic. El servidor local habitual sigue sin reiniciar.
+Publicar la mano provisional y medir su respuesta real. Ángel autorizó subirla
+a producción. Esta ampliación está validada en `main`; falta CI y publicación en Render.
+La respuesta de vuelo anterior sí está publicada, como registra su entrega abajo.
+
+## Incorporación inmediata a la mano · 2026-11-03
+
+Ampliación aprobada con «implementa» tras comparar la experiencia con Fortnite.
+El criterio pasa de inicio del vuelo a carta/cantidad presentes en la mano.
+
+- [x] Carta visible sumada provisionalmente a su grupo y contador desde el clic;
+  hasta dos elecciones, incluidos dos colores iguales y grupos nuevos.
+- [x] Robo oculto representado con reverso en la mano; el servidor revela el
+  color después del guardado. Vuelo de 180 ms, sin quedarse suspendido.
+- [x] Estado antes del ACK, renovación, agotamiento, rechazo, desconexión,
+  resize, fallo de almacenamiento, móvil y movimiento reducido sin duplicados.
+- [x] Consultas de destinos reutilizadas mientras vías, estaciones y billetes
+  no cambien. Estado autoritativo, permisos, recibos y commit conservados.
+- [x] Chrome: doce recorridos, veinte clics con guardado retenido; mano presente
+  en el primer rAF entre 12,3 y 51,5 ms. Las confirmaciones aceptadas de esos
+  recorridos llegan entre 523,9 y 702,9 ms por la espera impuesta y el conductor.
+  No son mediciones de Render ni tiempos físicos de pantalla.
+- [x] Suite amplia: 645/645 pruebas en 160,5 s; documentación y diff correctos.
+- [x] Regresión `browser-card-ui.cjs`: actor/rival/espectador, renovación,
+  pagos, móvil y traducción; sin errores de navegador. La última comprobación
+  de feedback retiene el ACK y verifica que el estado ya revele la carta.
+- [ ] Publicar esta ampliación y medir clic → mano/color en producción.
+
+Evidencia local en `.qa/draw-feedback/report.json`, `pending-visible-desktop.png`,
+`pending-desktop.png` y `pending-mobile-reduced.png`. Comparación CPU en
+`connectivity-benchmark.json`: tablero sintético europeo de cinco jugadores y
+tres estaciones por jugador, 60 muestras de seis vistas autorizadas, mediana
+3,52 → 0,65 ms (p95 3,87 → 0,76 ms), con vistas idénticas. No mide SQL ni red.
+Los 42 tests dirigidos de intención, caché, vistas, mapas e historial pasaron.
+Suite completa en `.qa/draw-feedback/node-tests.txt`; regresión visual en
+`card-ui-tests.txt` y recorrido final en `browser-tests.txt`, en la misma carpeta.
+El servidor habitual y las partidas de producción permanecen sin reiniciar.
 
 ## Respuesta inmediata al clic · 2026-11-03
 

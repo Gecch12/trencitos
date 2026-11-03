@@ -15,6 +15,7 @@ const LegacyScoring=require('../game/compat/legacy-scoring');
 const TrainCards=require('../game/domain/train-cards');
 const LegacyTiming=require('../game/compat/legacy-timing');
 const MatchView=require('../game/queries/match-view');
+const {createDestinationDetails}=require('../game/queries/destination-details');
 const {projectDefinition}=require('../game/queries/match-definition');
 const {historyEntries,historyEntryView}=MatchView;
 const {legacyError}=require('../game/compat/legacy-errors');
@@ -294,7 +295,7 @@ function finish(g,force=false,{random=randomFor(g)}={}){
  g.phase='finished';const {map,owners}=LegacyScoring.projectBoard(g),state={owners,players:g.players.map(LegacyScoring.projectPlayer)};
  g.result=Scoring.scoreMatch(state,{map,rules:rulesFor(g).scoring}).map(result=>LegacyScoring.legacyResult(result,g.players[result.seat]));
  note(g,'Partida finalizada. ¡Resultados calculados!')}
-function destinationDetails(g,seat,assignment){const {map,owners}=LegacyScoring.projectBoard(g);return Scoring.destinationDetails({...LegacyScoring.projectPlayer(g.players[seat]),seat,owners},{map},assignment)}
+const destinationDetails=createDestinationDetails();
 function view(g,seat,{now=Date.now()}={}){
  const context=contextFor(g);
  return MatchView.projectMatch(g,seat,{now,tunnelCardMs:context.rules.tunnel.cardMs,destinationDetails,
