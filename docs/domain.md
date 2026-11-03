@@ -145,7 +145,8 @@ la última. Congela el tiempo restante del constructor; la decisión lo reanuda.
 Solo el constructor puede pagar/desistir. El resultado se mantiene 3000 ms antes
 de avanzar turno o calcular el cierre final. Durante todo el intento compartido se congelan
 ofertas de destinos y se rechazan sus confirmaciones; al terminar el intento recuperan el
-tiempo restante. Ocultar el modal como observador no altera esos plazos. Bots y humanos cumplen la misma secuencia. Las cartas reveladas,
+tiempo restante. Que los observadores sigan el intento desde el tablero sin modal
+no altera esos plazos. Bots y humanos cumplen la misma secuencia. Las cartas reveladas,
 ruta, color usado y suplemento son públicos. Desde UI 8 también se publica la
 composición de la base comprometida y, solo al construir, el extra efectivamente
 pagado. El resto de la mano y las opciones de pago son privados. El resultado

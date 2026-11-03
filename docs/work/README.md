@@ -58,3 +58,4 @@ entonces usa `parent` y `depends_on`, según [el método](../maintenance.md).
 
 - [Historial completo, H y puntos propios](match-history-progress.md).
 - [Foco temporal, replay transparente y reinicio de partidas](replay-transparency-reset.md).
+- [Replay ligero con la vista y animaciones de la partida](replay-experience.md).

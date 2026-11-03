@@ -1,5 +1,5 @@
 ---
-{"id":"destination-map-tunnels","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-03"}
+{"id":"destination-map-tunnels","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
 ---
 # Mapas de billetes en vivo y túneles sobre el tablero
 
@@ -102,3 +102,87 @@ y el reinicio de servidores con partidas activas quedan fuera de este alcance.
 La implementación de esta ficha quedó publicada en `ef65487`, Live en Render
 tras CI aprobado. El alcance publicado, las comprobaciones de producción y
 sus límites están en [Producción](../production.md).
+
+## Modal exclusivo del constructor · 2026-11-03
+
+Ángel aprobó tras Moti que los demás jugadores y espectadores sigan los túneles
+desde el tablero. Esta revisión sustituye la apertura compartida y el regreso
+opcional descritos en la entrega anterior. El modal conserva revelación,
+decisión privada y resultado solo para el constructor humano que tiene el control.
+
+- [x] Eliminar apertura automática y botón «Ver túnel» para observadores.
+- [x] Conservar cartas, iluminación, aviso del tablero e historial público.
+- [x] Proteger ambos puntos de apertura del modal, incluidos bots de reemplazo
+  y replay; mantener los diálogos opcionales y los tiempos del servidor.
+- [x] Verificar todos los desenlaces, roles, reconexión, bots y dispositivos.
+
+Validación de esta revisión:
+
+- `node --test tests/turn-tunnel-ui.test.js tests/shared-tunnel.test.js
+  tests/presentation-controls.test.js`: **31/31**. Incluye guardas para rivales,
+  espectadores, bots, reemplazos y replay, además de privacidad y relojes.
+- `node tests/browser-tunnel-outcomes.cjs`: **6 grupos**, todos correctos;
+  cero extra, pago mixto, comodines, desistimiento, insuficiencia y timeout.
+  Constructor recupera su decisión al recargar; espectador recupera el tablero
+  durante el resultado. Recibos, cartas y plazos se conservan.
+- `node tests/browser-flow-ui.cjs`: **6 grupos**, todos correctos; tres roles,
+  bot constructor, rechazo de acciones prematuras, billetes y resultados.
+- `node tests/browser-destination-map.cjs`: **7 grupos**, todos correctos;
+  cámara, cartas sobre el tablero, diálogo opcional de destinos que sobrevive
+  al resultado y puede cerrarse en móvil. Conserva la regresión de textos,
+  sombra, mapas de billetes, inglés y WebGL.
+- Sintaxis, validación documental, revisión de impacto y `git diff --check`:
+  correctos. Se preservan los cambios locales previos de este chat y del modal
+  de vagones.
+
+Las tres suites de navegador terminaron sin errores de página/consola. Las
+primeras ejecuciones requirieron ajustar las esperas de carga 3D tras recargar
+y usar la pestaña Destinos antes de abrir sus rutas en móvil. Evidencia final
+en `.qa/tunnel-outcomes/`, `.qa/flow-ui/` y `.qa/destination-map/`. Se revisaron
+visualmente el resultado del espectador tras reconectar, el modal del constructor
+en inglés, las cartas del túnel y el resultado sobre el tablero móvil. Chrome
+real con dispositivos emulados; sin prueba en hardware móvil. Los servidores
+usaron loopback y estado temporal, y se cerraron al terminar.
+
+Cambio local validado en `main`, sin commit ni publicación. Siguiente paso:
+incluir esta revisión en la próxima publicación autorizada.
+
+## Destinos premarcados y altura del modal · 2026-11-03
+
+Ángel aprobó marcar todos los destinos actuales al abrir una oferta y corregir
+el gran espacio vacío, verificando únicamente en local con bots construyendo.
+
+- [x] Cada oferta abre todos los billetes propios marcados para comparar,
+  incluidos los completados. Los nuevos siguen sin seleccionar; no se mezclan
+  los controles de comparación con los índices enviados para conservar.
+- [x] Respetar desmarcaciones manuales, selección nueva y zoom durante las
+  construcciones y al minimizar/reabrir la misma oferta.
+- [x] Contener las etiquetas accesibles absolutas dentro de `.ticket-number`.
+  La reproducción con ocho destinos medía `scrollHeight=1229` frente a
+  `clientHeight=792` en el diálogo; anclar la etiqueta a su número devolvió
+  ambos a 792, sin quitar contenido ni accesibilidad. No eran nodos acumulados
+  por las construcciones.
+- [x] Limitar el modal mediante flex al alto disponible, con lista desplazable
+  y confirmación visible en escritorio, tablet, teléfono y horizontal.
+
+Validación local con Chrome y backend HTTP/WebSocket de archivo temporal:
+
+- `node tests/browser-ticket-layout.cjs`: cuatro grupos correctos, cero errores;
+  diez destinos propios, pendientes y completados, en Europa y Sudamérica.
+  El worker y el motor reales ejecutaron tres construcciones de bots por mapa
+  mientras la misma oferta seguía abierta. Casillas y cámara permanecieron;
+  se confirmó únicamente el nuevo billete seleccionado por la acción habitual.
+  Catorce mediciones, antes/después y en cinco tamaños, sin overflow del modal,
+  con botón visible y un solo canvas. La prueba espera el final de la animación
+  autoritativa de construcción antes de confirmar, como exige `act`.
+- `node tests/browser-destination-map.cjs`: siete grupos correctos, cero errores;
+  incluye reapertura con destino desmarcado, foco, zoom, WebGL, inglés y túneles.
+- Planificador, consulta de destinos y controles móviles: **23/23** pruebas.
+  Sintaxis, validación documental, revisión de impacto y diff correctos.
+
+Informe y capturas en `.qa/ticket-layout/`; reproducción previa en
+`.qa/ticket-modal/`. Se revisaron visualmente ambos mapas en escritorio y el
+modal horizontal. Dispositivos emulados, sin validación en hardware móvil.
+Procesos de prueba cerrados y servidores del usuario intactos; sin acceso a
+producción, commit, push ni despliegue. Siguiente paso: incluir estos cambios
+en la próxima publicación autorizada.

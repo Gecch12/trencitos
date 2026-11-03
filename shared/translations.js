@@ -30,6 +30,8 @@ const Translations = {
   "Alejar mapa": "Zoom out",
   "Restablecer mapa": "Reset map",
   "Ver todos": "Show all",
+  "Quitar sombra": "Remove shading",
+  "Activar sombra": "Enable shading",
   "Vista previa · vagones translúcidos": "Preview · translucent wagons",
   "Recorrido actualizado": "Route updated",
   "Sin conexión disponible": "No connection available",

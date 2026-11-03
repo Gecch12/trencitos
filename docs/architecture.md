@@ -643,7 +643,8 @@ Alcance y pruebas en
   la recogida, barajado y reparto, por lo que M cancela toda la secuencia.
   Los túneles usan `sharedTunnel` (protocolo UI 8): la etapa y los tiempos vienen
   del motor. El cliente dibuja las cartas por timestamp y no puede adelantar la secuencia
-  del servidor. Los observadores pueden ocultar su modal durante todo ese intento. La ruta se adjudica al resolver, nunca antes de revelar.
+  del servidor. Solo el constructor humano recibe el modal; el resto sigue el
+  intento en el tablero. La ruta se adjudica al resolver, nunca antes de revelar.
   El modal mantiene reserva, revelación, decisión y resultado; el desglose separa
   base, extra y total. El motor guarda el extra cobrado y la marca de inicio del
   resultado. El cliente anima el pago y los vagones o la devolución de la base;
@@ -673,9 +674,21 @@ Alcance y pruebas en
   vida propios. Three dibuja la red y vagones proyectados translúcidos; SVG añade
   solo blancos de inspección, números y etiquetas de extremos. Las construcciones
   confirmadas invalidan los cálculos sin recrear el diálogo ni sus selecciones.
-  La vista conjunta usa la mitad del ensombrecimiento y muestra solo los billetes
-  marcados, además de los destinos actuales activados para comparar. Sin selección
-  no entrega spotlight, rutas proyectadas ni etiquetas especiales. Cada tarjeta
+  La vista conjunta muestra solo los billetes marcados, además de los destinos
+  actuales activados para comparar. Cada nueva oferta inicializa `retainedVisible`
+  con todos los billetes propios, incluidos los completados; la misma oferta
+  conserva los cambios manuales al actualizarse o reabrirse. Esta selección es
+  independiente de `ticketChoices`, que contiene los índices enviados al servidor.
+  El modal usa una columna flex limitada a la pantalla y scroll en la colección;
+  `.ticket-number` contiene su etiqueta accesible absoluta para que esta no
+  amplíe el área desplazable del diálogo. En iniciales/ofertas, `ticketMapShaded`
+  controla una intensidad constante de 1 o 0, independiente del foco o selección.
+  Se inicia activada con cada `pendingChoiceKey` nuevo y se conserva al reabrir la
+  misma oferta. `ticketMapShade` alterna la sombra sin cambiar recorridos ni cámara.
+  El spotlight con fuerza 0 conserva las cintas de los recorridos; sin selección
+  no se proyectan rutas ni etiquetas especiales, pero la sombra sigue activada
+  si el usuario no la quitó. La consulta `routes` conserva la intensidad previa:
+  0 sin selección, 0,5 en conjunto y 1 en foco. Cada tarjeta
   es un label de su casilla nativa: texto, número y espacio libre cambian la misma
   selección. Hover inspecciona sin seleccionar; el toque que selecciona enfoca el
   billete. Salir con ratón o tocar fuera limpia el foco individual y vuelve al
@@ -690,10 +703,14 @@ Alcance y pruebas en
 - `tunnel-board.js` coloca hasta tres cartas como planos sobre el tablero junto
   a la vía, buscando espacio sin vías o ciudades. Usa el arte existente y la
   cámara principal. `syncTunnelBoard` comparte el timestamp de `sharedTunnel`
-  con el modal, oculta caras todavía no reveladas y no reinicia la secuencia al
-  minimizar o reabrir. El aviso permite volver al detalle sin mover la cámara;
-  la preferencia de ocultar pertenece al intento y al cliente. Solo el constructor
-  conserva el modal obligatorio. La pausa y el cambio de turno siguen en el motor.
+  con el modal del constructor y oculta caras todavía no reveladas. El aviso
+  muestra suplemento y resultado sin abrir detalles. `isTunnelBuilder` limita
+  el modal al puesto activo humano, excluyendo bots, reemplazos y replay;
+  `showSharedTunnel` y `showTunnelDialog` comprueban también esa condición.
+  Rivales y espectadores conservan su cámara y sus diálogos opcionales al cambiar
+  de etapa. Reconectar tampoco abre el modal ajeno, y no existe un control para
+  abrirlo. La pausa
+  y el cambio de turno siguen en el motor.
 - Los 21 colores seleccionables tienen una familia propia; jade lleva Vivienda
   e índigo Circo. Hongos, Cristales y Confitería se retiraron. Rosa conserva su
   clave en partidas anteriores y usa Pasajeros; no se ofrece a nuevas selecciones.
@@ -741,8 +758,11 @@ Alcance y pruebas en
 - [wagon-preview.js](../frontend/wagon-preview.js) comparte `createWagonRenderer` con el
   tablero. Lobby y práctica muestran una pieza estable en vista 3/4, con nombre
   y enlace al detalle. La colección se crea al abrir su diálogo: las seis variantes
-  de Pasajeros se distribuyen en tres columnas (dos en pantallas
-  pequeñas), dentro de un solo canvas lateral. Familias sin variantes muestran
+  de Pasajeros forman una fila enganchada dentro de un solo canvas lateral, con
+  scroll horizontal nativo en una franja enfocable. El diálogo conserva título y
+  cierre fuera del área desplazable y adapta su altura al viewport. El canvas
+  fija por separado su tamaño CSS y su buffer para evitar desbordamiento con DPR 2;
+  el encuadre lateral utiliza los límites de la geometría. Familias sin variantes muestran
   su único diseño y el enlace «Ver detalle». Se conservan IDs, geometría y modelos
   del tablero; la colección no cambia el orden de vagones en las rutas.
   Los nombres de las variantes están disponibles al lector de pantalla. Escape/cierre libera la
@@ -923,9 +943,17 @@ la ruta rival se ilumina durante la colocación y vuelve al sombreado en 350 ms.
 un resultado construido enlaza con la colocación sin perderlo.
 
 `frontend/replay-ui.js` controla exclusivamente carga, perspectivas, navegación,
-velocidad e historial de la grabación. `history-ui.js` conserva listado/perfil.
+velocidad e historial de la grabación. `history-ui.js` conserva listado/perfil y
+consume el replay progresivamente mediante NDJSON. La proyección compacta comparte
+diario/eventos/resultados entre POVs y `ReplayState.cursor` aplica cambios a su
+estado privado sin clonarlo entero a cada paso; el contrato JSON anterior permanece.
+La vista reutiliza los paneles, avatares y efectos de `app.js`, incluidos robos,
+renovaciones y construcciones. El historial conserva nodos que no cambiaron y
+presenta cada destino una sola vez con ✓/✕. Detalle en
+[historial/replay](history-replay.md#entrega-con-memoria-acotada).
 La consulta opcional de análisis deriva longitudes del dominio y lee completitud
-histórica de los destinos; no vuelve a ejecutar la partida.
+histórica de los destinos; no vuelve a ejecutar la partida ni bloquea la UI,
+que ya no la solicita.
 
 
 ## Checkpoints incrementales y agrupación de comandos
@@ -1000,6 +1028,9 @@ para conexiones completas; solo anima su opacidad mientras el modo está activo,
 la pestaña visible y no se solicita reducir movimiento. No añade un renderizador
 ni efectos globales de posprocesamiento.
 
-El selector de billetes muestra `game.players[seat].trains` en un bloque fijo
-fuera de `.ticket-collections`, actualizado junto con la selección. Representa
+Fuera de la fase `initial`, el selector de billetes muestra
+`game.players[seat].trains` en un bloque fijo fuera de `.ticket-collections`,
+actualizado junto con la selección. Representa
 la reserva física actual, independiente de la estimación de cada destino.
+En la selección inicial no se generan ese bloque ni las líneas `.ticket-plan`;
+el planificador sigue calculando los recorridos para la vista previa del mapa.

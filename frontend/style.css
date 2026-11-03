@@ -501,9 +501,15 @@ label {
   margin-top: 15px;
 }
 .dialog.ticket-dialog {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   max-width: 1280px;
   max-height: calc(100dvh - 48px);
   padding: 26px;
+}
+.ticket-dialog > :not(.ticket-layout) {
+  flex-shrink: 0;
 }
 .ticket-dialog h2 {
   font-size: 32px;
@@ -514,10 +520,11 @@ label {
 }
 .ticket-layout {
   display: grid;
+  flex: 1 1 auto;
   grid-template-columns: minmax(0, 1fr) 330px;
   gap: 22px;
   height: min(560px, calc(100dvh - 220px));
-  min-height: 440px;
+  min-height: 0;
 }
 .ticket-map-panel {
   display: flex;
@@ -606,6 +613,8 @@ label {
   margin: 0;
 }
 .ticket-number {
+  /* Keep the absolute screen-reader label inside its scrolling ticket row. */
+  position: relative;
   display: grid;
   place-items: center;
   background: var(--ticket-color);

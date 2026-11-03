@@ -1,5 +1,5 @@
 ---
-{"id":"ticket-map-shading","status":"done","parent":null,"depends_on":["destination-map-tunnels"],"branch":"main","delivery":"released","updated":"2026-11-03"}
+{"id":"ticket-map-shading","status":"done","parent":null,"depends_on":["destination-map-tunnels"],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
 ---
 # Sombreado y foco del mapa de billetes
 
@@ -136,3 +136,57 @@ la lista desplazable. Evidencia en [Transparencia y reinicio](replay-transparenc
 La implementación de esta ficha quedó publicada en `ef65487`, Live en Render
 tras CI aprobado. El alcance publicado, las comprobaciones de producción y
 sus límites están en [Producción](../production.md).
+
+## Simplificación de billetes iniciales · 2026-11-03
+
+Revisión aprobada tras Moti: ocultar en la selección inicial el recuadro de
+vagones disponibles y las cantidades de vagones de las tarjetas. Las ofertas
+y la consulta de destinos durante la partida conservan ambos datos. El mapa,
+sus recorridos y la selección de billetes mantienen su funcionamiento.
+
+- [x] Omitir ambos elementos en fase inicial, sin reservar espacio vacío.
+- [x] Actualizar la prueba de navegador para iniciales en escritorio/móvil y
+  conservar la comprobación de reserva y estimaciones durante la partida.
+- [x] Verificar navegador, sintaxis e impacto documental.
+
+`node tests/browser-destination-map.cjs`: siete grupos correctos, sin errores de
+navegador. Se inspeccionaron las capturas `initial-medium-overview.png` e
+`initial-medium-mobile.png`; evidencias y `report.json` en `.qa/destination-map/`.
+Chrome real con móvil emulado, servidor de loopback y almacenamiento temporal;
+sin acceso a producción. La apertura del puerto requirió salir del sandbox.
+Sintaxis de `frontend/app.js`, validación documental, revisión de impacto y
+`git diff --check` correctos.
+
+Cambio local validado en `main`, todavía sin commit ni publicación. Siguiente
+paso: incluir esta revisión en la próxima publicación autorizada.
+
+## Sombra fija y control manual · 2026-11-03
+
+Revisión aprobada tras Moti: iniciales y ofertas nuevas usan un único nivel
+oscuro por defecto, incluso sin selección. Se retira el nivel intermedio de
+estas dos vistas. El foco sigue eligiendo recorridos sin cambiar la oscuridad.
+La consulta de billetes conservados mantiene su comportamiento anterior.
+
+- [x] Botón «Quitar sombra» / «Activar sombra», traducido al inglés y accesible
+  con ratón, teclado y toque, sin alterar casillas, recorridos, foco o cámara.
+- [x] Mantener la elección al minimizar/reabrir la misma oferta y al recuperar
+  WebGL; volver al modo oscuro al abrir otra selección o recargar.
+- [x] Mantener las cintas y propuestas visibles cuando se quita la sombra.
+- [x] Verificar navegador, regresión y documentación.
+
+Verificación: `node tests/browser-destination-map.cjs`, siete grupos correctos,
+sin errores. Incluye selección vacía, hover sin variar intensidad, alternancia
+con ratón/Space/Enter/toque, conservación del foco táctil, movimiento reducido,
+zoom, recuperación de WebGL sin sombra, actualización concurrente y reapertura
+de ofertas, recarga e inglés. Se comprueban también la consulta de destinos
+conservados y los túneles del tablero compartido. Chrome real, teléfono/tablet/
+horizontal emulados, servidor y estado temporal aislados.
+
+`node --test tests/board-3d.test.js tests/i18n.test.js`: 6/6. Sintaxis de ambos
+módulos y de la prueba de navegador correcta. Validación documental, revisión
+de impacto y `git diff --check` correctos. Informe y capturas en
+`.qa/destination-map/`; se inspeccionaron `initial-dark-overview.png`,
+`initial-unshaded.png` e `initial-unshaded-mobile-focus.png`.
+
+Cambio local validado en `main`, sin commit ni publicación. Siguiente paso:
+incluir estas revisiones en la próxima publicación autorizada.

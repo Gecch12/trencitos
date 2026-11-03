@@ -7,9 +7,9 @@
 .ticket-map-overlay text { pointer-events: none; }
 .ticket-endpoint-name { font: 700 12px system-ui, sans-serif; text-anchor: middle; fill: #24444e; stroke: #fff9e8; stroke-width: 3px; paint-order: stroke; stroke-linejoin: round; }
 .ticket-endpoint-number, .ticket-path-badge text { font: 800 11px system-ui, sans-serif; }
-.ticket-map-controls { position: absolute; z-index: 2; inset: 6px auto auto 6px; display: flex; gap: 4px; }
+.ticket-map-controls { position: absolute; z-index: 2; inset: 6px 6px auto 6px; display: flex; flex-wrap: wrap; gap: 4px; width: fit-content; max-width: calc(100% - 12px); }
 .dialog .ticket-map-controls button { min-height: 30px; min-width: 30px; padding: 3px 9px; font-size: 16px; border: 1px solid #9cb5b5; border-radius: 7px; background: #fffbeded; color: #24444e; box-shadow: 0 1px 3px #233c4333; }
-.dialog #ticketMapOverview { font-size: 11px; }
+.dialog #ticketMapOverview, .dialog #ticketMapShade { font-size: 11px; }
 .ticket-map-footer { display: flex; align-items: center; justify-content: space-between; gap: 4px; min-height: 25px; padding: 4px 9px; background: #f4f8f4; color: #526c75; font-size: 11px; }
 .ticket-map-loading { position: absolute; inset: 45% 5% auto; text-align: center; font-size: 13px; }
 .dialog .ticket-inspect { flex: 1; min-width: 0; padding: 0; margin: 0; border: 0; border-radius: 4px; box-shadow: none; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }

@@ -3,110 +3,133 @@ if (location.pathname === '/replay') document.documentElement.classList.add('rep
 const ReplayUI = (() => {
   const $=id=>document.getElementById(id);
   const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  async function open({id,load,show}) {
-    const t=I18n.t,controls=$('replayControls');
+  let dispose=null,selectViewer=()=>{};
+  async function open({id,load,show,decorateRow=()=>{},cancelEffects=()=>{}}) {
+    dispose?.();
+    const t=I18n.t,controls=$('replayControls'),controller=new AbortController();
+    const compact=matchMedia('(max-width:1100px), (max-height:600px)');
+    let data,step=0,viewer=0,timer=null,playing=false,speed=1,indexed=0,playCursor,indexCursor,ready=false,failed=false;
+    let lastView=null,lastCity=null,historyDirty=true,lastHistoryStep=-1;
+    const rows=new Map(),nodes=new Map(),eventSteps=new Map(),fallbackRows=[];
+    const history=$('historyEntries');
     let loader=$('replayLoading');
     if(!loader){loader=document.createElement('dialog');loader.id='replayLoading';loader.className='replay-loading';document.body.append(loader);}
     loader.innerHTML=`<div class="loading-train" aria-hidden="true"><span>▰</span><span>▰</span><span>▰</span></div><p role="status">${t('Preparando repetición…')}</p>`;
     loader.oncancel=e=>e.preventDefault();if(!loader.open)loader.showModal();
-    try {
-      const data=await load(id);if(!data.frames?.length)throw Error(t('Esta repetición no está disponible.'));
-      const playerColors=LobbyUI.restoreColors(data.match.players);
-      let step=0,viewer=data.full?0:-1,timer=null,speed=1;
-      const labels=data.frames.map((f,i)=>f.events?.map(e=>e.message?I18n.format(e.message):t(e.text)).join(' · ')||t(i?'Actualización de la partida':'Inicio de la grabación'));
-      const milestones=data.analysis?.flatMap((a,i)=>(a.milestones||[]).map(m=>({...m,step:i})))||[];
-      const milestoneNames={construction:'Ruta construida',station:'Estación construida',ticket_completed:'Destino completado',longest_leader:'Nuevo camino más largo',longest_tie:'Empate en camino más largo',tunnel_abandoned:'Túnel abandonado',last_round:'Última ronda',finish:'Partida terminada'};
-      controls.hidden=false;$('gameSidebar').prepend(controls);
+    function stop(){playing=false;clearTimeout(timer);timer=null;cancelEffects();if($('replayPlay')){$('replayPlay').textContent='▶';$('replayPlay').setAttribute('aria-label',t('Reproducir'));}}
+    const visibility=()=>{if(document.hidden)stop();};
+    const place=()=>{if(!ready)return;if(compact.matches){document.body.append(controls);$('replayDock').open=false;}else{$('gameSidebar').prepend(controls);$('replayDock').open=true;}};
+    dispose=()=>{stop();controller.abort();compact.removeEventListener('change',place);document.removeEventListener('visibilitychange',visibility);};
+    function updateControls(){
+      $('replaySeek').max=data.frames.length-1;$('replaySeek').value=step;
+      $('replayPosition').textContent=`${step+1}/${data.match.steps||data.frames.length}`;
+      $('replayFirst').disabled=$('replayPrevious').disabled=step===0;
+      $('replayLast').disabled=!data.complete||step===data.frames.length-1;
+      $('replayNext').disabled=step===data.frames.length-1;
+      $('replayGeneral').setAttribute('aria-pressed',String(viewer===-1));
+      $('replayProgress').hidden=data.complete;
+      $('replayProgress').textContent=data.complete?'':`${t('Cargando…')} ${Math.floor(100*data.frames.length/data.match.steps)}%`;
+    }
+    function journalHistory(view,city){
+      const current=new Map(TurnHistory.displayRows(view.turnHistory||[]).map(row=>[row.id,row]));
+      const all=rows.size?TurnHistory.displayRows([...rows.values()].map(value=>value.row)):fallbackRows;
+      const children=all.map(finalRow=>{
+        const row=current.get(finalRow.id)||finalRow,signature=JSON.stringify(row);
+        let node=nodes.get(row.id);
+        if(!node||node._signature!==signature){
+          node=TurnHistory.render(row,{players:view.players,city,revealAll:data.full},{button:true});
+          decorateRow(node,row);node.classList.add('replay-history-row');node._signature=signature;nodes.set(row.id,node);
+        }
+        const steps=finalRow.events.map(e=>eventSteps.get(e.id)??0),first=Math.min(...steps),last=Math.max(...steps);
+        node.dataset.step=last;node.classList.toggle('is-future',first>step);node.classList.toggle('is-current',steps.includes(step));
+        node.setAttribute('aria-current',steps.includes(step)?'step':'false');return node;
+      });
+      // Reuse unchanged DOM rows, including their images, focus and scroll position.
+      let prior=null;
+      for(const node of children){const next=prior?prior.nextSibling:history.firstChild;if(next!==node)history.insertBefore(node,next);prior=node;}
+      const keep=new Set(children);for(const node of [...history.children])if(!keep.has(node))node.remove();
+      if(step!==lastHistoryStep)children.find(node=>node.classList.contains('is-current'))?.scrollIntoView({block:'nearest'});
+      lastHistoryStep=step;historyDirty=false;
+    }
+    function paint(animate=false){
+      const state=playCursor.at(step),view=structuredClone(ReplayState.view(state,data.full?viewer+1:0));
+      if(data.match.status==='abandoned'&&(data.complete&&step===data.frames.length-1||view.phase==='finished')){view.phase='abandoned';view.result=null;}
+      const names=new Map((state.definition?.map.cities||[]).map(c=>[c.id,c.name])),city=id=>names.get(id)||(!view.definitionVersion?CITIES[id]?.[2]:null)||id;
+      const frame=data.frames[step];
+      show(view,state.members,{at:frame.at,seat:viewer,full:data.full,match:data.match,definition:state.definition,animate,speed,step});
+      lastView=view;lastCity=city;journalHistory(view,city);updateControls();
+    }
+    function seek(n){
+      if(failed)return;
+      const next=Math.max(0,Math.min(data.frames.length-1,Number(n))),animate=next===step+1;
+      stop();step=next;paint(animate);
+    }
+    function schedule(){
+      if(!playing)return;
+      timer=setTimeout(()=>{
+        if(!playing||failed)return;
+        if(step<data.frames.length-1){step++;paint(true);schedule();}
+        else if(data.complete)stop();else schedule();
+      },1200/speed);
+    }
+    function start(){playing=true;$('replayPlay').textContent='Ⅱ';$('replayPlay').setAttribute('aria-label',t('Pausar'));schedule();}
+    function setup(){
+      viewer=data.full?0:-1;playCursor=ReplayState.cursor(data.frames);indexCursor=ReplayState.cursor();
+      controls.hidden=false;history.replaceChildren();$('history').setAttribute('aria-label',t('Historial completo de la repetición'));
       controls.innerHTML=`<details id="replayDock" open><summary><strong>${t('Repetición')}</strong><output id="replayPosition"></output></summary><div class="replay-body">
-        <div class="replay-top"><a href="/profile?tab=history">← ${t('Historial')}</a><span>${t(data.full?'Información completa':'Público')}</span></div>
-        <div id="replayAvatars" class="replay-avatars"><button data-viewer="-1" title="${t('Vista general')}" aria-label="${t('Vista general')}">◎</button>${data.full?data.match.players.map((p,i)=>`<button data-viewer="${i}" title="${escape(p.name)}" aria-label="${escape(p.name)}">${escape(p.name.slice(0,2).toUpperCase())}</button>`).join(''):''}</div>
-        <label class="replay-perspective">${t('Perspectiva')}<select id="replayViewer"><option value="-1">${t('Vista general')}</option>${data.full?data.match.players.map((p,i)=>`<option value="${i}">${escape(p.name)}</option>`).join(''):''}</select></label>
+        <div class="replay-top"><a href="/profile?tab=history">← ${t('Historial')}</a><button id="replayGeneral" title="${t('Vista general')}" aria-label="${t('Vista general')}" aria-pressed="false">◎</button></div>
         <div class="replay-transport"><button id="replayFirst" aria-label="${t('Ir al inicio')}">⏮</button><button id="replayPrevious" aria-label="${t('Paso anterior')}">◀</button><button id="replayPlay" aria-label="${t('Reproducir')}">▶</button><button id="replayNext" aria-label="${t('Paso siguiente')}">▶|</button><button id="replayLast" aria-label="${t('Ir al final')}">⏭</button><select id="replaySpeed" aria-label="${t('Velocidad')}">${[.5,1,2,4,8].map(n=>`<option ${n===1?'selected':''} value="${n}">${n}×</option>`).join('')}</select></div>
-        <input id="replaySeek" type="range" min="0" max="${data.frames.length-1}" value="0" aria-label="${t('Paso de la repetición')}">
-        <div class="replay-jumps"><button id="replayNextBuild">${t('Siguiente construcción')}</button><button id="replayNextMilestone">${t('Siguiente hito')}</button></div>
-        <select id="replayEvent" aria-label="${t('Acción')}">${labels.map((label,i)=>`<option value="${i}">${i+1}. ${escape(label)}</option>`).join('')}</select>
-        <div id="replayMilestones" class="replay-milestones" aria-label="${t('Hitos de la partida')}">${milestones.map(m=>`<button data-step="${m.step}" title="${escape(t(milestoneNames[m.type]||m.type))}">${m.step+1} · ${escape(t(milestoneNames[m.type]||m.type))}</button>`).join('')}</div>
-        <details class="replay-market"><summary>${t('Cartas disponibles')}</summary><div id="replayMarket"></div></details>
-        <details class="replay-analysis"><summary>${t('Estadísticas de este paso')}</summary><div id="replayStats"></div></details>
-        ${data.full?`<div class="replay-private"><button id="replaySecretsOpen">${t('Ver cartas y destinos')}</button>${data.canAudit??data.full?`<a href="/api/history/${encodeURIComponent(id)}/audit">${t('Descargar auditoría')}</a>`:''}</div>`:`<p>${t('Repetición pública sin secretos')}</p>`}
+        <input id="replaySeek" type="range" min="0" value="0" aria-label="${t('Paso de la repetición')}">
+        <small id="replayProgress" role="status"></small>
         ${!data.match.complete?`<small>${t('Registro parcial: la grabación comenzó con la partida ya iniciada.')}</small>`:''}
       </div></details>`;
-      const compact=matchMedia('(max-width:767px)');
-      const place=()=>{if(compact.matches){document.body.append(controls);$('replayDock').open=false;}else{$('gameSidebar').prepend(controls);$('replayDock').open=true;}};
-      place();compact.addEventListener('change',place);
-      for(const button of controls.querySelectorAll('[data-viewer]')){
-        const p=data.match.players[Number(button.dataset.viewer)];if(p)button.style.setProperty('--replay-player',playerColors[Number(button.dataset.viewer)]);
-        button.onclick=()=>{viewer=Number(button.dataset.viewer);paint(false);};
-      }
-      const history=$('historyEntries');history.replaceChildren();$('history').setAttribute('aria-label',t('Historial completo de la repetición'));
-      let historyRows=data.frames.flatMap((frame,i)=>{
-        const entries=frame.events?.length?frame.events:[{text:labels[i]}];
-        return entries.map(entry=>{const button=document.createElement('button');button.type='button';button.className='replay-history-row';button.dataset.step=i;
-          button.textContent=entry.message?I18n.format(entry.message):t(entry.text);button.onclick=()=>seek(i);history.append(button);return button;});
-      });
-      let recordedState=null;
-      const eventSteps=new Map();
-      for(let i=0;i<data.frames.length;i++){
-        const frame=data.frames[i];recordedState=frame.snapshot?frame.snapshot:ReplayState.apply(recordedState,frame.changes);
-        for(const v of recordedState.views||[])for(const row of v.turnHistory||[])for(const e of row.events)if(!eventSteps.has(e.id))eventSteps.set(e.id,i);
-      }
-      const finalState=recordedState;
-      function journalHistory(view,city){
-        const all=finalState.views[data.full?viewer+1:0].turnHistory;if(!all||!view.turnHistory)return false;
-        const current=new Map(TurnHistory.displayRows(view.turnHistory).map(row=>[row.id,row]));
-        historyRows=TurnHistory.displayRows(all).map(finalRow=>{
-          const row=current.get(finalRow.id)||finalRow,node=TurnHistory.render(row,{players:view.players,city,revealAll:data.full},{button:true});
-          node.classList.add('replay-history-row');
-          const steps=finalRow.events.map(e=>eventSteps.get(e.id)??0),first=Math.min(...steps),last=Math.max(...steps);
-          node.dataset.step=last;node.classList.toggle('is-future',first>step);node.classList.toggle('is-current',steps.includes(step));
-          node.setAttribute('aria-current',steps.includes(step)?'step':'false');node.onclick=()=>seek(last);return node;
-        });
-        history.replaceChildren(...historyRows);return true;
-      }
-      function stop(){clearTimeout(timer);timer=null;$('replayPlay').textContent='▶';$('replayPlay').setAttribute('aria-label',t('Reproducir'));}
-      function paint(animate=false){
-        const state=ReplayState.at(data.frames,step),view=structuredClone(state.views[data.full?viewer+1:0]);
-        if(data.match.status==='abandoned'&&(step===data.frames.length-1||view.phase==='finished')){view.phase='abandoned';view.result=null;}
-        const names=new Map((state.definition?.map.cities||[]).map(c=>[c.id,c.name])),city=id=>names.get(id)||(!view.definitionVersion?CITIES[id]?.[2]:null)||id;
-        if(data.full){
-          const colors={red:'Rojo',blue:'Azul',green:'Verde',yellow:'Amarillo',black:'Negro',white:'Blanco',orange:'Naranja',purple:'Morado',wild:'Comodín'};
-          const cards=items=>(items||[]).map(c=>escape(t(colors[c]||c))).join(', ')||'—';
-          const tickets=items=>(items||[]).map(ticket=>`${escape(city(ticket.a))} — ${escape(city(ticket.b))} (${ticket.p})`).join('<br>')||'—';
-          $('replaySecretsContent').innerHTML=state.views.slice(1).map((v,i)=>`<section><h3>${escape(data.match.players[i].name)}</h3><p><b>${t('Mano')}:</b> ${cards(v.hand)}</p><p><b>${t('Billetes conservados')}:</b><br>${tickets(v.tickets)}</p><p><b>${t('Billetes pendientes')}:</b><br>${tickets(v.initial||v.ticketOffer?.tickets)}</p>${v.tunnel?`<p>${t('Cartas del túnel')}: ${cards(v.tunnel.revealed)} · ${t('Suplemento')}: ${v.tunnel.surcharge}</p>`:''}</section>`).join('');
-          if(state.knowledge){
-            const k=state.knowledge;
-            $('replaySecretsContent').insertAdjacentHTML('beforeend',`<section class="replay-piles"><h3>${t('Mazos y descartes')}</h3><p>${t('Orden: próxima carta primero')}</p><details><summary>${t('Mazo de trenes')} (${k.deck?.length??'—'})</summary><p>${cards(k.deck?.slice().reverse())}</p></details><details><summary>${t('Descarte de trenes')} (${k.discard?.length??'—'})</summary><p>${cards(k.discard)}</p></details><details><summary>${t('Mazo de destinos')}</summary><p>${tickets(k.ticketDeck)}</p>${k.longTicketDeck?.length?`<p>${tickets(k.longTicketDeck)}</p>`:''}</details></section>`);
+      selectViewer=i=>{if(!data.full||i< -1||i>=data.match.players.length||failed)return;stop();viewer=i;paint(false);};
+      $('replayGeneral').onclick=()=>selectViewer(-1);
+      $('replayFirst').onclick=()=>seek(0);$('replayPrevious').onclick=()=>seek(step-1);$('replayNext').onclick=()=>seek(step+1);$('replayLast').onclick=()=>seek(data.frames.length-1);
+      $('replaySeek').oninput=e=>seek(e.target.value);
+      $('replayPlay').onclick=()=>{if(playing)stop();else{if(data.complete&&step===data.frames.length-1){step=0;paint(false);}start();}};
+      $('replaySpeed').onchange=e=>{const resume=playing;stop();speed=Number(e.target.value);if(resume)start();};
+      history.onclick=e=>{const row=e.target.closest('[data-step]');if(row)seek(row.dataset.step);};
+      ready=true;place();compact.addEventListener('change',place);document.addEventListener('visibilitychange',visibility);
+    }
+    function indexFrames(){
+      for(;indexed<data.frames.length;indexed++){
+        const frame=data.frames[indexed],state=indexCursor.push(frame),view=ReplayState.view(state,0);
+        const journal=view.turnHistory||[];
+        // Only inspect changed rows. A checkpoint needs a full scan, a normal
+        // frame usually adds one event to one row of the shared journal.
+        let changed=null;
+        if(!frame.snapshot&&state.shared?.turnHistory){
+          changed=new Set();for(const change of frame.changes){const path=change.path;if(path[0]==='shared'&&path[1]==='turnHistory'){if(path.length<3){changed=null;break;}changed.add(Number(path[2]));}}
+        }
+        for(const row of changed?[...changed].map(i=>journal[i]).filter(Boolean):journal){
+          const signature=JSON.stringify(row);if(rows.get(row.id)?.signature===signature)continue;
+          rows.set(row.id,{row:structuredClone(row),signature});historyDirty=true;
+          for(const e of row.events)if(!eventSteps.has(e.id))eventSteps.set(e.id,indexed);
+        }
+        if(!journal.length){
+          const entries=frame.events?.length?frame.events:[{text:indexed?t('Actualización de la partida'):t('Inicio de la grabación')}];
+          for(const [i,entry]of entries.entries()){
+            const id=`legacy:${indexed}:${i}`;fallbackRows.push({id,seat:entry.seat??null,turn:null,at:frame.at,events:[{id,type:'legacy',data:entry}]});eventSteps.set(id,indexed);historyDirty=true;
           }
         }
-        $('replayMarket').innerHTML=(view.face||[]).map(color=>`<img src="/assets/cards/${escape(color)}.svg" alt="${escape(t(color))}" />`).join('');
-        const analysis=data.analysis?.[step];
-        $('replayStats').innerHTML=analysis?.available?analysis.players.map(p=>`<section class="replay-stat-player"><strong>${escape(data.match.players[p.seat].name)}${p.leader?' ★':''}</strong><dl><dt>${t('Puntos de construcción')}</dt><dd>${p.routePoints}</dd><dt>${t('Rutas construidas')}</dt><dd>${p.routes}</dd><dt>${t('Camino más largo')}</dt><dd>${p.longest}</dd><dt>${t('Vagones restantes')}</dt><dd>${p.trains}</dd><dt>${t('Cartas')} / ${t('Estaciones')}</dt><dd>${p.cards} / ${p.stations}</dd>${data.full?`<dt>${t('Destinos completados')}</dt><dd>${p.completed??'—'} / ${p.tickets}</dd><dt>${t('Puntos completados / pendientes')}</dt><dd>+${p.completedPoints??'—'} / −${p.pendingPoints??'—'}</dd><dt>${t('Bonificación provisional')}</dt><dd>${p.provisionalBonus??'—'}</dd><dt>${t('Puntuación si terminara ahora')}</dt><dd>${p.projectedScore??'—'}</dd>`:''}</dl></section>`).join(''):`<p>${t('Datos no disponibles en esta grabación.')}</p>`;
-        const frame=data.frames[step],actor=frame.action?.seat??frame.events?.find(e=>Number.isInteger(e.seat))?.seat;
-        show(view,state.members,{at:frame.at,seat:viewer,full:data.full,match:data.match,definition:state.definition,animate,speed,step,
-          builds:(analysis?.milestones||[]).filter(m=>m.type==='construction'||m.type==='station')});
-        $('replayViewer').value=viewer;$('replaySeek').value=step;$('replayEvent').value=step;$('replayPosition').textContent=`${step+1}/${data.frames.length}`;
-        for(const button of controls.querySelectorAll('[data-viewer]')){const seat=Number(button.dataset.viewer);button.setAttribute('aria-pressed',String(seat===viewer));button.classList.toggle('is-actor',seat===actor);if(seat>=0)button.title=data.match.players[seat].name+(seat===actor?' · '+t('Acción de este paso'):'');}
-        $('replayFirst').disabled=$('replayPrevious').disabled=step===0;$('replayLast').disabled=$('replayNext').disabled=step===data.frames.length-1;
-        $('replayNextBuild').disabled=!milestones.some(m=>m.step>step&&['construction','station'].includes(m.type));$('replayNextMilestone').disabled=!milestones.some(m=>m.step>step);
-        const journal=journalHistory(view,city);
-        if(!journal)for(const row of historyRows){const i=Number(row.dataset.step);row.classList.toggle('is-future',i>step);row.classList.toggle('is-current',i===step);row.setAttribute('aria-current',i===step?'step':'false');}
-        historyRows.find(r=>r.classList.contains('is-current'))?.scrollIntoView({block:'nearest'});
-        for(const button of $('replayMilestones').children)button.classList.toggle('is-current',Number(button.dataset.step)===step);
       }
-      function seek(n){stop();step=Math.max(0,Math.min(data.frames.length-1,Number(n)));paint(false);}
-      function play(){ $('replayPlay').textContent='Ⅱ';$('replayPlay').setAttribute('aria-label',t('Pausar'));timer=setTimeout(()=>{if(step<data.frames.length-1){step++;paint(true);play();}else stop();},1200/speed); }
-      $('replayFirst').onclick=()=>seek(0);$('replayPrevious').onclick=()=>seek(step-1);$('replayNext').onclick=()=>seek(step+1);$('replayLast').onclick=()=>seek(data.frames.length-1);
-      $('replaySeek').oninput=e=>seek(e.target.value);$('replayEvent').onchange=e=>seek(e.target.value);
-      $('replayPlay').onclick=()=>{if(timer)stop();else{if(step===data.frames.length-1){step=0;paint(false);}play();}};
-      $('replaySpeed').onchange=e=>{const running=!!timer;stop();speed=Number(e.target.value);if(running)play();};
-      $('replayViewer').onchange=e=>{viewer=Number(e.target.value);paint(false);};
-      $('replayNextBuild').onclick=()=>{const next=milestones.find(m=>m.step>step&&['construction','station'].includes(m.type));if(next)seek(next.step);};
-      $('replayNextMilestone').onclick=()=>{const next=milestones.find(m=>m.step>step);if(next)seek(next.step);};
-      $('replayMilestones').onclick=e=>{const button=e.target.closest('[data-step]');if(button)seek(button.dataset.step);};
-      if(data.full)$('replaySecretsOpen').onclick=()=>{stop();$('replaySecrets').showModal();};
-      document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
-      paint(false);loader.close();document.documentElement.classList.remove('replay-loading-mode');
-    }catch(error){loader.innerHTML=`<p role="alert">${escape(error.message)}</p><button id="retryReplay">${t('Reintentar')}</button><a href="/profile?tab=history">${t('Volver al historial')}</a>`;$('retryReplay').onclick=()=>open({id,load,show});}
+    }
+    try{
+      await load(id,next=>{
+        if(controller.signal.aborted)return;
+        data=next;if(!data.frames.length)return;
+        const first=!ready;if(first)setup();indexFrames();
+        if(first){paint(false);loader.close();document.documentElement.classList.remove('replay-loading-mode');}
+        else{updateControls();if(historyDirty&&lastView)journalHistory(lastView,lastCity);}
+      },controller.signal);
+      if(!ready)throw Error(t('Esta repetición no está disponible.'));
+    }catch(error){
+      if(controller.signal.aborted)return;
+      failed=true;stop();
+      loader.innerHTML=`<p role="alert">${escape(error.message)}</p><button id="retryReplay">${t('Reintentar')}</button><a href="/profile?tab=history">${t('Volver al historial')}</a>`;
+      if(!loader.open)loader.showModal();$('retryReplay').onclick=()=>open({id,load,show,decorateRow,cancelEffects});
+    }
   }
-  return {open};
+  return {open,selectViewer:i=>selectViewer(i)};
 })();

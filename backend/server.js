@@ -216,10 +216,12 @@ const server = http.createServer(async (req, res) => {
       if(path.length>2||path[1]&&!audit)throw Object.assign(Error("Esta repetición no está disponible."),{status:404});
       if(id&&!/^[a-f0-9-]{36}$/.test(id)) throw Object.assign(Error("Esta repetición no está disponible."),{status:404});
       if(id){
-        const source=await archive.replayStream(identity,id,audit,url.searchParams.get("analysis")==="1");
+        const compact=!audit&&req.headers.accept==='application/x-ndjson';
+        const source=await archive.replayStream(identity,id,audit,url.searchParams.get("analysis")==="1",compact);
         // Validate the first frame before committing HTTP headers. A later
         // corrupt page closes the response; it can never become a partial replay.
         const first=await source.next();
+        if(compact)res.setHeader("Content-Type","application/x-ndjson; charset=utf-8");
         if(audit)res.setHeader("Content-Disposition",`attachment; filename="trencitos-${id}.json"`);
         async function* chunks(){try{if(!first.done)yield first.value;yield* source;}finally{await source.return();}}
         await require('node:stream/promises').pipeline(require('node:stream').Readable.from(chunks()),res);

@@ -625,6 +625,11 @@ button:focus-visible, summary:focus-visible, [tabindex="0"]:focus-visible { outl
 .turn-history-row .history-draw{display:inline}.history-separator{color:#8c958c}
 .game .turn-history-row .history-avatar{display:inline-grid;vertical-align:middle;margin:0 5px 0 0}
 .turn-history-row .history-drawn-cards{white-space:nowrap}
+.turn-history-row .history-initial-cards{display:flex;align-items:center;flex-wrap:wrap;gap:2px;margin-bottom:6px}
+.history-tickets{display:grid;gap:5px;margin:6px 0;font-weight:500}
+.history-ticket{display:grid;grid-template-columns:16px minmax(0,1fr) auto;align-items:start;gap:6px;padding:5px 0;border-bottom:1px solid #e4dfcf;line-height:1.45}
+.history-ticket:last-child{border-bottom:0}.history-ticket strong{font-variant-numeric:tabular-nums}
+.history-ticket-status{font-weight:800;color:#8a7b60}.history-ticket-status.kept{color:#287348}.history-ticket-status.discarded{color:#ad5149}
 .turn-history-row .history-market-refresh,.turn-history-row .history-market-new{display:block}
 .history-turn-heading{font-weight:750}
 .turn-history-row .history-step{display:block;margin:5px 0 0 8px;padding:3px 0 3px 10px;border-left:2px solid #d8d2bf;line-height:1.65}

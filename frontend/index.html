@@ -142,7 +142,7 @@
     <dialog id="wagonCollectionDialog" class="shell-dialog wagon-collection-dialog" aria-labelledby="wagonCollectionTitle" aria-describedby="wagonCollectionDescription">
       <button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button>
       <h2 id="wagonCollectionTitle">Tus vagones</h2><p id="wagonCollectionDescription"></p>
-      <div id="wagonCollectionStage" class="wagon-collection-stage" role="group" aria-label="Colección de vagones"></div>
+      <div id="wagonCollectionStage" class="wagon-collection-stage" role="group" aria-label="Colección de vagones" tabindex="0"></div>
       <p id="wagonCollectionError" role="status" hidden>La vista previa no está disponible.</p>
     </dialog>
     <dialog id="joinDialog" class="shell-dialog" aria-labelledby="joinTitle"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button><h2 id="joinTitle">Join Room</h2>
@@ -157,7 +157,6 @@
       <form id="homeCreate"><input id="createCode" /><button id="regenerateCode" type="button">Generar código</button><p id="createCodeError"></p></form>
       <section id="homePractice" hidden><span id="practiceColorName"></span><div id="practiceColors"></div><button id="createTest" type="button">Practicar</button></section>
     </div>
-    <dialog id="replaySecrets" class="shell-dialog" aria-labelledby="replaySecretsTitle"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button><h2 id="replaySecretsTitle">Datos privados de este paso</h2><div id="replaySecretsContent"></div></dialog>
     <section id="replayControls" class="replay-controls" aria-label="Controles de repetición" hidden></section>
     <div id="game" class="game hidden">
       <main class="game-stage" aria-label="Mesa de juego">
@@ -265,7 +264,7 @@
         <strong id="compactClock" class="turn-clock" data-clock="turn" data-clock-format="timer"></strong>
       </section>
     </div>
-    <div id="tunnelBoardNotice" class="tunnel-board-notice" hidden><span id="tunnelBoardStatus" role="status"></span><button type="button" id="viewTunnel">Ver túnel</button></div>
+    <div id="tunnelBoardNotice" class="tunnel-board-notice" hidden><span id="tunnelBoardStatus" role="status"></span></div>
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
     <div id="overlay" class="overlay hidden">
       <div class="dialog" id="dialog" role="dialog" aria-modal="true"></div>

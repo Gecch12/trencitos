@@ -47,10 +47,10 @@ function createHistoryQueries({ repository }) {
     const frames=record.frames||await repository.frames(id,record.steps);
     return projectReplay({...record,frames},{full,canAudit,audit,includeAnalysis});
   }
-  async function replayStream(identity,id,audit=false,includeAnalysis=false){
+  async function replayStream(identity,id,audit=false,includeAnalysis=false,compact=false){
     const {record,full,canAudit}=await authorizedRecord(identity,id,audit);
     const source=record.frames||(repository.iterateFrames?repository.iterateFrames(id,record.steps):await repository.frames(id,record.steps));
-    return streamReplay(record,{full,canAudit,audit,includeAnalysis},source);
+    return streamReplay(record,{full,canAudit,audit,includeAnalysis,compact:compact&&!audit},source);
   }
   return { list, replay, replayStream };
 }

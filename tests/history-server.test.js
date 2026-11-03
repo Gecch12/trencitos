@@ -22,6 +22,12 @@ test('guest history and replay survive reload/restart, duplicate actions stay si
  // Close via the same authoritative finalizer used by the last round.
  Engine.finish(r.game,true);a.send({type:'reclaim'});await a.next('state',m=>m.game.phase==='finished');
  const replay=await (await http('/api/history/'+matchId,cookie)).json();assert.equal(replay.match.status,'completed');assert.equal(replay.full,true);
+ const stream=await fetch(`http://127.0.0.1:${port}/api/history/${matchId}`,{headers:{cookie,Accept:'application/x-ndjson'}});
+ assert.match(stream.headers.get('content-type'),/application\/x-ndjson/);
+ const lines=(await stream.text()).trim().split('\n').map(JSON.parse);
+ assert.equal(lines[0].type,'match');assert.equal(lines.at(-1).type,'end');
+ assert.equal(lines.filter(item=>item.type==='frame').length,replay.frames.length);
+ assert.equal((await fetch(`http://127.0.0.1:${port}/api/history/${matchId}`,{headers:{Accept:'application/x-ndjson'}})).status,404);
  assert.equal((await http('/api/history/'+matchId)).status,404);assert.equal((await http('/api/history/'+matchId+'/audit')).status,404);
  assert.equal((await http('/api/history/'+matchId+'/audit',cookie)).status,200);
  assert.ok(!JSON.stringify(replay).includes(lobby.token));assert.ok(!JSON.stringify(replay.match).includes('guestId'));

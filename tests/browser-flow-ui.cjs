@@ -44,26 +44,32 @@ let browser;
   await Promise.all([actor,rival,spectator].map(p=>p.waitForFunction(()=>game.sharedTunnel?.stage==='reveal')));
   assert.equal(room.game.current,0);assert.equal(room.game.routes[route.id].owner,null);
   for(const p of [actor,rival,spectator]) {
-   assert.equal(await p.locator('#tunnelSequence').count(),1);assert.equal(await p.locator('#skipTunnelReveal').count(),0);
-   assert.doesNotMatch(await p.locator('#dialog').innerText(),/Revelamos hasta|Sin coste adicional/);
-   assert.equal(await p.locator('#dismissTunnel').count(),p===actor?0:1);
+   assert.equal(await p.locator('#tunnelSequence').count(),p===actor?1:0);
+   assert.equal(await p.locator('#overlay').isVisible(),p===actor);
+   assert.equal(await p.locator('#dismissTunnel, #viewTunnel').count(),0);
+   if(p!==actor)assert.equal(await p.locator('#tunnelBoardNotice').isVisible(),true);
   }
   // A direct command cannot bypass the modal or consume the following turn.
   await rival.evaluate(()=>send({type:'action',action:{type:'draw_train',index:-1}}));
-  await rival.waitForFunction(()=>document.querySelector('#errorMsg')?.textContent.includes('termine el túnel'));
+  await rival.waitForFunction(()=>document.querySelector('#toast')?.textContent.includes('termine el túnel'));
   assert.equal(room.game.current,0);
   if(kind!=='zero') {
    await Promise.all([actor,rival,spectator].map(p=>p.waitForFunction(()=>game.sharedTunnel?.stage==='decision')));
    assert.equal(await rival.locator('#acceptTunnel').count(),0);assert.equal(await spectator.locator('#acceptTunnel').count(),0);
-   assert.match(await rival.locator('#dialog').innerText(),/Probador está decidiendo/);
-   await rival.reload();await rival.waitForFunction(()=>game?.sharedTunnel?.stage==='decision');
-   assert.equal(await rival.locator('#tunnelSequence .tunnel-reveal').count(),3);
+   assert.match(await rival.locator('#tunnelBoardStatus').innerText(),/Probador · 3 de 3 cartas · Suplemento: 2/);
+   await rival.reload();await rival.waitForFunction(()=>game?.sharedTunnel?.stage==='decision'&&board3D?.stats().tunnelCards.visible);
+   assert.equal(await rival.locator('#overlay').isVisible(),false);
+   assert.equal(await rival.evaluate(()=>board3D.stats().tunnelCards.cards.length),3);
    if(kind==='color') {await rival.screenshot({path:path.join(out,'tunnel-observer.png')});await actor.locator('#acceptTunnel').click();}
    else {assert.equal(await actor.locator('#acceptTunnel').isDisabled(),true);assert.match(await actor.locator('.tunnel-insufficient').innerText(),/Te faltan 2 cartas/);assert.doesNotMatch(await actor.locator('#dialog').innerText(),/Aún no se ha gastado|Al desistir conservas/);await actor.screenshot({path:path.join(out,'tunnel-shortfall.png')});await actor.locator('#declineTunnel').click();}
   }
   await Promise.all([actor,rival,spectator].map(p=>p.waitForFunction(()=>game.sharedTunnel?.stage==='result')));
   assert.equal(room.game.current,0);
-  assert.equal(await rival.locator('#dialogTitle').innerText(),kind==='decline'?'Túnel no construido':'Túnel construido');
+  assert.equal(await actor.locator('#dialogTitle').innerText(),kind==='decline'?'Túnel no construido':'Túnel construido');
+  for(const p of [rival,spectator]) {
+   assert.equal(await p.locator('#overlay').isVisible(),false);
+   assert.equal(await p.locator('#tunnelBoardStatus').innerText(),kind==='decline'?'Túnel no construido':'Túnel construido');
+  }
   await Promise.all([actor,rival,spectator].map(p=>p.waitForFunction(()=>!game.sharedTunnel&&game.current===1)));
   assert.ok(room.game.turnDeadline-Date.now()>59000);
   assert.equal(room.game.routes[route.id].owner,kind==='decline'?null:0);
@@ -80,9 +86,25 @@ let browser;
    assert.equal(await rival.locator('.keep').first().isChecked(),true);
    assert.equal(await rival.evaluate(()=>game.ticketOffer.deadline),deadline);
   }
-  report.checks.push('Shared tunnel '+kind+': actor, rival, spectator, authority, clocks, automatic close');
+  report.checks.push('Tunnel '+kind+': builder-only modal, rival/spectator on board, reconnect, authority, clocks, automatic close');
   await Promise.all([actor,rival,spectator].map(p=>p.close()));
  }
+ const bot=tunnelRoom('QABOT0','zero',true);bot.practice=false;bot.visibility='public';bot.members[0].bot=true;
+ const botRoute=bot.game.routes.find(r=>r.tunnel&&r.color==='gray'&&r.n===2);
+ E.action(bot.game,0,{type:'claim',routeId:botRoute.id,color:'white'});app.rooms.set(bot.code,bot);
+ const botView=await page('/?room=QABOT0#recover=preview-1'),botSpectator=await page('/?watch=QABOT0');
+ for(const p of [botView,botSpectator]) {
+  await p.waitForFunction(()=>game.sharedTunnel?.stage==='reveal');
+  assert.equal(await p.locator('#overlay').isVisible(),false);
+  assert.equal(await p.locator('#viewTunnel').count(),0);
+ }
+ await Promise.all([botView,botSpectator].map(p=>p.waitForFunction(()=>game.sharedTunnel?.stage==='result')));
+ for(const p of [botView,botSpectator]) {
+  assert.equal(await p.locator('#overlay').isVisible(),false);
+  assert.equal(await p.locator('#tunnelBoardStatus').innerText(),'Túnel construido');
+ }
+ await Promise.all([botView,botSpectator].map(p=>p.close()));
+ report.checks.push('Bot tunnel stays on the board for both players and spectators');
  const result=resultsRoom();app.rooms.set(result.code,result);
  const rp=await page('/?room='+result.code+'#recover='+result.members[0].token);
  await rp.waitForSelector('.results-table');

@@ -37,7 +37,10 @@ const report={checks:[],errors:[]};let browser;
   for(const p of clients) {
    assert.ok(await p.evaluate(id=>board3D.stats().spotlightRoutes.includes(id),route.id));
    assert.deepEqual(await p.evaluate(()=>game.sharedTunnel.base),reserved);
-   assert.equal(await p.locator('[data-tunnel-payment="base"] .payment-chip').count(),reserved.regular&&reserved.wild?2:1);
+   assert.equal(await p.locator('#overlay').isVisible(),p===actor);
+   assert.equal(await p.locator('#viewTunnel, #dismissTunnel').count(),0);
+   if(p===actor)assert.equal(await p.locator('[data-tunnel-payment="base"] .payment-chip').count(),reserved.regular&&reserved.wild?2:1);
+   else assert.equal(await p.locator('#tunnelBoardNotice').isVisible(),true);
   }
   if(kind!=='zero') {
    await Promise.all(clients.map(p=>p.waitForFunction(()=>game.sharedTunnel?.stage==='decision')));
@@ -45,6 +48,9 @@ const report={checks:[],errors:[]};let browser;
    assert.ok(await rival.evaluate(id=>board3D.stats().spotlightRoutes.includes(id),route.id));
    assert.equal(await spectator.evaluate(()=>game.sharedTunnel.extra),undefined);
    if(kind==='mixed') {
+    const deadline=room.game.turnDeadline;
+    await actor.reload();await actor.waitForSelector('#acceptTunnel');
+    assert.equal(await actor.evaluate(()=>game.turnDeadline),deadline);
     await actor.locator('input[name="tunnelPayment"][value="1"]').check();
     assert.equal(await actor.locator('[data-tunnel-payment="total"] .payment-icons').getAttribute('aria-label'),'2 de color blanco + 2 comodines');
     await actor.screenshot({path:path.join(out,'decision-desktop.png')});
@@ -64,11 +70,12 @@ const report={checks:[],errors:[]};let browser;
   const built=['zero','mixed','wild'].includes(kind),until=room.game.pending.until,receipt={...room.game.pending};
   assert.equal(until-receipt.resultStartedAt,3000);assert.equal(room.game.current,0);
   for(const p of clients) {
-   assert.equal(await p.locator('#dialogTitle').innerText(),built?'Túnel construido':'Túnel no construido');
+   assert.equal(await p.locator('#overlay').isVisible(),p===actor);
+   assert.equal(await p.locator(p===actor?'#dialogTitle':'#tunnelBoardStatus').innerText(),built?'Túnel construido':'Túnel no construido');
    assert.ok(await p.evaluate(id=>board3D.stats().spotlightRoutes.includes(id),route.id));
    assert.deepEqual(await p.evaluate(()=>game.sharedTunnel.base),reserved);
    if(built)assert.deepEqual(await p.evaluate(()=>game.sharedTunnel.extra),receipt.extra);
-   else {
+   else if(p===actor) {
     assert.equal(await p.locator('[data-tunnel-payment="total"] .payment-icons').getAttribute('aria-label'),'0 cartas');
     assert.equal(await p.locator('.tunnel-return-target').count(),1);
    }
@@ -81,9 +88,11 @@ const report={checks:[],errors:[]};let browser;
    await Promise.all([actor.screenshot({path:path.join(out,`${kind}-result-motion.png`)}),rival.screenshot({path:path.join(out,`${kind}-result-reduced.png`)})]);
   }
   if(kind==='mixed') {
-   await spectator.reload();await spectator.waitForFunction(()=>game?.sharedTunnel?.stage==='result');
+   await spectator.reload();await spectator.waitForFunction(()=>game?.sharedTunnel?.stage==='result'&&board3D?.stats().tunnelCards.visible);
    assert.equal(await spectator.evaluate(()=>game.sharedTunnel.until),until);
-   const times=await spectator.evaluate(()=>tunnelReveal.animations.map(a=>a.currentTime));assert.ok(times.every(n=>n>300));
+   assert.equal(await spectator.locator('#overlay').isVisible(),false);
+   assert.equal(await spectator.evaluate(()=>tunnelReveal),null);
+   assert.deepEqual(await spectator.evaluate(()=>board3D.stats().tunnelCards.cards.map(c=>c.color)),receipt.revealed);
    await spectator.screenshot({path:path.join(out,'result-reconnect.png')});
   }
   if(kind==='insufficient') {
@@ -108,10 +117,15 @@ const report={checks:[],errors:[]};let browser;
  const route=room.game.routes.find(r=>r.tunnel&&r.color==='gray'&&r.n===2);
  E.action(room.game,0,{type:'claim',routeId:route.id,color:'white'});E.expire(room.game,room.game.pending.until);
  E.action(room.game,0,{type:'decline_tunnel'},{now:Date.now()});
+ await actor.addInitScript(()=>{localStorage.setItem('rr-language','en');localStorage.setItem('rr-room-QATEN0','preview-human');});
+ await actor.goto(base+'/?room=QATEN0');
+ await actor.waitForSelector('.tunnel-return-target');assert.match(await actor.locator('#dialog').innerText(),/Base returned/);
+ assert.match(await actor.locator('#dialog').innerText(),/You keep your cards/);
  await spectator.addInitScript(()=>localStorage.setItem('rr-language','en'));await spectator.goto(base+'/?watch=QATEN0');
- await spectator.waitForSelector('.tunnel-return-target');assert.match(await spectator.locator('#dialog').innerText(),/Base returned/);
- assert.match(await spectator.locator('#dialog').innerText(),/They keep their cards/);
- await spectator.screenshot({path:path.join(out,'returned-english.png')});
+ await spectator.waitForFunction(()=>game?.sharedTunnel?.stage==='result');
+ assert.equal(await spectator.locator('#overlay').isVisible(),false);
+ assert.equal(await spectator.locator('#tunnelBoardStatus').innerText(),'Tunnel not built');
+ await actor.screenshot({path:path.join(out,'returned-english.png')});
  assert.deepEqual(report.errors,[]);report.passed=true;
 })().catch(e=>{report.failure=e.stack;process.exitCode=1;console.error(e);}).finally(async()=>{
  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));

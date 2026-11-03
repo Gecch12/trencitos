@@ -13,7 +13,11 @@ const ReplayState = (() => {
     return changes;
   }
   function apply(state, changes) {
-    let next=structuredClone(state);
+    return applyChanges(structuredClone(state), changes);
+  }
+  // A cursor owns its working state. Only changed values need copying between
+  // checkpoints; callers must not retain or mutate the returned working state.
+  function applyChanges(next, changes) {
     for (const {path,value,remove} of changes) {
       if(path.some(key=>['__proto__','constructor','prototype'].includes(key))) throw Error('Invalid replay path');
       if(!path.length){next=structuredClone(value);continue;}
@@ -22,12 +26,33 @@ const ReplayState = (() => {
     }
     return next;
   }
+  function cursor(frames = []) {
+    let state=null,position=-1;
+    function push(frame) {
+      state=frame.snapshot?structuredClone(frame.snapshot):applyChanges(state,frame.changes);
+      position++;return state;
+    }
+    function at(step) {
+      if(!Number.isInteger(step)||step<0||step>=frames.length)throw Error('Invalid replay step');
+      if(step===position)return state;
+      if(step<position||position<0||step-position>32){
+        let checkpoint=step;while(checkpoint>0&&!frames[checkpoint].snapshot)checkpoint--;
+        state=null;position=checkpoint-1;
+      }
+      while(position<step)push(frames[position+1]);
+      return state;
+    }
+    return {push,at};
+  }
+  function view(state, index) {
+    return {...state.views[index],...state.shared};
+  }
   function at(frames, step) {
     let index=step; while(index>0&&!frames[index].snapshot) index--;
     let state=structuredClone(frames[index].snapshot);
     for(let i=index+1;i<=step;i++) state=frames[i].snapshot?structuredClone(frames[i].snapshot):apply(state,frames[i].changes);
     return state;
   }
-  return {diff,apply,at};
+  return {diff,apply,at,cursor,view};
 })();
 if(typeof module!=='undefined'&&module.exports) module.exports=ReplayState;

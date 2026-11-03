@@ -37,9 +37,13 @@ en filas compactas con fecha, puesto propio, jugadores, duración, estado y acce
 a la repetición. Tocar una fila abre su desglose; solo uno permanece abierto.
 En móvil cada partida ocupa dos líneas. Las partidas en curso o abandonadas no
 tienen puesto final; la duración parcial lleva `~`. El icono de información
-explica el acceso al historial. La repetición avanza por pasos a 0,5×, 1×, 2×, 4× y 8×. Vincular
-Google conserva el historial previo de invitado en esa cuenta. Al cerrar la partida, cualquiera que tenga acceso a su replay puede consultar
-todos los POV, manos, destinos, robos y mazos registrados. Las salas privadas
+explica el acceso al historial. La repetición muestra el primer estado mientras
+carga el resto y avanza por pasos a 0,5×, 1×, 2×, 4× y 8×. Reutiliza el tablero,
+mercado, mano y animaciones de la partida; tocar un avatar cambia de jugador.
+El historial permite saltar a una acción y muestra cada destino una sola vez,
+con ✓/✕ para su elección. Vincular Google conserva el historial previo de invitado
+en esa cuenta. Al cerrar la partida, cualquiera que tenga acceso a su replay puede
+consultar todos los POV, manos, destinos y robos registrados. Las salas privadas
 siguen limitadas a sus participantes. [Detalles de conservación y acceso](docs/history-replay.md).
 
 Editar perfil solicita al navegador desactivar el autocompletado del apodo;
@@ -72,11 +76,11 @@ Laboratorio es un tablero ficticio de prueba con las mismas reglas. La selecció
 se guarda y se conserva en la revancha.
 La sección **Tiempos** agrupa turno (30/60/90 s), extra para nuevos billetes
 (+15/+30 s) e iniciales (30/60/90 s). El anfitrión ajusta plazas y tiempos con
-flechas. La invitación es compacta y la paleta aparece sobre un tren de perfil,
-con los vagones enganchados y ajustados al ancho del panel. En escritorio se ven
-las variantes disponibles juntas; en móvil aparece solo un vagón en vista 3/4,
-mostrando el lateral, el frente y el techo. No hay
-tarjetas, descripciones ni desplazamiento horizontal.
+flechas. La invitación es compacta y la paleta acompaña una miniatura de un vagón
+en vista 3/4. **Ver los 6 vagones** abre un modal compacto con las seis variantes
+de Pasajeros enganchadas en una fila de perfil. La franja se desplaza solo en
+horizontal; el título y el cierre permanecen visibles. Las otras familias abren
+**Ver detalle** con su único diseño.
 La configuración conserva desplazamiento cuando
 lo necesita y un pie reservado para **Iniciar partida**. Los valores predeterminados son
 5 plazas y 60/+30/60 s;
@@ -198,7 +202,26 @@ con un pequeño margen uniforme alrededor.
 
 Pulsa una ruta libre y después **Construir** para abrir el pago. El botón solo aparece durante tu turno jugable, antes de robar una carta y sin elecciones obligatorias pendientes; fuera de turno o al terminar, el menú es informativo. Si ya está ocupada, muestra únicamente al propietario; las propias indican «Esta ruta es tuya». Cada carril de una ruta doble se evalúa por separado. Se comprueban todos los colores legales y los comodines disponibles; si no alcanzan, aparece un aviso. Un túnel requiere poder pagar su coste inicial, no el suplemento todavía desconocido. Al revelarlo, el modal señala qué cartas aumentan el coste, muestra el pago base reservado y ofrece las combinaciones legales del suplemento (color, comodines o ambos), con el total antes de confirmar. No cuenta dos veces las cartas reservadas. Pulsa una ciudad libre para **Construir estación**; una ocupada identifica al dueño. Las estaciones tienen tejado y fachada del color del jugador, borde marfil, contorno oscuro y tamaño mínimo legible al alejar el mapa. Cancelar o Escape antes de confirmar no consume el turno; una vez revelado un túnel, hay que pagar o desistir. Desistir conserva la mano, pero termina el turno.
 
-El pago se muestra como una suma visual de cartas ×cantidad + comodines ×cantidad = total. **Cambiar cartas** ofrece miniaturas con existencias en la esquina; nombres y disponibilidad permanecen accesibles por teclado/lector y tooltip. Si faltan cartas para el túnel, el aviso indica cuántas faltan tras reservar el pago inicial. El intento de túnel muestra a toda la mesa la base reservada y las cartas reveladas; solo el constructor ve las opciones del suplemento. Al construir, el resultado muestra **Base pagada + Extra pagado = Total pagado** y anima el pago seguido por los vagones. Si se desiste, muestra **Base recuperada**, **Extra no cobrado** y **Total gastado: 0**, con devolución visual a la mano. El tiempo agotado tiene su propio mensaje. Los observadores pueden pulsar **Volver al mapa** o Escape y retomar su encuadre; el mismo intento no vuelve a imponerles el modal al cambiar de etapa. **Ver túnel** permite reabrirlo. Las tres cartas están apoyadas junto al túnel en el tablero desde el inicio: se revelan con los mismos tiempos, señalan coincidencias y permanecen hasta el desenlace. Si el mazo aporta menos cartas, solo se muestran las que existen. El constructor conserva su decisión obligatoria. El resultado dura tres segundos, se cierra automáticamente y conserva sus plazos al reconectar; movimiento reducido muestra el mismo resumen sin desplazamientos.
+El pago se muestra como una suma visual de cartas ×cantidad + comodines ×cantidad = total.
+**Cambiar cartas** ofrece miniaturas con existencias en la esquina; nombres y
+disponibilidad permanecen accesibles por teclado/lector y tooltip. Si faltan
+cartas para el túnel, el aviso indica cuántas faltan tras reservar el pago inicial.
+Solo el constructor humano ve el modal de revelación, decisión y resultado.
+Al construir, muestra **Base pagada + Extra pagado = Total pagado** y anima el
+pago seguido por los vagones. Si se desiste, muestra **Base recuperada**,
+**Extra no cobrado** y **Total gastado: 0**, con devolución visual a la mano.
+El tiempo agotado tiene su propio mensaje.
+
+Los demás jugadores y espectadores siguen el intento desde el tablero, sin modal
+ni botón para abrirlo, también al reconectar o cuando construye un bot. Las tres
+cartas están apoyadas junto al túnel desde el inicio: se revelan con los mismos
+tiempos, señalan coincidencias y permanecen hasta el desenlace. Si el mazo aporta
+menos cartas, solo se muestran las que existen. El aviso del tablero muestra el
+suplemento y el resultado; el historial conserva el desglose público. Los diálogos
+opcionales que un observador esté consultando no se sustituyen por el túnel.
+El constructor conserva su decisión obligatoria. El resultado dura tres segundos,
+se cierra automáticamente y conserva sus plazos al reconectar; movimiento reducido
+muestra el mismo resumen sin desplazamientos.
 
 **Tus destinos** muestra cuatro billetes junto a la mano, con scroll interno a partir del quinto. Los pendientes son beige; los conectados, dorados con **✓ verde**, también en el modal. El servidor calcula el progreso de forma privada y emplea una asignación compatible de estaciones para todos los billetes; los destinos cumplidos ya se reflejan en tu marcador privado y se liquidan en el resultado final. **Ver rutas** abre tus billetes conservados, incluso durante turnos ajenos. Pulsar un billete concreto lo abre resaltado. Las casillas del modal solo resaltan conexiones: no descartan billetes ni consumen acciones. Un destino completado resalta un recorrido real de vías construidas; los tramos prestados mediante estación son discontinuos. Se cierra con X o Escape. **Historial** permanece abierto arriba a la derecha, sin desplazar el tablero ni la mano; su rueda recorre únicamente los movimientos.
 
@@ -210,7 +233,10 @@ Los billetes se comparan sobre el mismo tablero 3D de la partida, con vías,
 colores, túneles, ferris, piezas y estaciones actuales. Solo llevan nombre las
 ciudades de destino. Los recorridos propuestos usan vagones translúcidos de tu
 familia y color; los tramos compartidos se dibujan una vez. Los billetes iniciales
-muestran el camino de menos vagones. Los nuevos minimizan los vagones adicionales,
+muestran el camino de menos vagones, sin indicar cantidades de vagones en las
+tarjetas ni mostrar el recuadro de reserva disponible. Durante la partida,
+las ofertas nuevas y la consulta de destinos conservados sí muestran la reserva
+y los vagones adicionales de cada recorrido. Los nuevos minimizan esos vagones,
 aprovechan tus vías y las estaciones ya colocadas, y respetan bloqueos y vías
 dobles. Conservan los préstamos que ya completan tus destinos. Cada propuesta es
 individual: no reserva vías, no estima las cartas de pago ni garantiza una
@@ -218,22 +244,34 @@ asignación conjunta de estaciones para varios billetes todavía pendientes.
 
 Pulsar cualquier parte de un billete (texto, número, casilla o espacio libre)
 lo selecciona o desmarca una sola vez. La casilla conserva su manejo nativo por
-teclado. Pasar el cursor permite inspeccionar un destino con intensidad completa
+teclado. Pasar el cursor permite inspeccionar un destino
 sin cambiar la selección; seleccionar un billete por toque o tocar un recorrido
 del mapa lo enfoca. Retirar el cursor o tocar fuera de las opciones y recorridos
-recupera la vista conjunta, con ensombrecimiento medio (50 % del foco individual)
-y únicamente los billetes marcados. Sin selección queda el mapa base, sin
+recupera la vista conjunta con únicamente los billetes marcados. Sin selección queda el mapa base, sin
 resaltados, nombres especiales ni vagones de previsualización. **Ver todos**
 también vuelve al conjunto seleccionado. Los cambios de foco duran 180 ms,
 conservan el zoom y no se animan con movimiento reducido.
-**Tus destinos
-actuales** conserva controles independientes en una oferta nueva. Rueda, pellizco,
+
+Al elegir billetes iniciales o nuevos, el mapa empieza oscurecido y mantiene
+esa intensidad con cualquier selección o foco, incluso sin billetes marcados.
+**Quitar sombra** muestra los colores normales y pasa a **Activar sombra** para
+restaurarla. El botón conserva recorridos, casillas, foco y zoom. La elección
+de sombra se mantiene al minimizar y reabrir la misma oferta; cada nueva
+selección o recarga empieza oscurecida. En **Ver rutas**, la consulta de billetes
+conservados mantiene el sombreado medio de la vista conjunta y completo del foco.
+
+**Tus destinos actuales** abre todos tus billetes marcados para comparar en una
+oferta nueva, incluidos los completados. Puedes desmarcarlos; esa elección se
+respeta al actualizar el tablero y al minimizar/reabrir la misma oferta. Estos
+controles no seleccionan billetes nuevos ni cuentan para su mínimo. Rueda, pellizco,
 arrastre, teclado y botones de zoom actúan solo dentro del mapa del modal.
 Las construcciones confirmadas actualizan los recorridos en vivo, conservando
 casillas, foco y cámara. Una alternativa igual de económica no desplaza la
 propuesta vigente. **Recorrido actualizado** avisa de los cambios y **Sin conexión
 disponible** identifica un destino bloqueado sin desmarcarlo. Los puntos del
-billete siguen siendo fijos y distintos de la cantidad de vagones.
+billete siguen siendo fijos y distintos de la cantidad de vagones. El modal se
+ajusta a la pantalla: las listas largas se desplazan dentro de su columna y el
+botón de confirmación permanece visible, sin espacio vacío al final del modal.
 
 Los diálogos de billetes iniciales y nuevos muestran segundos y una barra de tiempo decreciente como la del turno, con una indicación breve de los vagones de previsualización. El mínimo permanece junto al botón de confirmación. Se requieren al menos dos billetes iniciales y uno al robar destinos durante la partida. Las actualizaciones de estado no reinician las casillas elegidas. `npm test` incluye la regresión de confirmar nuevos destinos y continuar con los turnos siguientes. Hay verificaciones de escritorio y emulación móvil; las pruebas en dispositivos físicos siguen pendientes. Consulta el [índice de QA](docs/qa-index.md) para distinguir el alcance de cada ejecución.
 
@@ -255,7 +293,7 @@ y su sonido son inmediatos; ocultar, desconectar o redimensionar termina los
 efectos pendientes sin alterar la jugada ni los plazos del servidor.
 
 - **Elección inicial simultánea: 30, 60 o 90 segundos compartidos.** Cada jugador recibe sus cuatro billetes privados y confirma al menos dos, en cualquier orden. Quien confirma puede explorar el mapa mientras espera; se muestra cuántos están listos. Al confirmar todos comienza el jugador sorteado, no el primero en confirmar. Al vencer el plazo, cada pendiente conserva dos billetes distintos al azar y empieza la partida. Reconectar no reinicia el plazo; las partidas antiguas conservan sus elecciones y usan el plazo que ya tenían.
-- **Túneles compartidos:** todos los jugadores y espectadores ven quién intenta la ruta, las cartas reveladas y el resultado. Cada carta aparece cada 700 ms; tras la última se dejan otros 700 ms antes de resolver. Durante la revelación el reloj del constructor está congelado. Con suplemento solo él decide pagar o desistir usando el tiempo que le quedaba; al agotarse, desiste. Sin suplemento se construye automáticamente. El resultado dura tres segundos y se cierra solo, antes de comenzar el siguiente turno. Los bots respetan estas etapas. Los billetes pendientes conservan su borrador y su tiempo restante durante todo el intento, aunque un observador oculte el modal. Recargar, reducir movimiento u ocultar una pestaña no adelanta ni prolonga los plazos del servidor.
+- **Túneles compartidos:** todos los jugadores y espectadores ven quién intenta la ruta, las cartas reveladas y el resultado; solo el constructor humano recibe el modal. Cada carta aparece cada 700 ms; tras la última se dejan otros 700 ms antes de resolver. Durante la revelación el reloj del constructor está congelado. Con suplemento solo él decide pagar o desistir usando el tiempo que le quedaba; al agotarse, desiste. Sin suplemento se construye automáticamente. El resultado dura tres segundos y se cierra solo, antes de comenzar el siguiente turno. Los bots respetan estas etapas. Los billetes pendientes conservan su borrador y su tiempo restante durante todo el intento, aunque los observadores permanezcan en el tablero. Recargar, reducir movimiento u ocultar una pestaña no adelanta ni prolonga los plazos del servidor.
 - **Turno normal: 30, 60 o 90 segundos según la sala.** Una primera carta no reinicia el reloj. Al vencer, se roban del mazo las dos cartas pendientes, o solo la restante. Si no hay suficientes, se toman las disponibles y pasa el turno. Un túnel aún sin resolver se abandona conservando el pago reservado.
 - Pedir nuevos destinos consume el turno inmediatamente: el siguiente jugador continúa mientras eliges. Cada oferta privada recibe **el tiempo restante del turno +15 o +30 segundos**,
 según la sala. Por ejemplo, 20 s restantes con +30 s dan 50 s para elegir. **Ver mapa** minimiza el diálogo sin detener el reloj ni borrar tu selección; **Elegir billetes** permite volver mientras juegan los demás; si vuelve tu turno pendiente de elegir, se abre y debe resolverse primero. Confirmar (o vencer el plazo de elección) inicia entonces la **duración completa configurada para el nuevo turno**. Confirmar fuera de turno no modifica el reloj del jugador activo.

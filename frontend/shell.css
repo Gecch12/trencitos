@@ -370,21 +370,10 @@ body .player-avatar.is-bot > svg,body .home-avatar.is-bot > svg { fill:none; str
 .match-status { border-radius:16px; padding:5px 10px; font-size:12px; background:#e6ecec; white-space:nowrap; }
 .match-status.completed { background:#d4ebdc; }.match-status.abandoned { background:#f8e8d1; }
 .history-summary { display:grid; grid-template-columns:auto 1fr; gap:20px; padding:24px; background:#dfebeb; border-radius:10px; }
-.replay-controls { position:fixed; top:var(--top-height,52px); left:0; right:0; z-index:35; padding:10px 18px; background:#edf3f2; border-bottom:1px solid #bacdcc; color:#193c4a; font-size:13px; }
-.replay-top,.replay-transport { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
-.replay-top label { margin-left:auto; }.replay-controls label { display:flex; align-items:center; gap:6px; }
-.replay-controls select { width:auto; min-height:32px; padding:4px; }.replay-controls button { min-height:34px; min-width:34px; padding:4px 8px; }
-.replay-controls #replaySeek { flex:1; min-width:50px; padding:0; }.replay-events select { flex:1; min-width:0; width:0; }
-.is-replaying .game { top:calc(var(--top-height) + var(--replay-height,126px)); }
 .is-replaying #sessionControls,.is-replaying #copyRoomInGame,.is-replaying #pendingTickets,.is-replaying #initialStatus,.is-replaying #rematch,.is-replaying #multiplayerHome,.is-replaying #practiceHome { display:none!important; }
-@media(max-width:767px){ .replay-controls{padding:8px;font-size:11px;}.replay-privacy{display:none;}.replay-top{flex-wrap:wrap;}.replay-top label{margin-left:0;}.replay-transport{gap:4px;}.replay-transport label{font-size:0;}.replay-controls select{font-size:12px;} }
 
-#replaySecrets{width:min(650px,calc(100vw - 24px));max-height:80dvh;overflow:auto;}
-#replaySecretsContent section{border-top:1px solid #ccd9d7;padding:12px 0;font-size:14px;}
 @media(max-width:1100px),(max-height:600px){body.is-spectating{--compact-bottom:calc(82px + env(safe-area-inset-bottom));}}
 
-.replay-controls label { margin:0; }
-.replay-controls input,.replay-controls select { margin:0; }
 
 .is-replaying .docktip { display:none; }
 

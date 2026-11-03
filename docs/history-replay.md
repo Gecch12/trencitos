@@ -145,7 +145,7 @@ como consecuencia de una restauración parcial.
 Supabase: [003_match_archive.sql](../supabase/003_match_archive.sql)
 crea metadatos, pasos y reclamaciones de invitados. La lectura usa
 [004_archive_paging.sql](../supabase/004_archive_paging.sql): primero
-metadatos/permisos y después páginas de hasta 16 pasos, tres solicitudes simultáneas.
+metadatos/permisos y después páginas secuenciales de hasta 16 pasos.
 Se verifica la secuencia completa y se limita al cierre leído; una respuesta parcial
 no se presenta como replay válido. El plazo de lectura es 15 s por página, sin cambiar
 el plazo ni la autoridad de las escrituras. El RPC v2 guarda checkpoint y
@@ -262,15 +262,32 @@ verificada y sus reclamaciones de invitado, nunca del nombre. El puesto solo
 existe al completar: compara puntos, destinos completados, puntos de estaciones
 y Express, compartiendo puesto en empate exacto. No expone IDs de propiedad.
 Resumen cuenta los estados por separado. `/replay?id=UUID`
-reutiliza el tablero, mano y resultados, sin conexión de juego ni envío de acciones.
-Tiene inicio/final, pasos, búsqueda por acción, barra de posición, pausa y velocidades
+reutiliza el tablero, mercado, jugadores, mano y resultados, sin conexión de juego
+ni envío de acciones. Pulsar un avatar del panel normal selecciona su perspectiva;
+los iconos de persona/robot, nombres y colores son los mismos de la partida.
+Tiene inicio/final, pasos, historial pulsable, barra de posición, pausa y velocidades
 0,5×, 1×, 2×, 4× y 8×. Todo visitante autorizado puede elegir cualquier
-perspectiva y consultar cartas, destinos, mazos y descartes del paso. La
+perspectiva y consultar su mano y destinos. La interfaz no muestra selectores de
+perspectiva/acción, hitos, estadísticas adicionales ni enlaces de auditoría. La
 vista general conserva el tablero y el historial completo, sin asignar una mano
 propia al observador.
 
+El mercado usa el panel normal, sin acordeón; en móvil se abre el panel de robos
+existente al reproducir un robo o renovación. Las animaciones comparten
+`prepareEffects`, `playEffects`, `animateCardFlight`, `prepareMarketRefresh` y
+`animateConstruction` con el juego. Sus tiempos siguen la velocidad seleccionada;
+las cartas del puesto observado entran al contador cuando aterrizan. Pausar,
+cambiar de jugador o saltar lejos cancela efectos; avanzar un paso reproduce su
+animación. La preferencia de movimiento reducido se respeta.
+
+Las manos iniciales separan miniaturas y destinos. Cada destino ofrecido aparece
+una sola vez, con sus puntos y ✓/✕ cuando la decisión está registrada. No repiten
+listas ni etiquetas de conservado/descartado; los símbolos tienen descripción
+accesible. Las grabaciones antiguas sin identidades conservan sus cantidades,
+sin inventar nombres ni estados. La proyección en vivo mantiene su privacidad.
+
 El cliente recibe la definición reconstruida de cada paso junto a su vista.
-Usa los nombres de ciudades guardados incluso en el panel privado, y conserva
+Usa los nombres de ciudades guardados y conserva
 IDs numéricos o de texto al seleccionar destinos y vías. Solo el protocolo
 antiguo completo usa el contexto europeo legado; un paso actual sin definición
 o sin layout compatible detiene la reproducción y muestra el error. Los controles
@@ -304,11 +321,12 @@ Nunca cargar ese helper en producción. La ruta de fixture solo existe en el hel
 no en `server.js`. Las pruebas SQL usan PGlite y las de OAuth un proveedor simulado.
 
 
-## Análisis por paso y controles compactos
+## Análisis opcional y controles de reproducción
 
 `GET /api/history/:id?analysis=1` añade una lista `analysis`, alineada con los
 frames. La auditoría conserva los frames originales; la respuesta de juego
-añade `canAudit` y `knowledge` con los mazos guardados.
+añade `canAudit` y `knowledge` con los mazos guardados. Esta API de compatibilidad
+sigue disponible, pero la interfaz de replay no solicita ni dibuja el análisis.
 Cada paso contiene recursos públicos, rutas construidas, longitud del camino más
 largo y líderes empatados. Todo visitante autorizado recibe cantidades/puntos de destinos
 completados y pendientes y una proyección «Puntuación si terminara ahora».
@@ -321,20 +339,30 @@ No se confunden bonificaciones provisionales con puntos concedidos en vivo.
 La interfaz muestra un modal de carga con tren y reintento, conserva la perspectiva
 seleccionada al avanzar y distingue el actor del paso. El historial acumula todos
 los eventos grabados: pasado, paso actual y futuro navegable. Los controles viven
-junto al historial en escritorio y en un panel plegable en móvil. Hay saltos a
-construcción e hito (destinos, liderazgo/empate, estaciones, túnel desistido, última
-ronda y final). Buscar un paso es instantáneo y cancela sonidos/efectos pendientes;
-la reproducción usa la velocidad elegida y conserva la cámara.
+junto al historial en escritorio y en un panel plegable en móvil. Las filas del
+historial permiten saltar a una acción y conservan sus nodos mientras no cambie
+su contenido; avanzar no vuelve a crear toda la lista. La reproducción conserva
+la cámara y la perspectiva elegida.
 
 ## Entrega con memoria acotada
 
-HTTP autoriza el registro antes de leer frames y entrega el mismo JSON mediante
-un flujo con backpressure. Supabase se consulta en páginas secuenciales de 16
-frames; solo se retienen la página actual, dos estados reconstruidos y el análisis
-compacto. La auditoría también se entrega por partes. Cancelar la descarga cierra
-el iterador; un error posterior al inicio interrumpe la respuesta en vez de
-publicar una grabación parcial válida. Los hashes y snapshots almacenados no cambian.
+HTTP autoriza el registro antes de leer frames. El cliente solicita
+`Accept: application/x-ndjson` sobre la misma URL: recibe una línea `match`, líneas
+`frame` y un cierre `end` con cantidad validada. Tras el primer frame puede mostrar
+el tablero mientras descarga el resto. Solo permite buscar pasos recibidos y
+habilita ir al final al confirmar `end`; una interrupción ofrece reintento y nunca
+se presenta como grabación completa.
 
-Esto evita cargar y volver a copiar de golpe grabaciones antiguas de decenas de MB.
-El navegador mantiene el historial completo recibido; no se modificó el formato
-ni se ejecutan jugadas para reconstruirlo.
+Esta proyección comparte diario/eventos/resultados entre perspectivas en `shared`
+y omite mazos internos y estadísticas. `ReplayState.view` recompone la vista para
+el renderer existente. Los cursores reutilizan un estado de trabajo privado,
+copian solo valores cambiados y parten del snapshot apropiado al retroceder;
+no mutan los frames recibidos ni almacenados. El índice de eventos inspecciona
+las filas modificadas, no todos los historiales de todos los jugadores por paso.
+
+Supabase sigue consultándose en páginas secuenciales de 16 frames y HTTP conserva
+backpressure. El backend de archivos cede entre frames para enviar el primer paso
+y atender otras solicitudes. Sin ese encabezado se conserva el contrato JSON
+anterior y la auditoría completa. Cancelar cierra el iterador; los hashes,
+snapshots, permisos y archivos persistidos no cambian. No hay migración ni
+ejecución de jugadas para reconstruir estados históricos.

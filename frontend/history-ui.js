@@ -5,7 +5,7 @@ const HistoryUI = (() => {
   const date=value=>new Intl.DateTimeFormat(I18n.language,{dateStyle:'short',timeStyle:'short'}).format(value);
   const status={active:'En curso',completed:'Completada',abandoned:'Abandonada'};
   async function api(id='') {
-    const response=await fetch('/api/history'+(id?'/'+encodeURIComponent(id)+'?analysis=1':''),{credentials:'same-origin',cache:'no-store'}),data=await response.json();
+    const response=await fetch('/api/history'+(id?'/'+encodeURIComponent(id):''),{credentials:'same-origin',cache:'no-store'}),data=await response.json();
     if(!response.ok)throw Error(t(data.message));return data;
   }
   function duration(match) {
@@ -72,6 +72,43 @@ const HistoryUI = (() => {
       $('historyFilter').onchange=draw;draw();
     } catch(error){if(request!==profileRequest)return;root.innerHTML=`<p role="alert">${escape(error.message)}</p><button id="retryHistory">${t('Reintentar')}</button>`;$('retryHistory').onclick=()=>profile(tab);}
   }
-  const replay=(id,show)=>ReplayUI.open({id,load:api,show});
+  async function loadReplay(id,onUpdate,signal){
+    const response=await fetch('/api/history/'+encodeURIComponent(id),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/x-ndjson'},signal});
+    if(!response.ok){const error=await response.json();throw Error(t(error.message));}
+    if(!response.headers.get('content-type')?.includes('application/x-ndjson')){
+      const data=await response.json();data.complete=true;onUpdate(data);return data;
+    }
+    const reader=response.body.getReader(),decoder=new TextDecoder();
+    let pending='',data=null,ended=false,start=performance.now(),dirty=false;
+    const accept=line=>{
+      const item=JSON.parse(line);
+      if(ended)throw Error(t('Esta repetición no está disponible.'));
+      if(item.type==='match'&&!data)data={...item,frames:[],complete:false};
+      else if(item.type==='frame'&&data){
+        const previous=data.frames.at(-1);
+        if(previous&&item.frame.seq!==previous.seq+1||!previous&&!item.frame.snapshot)throw Error(t('Esta repetición no está disponible.'));
+        data.frames.push(item.frame);dirty=true;
+      }else if(item.type==='end'&&data&&item.steps===data.frames.length&&item.steps===data.match.steps){data.complete=true;ended=true;dirty=true;}
+      else throw Error(t('Esta repetición no está disponible.'));
+    };
+    try{
+      while(true){
+        const {value,done}=await reader.read();pending+=decoder.decode(value,{stream:!done});
+        let newline;
+        while((newline=pending.indexOf('\n'))>=0){
+          const line=pending.slice(0,newline);pending=pending.slice(newline+1);if(line)accept(line);
+          if(dirty&&(data.frames.length===1||performance.now()-start>16)){
+            onUpdate(data);dirty=false;
+            await new Promise(resolve=>setTimeout(resolve,0));start=performance.now();
+          }
+        }
+        if(dirty){onUpdate(data);dirty=false;}
+        if(done)break;
+      }
+      if(!ended||pending.trim())throw Error(t('Esta repetición no está disponible.'));
+      return data;
+    }finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
+  }
+  const replay=(id,show,options={})=>ReplayUI.open({id,load:loadReplay,show,...options});
   return {profile,replay};
 })();

@@ -26,7 +26,13 @@ const TurnHistory = (() => {
     const payment=value=>value?Array(value.regular||0).fill(value.color).concat(Array(value.wild||0).fill('wild')):[];
     const route=value=>`${city(value.a)} — ${city(value.b)}`;
     const name=seat=>players[seat]?.name||'—';
-    const tickets=(label,items)=>{if(items)text(`${label}: ${items.map(item=>`${route(item)} (${item.p})`).join('; ')||'—'}`);};
+    const ticketKey=ticket=>ticket.id??`${ticket.a}:${ticket.b}:${ticket.p}`;
+    const tickets=(offered,kept=[],discarded=[])=>{
+      const items=new Map([...(offered||[]),...kept,...discarded].map(ticket=>[ticketKey(ticket),ticket]));
+      if(!items.size)return false;
+      const yes=new Set(kept.map(ticketKey)),no=new Set(discarded.map(ticketKey));
+      add({tickets:[...items].map(([key,ticket])=>({route:route(ticket),points:ticket.p,status:yes.has(key)?'kept':no.has(key)?'discarded':null}))});return true;
+    };
     const actors=[...new Set(events.filter(e=>!['market_refresh','destinations','longest','deck_empty'].includes(e.type)).map(e=>e.actor))];
     if(row.turn===null&&row.at&&row.kind!=='longest')text(new Date(row.at).toLocaleTimeString(I18n.language==='en'?'en-GB':'es-PE',{hour:'2-digit',minute:'2-digit'}));
     if(row.seat!==null)text(name(row.seat));
@@ -54,11 +60,12 @@ const TurnHistory = (() => {
         case 'build':text(t`Construyó ${route(d)} (+${d.points})`);cards(t('Pagó'),payment(d.payment));break;
         case 'station':text(t`Estación en ${city(d.city)}`);cards(t('Pagó'),payment(d.payment));break;
         case 'initial':case 'tickets_kept':
-          if(e.type==='initial'&&d.handCount)cards(t('Mano inicial'),d.hand||Array(d.handCount).fill('back'));
-          text(t`Destinos: recibió ${d.received}, conservó ${d.kept}, descartó ${d.discarded}`);
-          if(revealAll){tickets(t('Ofrecidos'),d.offeredTickets);tickets(t('Conservados'),d.tickets);tickets(t('Descartados'),d.discardedTickets);}
+          if(e.type==='initial'&&d.handCount)cards(t('Mano inicial'),d.hand||Array(d.handCount).fill('back'),'history-initial-cards');
+          if(!revealAll||!tickets(d.offeredTickets,d.tickets,d.discardedTickets))text(t`Destinos: recibió ${d.received}, conservó ${d.kept}, descartó ${d.discarded}`);
           break;
-        case 'tickets_offer':text(t`Recibió ${d.received} destinos; está eligiendo`);if(revealAll)tickets(t('Ofrecidos'),d.tickets);break;
+        case 'tickets_offer':
+          if(events.some(event=>event.type==='tickets_kept'))break;
+          text(t`Recibió ${d.received} destinos; está eligiendo`);if(revealAll)tickets(d.tickets);break;
         case 'setup':text(t`Inicio · empieza ${name(d.first)}`);break;
         case 'timeout':text(t('Tiempo agotado'));break;
         case 'no_action':text(t('Turno sin jugada'));break;
@@ -102,8 +109,20 @@ const TurnHistory = (() => {
           lastPhase=part.phase;
         } else lastPhase=null;
         node.append(container);
-      } else if(part.className!=='history-market-new'){const separator=document.createElement('span');separator.className='history-separator';separator.textContent=' · ';container.append(separator);}
-      const span=document.createElement('span');span.textContent=part.text;container.append(span);
+      } else if(!part.tickets&&part.className!=='history-market-new'){const separator=document.createElement('span');separator.className='history-separator';separator.textContent=' · ';container.append(separator);}
+      const span=document.createElement('span');span.textContent=part.text||'';container.append(span);
+      if(part.tickets){
+        span.className='history-tickets';span.setAttribute('role','list');span.setAttribute('aria-label',t('Destinos'));
+        for(const ticket of part.tickets){
+          const item=document.createElement('span');item.className='history-ticket';item.setAttribute('role','listitem');
+          const status=document.createElement('span');status.className='history-ticket-status '+(ticket.status||'');
+          status.textContent=ticket.status==='kept'?'✓':ticket.status==='discarded'?'✕':'•';
+          if(ticket.status){status.setAttribute('role','img');status.setAttribute('aria-label',t(ticket.status==='kept'?'Billetes conservados':'Descartados'));}
+          const route=document.createElement('span');route.textContent=ticket.route;
+          const points=document.createElement('strong');points.textContent=ticket.points;points.setAttribute('aria-label',t`${ticket.points} puntos`);
+          item.append(status,route,points);span.append(item);
+        }
+      }
       if(part.cards){
         span.className=['history-draw',part.className].filter(Boolean).join(' ');
         if(!part.cards.length)span.append(document.createTextNode(' 0'));

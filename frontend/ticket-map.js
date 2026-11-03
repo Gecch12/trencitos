@@ -73,10 +73,13 @@ export function createTicketMap({ container, map, network, camera, onPreview, on
     data = next;
     const shown = shownItems();
     const routes = [...new Set(shown.flatMap(item => item.plan.routes))];
-    const strength = !shown.length ? 0 : data.focus === null ? data.overviewStrength : 1;
+    const strength = data.shadingEnabled === undefined
+      ? (!shown.length ? 0 : data.focus === null ? data.overviewStrength : 1)
+      : Number(data.shadingEnabled);
     board.update({ routes: data.routes, players: data.players, routeColors: data.routeColors, visualSeed: data.visualSeed,
       preview: { routes, player: data.players[data.seat] },
-      transitionMs: 180, spotlight: !strength ? null : { strength,
+      // A zero-strength spotlight keeps route ribbons and previews without dimming the map.
+      transitionMs: 180, spotlight: { strength,
         routes, endpoints: shown.flatMap(item => [item.ticket.a, item.ticket.b]),
         stationRoutes: shown.flatMap(item => item.plan.stationRoutes), stations: shown.flatMap(item => item.plan.stations) } });
     if (data.changed && !matchMedia('(prefers-reduced-motion: reduce)').matches) {

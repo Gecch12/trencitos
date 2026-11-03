@@ -61,6 +61,10 @@ test('offered and discarded tickets remain private live and become visible in al
     const entries=view.turnHistory.flatMap(row=>row.events),kept=entries.find(e=>e.type==='tickets_kept');
     assert.deepEqual(kept.data.offeredTickets,offered);assert.deepEqual(kept.data.discardedTickets,offered.slice(1));
     assert.equal(entries.find(e=>e.id===initial.id).data.hand.length,4);
-    assert.ok(History.content(view.turnHistory.find(row=>row.events.includes(kept)),{players:view.players,city:id=>id,revealAll:true}).some(p=>p.text.startsWith('Descartados:')));
+    const parts=History.content(view.turnHistory.find(row=>row.events.includes(kept)),{players:view.players,city:id=>id,revealAll:true});
+    const tickets=parts.flatMap(part=>part.tickets||[]);
+    assert.equal(tickets.length,offered.length,'each offered destination appears only once after the choice');
+    assert.deepEqual(tickets.map(ticket=>ticket.status),['kept','discarded','discarded']);
+    assert.ok(parts.every(part=>!part.text?.includes('Descartados:')));
   }
 });

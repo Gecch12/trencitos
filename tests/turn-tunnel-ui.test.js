@@ -110,17 +110,17 @@ function revealHarness(reduced = false) {
     replaceChildren(...children) { this.children = children; }, append(node) { this.children.push(node); }, animate() { this.animations++; return {cancel() {}}; }}));
   const nodes = { dialog: {dataset: {}, classList: {add() {}}, querySelector() {return null;}, querySelectorAll() {return [];}}, dialogTitle: {}, tunnelRevealStatus: {},
     tunnelSequence: { querySelector: selector => slots[+selector.match(/"(\d+)"/)[1]] } };
-  const game = {players: [{name: "A"}, {name: "B"}], routes: [{id: 0,n:2}], sharedTunnel: {id: 7, seat: 0, routeId: 0, revealed: ["red", "blue", "wild"], paymentColor: "red", surcharge: 2, stage: "reveal", startedAt: 1000, until: 3800, cardMs: 700}};
-  const context = vm.createContext({I18n: require('../shared/i18n'), GameUI:UI, gameRules:require("../frontend/match-presentation").legacyRules, game, seat: 1, tunnelReveal: null, uiDialog: null,
+  const game = {phase: 'tunnel', current: 0, players: [{name: "A"}, {name: "B"}], routes: [{id: 0,n:2}], sharedTunnel: {id: 7, seat: 0, routeId: 0, revealed: ["red", "blue", "wild"], paymentColor: "red", surcharge: 2, stage: "reveal", startedAt: 1000, until: 3800, cardMs: 700}};
+  const context = vm.createContext({I18n: require('../shared/i18n'), GameUI:UI, gameRules:require("../frontend/match-presentation").legacyRules, game, seat: 0, members: [{}, {}], replayMode: false, tunnelReveal: null, uiDialog: null,
     reducedMotion: {matches: reduced}, Date: {now: () => time}, serverOffset: 0, replayAt: null,
     document: {hidden: false, createElement: () => ({})}, $: id => nodes[id], escapeHTML: String, routeName: () => "Paris — Bruxelles",
-    colorCard: color => ({color}), playSound() {}, syncBoard3D() {}, showTunnelDialog() {throw Error('Rival cannot decide');},
+    colorCard: color => ({color}), playSound() {}, syncBoard3D() {}, showTunnelDialog() {nodes.dialogTitle.textContent = 'Decisión privada';},
     showDialog(title) {nodes.dialog.dataset = {}; nodes.dialogTitle.textContent = title;}
   });
   vm.runInContext(source.slice(source.indexOf("function prepareTunnelReveal("), source.indexOf("function showTunnelDialog(")), context);
   return {context, game, slots, nodes, at(value) {time = value; context.showSharedTunnel();}};
 }
-for (const reduced of [false, true]) test(`shared reveal follows server timestamps, including reconnect and reduced motion=${reduced}`, () => {
+for (const reduced of [false, true]) test(`builder reveal follows server timestamps, including reconnect and reduced motion=${reduced}`, () => {
   const h = revealHarness(reduced);
   h.at(1000); assert.equal(h.context.tunnelReveal.shown, 0);
   h.at(1700); assert.equal(h.context.tunnelReveal.shown, 1);
@@ -133,10 +133,24 @@ for (const reduced of [false, true]) test(`shared reveal follows server timestam
   h.context.cancelTunnelReveal(); h.at(5000);
   assert.equal(h.context.tunnelReveal.shown, 3); // A cancelled/disconnected surface can hydrate the same stage.
   h.game.sharedTunnel.stage = 'decision'; h.at(5001);
-  assert.match(h.nodes.tunnelRevealStatus.textContent, /A está decidiendo/);
+  assert.equal(h.nodes.dialogTitle.textContent, 'Decisión privada');
   h.game.sharedTunnel.stage = 'result'; h.game.sharedTunnel.outcome = 'declined'; h.at(6000);
   assert.equal(h.nodes.dialogTitle.textContent, 'Túnel no construido');
   h.game.sharedTunnel = null; h.context.prepareTunnelReveal(); assert.equal(h.context.tunnelReveal, null);
   const reconnect = revealHarness(reduced); reconnect.at(3100);
   assert.equal(reconnect.context.tunnelReveal.shown, 3);
+});
+test('rivals, spectators, bot-controlled seats and replay cannot open the tunnel modal', () => {
+  for (const role of ['rival', 'spectator', 'bot', 'autopilot', 'replay']) {
+    const h = revealHarness();
+    if (role === 'rival') h.context.seat = 1;
+    else if (role === 'spectator') h.context.seat = -1;
+    else if (role === 'replay') h.context.replayMode = true;
+    else h.context.members[0][role] = true;
+    for (const stage of ['reveal', 'decision', 'result']) {
+      h.game.sharedTunnel.stage = stage; h.at(3000);
+      assert.equal(h.context.tunnelReveal, null, `${role}: ${stage}`);
+      assert.equal(h.nodes.dialogTitle.textContent, undefined, `${role}: ${stage}`);
+    }
+  }
 });

@@ -30,20 +30,19 @@ let app, browser;
       assert.equal(await page.evaluate(() => game.definitionVersion), version);
       assert.equal(await page.evaluate(() => matchContext.legacy), version === undefined);
       assert.equal(await page.evaluate(() => matchContext.cityName("PAR")), "Paris");
-      assert.equal(await page.locator('#replayViewer option').count(), own ? 3 : 1);
-      assert.equal(await page.locator('#replaySecretsOpen').count(), own ? 1 : 0);
-      if (own) {
-        assert.ok((await page.evaluate(() => game.hand)).length > 0);
-        await page.locator('#replayViewer').selectOption('-1');
-      }
+      assert.equal(await page.locator('#replayViewer,#replaySecretsOpen').count(), 0);
+      assert.equal(await page.locator('#scores [data-player]').count(),record.players.length);
+      assert.ok((await page.evaluate(() => game.hand)).length > 0);
+      if(!own)await page.locator('#replayDock > summary').click();
+      await page.locator('#replayGeneral').click();
       assert.deepEqual(await page.evaluate(() => [game.hand, game.tickets]), [[], []]);
       await page.locator('#replayLast').click(); await page.waitForFunction(() => game.phase === 'finished');
       assert.deepEqual(await page.evaluate(() => [...game.result].sort((a, b) => a.seat - b.seat).map(row => row.score)), record.scores.map(row => row.score));
-      assert.ok(await page.evaluate(() => game.result.every(row => !row.tickets.length && !row.details.destinations.length)));
+      assert.ok(await page.evaluate(() => game.result.every(row => Array.isArray(row.details.destinations))));
       await page.locator('#replayFirst').click(); await page.waitForFunction(() => game.phase === 'initial');
       await page.locator('#replayLast').click(); await page.waitForFunction(() => game.phase === 'finished');
       await page.screenshot({ path: path.join(out, `${name}-${own ? 'participant' : 'public-mobile'}.png`), fullPage: true });
-      report.tests.push({ protocol: name, perspective: own ? 'participant with public switch' : 'public', steps: record.steps, seek: true, privateDataHidden: true });
+      report.tests.push({ protocol: name, perspective: own ? 'participant with overview switch' : 'public with overview switch', steps: record.steps, seek: true, overviewWithoutHand: true });
       await context.close();
     }
   }
