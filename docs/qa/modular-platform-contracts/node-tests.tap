@@ -1,0 +1,494 @@
+TAP version 13
+# Client delivery failed after commit; reconnect to recover.
+# Subtest: serialized mutations wait for commit before state/ack, including queued timers
+ok 1 - serialized mutations wait for commit before state/ack, including queued timers
+  ---
+  duration_ms: 3.4425
+  type: 'test'
+  ...
+# Subtest: failed commit rolls back, discards outgoing state and acknowledgements, reports once
+ok 2 - failed commit rolls back, discards outgoing state and acknowledgements, reports once
+  ---
+  duration_ms: 0.388791
+  type: 'test'
+  ...
+# Subtest: a disconnected recipient cannot roll back a successful durable commit
+ok 3 - a disconnected recipient cannot roll back a successful durable commit
+  ---
+  duration_ms: 0.293542
+  type: 'test'
+  ...
+# Subtest: dataset Europe 47 cities, 101 routes, 40 regular + 6 long tickets
+ok 4 - dataset Europe 47 cities, 101 routes, 40 regular + 6 long tickets
+  ---
+  duration_ms: 0.967709
+  type: 'test'
+  ...
+# Subtest: official Europe route dataset matches critical ferries, tunnels and double-route colors
+ok 5 - official Europe route dataset matches critical ferries, tunnels and double-route colors
+  ---
+  duration_ms: 0.856542
+  type: 'test'
+  ...
+# Subtest: setup: 2..5, 110 cards, unique tickets, 45 trains, stations
+ok 6 - setup: 2..5, 110 cards, unique tickets, 45 trains, stations
+  ---
+  duration_ms: 1.248333
+  type: 'test'
+  ...
+# Subtest: initial keep at least 2, discards are removed
+ok 7 - initial keep at least 2, discards are removed
+  ---
+  duration_ms: 0.815209
+  type: 'test'
+  ...
+# Subtest: seat-specific views never leak opponents cards, tickets, deck order
+ok 8 - seat-specific views never leak opponents cards, tickets, deck order
+  ---
+  duration_ms: 0.547875
+  type: 'test'
+  ...
+# Subtest: 2-3 players double routes closed after claim, 4-5 opponent can claim other side
+ok 9 - 2-3 players double routes closed after claim, 4-5 opponent can claim other side
+  ---
+  duration_ms: 1.164417
+  type: 'test'
+  ...
+# Subtest: face-up locomotive first ends turn; face-up locomotive cannot be second; blind wild can be second
+ok 10 - face-up locomotive first ends turn; face-up locomotive cannot be second; blind wild can be second
+  ---
+  duration_ms: 0.8565
+  type: 'test'
+  ...
+# Subtest: regular route scoring, payment and trains are authoritative
+ok 11 - regular route scoring, payment and trains are authoritative
+  ---
+  duration_ms: 0.376208
+  type: 'test'
+  ...
+# Subtest: gray routes accept one matching color, not mixed colors; ferries need locomotive symbols
+ok 12 - gray routes accept one matching color, not mixed colors; ferries need locomotive symbols
+  ---
+  duration_ms: 0.267167
+  type: 'test'
+  ...
+# Subtest: tunnel only wilds are matched when paying exclusively locomotives; can decline without spending
+ok 13 - tunnel only wilds are matched when paying exclusively locomotives; can decline without spending
+  ---
+  duration_ms: 0.406542
+  type: 'test'
+  ...
+# Subtest: tunnel payment only works if both base and surcharge are affordable
+ok 14 - tunnel payment only works if both base and surcharge are affordable
+  ---
+  duration_ms: 0.286834
+  type: 'test'
+  ...
+# Subtest: station costs 1/2/3, only one station per city, 4 bonus per unused station
+ok 15 - station costs 1/2/3, only one station per city, 4 bonus per unused station
+  ---
+  duration_ms: 0.301167
+  type: 'test'
+  ...
+# Subtest: stations choose a fixed opponent route across all tickets, not different edges per ticket
+ok 16 - stations choose a fixed opponent route across all tickets, not different edges per ticket
+  ---
+  duration_ms: 0.194708
+  type: 'test'
+  ...
+# Subtest: longest path counts each train once, loops permitted and opponents never count
+ok 17 - longest path counts each train once, loops permitted and opponents never count
+  ---
+  duration_ms: 0.245625
+  type: 'test'
+  ...
+# Subtest: end triggers after extra turn for everyone including trigger seat
+ok 18 - end triggers after extra turn for everyone including trigger seat
+  ---
+  duration_ms: 0.404208
+  type: 'test'
+  ...
+# Subtest: draw tickets: return unkept to bottom and keep at least one
+ok 19 - draw tickets: return unkept to bottom and keep at least one
+  ---
+  duration_ms: 0.259958
+  type: 'test'
+  ...
+# Subtest: only active player can act and impossible colors rejected
+ok 20 - only active player can act and impossible colors rejected
+  ---
+  duration_ms: 0.166416
+  type: 'test'
+  ...
+# Subtest: explicit starter survives simultaneous initial selections
+ok 21 - explicit starter survives simultaneous initial selections
+  ---
+  duration_ms: 0.105791
+  type: 'test'
+  ...
+# Subtest: tunnel with no surcharge claims after the shared reveal and recycles revealed cards
+ok 22 - tunnel with no surcharge claims after the shared reveal and recycles revealed cards
+  ---
+  duration_ms: 0.18475
+  type: 'test'
+  ...
+# Subtest: 2–5 players choose privately in any order under one clock; last ready starts the random starter
+ok 23 - 2–5 players choose privately in any order under one clock; last ready starts the random starter
+  ---
+  duration_ms: 4.489917
+  type: 'test'
+  ...
+# Subtest: legacy initial saves preserve confirmed tickets and the existing deadline on reconnect
+ok 24 - legacy initial saves preserve confirmed tickets and the existing deadline on reconnect
+  ---
+  duration_ms: 0.802167
+  type: 'test'
+  ...
+# Subtest: final details reconcile every score category, destination path and station assignment
+ok 25 - final details reconcile every score category, destination path and station assignment
+  ---
+  duration_ms: 1.12625
+  type: 'test'
+  ...
+# Subtest: old finished saves gain an audit breakdown without changing the stored scores
+ok 26 - old finished saves gain an audit breakdown without changing the stored scores
+  ---
+  duration_ms: 1.59775
+  type: 'test'
+  ...
+# Subtest: longest-route ties award and describe the bonus for every tied player
+ok 27 - longest-route ties award and describe the bonus for every tied player
+  ---
+  duration_ms: 0.222209
+  type: 'test'
+  ...
+# Subtest: all recorded outcomes survive closure; unfinished points never become a final result
+ok 28 - all recorded outcomes survive closure; unfinished points never become a final result
+  ---
+  duration_ms: 19.771083
+  type: 'test'
+  ...
+# Subtest: private replay, public projection, active secrecy and completed point sources
+ok 29 - private replay, public projection, active secrecy and completed point sources
+  ---
+  duration_ms: 12.161041
+  type: 'test'
+  ...
+# Subtest: verified account merge preserves existing histories, is idempotent, and blocks another account
+ok 30 - verified account merge preserves existing histories, is idempotent, and blocks another account
+  ---
+  duration_ms: 2.400083
+  type: 'test'
+  ...
+# Subtest: public replay redacts blind thumbnails from frame events as well as projected history
+ok 31 - public replay redacts blind thumbnails from frame events as well as projected history
+  ---
+  duration_ms: 11.422791
+  type: 'test'
+  ...
+# Subtest: guest ownership uses an unguessable cookie, not the nickname; cookie is HttpOnly
+ok 32 - guest ownership uses an unguessable cookie, not the nickname; cookie is HttpOnly
+  ---
+  duration_ms: 0.551584
+  type: 'test'
+  ...
+# Subtest: history identifies the owned seat with duplicate names, applies all tie breaks and leaves unfinished ranks empty
+ok 33 - history identifies the owned seat with duplicate names, applies all tie breaks and leaves unfinished ranks empty
+  ---
+  duration_ms: 2.469583
+  type: 'test'
+  ...
+# Subtest: orphaned active recordings close on restart, and existing rooms remain active
+ok 34 - orphaned active recordings close on restart, and existing rooms remain active
+  ---
+  duration_ms: 1.578
+  type: 'test'
+  ...
+# Subtest: remote frame pages are loaded only after closed-game authorization
+ok 35 - remote frame pages are loaded only after closed-game authorization
+  ---
+  duration_ms: 2.222833
+  type: 'test'
+  ...
+# Subtest: completed archive is sealed before later disconnects and room expiry
+ok 36 - completed archive is sealed before later disconnects and room expiry
+  ---
+  duration_ms: 3.362084
+  type: 'test'
+  ...
+# Subtest: construction immediately shuffles spent cards with the remaining deck exactly once
+ok 37 - construction immediately shuffles spent cards with the remaining deck exactly once
+  ---
+  duration_ms: 3.412
+  type: 'test'
+  ...
+# Subtest: station payments also return to the deck immediately
+ok 38 - station payments also return to the deck immediately
+  ---
+  duration_ms: 0.364042
+  type: 'test'
+  ...
+# Subtest: pending tunnel isolates reveals; pay_tunnel recycles one batch
+ok 39 - pending tunnel isolates reveals; pay_tunnel recycles one batch
+  ---
+  duration_ms: 0.762
+  type: 'test'
+  ...
+# Subtest: pending tunnel isolates reveals; decline_tunnel recycles one batch
+ok 40 - pending tunnel isolates reveals; decline_tunnel recycles one batch
+  ---
+  duration_ms: 0.425083
+  type: 'test'
+  ...
+# Subtest: visible draw replaces only its slot; rejected draws and reads never shuffle
+ok 41 - visible draw replaces only its slot; rejected draws and reads never shuffle
+  ---
+  duration_ms: 0.902167
+  type: 'test'
+  ...
+# Subtest: three visible locomotives recycle without losing cards, including impossible markets
+ok 42 - three visible locomotives recycle without losing cards, including impossible markets
+  ---
+  duration_ms: 9.772625
+  type: 'test'
+  ...
+# Subtest: every market slot can be drawn and a depleted deck remains usable
+ok 43 - every market slot can be drawn and a depleted deck remains usable
+  ---
+  duration_ms: 0.654125
+  type: 'test'
+  ...
+# Subtest: private ticket progress uses compatible station assignments, never opponent secrets
+ok 44 - private ticket progress uses compatible station assignments, never opponent secrets
+  ---
+  duration_ms: 0.526875
+  type: 'test'
+  ...
+# Recuperando partidas desde la copia de seguridad.
+# Recuperando partidas desde la copia de seguridad.
+# Recuperando partidas desde la copia de seguridad.
+# Subtest: snapshots contain token hashes, never recovery credentials or sockets
+ok 45 - snapshots contain token hashes, never recovery credentials or sockets
+  ---
+  duration_ms: 7.653125
+  type: 'test'
+  ...
+# Subtest: atomic snapshots recover the prior valid save when the main file is corrupted
+ok 46 - atomic snapshots recover the prior valid save when the main file is corrupted
+  ---
+  duration_ms: 25.424458
+  type: 'test'
+  ...
+# Subtest: corrupt saves without a valid backup fail closed instead of overwriting games
+ok 47 - corrupt saves without a valid backup fail closed instead of overwriting games
+  ---
+  duration_ms: 1.464042
+  type: 'test'
+  ...
+# Subtest: write failures propagate to the authoritative server
+ok 48 - write failures propagate to the authoritative server
+  ---
+  duration_ms: 0.388959
+  type: 'test'
+  ...
+# Subtest: legacy history migrates without losing rooms, frames, claims or the old backup
+ok 49 - legacy history migrates without losing rooms, frames, claims or the old backup
+  ---
+  duration_ms: 19.743667
+  type: 'test'
+  ...
+# Subtest: changing a lobby color neither reads nor serializes committed replay frames
+ok 50 - changing a lobby color neither reads nor serializes committed replay frames
+  ---
+  duration_ms: 28.057541
+  type: 'test'
+  ...
+# Subtest: failed manifest commit keeps the previous replay prefix and retry replaces its uncommitted tail
+ok 51 - failed manifest commit keeps the previous replay prefix and retry replaces its uncommitted tail
+  ---
+  duration_ms: 41.366459
+  type: 'test'
+  ...
+# Subtest: a corrupt manifest recovers its matching room and replay prefix from backup
+ok 52 - a corrupt manifest recovers its matching room and replay prefix from backup
+  ---
+  duration_ms: 42.037542
+  type: 'test'
+  ...
+# Subtest: missing replay files fail closed instead of treating the store as empty
+ok 53 - missing replay files fail closed instead of treating the store as empty
+  ---
+  duration_ms: 11.875792
+  type: 'test'
+  ...
+# Subtest: truncated replay tails fall back to the last complete prefix
+ok 54 - truncated replay tails fall back to the last complete prefix
+  ---
+  duration_ms: 26.417208
+  type: 'test'
+  ...
+# Subtest: every ordinary/ferry route: minimum-wild preserves cards, ownership, score and turn
+ok 55 - every ordinary/ferry route: minimum-wild preserves cards, ownership, score and turn
+  ---
+  duration_ms: 9.696042
+  type: 'test'
+  ...
+# Subtest: every ordinary/ferry route: extra-wild preserves cards, ownership, score and turn
+ok 56 - every ordinary/ferry route: extra-wild preserves cards, ownership, score and turn
+  ---
+  duration_ms: 4.346625
+  type: 'test'
+  ...
+# Subtest: every ordinary/ferry route: all-wild preserves cards, ownership, score and turn
+ok 57 - every ordinary/ferry route: all-wild preserves cards, ownership, score and turn
+  ---
+  duration_ms: 3.781708
+  type: 'test'
+  ...
+# Subtest: every Europe tunnel reserves the base until reveal, then builds and advances once
+ok 58 - every Europe tunnel reserves the base until reveal, then builds and advances once
+  ---
+  duration_ms: 1.858167
+  type: 'test'
+  ...
+# Subtest: double-route restrictions hold through claim for all player counts
+ok 59 - double-route restrictions hold through claim for all player counts
+  ---
+  duration_ms: 1.630333
+  type: 'test'
+  ...
+# Subtest: rejected claims before a deadline leave the entire state and randomness untouched
+ok 60 - rejected claims before a deadline leave the entire state and randomness untouched
+  ---
+  duration_ms: 1.874333
+  type: 'test'
+  ...
+# Subtest: a late rejected claim still preserves the separately accepted timeout draws
+ok 61 - a late rejected claim still preserves the separately accepted timeout draws
+  ---
+  duration_ms: 0.34625
+  type: 'test'
+  ...
+# Subtest: a claim triggers the final round after paying and includes its builder's final turn
+ok 62 - a claim triggers the final round after paying and includes its builder's final turn
+  ---
+  duration_ms: 0.123625
+  type: 'test'
+  ...
+# Subtest: all actions and bots wait for the reveal; private ticket clocks resume without lost time
+ok 63 - all actions and bots wait for the reveal; private ticket clocks resume without lost time
+  ---
+  duration_ms: 3.5135
+  type: 'test'
+  ...
+# Subtest: late timers still show the outcome, and the final round finishes only after it
+ok 64 - late timers still show the outcome, and the final round finishes only after it
+  ---
+  duration_ms: 0.857209
+  type: 'test'
+  ...
+# Subtest: serialized/reconnected shared stages preserve time, including a full-room absence
+ok 65 - serialized/reconnected shared stages preserve time, including a full-room absence
+  ---
+  duration_ms: 0.422208
+  type: 'test'
+  ...
+# Subtest: room alarm follows stages instead of spinning on frozen ticket deadlines
+ok 66 - room alarm follows stages instead of spinning on frozen ticket deadlines
+  ---
+  duration_ms: 0.470834
+  type: 'test'
+  ...
+# Subtest: legacy saved payment decisions become shared without resetting the turn deadline
+ok 67 - legacy saved payment decisions become shared without resetting the turn deadline
+  ---
+  duration_ms: 0.435875
+  type: 'test'
+  ...
+# Subtest: public tunnel receipt records exact base and extra, extraWild=0
+ok 68 - public tunnel receipt records exact base and extra, extraWild=0
+  ---
+  duration_ms: 1.078125
+  type: 'test'
+  ...
+# Subtest: public tunnel receipt records exact base and extra, extraWild=1
+ok 69 - public tunnel receipt records exact base and extra, extraWild=1
+  ---
+  duration_ms: 0.399208
+  type: 'test'
+  ...
+# Subtest: declining returns the reservation without charging, timeout=false
+ok 70 - declining returns the reservation without charging, timeout=false
+  ---
+  duration_ms: 0.197083
+  type: 'test'
+  ...
+# Subtest: declining returns the reservation without charging, timeout=true
+ok 71 - declining returns the reservation without charging, timeout=true
+  ---
+  duration_ms: 0.170792
+  type: 'test'
+  ...
+# Subtest: zero-surcharge receipt has an explicit zero extra and never charges twice
+ok 72 - zero-surcharge receipt has an explicit zero extra and never charges twice
+  ---
+  duration_ms: 0.227708
+  type: 'test'
+  ...
+# Subtest: automated full-game smoke 2 players, scoring and train conservation
+ok 73 - automated full-game smoke 2 players, scoring and train conservation
+  ---
+  duration_ms: 71.384583
+  type: 'test'
+  ...
+# Subtest: automated full-game smoke 3 players, scoring and train conservation
+ok 74 - automated full-game smoke 3 players, scoring and train conservation
+  ---
+  duration_ms: 85.653792
+  type: 'test'
+  ...
+# Subtest: automated full-game smoke 4 players, scoring and train conservation
+ok 75 - automated full-game smoke 4 players, scoring and train conservation
+  ---
+  duration_ms: 94.3295
+  type: 'test'
+  ...
+# Subtest: automated full-game smoke 5 players, scoring and train conservation
+ok 76 - automated full-game smoke 5 players, scoring and train conservation
+  ---
+  duration_ms: 108.806125
+  type: 'test'
+  ...
+# Subtest: new destinations immediately pass the turn; confirmation is private and off-turn
+ok 77 - new destinations immediately pass the turn; confirmation is private and off-turn
+  ---
+  duration_ms: 3.939292
+  type: 'test'
+  ...
+# Subtest: new destinations require at least one choice without mutating a rejected selection
+ok 78 - new destinations require at least one choice without mutating a rejected selection
+  ---
+  duration_ms: 0.61525
+  type: 'test'
+  ...
+# Subtest: a destination offer works when only one ticket remains
+ok 79 - a destination offer works when only one ticket remains
+  ---
+  duration_ms: 0.28775
+  type: 'test'
+  ...
+# Subtest: keeping destinations on the last turn still finishes the game
+ok 80 - keeping destinations on the last turn still finishes the game
+  ---
+  duration_ms: 0.665
+  type: 'test'
+  ...
+1..80
+# tests 80
+# suites 0
+# pass 80
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1630.326292

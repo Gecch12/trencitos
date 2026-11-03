@@ -4,6 +4,8 @@ Estado: decisión aceptada por el usuario el 2026-11-02; implementación gradual
 pendiente. Avance y aceptación en [la iniciativa](../work/modular-game-platform.md).
 Este documento describe el destino acordado, no sustituye la
 [arquitectura existente](../architecture.md).
+El [modelo y los contratos de transición](match-domain-contracts.md) concretan
+sus límites, compatibilidad y primer recorrido de extracción.
 
 ## Contexto
 

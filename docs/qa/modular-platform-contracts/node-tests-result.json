@@ -1,0 +1,32 @@
+{
+  "startedAt": "2026-11-03T01:10:20.122893+00:00",
+  "base": "0511e264773392fb5c7d2fe6f9a996c3136bdd2c",
+  "branch": "codex/modular-game-platform",
+  "node": "v25.6.1",
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-concurrency=1",
+    "tests/route-claim-contract.test.js",
+    "tests/engine.test.js",
+    "tests/shared-tunnel.test.js",
+    "tests/recycling.test.js",
+    "tests/initial-results.test.js",
+    "tests/tickets.test.js",
+    "tests/simulation.test.js",
+    "tests/durable-queue.test.js",
+    "tests/room-store.test.js",
+    "tests/match-archive.test.js"
+  ],
+  "exitCode": 0,
+  "durationSeconds": 1.763,
+  "summary": [
+    "# tests 80",
+    "# pass 80",
+    "# fail 0",
+    "# cancelled 0",
+    "# skipped 0",
+    "# todo 0"
+  ]
+}

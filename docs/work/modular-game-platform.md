@@ -50,7 +50,7 @@ bloquea la fase 4 ni Sudamérica. Mantener un solo repositorio está acordado.
 ## Hitos
 
 - [x] Fase 0 aceptada según [su ficha](modular-platform-baseline.md).
-- [ ] Fase 1: modelo y compatibilidad definidos.
+- [x] Fase 1 completada según [modelo y contratos](modular-platform-contracts.md).
 - [ ] Fase 2: dominio extraído y Europa verificada.
 - [ ] Fase 3: coordinación e interfaz separadas y verificadas.
 - [ ] Fase 4: independencia del mapa demostrada.
@@ -80,32 +80,31 @@ por separado. El cierre de esta ficha no implica publicación.
 - Mantener Three.js, las familias de vagones, cartas y estaciones existentes.
   El SVG provisional y el visor de referencia no sustituyen el tablero principal.
 
-## Siguiente hito: fase 1
+## Siguiente hito: fase 2
 
-Tras cerrar la base, elaborar el modelo dentro de una ficha de diseño con entrega
-propia, enlazada a esta iniciativa. Debe especificar:
+El [modelo de fase 1](../decisions/match-domain-contracts.md) define los contratos
+y el puente. Empezar con una entrega acotada de pagos y decisión de construcción:
 
-1. Partida como unidad de consistencia y límites respecto a sala, identidad,
-   catálogo e historial; una instancia de datos/reglas por partida.
-2. Separación entre definición inmutable del mapa, reglamento, estado mutable y
-   composición visual. Identidades de ciudad, vía y billete independientes del
-   orden de las listas; lectura compatible de identificadores anteriores.
-3. Contratos de comandos, errores estructurados, eventos internos y consultas
-   autorizadas sin efectos sobre el estado. Tiempo y azar explícitos.
-4. Repositorios/adaptadores y confirmación conjunta de estado e historial;
-   publicación de éxito después del guardado, reintentos y rechazo de duplicados.
-5. Puente temporal para la API actual de `engine.js`, consumidores, bots y pruebas;
-   adaptaciones de formatos antiguos fuera de las consultas.
-6. Primer recorrido: construcción normal y doble, pagos, ferris y frontera con
-   túneles. Pruebas de comportamiento e invariantes antes/después.
+1. Extraer composición/reserva y restricciones de vía, dobles, vagones y ferris
+   a políticas independientes de textos, datos globales y efectos externos.
+2. Conservar `engine.js` como fachada; aplica el plan mediante el gasto, reciclado,
+   registro y avance existentes. Un túnel sigue su secuencia actual.
+3. Añadir pruebas directas con contexto inyectado e IDs opacos y comparar con los
+   contratos de comportamiento establecidos sobre Europa.
+4. Registrar evidencia de esa entrega antes de continuar con transiciones de
+   túnel/turno, creación, destinos, estaciones, puntuación y consultas puras.
+
+No declarar terminada toda la fase 2 al extraer solo el primer recorrido. La
+separación de frontend espera a fase 3; antes de mover archivos visuales, integrar
+un checkpoint revisado del trabajo de vagones. Las ediciones posteriores de
+otros worktrees no se sincronizan automáticamente con esta rama.
 
 No mover archivos por tamaño ni convertir cada función en un módulo. Los límites
 siguen responsabilidades y dependencias verificables.
 
 ## Evidencia y próximo paso
 
-La decisión y esta hoja de ruta registran acuerdos de la conversación. La
-[fase 0](modular-platform-baseline.md) está cerrada y conserva los resultados,
-fallos iniciales de conductores, correcciones y límites de la referencia.
-Siguiente paso: desarrollar la fase 1 descrita arriba y concretar el primer
-recorrido de extracción sin cambiar todavía el comportamiento de Europa.
+La [fase 0](modular-platform-baseline.md) conserva la base y sus límites; la
+[fase 1](modular-platform-contracts.md) conserva el diseño contrastado y las
+pruebas de aceptación del primer recorrido. El código de ejecución sigue siendo
+el de la base. Siguiente paso: iniciar la extracción de dominio descrita arriba.
