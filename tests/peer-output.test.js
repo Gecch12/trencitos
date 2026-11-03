@@ -20,3 +20,9 @@ test('failed persistence neither sends nor advances the metadata cache',async()=
  const run=()=>q.run(()=>{q.dirty();q.defer(()=>f.output.send(message,true));});await run();f.flush();assert.deepEqual(f.writes,[]);fail=false;await run();f.flush();assert.ok(JSON.parse(f.writes[0]).definition);
 });
 test('closing a peer drops a pending batch',()=>{const f=fixture();f.output.send('{"type":"ack"}');f.close();f.flush();assert.deepEqual(f.writes,[]);});
+
+test('version two envelopes state and ack in one frame while preserving ordered legacy negotiation',()=>{
+ const f=fixture();f.output.send(JSON.stringify({type:'directory'}),0);for(const type of ['lobby','storage','state','ack'])f.output.send(JSON.stringify({type}),2);
+ f.flush();const frames=f.writes[0].trim().split('\n').map(JSON.parse);assert.equal(frames.length,2);assert.equal(frames[0].type,'directory');assert.equal(frames[1].type,'batch');assert.deepEqual(frames[1].messages.map(m=>m.type),['lobby','storage','state','ack']);
+ f.output.send(JSON.stringify({type:'state'}),2);f.output.send(JSON.stringify({type:'ack'}),2);f.flush();assert.deepEqual(JSON.parse(f.writes[1]).messages.map(m=>m.type),['state','ack']);
+});

@@ -304,7 +304,7 @@ function connect() {
     lastDrawId = null; // The reconnect snapshot is not a new draw.
     lastEffectId = null;
     status(I18n.t("● Conectado"));
-    send({type:'list_rooms',compactMessages:1});
+    send({type:'list_rooms',compactMessages:2});
     if (desiredWatch) send({type:'spectate',code:desiredWatch});
     else if (attempted && desiredRoom) {
       let t = incomingRecovery || localStorage.getItem(identityKey(desiredRoom));
@@ -317,13 +317,7 @@ function connect() {
       });
     }
   };
-  sock.onmessage = (event) => {
-    let m;
-    try {
-      m = JSON.parse(event.data);
-    } catch {
-      return;
-    }
+  const receive = m => {
     if (m.type === 'directory') { shell?.receiveDirectory(m); return; }
     if (m.type === "error") {
       // Color rejections settle the in-flight choice, preserving a newer click.
@@ -457,6 +451,13 @@ function connect() {
       playEffects(effects);
       return;
     }
+  };
+  sock.onmessage = event => {
+    let message;
+    try { message=JSON.parse(event.data); } catch { return; }
+    if(message?.type==='batch'&&Array.isArray(message.messages)){
+      for(const item of message.messages)if(item&&typeof item==='object')receive(item);
+    }else if(message&&typeof message==='object')receive(message);
   };
   sock.onclose = () => {
     cancelRoomColor();

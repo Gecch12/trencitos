@@ -1,0 +1,129 @@
+{
+  "at": "2026-11-03T07:00:53.957Z",
+  "compact": false,
+  "pings": [
+    233.70325000000003,
+    234.42650000000003,
+    238.60412500000007,
+    236.38583299999982
+  ],
+  "samples": [
+    {
+      "ackMs": 353.91904200000045,
+      "stateMs": 353.90750000000025,
+      "lobbyToStateMs": 14.264207999999599,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    },
+    {
+      "ackMs": 356.08237499999996,
+      "stateMs": 356.0716250000005,
+      "lobbyToStateMs": 5.6898330000003625,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    },
+    {
+      "ackMs": 648.1876249999996,
+      "stateMs": 454.0483749999994,
+      "lobbyToStateMs": 5.4522079999997,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    },
+    {
+      "ackMs": 539.645458,
+      "stateMs": 539.6239999999998,
+      "lobbyToStateMs": 195.87929199999962,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    },
+    {
+      "ackMs": 567.9871250000006,
+      "stateMs": 567.9539580000001,
+      "lobbyToStateMs": 193.00533300000006,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    },
+    {
+      "ackMs": 536.8718749999998,
+      "stateMs": 536.8594170000006,
+      "lobbyToStateMs": 193.0035000000007,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    },
+    {
+      "ackMs": 606.9583750000002,
+      "stateMs": 606.8113750000011,
+      "lobbyToStateMs": 200.43204200000037,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    },
+    {
+      "ackMs": 601.7702090000002,
+      "stateMs": 601.7470420000009,
+      "lobbyToStateMs": 196.63416700000016,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    }
+  ],
+  "health": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 1,
+    "timingsMs": {
+      "queue": {
+        "count": 20,
+        "p50": 0.04,
+        "p95": 0.13,
+        "max": 74.56
+      },
+      "mutation": {
+        "count": 20,
+        "p50": 11.39,
+        "p95": 71.73,
+        "max": 85.09
+      },
+      "delivery": {
+        "count": 20,
+        "p50": 0.1,
+        "p95": 0.18,
+        "max": 0.21
+      },
+      "total": {
+        "count": 20,
+        "p50": 108.76,
+        "p95": 214.45,
+        "max": 220.36
+      },
+      "commit": {
+        "count": 13,
+        "p50": 105.19,
+        "p95": 150.19,
+        "max": 196.51
+      }
+    }
+  }
+}

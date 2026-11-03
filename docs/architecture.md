@@ -817,7 +817,7 @@ Contrato y detalles de seguridad en [historial/replay](history-replay.md).
 ## Ejecución y presentación de la entrega Sudamérica
 
 `backend/peer-output.js` agrupa frames consecutivos en una escritura. El servidor
-activa TCP_NODELAY; la negociación `compactMessages:1` en `list_rooms` omite lobby,
+activa TCP_NODELAY; la negociación `compactMessages:2` en `list_rooms` omite lobby,
 estado de almacenamiento y directorio idénticos, y definiciones ya transmitidas.
 La caché avanza después de confirmar persistencia. `MatchPresentation` solo acepta
 una definición omitida si ya validó referencias exactamente iguales. El primer
@@ -864,3 +864,9 @@ El observador del motor captura el resultado una vez. Si el staging posterior ve
 exactamente el mismo juego e identidad/conectividad, reutiliza esa captura y evita
 recalcular vistas privadas y diff. Su memo es runtime y participa en rollback;
 no se incorpora a frames ni se publica.
+
+El protocolo compacto 2 agrupa mensajes consecutivos en un único frame JSON
+`{type:"batch",messages:[...]}`. El navegador los aplica en orden: estado y ACK
+se reciben juntos, evitando la demora entre frames observada tras el proxy. La
+versión 1 sigue deduplicando sin envoltorio; clientes sin negociación conservan
+el protocolo original. Ningún mensaje se agrupa antes de aceptar el commit.

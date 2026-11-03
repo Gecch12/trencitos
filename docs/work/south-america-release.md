@@ -122,3 +122,15 @@ La fusión con `2ba28ac` conserva los módulos runtime exactamente como se proba
 en `de2a5d2`. Se resolvieron rutas antiguas de imports, duplicados de raíz frente
 a `frontend/shared`, IDs opacos y la pausa visual. Se incorporaron dos precisiones
 documentales de main sobre el presupuesto de Pasajeros y el encuadre Midsommar.
+
+## Ajuste tras medir producción
+
+El primer despliegue `2e53f46` quedó Live el 2026-11-03 a las 02:00:23 Lima.
+Los 43 recursos públicos coinciden y siete rutas privadas devuelven 404. La
+medición compacta mejoró la llegada del estado, pero mostró que el ACK todavía
+podía retrasarse ~190 ms; agrupar escrituras TCP no bastó. Se añadió negociación
+compacta 2 para incluir estado y ACK en el mismo frame JSON, conservando clientes
+anteriores. Pasaron 44 pruebas dirigidas y [Chrome](../qa/south-america-release/transport/report.json)
+con construcción real, desbloqueo de controles, privacidad y reconexión.
+
+La suite final del protocolo compacto 2 pasó **625/625**: [informe](../qa/south-america-release/final-node-result.json).

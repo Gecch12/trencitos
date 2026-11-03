@@ -1,0 +1,125 @@
+{
+  "at": "2026-11-03T07:01:38.053Z",
+  "compact": true,
+  "pings": [
+    239.42691699999978,
+    240.3603750000002,
+    238.13925000000017,
+    237.6269580000003
+  ],
+  "samples": [
+    {
+      "ackMs": 339.7206249999999,
+      "stateMs": 339.70387500000015,
+      "lobbyToStateMs": null,
+      "types": [
+        "state"
+      ]
+    },
+    {
+      "ackMs": 421.31045899999936,
+      "stateMs": 421.29912499999955,
+      "lobbyToStateMs": null,
+      "types": [
+        "state"
+      ]
+    },
+    {
+      "ackMs": 334.17183300000033,
+      "stateMs": 334.15770799999973,
+      "lobbyToStateMs": null,
+      "types": [
+        "state"
+      ]
+    },
+    {
+      "ackMs": 409.59862499999963,
+      "stateMs": 409.5796249999994,
+      "lobbyToStateMs": null,
+      "types": [
+        "state"
+      ]
+    },
+    {
+      "ackMs": 593.4200840000003,
+      "stateMs": 415.4713750000001,
+      "lobbyToStateMs": null,
+      "types": [
+        "state"
+      ]
+    },
+    {
+      "ackMs": 588.0829590000003,
+      "stateMs": 388.34900000000107,
+      "lobbyToStateMs": null,
+      "types": [
+        "state"
+      ]
+    },
+    {
+      "ackMs": 568.390958,
+      "stateMs": 378.273416,
+      "lobbyToStateMs": null,
+      "types": [
+        "state"
+      ]
+    },
+    {
+      "ackMs": 604.5858750000007,
+      "stateMs": 468.9928340000006,
+      "lobbyToStateMs": null,
+      "types": [
+        "state"
+      ]
+    }
+  ],
+  "health": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 3,
+    "timingsMs": {
+      "queue": {
+        "count": 49,
+        "p50": 0.04,
+        "p95": 0.15,
+        "max": 167.81
+      },
+      "mutation": {
+        "count": 49,
+        "p50": 2.6,
+        "p95": 43.52,
+        "max": 85.09
+      },
+      "delivery": {
+        "count": 49,
+        "p50": 0.09,
+        "p95": 1.43,
+        "max": 2.01
+      },
+      "total": {
+        "count": 49,
+        "p50": 108.08,
+        "p95": 214.45,
+        "max": 301.75
+      },
+      "commit": {
+        "count": 30,
+        "p50": 105.19,
+        "p95": 196.51,
+        "max": 265.92
+      },
+      "botTotal": {
+        "count": 1,
+        "p50": 628.67,
+        "p95": 628.67,
+        "max": 628.67
+      },
+      "botCompute": {
+        "count": 1,
+        "p50": 4.77,
+        "p95": 4.77,
+        "max": 4.77
+      }
+    }
+  }
+}

@@ -496,6 +496,8 @@
     "supabase/005_checkpoint_delta.sql",
     "frontend/replay-ui.js",
     "frontend/replay.css",
-    "game/queries/replay-analysis.js"
+    "game/queries/replay-analysis.js",
+    "tests/browser-transport.cjs",
+    "tests/peer-output.test.js"
   ]
 }
