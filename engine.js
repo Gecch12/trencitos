@@ -2,6 +2,9 @@
 const I18n = require('./i18n');
 const GameTiming = require('./game-timing');
 const crypto=require('node:crypto');
+const Payment=require('./game/domain/payment');
+const RouteClaim=require('./game/domain/route-claim');
+const {legacyError}=require('./game/compat/legacy-errors');
 // Per-action randomness stays outside serialized state. Simulations can supply
 // an isolated stream for all draws/recycles without patching global crypto.
 const actionRandom=new WeakMap(), observers=new WeakMap(), expiring=new WeakSet();
@@ -10,6 +13,7 @@ function recorded(g,seat,action,automatic=false){observers.get(g)?.({seat,action
 const randomFor=g=>actionRandom.get(g)||crypto.randomInt;
 const {COLORS,PLAYER_COLORS,CITIES,ROUTES,TICKETS}=require('./data');
 const SCORE={1:1,2:2,3:4,4:7,6:15,8:21};
+const CLAIM_RULES={colors:COLORS,routePoints:SCORE,doubleRoutesMinPlayers:4};
 const TURN_MS=60000, INITIAL_MS=60000, OFFER_MS=60000;
 const TUNNEL_CARD_MS=700, TUNNEL_RESULT_MS=3000;
 const tunnelBusy = g => g.phase==='tunnel' && g.pending?.stage && g.pending.stage!=='decision';
@@ -48,7 +52,6 @@ function ensureTiming(g,now=Date.now()){
 }
 function shuffle(xs,random=crypto.randomInt){let a=[...xs];for(let i=a.length-1;i>0;i--){let j=random(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
 function fail(message){throw new Error(message)}
-const same=(x,y)=>x.a===y.a&&x.b===y.b||x.a===y.b&&x.b===y.a;
 function draw(g){if(!g.deck.length&&g.discard.length){g.deck=shuffle(g.discard,randomFor(g));g.discard=[]}return g.deck.pop()||null}
 // House rule: each resolved event returns its whole discard batch to the deck.
 // Pending tunnel reveals are deliberately NOT in discard until resolution.
@@ -107,16 +110,18 @@ function next(g,now=Date.now()){g.drawCount=0;g.pending=null;
  else if(g.players[g.current].trains<=2){g.lastTrigger=g.current;g.finalRemaining=g.players.length;note(g,'¡Última ronda! Todos tienen un turno final, incluido quien la activó.')}
  g.current=(g.current+1)%g.players.length;startTurn(g,now)}
 function canDrawMore(g){return Boolean(g.deck.length||g.discard.length||g.face.some((c)=>!(g.drawCount===1&&c==='wild')))}
-function pay(hand,color,quantity,wildNeeded=0,wildCount){if(!Number.isInteger(quantity)||quantity<1)return null;
- if(color==='wild'){if(hand.filter(c=>c==='wild').length<quantity)return null;return {color:'wild',regular:0,wild:quantity}}
- if(!COLORS.includes(color))return null;
- const reg=hand.filter(c=>c===color).length, wild=hand.filter(c=>c==='wild').length;
- const w=wildCount===undefined?Math.max(wildNeeded,quantity-reg):wildCount;
- if(!Number.isInteger(w)||w<wildNeeded||w>quantity||w>wild||quantity-w>reg)return null;
- return {color,regular:quantity-w,wild:w};}
+function pay(hand,color,quantity,wildNeeded=0,wildCount){return Payment.planPayment(hand,{color,quantity,wildNeeded,wildCount},CLAIM_RULES)}
 function spend(g,p,comp){for(let k=0;k<comp.regular;k++){const i=p.hand.indexOf(comp.color);if(i<0)throw Error('Descuadre de mano');g.discard.push(...p.hand.splice(i,1))}
  for(let k=0;k<comp.wild;k++){const i=p.hand.indexOf('wild');if(i<0)throw Error('Descuadre de comodines');g.discard.push(...p.hand.splice(i,1))}}
-function block(g,r,seat){return g.routes.some(x=>x.id!==r.id&&same(x,r)&&x.owner!==null&&(x.owner===seat||g.players.length<=3))}
+function block(g,r,seat){return g.routes.some(x=>RouteClaim.blocksParallelRoute(r,x,{owner:x.owner,seat,playerCount:g.players.length},CLAIM_RULES))}
+// Temporary projection: keep persisted Europe rows/IDs and callers unchanged.
+// Domain definitions contain no owners; ownership is passed separately by ID.
+function decideClaim(g,seat,msg,r){
+ const p=g.players[seat];
+ const map={routes:g.routes.map(x=>({id:x.id,a:x.a,b:x.b,length:x.n,color:x.color,tunnel:x.tunnel,ferry:x.ferry}))};
+ return RouteClaim.decideRouteClaim({seat,playerCount:g.players.length,hand:p.hand,trains:p.trains,
+  owners:new Map(g.routes.map(x=>[x.id,x.owner]))},{routeId:r?.id,color:msg.color,wildCount:msg.wildCount},{map,rules:CLAIM_RULES});
+}
 function action(g,seat,msg,{now=Date.now(),random=crypto.randomInt}={}){
  const previous=actionRandom.get(g);actionRandom.set(g,random);
  try{expire(g,now,random);const serial=g.turnSerial;applyAction(g,seat,msg,now);if(g.turnSerial!==serial&&g.players[seat])g.players[seat].missedTurns=0;recycleDiscards(g);recorded(g,seat,msg)}
@@ -154,8 +159,8 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
   if(msg.type==='pay_tunnel'){
    const extra=pay(p.hand,t.color,t.surcharge,0,msg.extraWild);
    // The payment for base and extra must be collectively affordable.
-   const avail={...p,hand:[...p.hand]};
-   if(!extra || !reserve(avail.hand,base) || !pay(avail.hand,t.color,t.surcharge,0,msg.extraWild))fail('No tienes suficientes cartas para pagar el túnel.');
+   const remaining=extra&&Payment.reservePayment(p.hand,base);
+   if(!extra || !remaining || !pay(remaining,t.color,t.surcharge,0,msg.extraWild))fail('No tienes suficientes cartas para pagar el túnel.');
    spend(g,p,base);spend(g,p,extra);t.extra={...extra};
    const r=g.routes[t.routeId];r.owner=seat;p.trains-=r.n;p.score+=SCORE[r.n];event(g,'build',seat,{routeId:r.id});note(g,I18n.message`${p.name} completó el túnel ${CITIES[r.a][2]} — ${CITIES[r.b][2]}.`,seat);
   }else note(g,I18n.message`${p.name} desistió del túnel.`,seat);
@@ -179,13 +184,10 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
  }
  if(g.drawCount>0)fail('Debes terminar de robar cartas.');
  if(msg.type==='claim'){
-  const r=g.routes[msg.routeId];if(!r||r.owner!==null||block(g,r,seat))fail('Esta ruta ya no está disponible.');
-  if(p.trains<r.n)fail('Te faltan vagones.');
-  const color=msg.color==='wild'?'wild':r.color==='gray'?msg.color:r.color;
-  if(![...COLORS,'wild'].includes(color))fail('Color inválido.');
-  const base=pay(p.hand,color,r.n,r.ferry,msg.wildCount);
-  if(!base||base.wild<r.ferry)fail('No tienes cartas para esa ruta.');
-  if(!r.tunnel){spend(g,p,base);r.owner=seat;p.trains-=r.n;p.score+=SCORE[r.n];event(g,'build',seat,{routeId:r.id});note(g,I18n.message`${p.name} tomó ${CITIES[r.a][2]} — ${CITIES[r.b][2]} (+${SCORE[r.n]}).`,seat);next(g,now);return}
+  const r=g.routes[msg.routeId],decision=decideClaim(g,seat,msg,r);
+  if(!decision.ok)throw legacyError(decision.error);
+  const {payment:base,length,points,kind}=decision.plan,color=base.color;
+  if(kind==='build'){spend(g,p,base);r.owner=seat;p.trains-=length;p.score+=points;event(g,'build',seat,{routeId:r.id});note(g,I18n.message`${p.name} tomó ${CITIES[r.a][2]} — ${CITIES[r.b][2]} (+${points}).`,seat);next(g,now);return}
   const revealed=[];for(let i=0;i<3;i++){const c=draw(g);if(c)revealed.push(c)}
   const surcharge=revealed.filter(c=>c==='wild'||(color!=='wild'&&c===color)).length;
   g.phase='tunnel';g.pending={routeId:r.id,color,base,surcharge,revealed,stage:'reveal',startedAt:now,
@@ -271,7 +273,6 @@ function expireImpl(g,now=Date.now(),random=crypto.randomInt){
  }
  recycleDiscards(g);return true;
 }
-function reserve(hand,comp){for(let i=0;i<comp.regular;i++){let j=hand.indexOf(comp.color);if(j<0)return false;hand.splice(j,1)}for(let i=0;i<comp.wild;i++){let j=hand.indexOf('wild');if(j<0)return false;hand.splice(j,1)}return true}
 function indices(xs,n,min){if(!Array.isArray(xs)||xs.length<min||xs.length>n||new Set(xs).size!==xs.length||xs.some(x=>!Number.isInteger(x)||x<0||x>=n))fail('Selección de billetes inválida.');return xs}
 function possibleClaim(g,seat){const p=g.players[seat];return g.routes.some(r=>r.owner===null&&!block(g,r,seat)&&r.n<=p.trains&&[...COLORS,'wild'].some(c=>pay(p.hand,c,r.n,r.ferry))&&(r.color==='gray'||[r.color,'wild'].some(c=>pay(p.hand,c,r.n,r.ferry))))}
 function possibleStation(g,seat){const p=g.players[seat];return p.stations>0&&Object.keys(CITIES).some(city=>!g.players.some(x=>x.placed.includes(city)))&&[...COLORS,'wild'].some(c=>pay(p.hand,c,4-p.stations))}

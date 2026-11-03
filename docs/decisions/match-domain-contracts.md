@@ -5,6 +5,9 @@ Diseño de fase 1, concretado el 2026-11-02 bajo la
 extraídos.** Estado, validación y siguiente entrega en
 [la ficha de fase 1](../work/modular-platform-contracts.md). La
 [arquitectura existente](../architecture.md) sigue describiendo el código actual.
+La [fase 2](../work/modular-platform-domain.md) materializa el primer corte de
+pagos/construcción; los demás contratos de este documento siguen siendo el
+destino de la transición, no capacidades ya disponibles.
 
 ## Responsabilidades y vocabulario
 

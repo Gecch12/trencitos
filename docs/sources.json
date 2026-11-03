@@ -1,5 +1,7 @@
 {
   "architecture.md": [
+    "game/domain/",
+    "game/compat/",
     "server.js",
     "engine.js",
     "game-clock.js",
@@ -35,6 +37,7 @@
     "game-timing.js"
   ],
   "domain.md": [
+    "game/domain/",
     "engine.js",
     "data.js",
     "multiplayer.js",
@@ -183,6 +186,8 @@
     "tests/route-claim-contract.test.js"
   ],
   "decisions/match-domain-contracts.md": [
+    "game/domain/",
+    "game/compat/",
     "engine.js",
     "server.js",
     "data.js",
@@ -191,6 +196,15 @@
     "room-store.js",
     "supabase-store.js",
     "tests/route-claim-contract.test.js"
+  ],
+  "work/modular-platform-domain.md": [
+    "engine.js",
+    "game/domain/",
+    "game/compat/",
+    "tests/domain-payment.test.js",
+    "tests/domain-route-claim.test.js",
+    "tests/route-claim-contract.test.js",
+    "tests/browser-threejs.cjs"
   ],
   "work/wagon-variants.md": [
     "data.js",

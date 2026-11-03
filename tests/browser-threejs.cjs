@@ -156,7 +156,12 @@ const save = () => fs.writeFileSync(path.join(out, 'threejs-report.json'), JSON.
       const action=offer?{type:'keep_tickets',offerId:offer.id,indexes:[0]}:chooseBotAction(g,seat);
       assert.ok(action,`No action at ${g.phase}`);
       const nextRevision=(r.revision||0)+1;
-      if(seat===0) { await page.waitForFunction(()=>!pendingAction); await page.evaluate(a=>act(a.type,a),action); }
+      if(seat===0) {
+        // act() ignores draws while the market renewal animation owns the
+        // cards. Wait for the same readiness as a human before expecting ACK.
+        await page.waitForFunction(type=>!pendingAction && (type!=='draw_train'||!marketRefresh), action.type);
+        await page.evaluate(a=>act(a.type,a),action);
+      }
       else {
         const id = `qa-action-${actions}`, peer = peers[seat-1];
         peer.send({type:'action',id,revision:r.revision,action});

@@ -80,10 +80,11 @@ por separado. El cierre de esta ficha no implica publicación.
 - Mantener Three.js, las familias de vagones, cartas y estaciones existentes.
   El SVG provisional y el visor de referencia no sustituyen el tablero principal.
 
-## Siguiente hito: fase 2
+## Hito en curso: fase 2
 
 El [modelo de fase 1](../decisions/match-domain-contracts.md) define los contratos
-y el puente. Empezar con una entrega acotada de pagos y decisión de construcción:
+y el puente. La [ficha de dominio](modular-platform-domain.md) conserva avance,
+evidencia y alcance pendiente. La secuencia de extracción comienza así:
 
 1. Extraer composición/reserva y restricciones de vía, dobles, vagones y ferris
    a políticas independientes de textos, datos globales y efectos externos.
@@ -106,5 +107,7 @@ siguen responsabilidades y dependencias verificables.
 
 La [fase 0](modular-platform-baseline.md) conserva la base y sus límites; la
 [fase 1](modular-platform-contracts.md) conserva el diseño contrastado y las
-pruebas de aceptación del primer recorrido. El código de ejecución sigue siendo
-el de la base. Siguiente paso: iniciar la extracción de dominio descrita arriba.
+pruebas de aceptación del primer recorrido. La
+[fase 2](modular-platform-domain.md) ya contiene la extracción de pagos y decisión
+de construcción; el resto del motor continúa en la fachada. Siguiente paso y
+validación de la entrega en esa ficha.

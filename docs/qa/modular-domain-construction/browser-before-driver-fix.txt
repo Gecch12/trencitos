@@ -1,0 +1,9 @@
+
+> trencitos@0.6.1-beta test:board3d
+> node tests/browser-threejs.cjs
+
+page.waitForFunction: Timeout 15000ms exceeded.
+    at /Users/angelaltarodri/Desktop/free/trains/worktrees/modular-game-platform/tests/browser-threejs.cjs:166:18 {
+  log: [],
+  name: 'TimeoutError'
+}

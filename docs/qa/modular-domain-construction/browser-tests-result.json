@@ -1,0 +1,20 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:board3d"
+  ],
+  "base_commit": "1669ae5102c0d8316d4af6305661f43525c6e1a9",
+  "exit_code": 0,
+  "duration_seconds": 94.79,
+  "completed_at": "2026-11-03T01:21:09.285843+00:00",
+  "node": "v25.6.1",
+  "environment": "clean environment; isolated local file state; external auth disabled; loopback fixtures only",
+  "log_sha256": "291d910b0d98b83a20753177dc612700351892c86e1b8662e073651ec5ab5792",
+  "source_sha256": {
+    "engine.js": "784ad46fefab9d0552ab2a678f411239b315481a897d17b1f5a47c9c6f60a965",
+    "game/compat/legacy-errors.js": "73bfb4c70028ef686977a638dc366dfa90a96a12e8127884164730f6b2b6b4ea",
+    "game/domain/payment.js": "c44058eb80c8b7e372dff0d5afdbf26a2ac327cc9780f4ff2f0970751373653c",
+    "game/domain/route-claim.js": "921a956a5c91299af994228e865ccef2260a45a8c94a174149f7e2a3ba9076fa"
+  }
+}

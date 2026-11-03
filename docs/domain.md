@@ -4,6 +4,13 @@ Describe el comportamiento de Trencitos contrastado con [engine.js](../engine.js
 [data.js](../data.js) y pruebas. No equivale a una transcripción del reglamento
 comercial: conserva las variantes del proyecto.
 
+La composición/reserva de pagos y la decisión de construir están extraídas a
+[políticas de dominio](../game/domain/route-claim.js), con
+[pagos compartidos](../game/domain/payment.js). Reciben los datos de mapa y
+reglamento; devuelven un plan sin gastar cartas. El motor aplica sus efectos.
+La extracción conserva las reglas descritas aquí; avance y límites en
+[fase 2](work/modular-platform-domain.md).
+
 ## Conceptos e invariantes
 
 - **Sala:** código público, anfitrión y 2–5 puestos para iniciar. La credencial

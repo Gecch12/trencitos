@@ -20,6 +20,8 @@ Circo, Vivienda y variantes de Pasajeros. Estado local y evidencia en
 
 La referencia del checkout experimental para la reorganización modular y el
 ajuste de su conductor de pruebas viven en [fase 0](modular-platform-baseline.md).
+La extracción de pagos/construcción y la espera del conductor durante la
+renovación de cartas se verifican en [fase 2](modular-platform-domain.md).
 Sus resultados no sustituyen los informes históricos ni certifican publicación.
 
 ## Hitos

@@ -8,7 +8,8 @@ Iniciativa acordada:
 - [Plataforma modular y mapas](modular-game-platform.md): fases de reorganización,
   contratos y posterior integración de Sudamérica. Inicio en la
   [base reproducible](modular-platform-baseline.md) y desarrollo del
-  [modelo y contratos](modular-platform-contracts.md).
+  [modelo y contratos](modular-platform-contracts.md). Continuación:
+  [extracción del dominio](modular-platform-domain.md).
 
 Orden de trabajo acordado:
 

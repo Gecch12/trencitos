@@ -45,7 +45,8 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Responsabilidad | Código y puntos de entrada |
 | --- | --- |
 | HTTP, WebSocket, salas, credenciales, despachar y confirmar acciones | [server.js](../server.js): `dispatch`, `persist`, `sendRoom` |
-| Reglas, fases, pagos, cierre y privacidad | [engine.js](../engine.js): `newRandomGame`, `action`, `expire`, `finish`, `view` |
+| Fachada de reglas, fases, efectos, cierre y privacidad | [engine.js](../engine.js): `newRandomGame`, `action`, `expire`, `finish`, `view` |
+| Políticas de pago y decisión de construcción | [payment.js](../game/domain/payment.js): `planPayment`, `reservePayment`; [route-claim.js](../game/domain/route-claim.js): `decideRouteClaim`, `blocksParallelRoute` |
 | Ciudades, rutas, billetes y paleta | [data.js](../data.js) |
 | Valores permitidos de relojes y defaults compartidos | [game-timing.js](../game-timing.js): `valid`, `normalize` |
 | Relojes, desconexiones y recuperación | [game-clock.js](../game-clock.js), [multiplayer.js](../multiplayer.js) |
@@ -61,6 +62,26 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Familias de vagones por color, geometrías y acabados | [wagon-models.mjs](../wagon-models.mjs): `wagonStyle`, `wagonParts`; [wagon-renderer.js](../wagon-renderer.js): `createWagonRenderer` |
 | Proyección ortográfica compartida con objetivos SVG | [board-camera.js](../board-camera.js): `view` |
 | Geometría visual, curvas y etiquetas | [map-layout.js](../map-layout.js): `createNetwork`, `pointAt`, `placeLabels` |
+
+## Primera extracción del dominio
+
+`engine.js` conserva las firmas públicas de `pay` y `block`, pero delega sus
+políticas al dominio. Al construir, proyecta las vías como definiciones sin dueño
+y pasa la propiedad separada por ID; `decideRouteClaim` devuelve un plan o un
+rechazo estructurado. La paleta, puntuación y umbral de dobles son dependencias
+explícitas. El núcleo admite IDs opacos y no importa constantes de Europa.
+
+La fachada aún comprueba fase/turno y vencimientos, aplica el pago y el avance,
+emite historial/eventos y conserva la representación de guardados actual.
+[legacy-errors.js](../game/compat/legacy-errors.js) convierte los errores extraídos
+a los mensajes existentes. La reserva de base para pagar un túnel utiliza una
+copia de la mano; nunca gasta cartas durante la comprobación.
+
+No hay registro de mapas activo ni conversión de IDs de Europa todavía. Los
+otros consumidores siguen utilizando el formato legado. Las políticas extraídas
+no convierten en puro todo el motor: creación, túneles, reloj, cierre y consultas
+siguen su recorrido anterior. Alcance y pruebas en
+[la fase de dominio](work/modular-platform-domain.md).
 
 ## Límites que deben conservarse
 
