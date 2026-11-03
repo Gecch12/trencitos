@@ -165,6 +165,11 @@ const TYPES = {
   "/wagon-renderer.js": "text/javascript; charset=utf-8",
   "/wagon-preview.js": "text/javascript; charset=utf-8",
   "/wagon-models.mjs": "text/javascript; charset=utf-8",
+  "/wagon-people.mjs": "text/javascript; charset=utf-8",
+  "/hippie-model.mjs": "text/javascript; charset=utf-8",
+  "/hippie-geometry.mjs": "text/javascript; charset=utf-8",
+  "/hippie-hair.mjs": "text/javascript; charset=utf-8",
+
   "/board-camera.js": "text/javascript; charset=utf-8",
   "/board-3d.css": "text/css; charset=utf-8",
   "/vendor/three.module.js": "text/javascript; charset=utf-8",

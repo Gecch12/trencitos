@@ -22,7 +22,7 @@ const out = path.resolve(__dirname, '../docs/qa');
       await page.locator(`#roomColors [data-color="${style.color}"]`).click();
       await page.waitForFunction(model => document.getElementById('wagonPreview').dataset.model === model, style.model);
       assert.equal(await page.locator('#wagonPreviewStage canvas').count(), 1);
-      assert.equal(await page.locator('#wagonPreviewName').innerText(), style.label);
+      assert.ok((await page.locator('#wagonPreviewStage').getAttribute('aria-label')).startsWith(style.label + ','));
       if (refinedModels.includes(style.model)) {
         await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
         await page.locator('#wagonPreview').screenshot({path:path.join(out,`wagon-${style.model}.png`)});
@@ -123,7 +123,7 @@ const out = path.resolve(__dirname, '../docs/qa');
       for (const [i, s] of WAGON_STYLES.entries()) {
         const cell = network[i].cells[0], p = board.project(cell.x, cell.y + 8, 0);
         const label = document.createElement('div'); label.className = 'label'; label.style.left = `${p.x}px`; label.style.top = `${p.y + 28}px`;
-        label.innerHTML = `${s.label}<small>${['Rojo','Azul','Verde','Ámbar','Morado','Marrón','Amarillo','Negro','Gris','Magenta','Turquesa','Azul noche','Borgoña','Verde oliva','Marfil','Coral','Lavanda','Azul hielo','Jade','Índigo','Rosa'][i]}</small>`; container.append(label);
+        label.innerHTML = `${s.label}<small>${['Rojo','Azul','Verde','Ámbar','Morado','Marrón','Amarillo','Negro','Gris','Magenta','Turquesa','Azul noche','Borgoña','Verde oliva','Marfil','Coral','Lavanda','Azul hielo','Jade','Índigo'][i]}</small>`; container.append(label);
       }
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const stats = board.stats();
@@ -164,7 +164,7 @@ const out = path.resolve(__dirname, '../docs/qa');
     await page.screenshot({path:path.join(out,'wagons-refined.png'),fullPage:true});
     await page.evaluate(() => previews.forEach(p=>p.dispose()));
     assert.deepEqual(errors, []);
-    const report = { date: new Date().toISOString(), browser: browser.version(), tests: ['all 21 previews match selection', 'five revised cargo previews captured', '225 wagons across the five revised families', 'dense revised models pan and remain idle without changes', 'yellow auto carrier preview', 'mobile without overflow', 'room preview follows authoritative color', '3D ignores old 2D preferences and query', 'no owner symbols', 'resources stable across reload', 'WebGL startup failure and retry preserve the room', 'all 21 board models render', 'highlight/reset preserves model counts'], catalog, dense: after, refinedDense, refinedPerformance, errors };
+    const report = { date: new Date().toISOString(), browser: browser.version(), tests: ['all 20 previews match selection', 'five revised cargo previews captured', '225 wagons across the five revised families', 'dense revised models pan and remain idle without changes', 'yellow auto carrier preview', 'mobile without overflow', 'room preview follows authoritative color', '3D ignores old 2D preferences and query', 'no owner symbols', 'resources stable across reload', 'WebGL startup failure and retry preserve the room', 'all 20 board models render', 'highlight/reset preserves model counts'], catalog, dense: after, refinedDense, refinedPerformance, errors };
     fs.writeFileSync(path.join(out, 'wagons-report.json'), JSON.stringify(report, null, 2) + '\n');
     console.log(JSON.stringify(report, null, 2));
   } finally { await context.close(); await browser.close(); server.close(); }

@@ -111,11 +111,32 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
   de la selección autorizada del cliente. Atenúa el contexto y conserva los mismos
   vagones y colores; `destinationSpotlight` solo contiene etiquetas e indicadores,
   sin clonar vagones/estaciones SVG. No entrega manos ni billetes al renderizador.
-- Cada uno de los 21 colores tiene un modelo propio. A la familia inspirada en
-  cartas se suman grúa, vino, tractores, cemento, fruta, flores, lancha y los
-  modelos fantásticos de hongos (jade), cristales (índigo) y confitería (rosa).
-  Sus cargas multicolores conservan base y laterales del color del propietario.
-  Las nuevas cúpulas y prismas comparten geometrías instanciadas. El modelo
+- Los 21 colores seleccionables tienen una familia propia; jade lleva Vivienda
+  e índigo Circo; blanco lleva Midsommar Express. Hongos, Cristales y Confitería se retiraron. Rosa conserva su
+  clave en partidas anteriores y usa Pasajeros; no se ofrece a nuevas selecciones.
+  Pasajeros tiene seis composiciones: clásico, una/dos/tres personas, apoyado y
+  saludo. Cabezas esféricas suaves sin rasgos faciales, cuatro peinados y cuatro
+  estilos de prendas; piel/pelo/ropa se eligen independientemente en 32 conjuntos
+  reproducibles. Los torsos tienen hombros suaves y cintura estrecha; sus poses
+  estáticas se inclinan desde dentro de la ventana. Las piezas admiten un
+  cuaternión local, reflejado al eje Y del mundo y compuesto con el giro de la
+  vía en preview y tablero. Brazos por segmentos redondeados doblan el codo;
+  cabeza y pelo contrarrestan la inclinación, sin animación continua ni físicas.
+  Las prendas siguen la superficie del torso. Cada composición tiene también
+  una decoración fija en `PASSENGER_CARRIAGES`, independiente del conjunto de
+  personajes: cortinas y persiana, aperturas de ventanas, franjas, tono del techo
+  y distribución de respiraderos. Las ventanas ocupadas quedan despejadas.
+  Puertas de extremos, herrajes y escalones son compartidos; marcos, franjas y
+  costuras repetidas se agrupan en geometrías para conservar el presupuesto.
+  `wagonRouteAppearances` baraja las seis variantes por ruta y
+  tanda con una semilla de código de sala/puesto/ruta; agota la tanda antes de
+  repetir y evita duplicar la última con la primera de la siguiente. La longitud
+  no altera el prefijo y el índice de celda determina el conjunto de personajes.
+  No usa `Math.random` al renderizar ni persiste campos decorativos. Las plantillas
+  de piezas se calculan una vez y se comparten entre preview y tablero. El aforo
+  de instancias contempla todas las variantes; cada variante de Pasajeros normales respeta 70 piezas.
+  El replay usa el código ya archivado; el suavizado se limita a los personajes.
+  El modelo
   depende del propietario, nunca de cartas pagadas ni color de la ruta. No hay
   reglas de carga. Modelo, pintura y acabado son dimensiones separadas, aún sin
   selector de cosméticos ni catálogo comercial. `wagonStyle` conserva el amarillo
@@ -131,18 +152,58 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
   El resaltado atenúa todas las piezas. Tolvas, bloques y bobinas huecas usan
   geometrías compartidas; las bobinas separan acero satinado, capas y cinchos.
   Tablero y preview orientan la luz hemisférica al eje vertical Z.
+- Midsommar Express usa [hippie-model.mjs](../hippie-model.mjs) para seis escenas
+  deterministas, ropa, poses y decoración vegetal. Las actividades colocan los
+  instrumentos y objetos en las manos; la pareja de baile comparte dos puntos
+  de contacto en coordenadas del vagón. Poste, arco y utilería pertenecen al
+  mismo lote que las personas. [wagon-people.mjs](../wagon-people.mjs) comparte
+  la selección original de piel/pelo con Pasajeros, sin cambiar sus semillas.
+  [hippie-geometry.mjs](../hippie-geometry.mjs) y
+  [hippie-hair.mjs](../hippie-hair.mjs) combinan las 22 personas y los adornos de cada variante
+  en una geometría con colores por vértice. El renderizador crea sus lotes solo
+  cuando se usan; no reserva miles de instancias por personaje o prenda.
+  El tablero usa detalle bajo; previews individuales de al menos 240 px usan
+  alto. Ambos conservan cantidad, identidad, poses, blanco de la ropa y siluetas.
+  La reflexión Y corrige también el orden de índices, sin escalas negativas de
+  instancia. Un atributo por instancia aplica el mismo resaltado que al cuerpo.
+  Los lotes creados durante una construcción entran en sus rangos animados,
+  aterrizando con el vagón. El tamaño extra lateral y alto se verifica en su
+  prueba de integración; no sustituye las huellas de las demás familias.
+  La clave técnica `hippie` y los seis IDs se conservan por compatibilidad;
+  el nombre visible es Midsommar Express. Contratos y evidencia en
+  [la ficha de la familia](work/hippie-train.md).
 - Renderizado WebGL bajo demanda y DPR máximo 2. Sin selector ni retorno a 2D;
   se ignoran preferencias/enlaces antiguos de vista. Si falla WebGL, se oculta el
   mapa y se ofrece reintentar 3D, sin modificar sala ni estado del juego.
 - [wagon-preview.js](../wagon-preview.js) comparte `createWagonRenderer` con el
-  tablero, con capacidad de una pieza y cámara cercana. `syncWagonPreview` sigue
+  tablero. El selector usa una sola escena/cámara ortográfica, lateral en escritorio, con
+  capacidad para todas las variantes y centros separados 21,3 unidades: los
+  enganches existentes se tocan sin superponer las carrocerías. La cámara encuadra
+  el tren completo a la altura de sus laterales. `wagonVariants` aporta IDs y
+  etiquetas: las seis
+  composiciones de Pasajeros y de Midsommar Express, o un diseño clásico para familias aún sin variantes.
+  Los ejemplos conservan un aspecto estable al volver a un color; no representan
+  el orden ni los personajes exactos de una ruta. La paleta queda encima y los
+  vagones se muestran conectados en una franja de 78 px de alto, sin tarjetas,
+  bordes, fondos, títulos, nombres visibles, contador ni explicación. En móvil
+  se dibuja solo la primera variante estable en la vista 3/4 original, con cámara
+  en (24, −38, 29), encuadre de exposición y sombra al suelo; Midsommar Express
+  eleva el foco y amplía el encuadre para incluir las personas del techo
+  (hasta 600 px de ancho, o hasta 950 px de ancho y 500 px de alto para paisaje).
+  `matchMedia` actualiza la cámara y el reparto visible al cambiar de tamaño;
+  las variantes ocultas no se dibujan
+  ni se anuncian al lector de pantalla. No hay desplazamiento horizontal.
+  Los nombres visibles al lector de pantalla se conservan en `aria-label`.
+  `syncWagonPreview` sigue
   el último color pulsado, también mientras la sala espera confirmación. El cliente
   envía una selección a la vez y conserva solo la última pendiente; perfil,
   almacenamiento local y miembros mantienen el color confirmado por el servidor.
   Rechazo, desconexión o fallo de guardado restauran la selección confirmada;
   no se permite iniciar mientras queda una selección pendiente. Solo existe un
   canvas de previsualización; se libera al salir del selector o jugar.
-  ResizeObserver actualiza el encuadre; no hay bucle de animación continuo.
+  ResizeObserver actualiza los encuadres y la distribución; no hay bucle de
+  animación continuo. El modo de una pieza con cámara de exposición sigue
+  disponible para catálogos QA.
 - El estado completo de la partida permanece en el servidor. `view` entrega
   mano/destinos propios y datos públicos; los destinos rivales se revelan al final solo a participantes.
   `sharedTunnel` entrega evidencia pública a jugadores y espectadores; el pago

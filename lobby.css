@@ -1,11 +1,10 @@
 /* Trencitos entry and shared branding. Scoped to avoid changing the game HUD. */
-.wagon-preview { margin: 18px 0 8px; overflow: hidden; border: 1px solid #d9e1d9; border-radius: 9px; background: radial-gradient(ellipse at 50% 38%, #fffef6, #eff1e9); }
+.wagon-preview { min-width: 0; margin: 8px 0; overflow: hidden; }
 .wagon-preview-stage { height: 174px; width: 100%; }
 .wagon-preview-stage canvas { display: block; width: 100%; height: 100%; }
-.wagon-preview figcaption { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 0 16px 14px; }
-.wagon-preview figcaption span { color: #647a7b; font-size: 12px; }
-.wagon-preview figcaption strong { font-size: 14px; color: #193b49; text-align: right; }
-.wagon-preview > p { padding: 0 16px 12px; }
+.wagon-preview > p { margin: 0; font-size: 12px; color: #4b6973; }
+.wagon-preview-stage.wagon-preview-train { position: relative; height: 78px; }
+.wagon-preview-item { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (max-width: 480px) { .wagon-preview-stage { height: 150px; } }
 body:not(.is-playing) { display: flex; flex-direction: column; min-height: 100dvh; background: #eaf0f0; color: #193b49; }
 body:not(.is-playing) > .top { flex-shrink: 0; }
@@ -109,3 +108,6 @@ body:not(.is-playing) > .top { flex-shrink: 0; }
 .account-privacy a { color: #236478; text-underline-offset: 3px; }
 .account-rooms { display: flex; flex-wrap: wrap; gap: 8px; }
 .account-rooms:not(:empty) { margin-top: 10px; }
+
+/* Keep the selected mark legible on the pure-white Hippie Train swatch. */
+.color-options button[data-color="#ffffff"] > span { color:#193b49; text-shadow:none; }

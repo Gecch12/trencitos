@@ -28,6 +28,9 @@ al tiempo restante del turno; el siguiente jugador continúa mientras se elige.
 - [x] Refinamiento posterior: Tiempos separado, plazas de 32 px, invitación
   compacta y paleta junto al vagón. Sala completa sin scroll desde 1366×768;
   ventanas pequeñas conservan desplazamiento y pie de inicio accesible.
+  La [franja de variantes](wagon-variants.md) sustituye posteriormente esa
+  distribución: paleta arriba y tren conectado de perfil, con todas las variantes
+  en escritorio y solo un vagón en vista 3/4 en móvil, sin desplazamiento horizontal.
 - [x] Un roce continuo al marcar/desmarcar; firma aprobada sin cambios.
   Engranaje simétrico y estados activos sin la franja inferior.
 - [x] Bots nuevos: sorteo uniforme de un color libre, respetando reservas;
@@ -48,7 +51,9 @@ al tiempo restante del turno; el siguiente jugador continúa mientras se elige.
 Refinamiento aprobado e integrado en `main`: sonido de renovación independiente del panel,
 atajo H y menú de recuperación claro; perfil sin autocompletado, historial
 compacto con puesto propio y tres vagones fantásticos (hongos, cristales,
-confitería). Avatares aplazados en [personalización](commerce.md).
+confitería). Estas tres familias se retiraron en la revisión posterior de
+[variantes de vagones](wagon-variants.md); la evidencia inferior describe la
+entrega original. Avatares aplazados en [personalización](commerce.md).
 
 - Reglas: [dominio](../domain.md); componentes: [arquitectura](../architecture.md).
 - Uso: [guía](../../README.md). Packs de sonido futuros: [sonidos](sounds.md).

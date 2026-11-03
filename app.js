@@ -28,7 +28,7 @@ let homeMode = "create", homeBusy = false, lobbyStarted = false;
 let preferredColor = localStorage.getItem("rr-color");
 // The preview follows the latest click; profile/room colors stay authoritative.
 let pendingRoomColor = null, colorRequest = null;
-const previewColor = () => pendingRoomColor || preferredColor;
+const previewColor = () => pendingRoomColor || (room && !lobbyStarted ? members[seat]?.color : null) || preferredColor;
 function cancelRoomColor() {
   const pending = pendingRoomColor !== null;
   pendingRoomColor = colorRequest = null;
@@ -49,6 +49,7 @@ function selectRoomColor(color) {
 let account = null, shell = null;
 const replayMode = location.pathname === "/replay";
 let replayAt = null;
+let wagonSeed = '';
 let spectating = false, roomCapacity = 5, roomVisibility = 'private', roomTiming = GameTiming.normalize();
 let desiredWatch = new URLSearchParams(location.search).get('watch') || '';
 if (!LobbyUI.isColor(preferredColor)) preferredColor = LobbyUI.PALETTE[0].color;
@@ -102,16 +103,15 @@ async function syncWagonPreview() {
   try {
     const { createWagonPreview } = await import("./wagon-preview.js");
     if (game || (!room && homeMode !== "practice")) return;
-    wagonPreview ||= createWagonPreview({ container: $("wagonPreviewStage"), onFailure: () => {
+    wagonPreview ||= createWagonPreview({ container: $("wagonPreviewStage"), train: true, translate: text => I18n.t(text), onFailure: () => {
       wagonPreview?.dispose(); wagonPreview = null; $("wagonPreviewError").hidden = false;
     } });
     const color = previewColor(), description = wagonPreview.update(color);
     figure.dataset.model = description.model;
-    $("wagonPreviewName").textContent = I18n.t(description.label);
-    $("wagonPreviewStage").setAttribute("aria-label", I18n.t`${I18n.t(description.label)}, color ${I18n.t(LobbyUI.PALETTE.find(p => p.color === color)?.name)}`);
+    $("wagonPreviewStage").setAttribute("aria-label", I18n.t`${I18n.t(description.label)}, color ${I18n.t(LobbyUI.colorName(color))}`);
     $("wagonPreviewError").hidden = true;
   } catch (error) {
-    $("wagonPreviewName").textContent = I18n.t("Tu selección"); $("wagonPreviewError").hidden = false;
+    $("wagonPreviewError").hidden = false;
     console.warn("Vista previa no disponible:", error.message);
   } finally { wagonPreviewLoading = false; }
 }
@@ -280,7 +280,7 @@ function connect() {
         code: desiredRoom,
         token: t || undefined,
         name: $("nickname").value,
-        color: preferredColor,
+        color: LobbyUI.freeColor([], preferredColor),
       });
     }
   };
@@ -399,6 +399,7 @@ function connect() {
       if (oldOffer && oldOffer.id !== m.game.ticketOffer?.id) localStorage.removeItem(`rr-choice-${room}-${seat}-${oldOffer.id}`);
       if (game?.initial && !m.game.initial) localStorage.removeItem(`rr-choice-${room}-${seat}-initial-${game.initial.map(t => t.id).join("-")}`);
       game = m.game;
+      wagonSeed = room;
       prepareMarketRefresh(effects);
       serverOffset = (game.serverNow || Date.now()) - Date.now();
       closeMapMenu();
@@ -452,7 +453,7 @@ function renderLobby() {
   $("members").innerHTML = members
     .map(
       (m, i) =>
-        `<div class="member" data-member="${i}">${homeAvatarMarkup(m.bot || m.autopilot)}<div class="member-identity"><b>${escapeHTML(m.name)}</b><small>${[i === seat ? I18n.t("Tú") : "", m.host ? I18n.t("Anfitrión") : "", m.bot ? "Bot" : !m.connected ? I18n.t("Sin conexión · reserva 60 s") : "", I18n.t(LobbyUI.PALETTE.find(p => p.color === m.color)?.name || "")].filter(Boolean).join(" · ")}</small></div>${host && !lobbyStarted && i !== seat && !practiceMode ? I18n.t`<button class="member-remove" type="button" data-kick="${i}" aria-label="Retirar a ${escapeHTML(m.name)}" title="Retirar jugador">×</button>` : ""}</div>`,
+        `<div class="member" data-member="${i}">${homeAvatarMarkup(m.bot || m.autopilot)}<div class="member-identity"><b>${escapeHTML(m.name)}</b><small>${[i === seat ? I18n.t("Tú") : "", m.host ? I18n.t("Anfitrión") : "", m.bot ? "Bot" : !m.connected ? I18n.t("Sin conexión · reserva 60 s") : "", I18n.t(LobbyUI.colorName(m.color))].filter(Boolean).join(" · ")}</small></div>${host && !lobbyStarted && i !== seat && !practiceMode ? I18n.t`<button class="member-remove" type="button" data-kick="${i}" aria-label="Retirar a ${escapeHTML(m.name)}" title="Retirar jugador">×</button>` : ""}</div>`,
     )
     .join("");
   $("members").querySelectorAll("[data-member]").forEach(row => applyPlayerAppearance(row, members[+row.dataset.member].color));
@@ -506,7 +507,7 @@ function applyPlayerAppearance(element, color) {
 function renderHomeColors() {
   const selectedColor = previewColor();
   applyPlayerAppearance($("homeAvatar"), selectedColor);
-  $("chosenColorName").textContent = I18n.t(LobbyUI.PALETTE.find(p => p.color === selectedColor)?.name || "");
+  $("chosenColorName").textContent = I18n.t(LobbyUI.colorName(selectedColor));
   $("practiceColorName").textContent = $("chosenColorName").textContent;
   $("roomColors").setAttribute("aria-busy", String(pendingRoomColor !== null));
   for (const id of ["practiceColors", "roomColors"]) {
@@ -562,7 +563,7 @@ $("homeCreate").onsubmit = event => {
   if (!LobbyUI.isNewCode(code)) { homeCodeError("create", I18n.t("Usa entre 6 y 10 números, sin espacios.")); $("createCode").focus(); return; }
   attempted = false;
   homeBusy = true; syncHomeAvailability();
-  send({ type: "create", name: $("nickname").value, code, color: preferredColor, visibility:'public', maxPlayers:5 });
+  send({ type: "create", name: $("nickname").value, code, color: LobbyUI.freeColor([], preferredColor), visibility:'public', maxPlayers:5 });
 };
 $("createTest").onclick = () => {
   if (homeBusy) return;
@@ -571,7 +572,7 @@ $("createTest").onclick = () => {
   $("lobbyError").textContent = "";
   waitingForGameStart = true;
   homeBusy = true; syncHomeAvailability();
-  send({ type: "create_test", name: $("nickname").value, color: preferredColor });
+  send({ type: "create_test", name: $("nickname").value, color: LobbyUI.freeColor([], preferredColor) });
 };
 $("finishTest").onclick = () => send({ type: "finish_test" });
 $("leaveTest").onclick = () => send({ type: "leave_test" });
@@ -588,7 +589,7 @@ $("homeJoin").onsubmit = event => {
     code: desiredRoom,
     token: localStorage.getItem(identityKey(desiredRoom)) || undefined,
     name: $("nickname").value,
-    color: preferredColor,
+    color: LobbyUI.freeColor([], preferredColor),
   });
 };
 $("start").onclick = () =>
@@ -1337,7 +1338,7 @@ function syncBoard3D() {
   const cityFocus = document.activeElement.closest?.("#board [data-city]");
   board3D.update({ routes: game.routes.map(({ id, owner, color, tunnel, ferry, a, b }) => ({ id, owner, color, tunnel, ferry, a, b })),
     players: game.players.map(p => ({ color: GameUI.playerColor(p.color), placed: [...p.placed] })),
-    hiddenRoute: null, highlight, spotlight: boardSpotlight,
+    visualSeed: wagonSeed, hiddenRoute: null, highlight, spotlight: boardSpotlight,
     selectedRoute: selected ?? (focus ? +focus.dataset.routeId : null), selectedCity: stationCity ?? cityFocus?.dataset.city ?? null,
     routeColors: C });
 }
@@ -3009,6 +3010,7 @@ if(replayMode){
   document.body.classList.add('is-replaying');
   HistoryUI.replay(new URLSearchParams(location.search).get('id')||'',(view,recordedMembers,context)=>{
     game=view;members=recordedMembers;seat=context.seat;sessionSupported=true;replayAt=context.at;spectating=seat===-1;resultsSeen=true;uiDialog=null;
+    wagonSeed=context.match.code || context.match.id || '';
     displayedHistoryKey=null;document.body.classList.toggle('is-spectating',spectating);
     $('privateSession').hidden=true;$('leaveRoom').hidden=true;$('leaveWatch').hidden=true;$('connection').classList.add('hidden');
     render();

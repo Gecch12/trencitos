@@ -69,15 +69,28 @@ preparados para una integración posterior. Modo Clásico, miniatura plana de Eu
 visibilidad pública/privada y número destacado de jugadores aparecen en una fila.
 La sección **Tiempos** agrupa turno (30/60/90 s), extra para nuevos billetes
 (+15/+30 s) e iniciales (30/60/90 s). El anfitrión ajusta plazas y tiempos con
-flechas. La invitación es compacta y la paleta comparte fila con la vista previa
-del vagón. La sala aprovecha la altura sin cabecera vacía: desde 1366×768 al
-100 % de zoom cabe sin scroll; ventanas bajas y móvil conservan desplazamiento
-y un pie reservado para **Iniciar partida**. Los valores predeterminados son
+flechas. La invitación es compacta y la paleta aparece sobre un tren de perfil,
+con los vagones enganchados y ajustados al ancho del panel. En escritorio se ven
+las variantes disponibles juntas; en móvil aparece solo un vagón en vista 3/4,
+mostrando el lateral, el frente y el techo. No hay
+tarjetas, descripciones ni desplazamiento horizontal.
+La configuración conserva desplazamiento cuando
+lo necesita y un pie reservado para **Iniciar partida**. Los valores predeterminados son
 5 plazas y 60/+30/60 s;
 no se pueden reducir plazas ocupadas. El primer jugador sigue siendo al azar.
 Los ajustes se guardan y quedan bloqueados al comenzar; la revancha los conserva.
 
-En la sala de espera cada participante elige uno de veintiún colores libres: rojo, azul, verde, ámbar, morado, marrón, amarillo, negro, gris, magenta, turquesa, azul noche, borgoña, verde oliva, marfil, coral, lavanda, azul hielo, jade, índigo y rosa. Jade lleva hongos, índigo cristales y rosa confitería; las cargas multicolores son decorativas. Amarillo lleva deportivos y ámbar lleva grano; ambos usan pintura normal, sin presentación dorada. El servidor reserva el color incluso durante la ventana de reconexión, rechaza elecciones simultáneas duplicadas y lo guarda tanto en disco como en Supabase. Cambiar de puesto por la salida de otro participante no cambia tu color. Tras empezar, la elección queda bloqueada y se usa en trenes, estaciones, avatar e historial. El navegador recuerda nombre y color preferido (si está libre); al recargar una sala conocida recupera el puesto con su credencial local.
+En la sala de espera cada participante elige uno de veintiún colores libres: rojo, azul, verde, ámbar, morado, marrón, amarillo, negro, gris, magenta, turquesa, azul noche, borgoña, verde oliva, marfil, coral, lavanda, azul hielo, jade, índigo y blanco. Blanco lleva Midsommar Express; jade lleva un vagón vivienda e índigo uno de circo. Rosa se conserva únicamente en partidas anteriores y se representa con Pasajeros; ya no se ofrece en el selector. Amarillo lleva deportivos y ámbar lleva grano; ambos usan pintura normal, sin presentación dorada. El servidor reserva el color incluso durante la ventana de reconexión, rechaza elecciones simultáneas duplicadas y lo guarda tanto en disco como en Supabase. Cambiar de puesto por la salida de otro participante no cambia tu color. Tras empezar, la elección queda bloqueada y se usa en trenes, estaciones, avatar e historial. El navegador recuerda nombre y color preferido (si está libre); al recargar una sala conocida recupera el puesto con su credencial local.
+
+Los vagones de Pasajeros combinan seis composiciones: clásico sin personas, una persona asomada, dos personas, tres personas, alguien apoyado de medio cuerpo y alguien saludando. Los torsos se inclinan desde dentro de la ventana, con hombros redondeados y codos doblados al apoyarse o saludar. Las cabezas son esferas sin rasgos faciales; piel, color y forma del pelo y prendas se combinan por separado. Cada ruta baraja las seis variantes y las usa sin repetir hasta agotarlas; luego empieza otra tanda, evitando repetir justo entre tandas. Una ruta de ocho utiliza las seis y dos de una tanda nueva. La selección permanece estable al resaltar, reconectar y ver el replay, sin añadir datos decorativos al historial. Circo y Vivienda sustituyen a Hongos, Cristales y Confitería.
+
+Midsommar Express es la familia blanca: seis escenas de 22 viajeros cómodamente distribuidos, con camisas blancas, chalecos rojos o azules, faldas oscuras y pantalones mostaza. Cada terraza tiene su actividad: merienda con tarta, músicos con acordeón y violín, poste vegetal con dos coronas colgantes, una pareja de baile, taller de coronas florales o bienvenida bajo un arco de flores. Los vagones blancos llevan bancos, guirnaldas y cintas azules y amarillas. Conserva las tandas de seis diseños por ruta, sin guardar detalles de personajes en el historial. Se elige con el color **Blanco** en la sala y está disponible durante la beta.
+
+Cada composición de Pasajeros tiene además su propia decoración: cortinas crema,
+verdes, vino, mostaza, turquesa o azules; ventanas cerradas, entreabiertas o con
+interior cálido; franjas simples o dobles y dos o tres respiraderos en el techo.
+Todas comparten puertas en los extremos, manijas y pasamanos de latón, escalones
+y uniones del techo. El color del propietario sigue identificando la carrocería.
 
 Durante una partida no hay cabecera superior. Una columna de iconos arriba a la
 izquierda ofrece menú, pantalla completa y resaltado de destinos. El menú contiene
@@ -112,8 +125,10 @@ amarillo es una plataforma que transporta dos deportivos. Las cargas son decorat
 de las cartas pagadas. La mano, cartas, paneles y mapas de detalle siguen en 2D.
 El tablero principal solo usa 3D: si WebGL falla, ofrece **Reintentar** conservando
 la sala. Acercar permite ver los detalles; las etiquetas permanecen horizontales.
-Antes de comenzar, el selector de color en práctica y sala de espera muestra una
-previsualización del mismo vagón que se colocará en el tablero.
+Antes de comenzar, el selector de color en práctica y sala de espera muestra los
+diseños disponibles de esa familia: las seis composiciones de Pasajeros y Midsommar Express, o un solo
+diseño en las demás. Son ejemplos con los mismos modelos del tablero; las
+variaciones se combinan automáticamente al construir rutas, sin elegir una fija.
 
 El mapa se mueve arrastrando y se acerca con rueda o pellizco, sin botones de
 menos, más o centrado. Con el mapa enfocado, las flechas desplazan, `+`/`−`

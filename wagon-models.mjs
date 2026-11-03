@@ -1,3 +1,7 @@
+import { passengerPerson, visualHash } from './wagon-people.mjs';
+export { passengerPerson } from './wagon-people.mjs';
+import { HIPPIE_VARIANTS, hippieBodyParts } from './hippie-model.mjs';
+
 // Public presentation only. Model, owner paint and finish are independent.
 export const WAGON_STYLES = Object.freeze([
   { color: '#d45748', model: 'passenger', label: 'Pasajeros' },
@@ -18,10 +22,65 @@ export const WAGON_STYLES = Object.freeze([
   { color: '#ed897c', model: 'fruit', label: 'Fruta' },
   { color: '#b9ace2', model: 'flowers', label: 'Flores' },
   { color: '#9ed7ed', model: 'boat', label: 'Lancha' },
-  { color: '#71bba0', model: 'mushrooms', label: 'Jardín de hongos' },
-  { color: '#6269c7', model: 'crystals', label: 'Cristales' },
-  { color: '#edadd0', model: 'candy', label: 'Confitería' },
+  { color: '#71bba0', model: 'dwelling', label: 'Vivienda' },
+  { color: '#6269c7', model: 'circus', label: 'Circo' },
+  { color: '#ffffff', model: 'hippie', label: 'Midsommar Express' },
 ].map(style => Object.freeze({ finish: 'paint', ...style })));
+
+const CLASSIC_VARIANTS = Object.freeze([Object.freeze({ id: 'classic', label: 'Clásico' })]);
+const WAGON_VARIANTS = Object.freeze({
+  hippie: HIPPIE_VARIANTS,
+  passenger: Object.freeze([
+    ['classic', 'Clásico'], ['solo', 'Una persona'], ['duo', 'Dos personas'],
+    ['trio', 'Tres personas'], ['lean', 'Apoyado'], ['wave', 'Saludando'],
+  ].map(([id, label]) => Object.freeze({ id, label }))),
+});
+// Presentation catalog: families without variations show their single model.
+export function wagonVariants(model) { return WAGON_VARIANTS[model] || CLASSIC_VARIANTS; }
+export const PASSENGER_VARIANTS = Object.freeze(wagonVariants('passenger').map(({ id }) => id));
+export const PASSENGER_CAST_COUNT = 32;
+// Six carriage personalities share the owner's paint and the same physical shell.
+// Window order runs along X; occupied windows always stay clear for the people.
+const PASSENGER_CARRIAGES = {
+  classic: { windows:['glass','pair','warm','pair','glass'], curtain:'#d8ad73', belt:'#ecd9ac', double:true, roof:'paint', vents:[-5,5] },
+  solo: { windows:['left','ajar','person','glass','blind'], curtain:'#91ad9a', belt:'#ded7ba', double:false, roof:'shade', vents:[-4,4] },
+  duo: { windows:['right','person','ajar','person','left'], curtain:'#8e5470', belt:'#f0d7b0', double:true, roof:'paint', vents:[-5.6,0,5.6] },
+  trio: { windows:['person','pair','person','right','person'], curtain:'#e3b95b', belt:'#f1dfb3', double:false, roof:'paint', vents:[-4.6,0,4.6] },
+  lean: { windows:['left','person','warm','person','ajar'], curtain:'#629b9c', belt:'#cadbd0', double:true, roof:'shade', vents:[-5.5,4] },
+  wave: { windows:['ajar','person','right','person','pair'], curtain:'#809bb9', belt:'#efdfbf', double:false, roof:'paint', vents:[-3.4,3.4] },
+};
+// Each route gets independent shuffled bags. Prefixes stay unchanged for any length.
+// Stateless visual randomness: never written to the game, network or replay.
+export function wagonRouteAppearances(model, routeKey, length) {
+  if (!Number.isSafeInteger(length) || length < 0) throw new RangeError('Invalid wagon count');
+  const variants = wagonVariants(model).map(v=>v.id);
+  if (variants.length === 1) return Array.from({length},()=>({variant:'classic',cast:0}));
+  const appearances = [];
+  let previous = null;
+  for (let cycle=0;appearances.length<length;cycle++) {
+    let seed = visualHash(`${routeKey}:bag:${cycle}`);
+    const random = max => {
+      seed = (seed + 0x6d2b79f5) >>> 0;
+      let n = Math.imul(seed ^ seed >>> 15, seed | 1);
+      n ^= n + Math.imul(n ^ n >>> 7, n | 61);
+      return Math.floor(((n ^ n >>> 14) >>> 0) / 4294967296 * max);
+    };
+    const bag = [...variants];
+    for (let i=bag.length-1;i>0;i--) { const j=random(i+1); [bag[i],bag[j]]=[bag[j],bag[i]]; }
+    if (bag[0]===previous) { const j=1+random(bag.length-1); [bag[0],bag[j]]=[bag[j],bag[0]]; }
+    for (const variant of bag) {
+      const index = appearances.length;
+      if (index===length) break;
+      appearances.push({variant,cast:model==='passenger'?visualHash(`${routeKey}:cast:${index}`)%PASSENGER_CAST_COUNT:0});
+    }
+    previous = bag.at(-1);
+  }
+  return appearances;
+}
+
+export function wagonAppearance(model, key = 'preview') {
+  return wagonRouteAppearances(model,key,1)[0];
+}
 
 export function wagonStyle(color, customization = {}) {
   const canonical = color?.toLowerCase() === '#f4d83d' ? '#ddaf40' : color?.toLowerCase();
@@ -31,11 +90,25 @@ export function wagonStyle(color, customization = {}) {
   return { model, finish, color: base.paint || color || base.color };
 }
 
+// Model-space quaternion taking the vertical axis to a limb/body direction.
+function uprightRotation([x, y, z]) {
+  const length = Math.hypot(x, y, z);
+  if (z / length < -.999999) return [1, 0, 0, 0];
+  const q = [-y / length, x / length, 0, 1 + z / length], norm = Math.hypot(...q);
+  return q.map(n => n / norm);
+}
+
+function rotatePoint([x, y, z], [qx, qy, qz, qw]) {
+  const tx = 2 * (qy * z - qz * y), ty = 2 * (qz * x - qx * z), tz = 2 * (qx * y - qy * x);
+  return [x + qw * tx + qy * tz - qz * ty, y + qw * ty + qz * tx - qx * tz, z + qw * tz + qx * ty - qy * tx];
+}
+
 // Normalized primitives; coordinates are longitudinal X, width Y, height Z.
 // Paint is resolved by the renderer, so changing a model never changes ownership.
-export function wagonParts(model) {
+export function wagonParts(model, { variant = 'classic', cast = 0 } = {}) {
+  if (model === 'hippie') return hippieBodyParts(wagonParts('passenger')); // crowd is a separate baked batch
   const parts = [];
-  const add = (shape, xyz, size, color = 'paint', material = 'paint') => parts.push({ shape, xyz, size, color, material });
+  const add = (shape, xyz, size, color = 'paint', material = 'paint', rotation) => parts.push({ shape, xyz, size, color, material, ...(rotation && { rotation }) });
   const box = (xyz, size, color, material) => add('box', xyz, size, color, material);
   const round = (xyz, size, color, material) => add('round', xyz, size, color, material);
   const endWalls = (height = 3) => {
@@ -61,44 +134,48 @@ export function wagonParts(model) {
     add('wheel', [x, y * 1.13, 1.4], [1.25, .18, 1.25], '#84918e', 'metal');
   }
   switch (model) {
-    case 'mushrooms': {
-      openBed(1.5);
-      box([0,0,3.85], [16.8,6.1,.55], '#729861', 'cargo');
-      for (const [x,z,color] of [[-5.5,7.1,'#ed816c'],[.2,8.2,'#c95471'],[5.7,6.7,'#e4b84c']]) {
-        add('disc',[x,0,(z+2.9)/2],[1.5,1.5,z-3.9],'#f6e7bc','cargo');
-        add('disc',[x,0,z-1.05],[5.5,5.8,.22],'#f4dcab','cargo');
-        add('mushroom-cap',[x,0,z],[5.6,6,2.3],color,'cargo');
-        for (const [dx,dy,dz,r] of [[0,0,1.1,1.1],[-1.2,-1.1,.7,.8],[1.1,1,.73,.9]]) {
-          add('mound',[x+dx,dy,z+dz],[r,r,.18],'#fff2d4','cargo');
+    case 'dwelling': {
+      box([0,0,3.05],[19.5,7.8,.55],'#94704b','cargo');
+      box([-1.6,0,5.5],[14.6,6.8,4.7]);
+      add('roof',[-1.6,0,7.85],[15.6,7.7,1.75],'#36545b','metal');
+      // Painted timber boards, cream window casings and warm curtained glass.
+      for (const side of [-1,1]) {
+        for (const z of [3.9,4.6,5.3,6,6.7,7.4]) box([-1.6,side*3.42,z],[14.5,.07,.07],'trim');
+        for (const x of [-5,1.7]) {
+          box([x,side*3.5,5.85],[2.6,.12,2.35],'#26424a','glass');
+          add('window-frame',[x,side*3.6,5.85],[2.85,.22,2.6],'#f4e5bd','cargo');
+          box([x-.65,side*3.68,6.05],[.55,.12,1.8],'#e3b976','cargo');
+          box([x+.65,side*3.68,6.05],[.55,.12,1.8],'#e3b976','cargo');
         }
+        box([1.7,side*3.83,4.35],[3,.65,.6],'#aa6e49','cargo');
+        for (const x of [.8,1.7,2.6]) add('mound',[x,side*3.83,4.8],[.8,.65,.65],x===1.7?'#edb44d':'#587b4a','cargo');
+        box([7.1,side*3.5,4.5],[2.8,.3,.3],'#f4e5bd','cargo');
+        for (const x of [6,8.2]) box([x,side*3.5,3.95],[.3,.3,1.4],'#f4e5bd','cargo');
       }
-      for (const x of [-7.6,-2.7,3.3,7.9]) add('mound',[x,-2.4,4.25],[2.1,1.2,.6],'#97b977','cargo');
+      box([5.75,0,5.05],[.16,2.5,3.5],'#e9d5a4','cargo');
+      box([5.86,0,5.7],[.1,1.6,1.6],'#35555a','glass');
+      round([5.97,-.85,4.8],[.15,.25,.25],'#bb913e','metal');
+      box([8.85,0,2.75],[1.5,3.2,.5],'#94704b','cargo');
+      box([9.6,0,2.2],[1.4,3.2,.5],'#94704b','cargo');
+      box([-5.8,.9,8.85],[1,1,2.1],'#6c5851','metal');
+      box([-5.8,.9,9.95],[1.5,1.5,.35],'#384549','metal');
       break;
     }
-    case 'crystals': {
-      openBed(1.5);
-      box([0,0,3.8],[16.7,6.1,.45],'#546389','cargo');
-      for (const [x,y,height,width,color] of [
-        [-5.6,.6,4.5,3.4,'#ab87eb'],[-.6,.6,6.3,3.6,'#73d6df'],[5,.5,5.3,3.3,'#df8bc8'],
-        [-3,-1.8,3.1,2.5,'#df8bc8'],[2,-1.7,3.8,2.8,'#ab87eb'],[7,-1.4,2.4,2.2,'#73d6df'],
-      ]) add('crystal',[x,y,3.9+height/2],[width,width,height],color,'glass');
-      break;
-    }
-    case 'candy': {
-      openBed(1.6);
-      for (const [x,y,z,color] of [[-5.5,.8,7.4,'#f1ca64'],[0,.8,8.1,'#ee87b2'],[5.5,.8,7.1,'#7bc6c7']]) {
-        add('disc',[x,y,5.4],[.55,.55,3],'#fff0cd','cargo');
-        add('wheel',[x,y,z],[3.8,.9,3.8],color,'cargo');
-        for (const side of [-1,1]) {
-          add('wheel',[x,y+side*.47,z],[2.7,.12,2.7],'#fff1d4','cargo');
-          add('wheel',[x,y+side*.55,z],[1.7,.1,1.7],color,'cargo');
-          add('wheel',[x,y+side*.61,z],[.65,.08,.65],'#fff1d4','cargo');
+    case 'circus': {
+      round([0,0,5.15],[18.3,7.4,4.8]);
+      add('roof',[0,0,7.55],[19.2,8,1.95]);
+      for (const x of [-7.2,-3.6,0,3.6,7.2]) add('roof',[x,0,7.58],[1.5,8.05,1.95],'#f6dfad','cargo');
+      for (const side of [-1,1]) {
+        box([0,side*3.76,5.35],[11.8,.18,2.75],'#ad424c','cargo');
+        for (const z of [3.6,7.2]) box([0,side*3.82,z],[17.8,.22,.4],'#e9bc5a','metal');
+        for (const x of [-8.3,-6.3,6.3,8.3]) box([x,side*3.82,5.4],[.3,.22,3.3],'#f6dfad','cargo');
+        for (const x of [-3.8,0,3.8]) add('star',[x,side*3.96,5.45],[2.1,.18,2.1],'#f5cd69','cargo');
+        for (const x of [-7.3,7.3]) {
+          round([x,side*3.8,5.7],[1.35,.18,1.75],'#263b53','glass');
+          box([x,side*3.96,4.65],[1.6,.25,.2],'#e9bc5a','metal');
         }
       }
-      for (const [x,color] of [[-3,'#b19bdf'],[3.4,'#e99779']]) {
-        add('mound',[x,-1.7,4.9],[3.1,2.6,1.9],color,'cargo');
-        for (const side of [-1,1]) add('rock',[x+side*2,-1.7,4.9],[1.5,2.4,1.7],color,'cargo');
-      }
+      for (const x of [-9.2,9.2]) box([x,0,4.85],[.15,2.6,3.1],'#ad424c','cargo');
       break;
     }
     case 'crane': {
@@ -373,15 +450,71 @@ export function wagonParts(model) {
       }
       break;
     case 'passenger':
-    default:
+    default: {
+      const carriage = PASSENGER_CARRIAGES[variant] || PASSENGER_CARRIAGES.classic;
       round([0, 0, 5.1], [18.3, 7.4, 4.7]);
-      add('roof', [0, 0, 7.4], [19.2, 7.8, 2.1]);
-      windows([-6.2, -3.1, 0, 3.1, 6.2]);
-      for (const y of [-3.76, 3.76]) {
-        box([0, y, 3.7], [17.4, .18, .45], 'trim');
-        box([0, y, 6.7], [17.4, .18, .3], 'trim');
+      add('roof', [0, 0, 7.4], [19.2, 7.8, 2.1],carriage.roof);
+      add('coach-roof-seams',[0,0,8.465],[13.12,7.84,2.13],'trim');
+      for(const x of carriage.vents) add('coach-vent',[x,0,9.7],[1.65,1.3,.75],'#647374','metal');
+      // End vestibules leave the five side windows and approved poses intact.
+      add('coach-end-panels',[0,0,5.1],[18.5,2.45,3.7],'shade');
+      add('coach-end-panels',[0,0,6.05],[18.68,1.5,1.55],'#56828c','glass');
+      add('coach-door-frames',[0,0,5.1],[18.72,2.6,3.85],'#ead9b8','cargo');
+      add('coach-handles',[0,0,5.1],[18.9,3.6,2.6],'#c8a66c','metal');
+      add('coach-steps',[0,0,2.7],[21,3.5,.7],'#586b6b','metal');
+      add('coach-window-frames',[0,0,5.65],[15.1,7.84,2.3],'#f0d9b2','cargo');
+      add(carriage.double?'coach-belt-double':'coach-belt',[0,0,3.7],[17.4,7.7,carriage.double?.52:.35],carriage.belt,'cargo');
+      const positions = {classic:[],solo:[0],duo:[-3.2,3.2],trio:[-6.4,0,6.4],lean:[-3.2,3.2],wave:[-3.2,3.2]}[variant] || [];
+      for (const side of [-1,1]) {
+        for (const [index,x] of [-6.4,-3.2,0,3.2,6.4].entries()) {
+          const window = carriage.windows[index], open = window==='person'||window==='ajar';
+          const warm = window==='warm'||window==='pair';
+          box([x,side*3.74,5.65],[2.05,.12,2.05],open?'#152e35':warm?'#c7aa79':'#56828c',open?'cargo':'glass');
+          if(window==='ajar') box([x,side*3.91,6.17],[1.86,.12,.95],'#80a4ab','glass');
+          else if(['pair','left','right','blind'].includes(window)) {
+            const direction = side<0 && window==='left'?'right':side<0 && window==='right'?'left':window;
+            add(`coach-curtain-${direction}`,[x,side*3.94,5.65],[2.02,.14,1.98],carriage.curtain,'cargo');
+          }
+        }
+        for (const [i,x] of positions.entries()) {
+          const person = passengerPerson(cast,side,i);
+          const half = i===0 && (variant==='wave' || variant==='lean');
+          const tilt = (half ? (variant==='lean' ? 27 : 24) : 12) * Math.PI / 180;
+          const sideways = half ? (variant==='lean' ? .16 : -.14) : (i%2 ? -.09 : .09);
+          const rotation = uprightRotation([sideways,side*Math.sin(tilt),Math.cos(tilt)]);
+          const waist = [x,side*(half ? 3.25 : 3.48),half ? 4.65 : 4.85], height = half ? 1.55 : .95;
+          const point = offset => rotatePoint(offset,rotation).map((n,j)=>n+waist[j]);
+          const body = point([0,0,height/2]), size = [1.55,.8,height];
+          add('person-torso',body,size,person.clothes,'person',rotation);
+          add(`shirt-${person.outfit}${side<0?'-back':''}`,body,size,person.accent,'person',rotation);
+          // A true smooth sphere; no eyes, mouth, nose or other facial marks.
+          // The waist stays inside the window; the head counters the torso's lean.
+          const headRotation = uprightRotation([-sideways*.35,0,1]);
+          const neck = point([0,0,height]);
+          const head = half ? rotatePoint([0,0,.34],headRotation).map((n,j)=>n+neck[j]) : point([0,0,height+.34]);
+          add('person-head',head,[1.45,1.45,1.45],person.skin,'person');
+          const [hairZ,hairHeight] = {short:[.44,.68],bob:[.15,1.4],curly:[.43,.88],bun:[.38,1.2]}[person.hairstyle];
+          const hair = rotatePoint([0,-side*.04,hairZ],headRotation).map((n,j)=>n+head[j]);
+          add(`hair-${person.hairstyle}${side<0?'-back':''}`,hair,[1.55,1.5,hairHeight],person.hair,'person',headRotation);
+          if (half) {
+            const limb = (from,to,width,color) => {
+              const direction=to.map((n,j)=>n-from[j]);
+              add('person-limb',from.map((n,j)=>(n+to[j])/2),[width,width,Math.hypot(...direction)+width*.35],color,'person',uprightRotation(direction));
+            };
+            for (const arm of [-1,1]) {
+              const waving = variant==='wave' && arm===1;
+              const shoulder = point([arm*.58,0,height*.78]);
+              const elbow = [x+arm*(waving?.98:.83),side*3.99,waving?5.83:4.96];
+              const hand = [x+arm*(waving?1.28:.46),side*(waving?4.08:4.33),waving?6.65:4.86];
+              limb(shoulder,elbow,.43,person.clothes);
+              limb(elbow,hand,.29,person.skin);
+              add('mound',hand,waving?[.38,.32,.43]:[.4,.32,.28],person.skin,'person');
+            }
+          }
+        }
       }
       break;
+    }
   }
   return parts;
 }

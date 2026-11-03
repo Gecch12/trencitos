@@ -7,7 +7,7 @@ import {createWagonPreview} from '/wagon-preview.js';
 import {createBoard3D} from '/board-3d.js';
 import {WAGON_STYLES} from '/wagon-models.mjs';
 const labels=['Azul noche · Pluma telescópica, cable y gancho','Borgoña · Toneles de madera y aros','Verde oliva · Neumáticos y motor','Marfil · Silos, escalerilla y tuberías','Coral · Cajones de manzanas y naranjas','Lavanda · Macetas y flores abiertas','Azul hielo · Casco, cubierta y parabrisas'];
-const styles=WAGON_STYLES.slice(11),previews=[];
+const styles=WAGON_STYLES.slice(11,18),previews=[];
 for(const [i,s] of styles.entries()){
  const article=document.createElement('article');article.innerHTML='<div class="stage"></div><footer><h2></h2><p></p></footer>';
  article.querySelector('h2').textContent=s.label;article.querySelector('p').textContent=labels[i];document.querySelector('main').append(article);

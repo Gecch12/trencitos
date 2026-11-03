@@ -115,7 +115,10 @@
               <div class="room-setting-field"><label for="roomInitialSeconds">Billetes iniciales</label><div class="room-stepper" data-setting="roomInitialSeconds"></div></div>
             </div><p class="shell-muted timing-hint">El extra se suma al tiempo restante del turno.</p></section>
             <section class="room-setting-group appearance-setting"><fieldset class="color-choice"><legend>Tu color <span id="chosenColorName"></span></legend><div id="roomColors" class="color-options"></div></fieldset>
-              <figure id="wagonPreview" class="wagon-preview" hidden><div id="wagonPreviewStage" class="wagon-preview-stage" role="img" aria-label="Vista previa de tu vagón"></div><figcaption><span>Tu vagón</span><strong id="wagonPreviewName">Cargando…</strong></figcaption><p id="wagonPreviewError" hidden>La vista previa no está disponible.</p></figure>
+              <figure id="wagonPreview" class="wagon-preview" aria-label="Vista previa de tu vagón" hidden>
+                <div id="wagonPreviewStage" class="wagon-preview-stage" role="group" aria-label="Vista previa de tu vagón"></div>
+                <p id="wagonPreviewError" hidden>La vista previa no está disponible.</p>
+              </figure>
               <p id="roomNote" class="shell-muted" role="status"></p>
             </section>
           </div>

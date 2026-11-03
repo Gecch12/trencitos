@@ -112,7 +112,7 @@ function liveRoom() {
   report.checks.push('Real filtered history API, duplicate nicknames with private own-seat metadata, ranks only for completed games, compact rows in nine sizes, keyboard details, filters, replay endpoint, profile save and English');
   await Promise.all([actor,observer,history].map(p=>p.close()));
   const lobby=await newPage();page=lobby;await lobby.goto(base+'/rooms');await lobby.locator('#create').click();await lobby.waitForFunction(()=>!!room&&!!wagonPreview);
-  for(const [color,model]of [['#71bba0','mushrooms'],['#6269c7','crystals'],['#edadd0','candy']]){
+  for(const [color,model]of [['#71bba0','dwelling'],['#6269c7','circus']]){
     await lobby.locator(`#roomColors [data-color="${color}"]`).click();await lobby.waitForFunction(model=>document.querySelector('#wagonPreview').dataset.model===model,model);
     const code=await lobby.evaluate(()=>room);assert.equal(loadRooms(process.env.STATE_FILE).find(r=>r.code===code).members[0].color,color);
     await lobby.locator('#wagonPreview').screenshot({path:path.join(out,`wagon-${model}.png`)});
@@ -126,11 +126,11 @@ function liveRoom() {
   await lobby.locator('#wagonPreview').scrollIntoViewIfNeeded();await lobby.screenshot({path:path.join(out,'lobby-390.png')});
   await lobby.close();
   const gallery=await newPage({width:1080,height:630});page=gallery;
-  await gallery.route('**/__fantasy',route=>route.fulfill({contentType:'text/html',body:`<!doctype html><html lang="es"><meta charset="utf-8"><style>*{box-sizing:border-box}body{margin:0;padding:28px;background:#edf2ef;color:#203e46;font-family:system-ui}h1{font-size:24px;margin:0 0 20px}main{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}article{border:1px solid #cbdad4;border-radius:12px;background:#fffcf5;overflow:hidden}.stage{height:210px}h2{margin:0;padding:0 18px 18px;font-size:17px}#dense{height:270px;margin-top:16px;position:relative}canvas{display:block}</style><h1>Tres nuevos vagones</h1><main></main><div id="dense"></div></html>`}));
+  await gallery.route('**/__fantasy',route=>route.fulfill({contentType:'text/html',body:`<!doctype html><html lang="es"><meta charset="utf-8"><style>*{box-sizing:border-box}body{margin:0;padding:28px;background:#edf2ef;color:#203e46;font-family:system-ui}h1{font-size:24px;margin:0 0 20px}main{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}article{border:1px solid #cbdad4;border-radius:12px;background:#fffcf5;overflow:hidden}.stage{height:210px}h2{margin:0;padding:0 18px 18px;font-size:17px}#dense{height:270px;margin-top:16px;position:relative}canvas{display:block}</style><h1>Vivienda, circo y pasajeros</h1><main></main><div id="dense"></div></html>`}));
   await gallery.goto(base+'/__fantasy');
   const stats=await gallery.evaluate(async()=>{
     const {createWagonPreview}=await import('/wagon-preview.js'),{createBoard3D}=await import('/board-3d.js'),{WAGON_STYLES}=await import('/wagon-models.mjs');
-    const styles=WAGON_STYLES.slice(-3);window.previews=[];
+    const styles=[...WAGON_STYLES.slice(-2), WAGON_STYLES[0]];window.previews=[];
     for(const style of styles){const article=document.createElement('article');article.innerHTML='<div class="stage"></div><h2>'+style.label+'</h2>';document.querySelector('main').append(article);const preview=createWagonPreview({container:article.firstChild,onFailure:e=>{throw e;}});preview.update(style.color);previews.push(preview);}
     const network=Array.from({length:225},(_,i)=>({d:'',cells:[{x:18+i%25*25,y:16+Math.floor(i/25)*22,angle:0}]}));
     const board=createBoard3D({container:document.querySelector('#dense'),map:{bounds:{x:0,y:0,width:660,height:220},land:[],details:[],cities:{}},network,onFailure:e=>{throw e;}});
@@ -144,7 +144,7 @@ function liveRoom() {
   await gallery.screenshot({path:path.join(out,'fantasy-wagons.png')});
   await gallery.locator('main').screenshot({path:path.join(out,'fantasy-preview.png')});
   const draws=await gallery.evaluate(()=>qaBoard.stats().draws);await gallery.waitForTimeout(200);assert.equal(await gallery.evaluate(()=>qaBoard.stats().draws),draws);
-  report.wagons=stats;report.checks.push('Three new colors persist through the authoritative lobby; previews and 225 board wagons render, retain models on highlight and stay idle; desktop room still fits without scrolling');
+  report.wagons=stats;report.checks.push('Two replacement colors persist through the authoritative lobby; previews and 225 board wagons render, retain models on highlight and stay idle; desktop room still fits without scrolling');
   assert.deepEqual(report.errors,[]);report.passed=true;
 })().catch(async error=>{report.failure=error.stack;process.exitCode=1;console.error(error);await page?.screenshot({path:path.join(out,'failure.png')}).catch(()=>{});}).finally(async()=>{
   fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));console.log(JSON.stringify({passed:report.passed,checks:report.checks,layouts:report.layouts.length,errors:report.errors}));

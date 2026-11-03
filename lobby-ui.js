@@ -5,6 +5,7 @@ const LobbyUI = (() => {
   const PALETTE = typeof module !== "undefined" && module.exports ? require("./data").PLAYER_PALETTE : PLAYER_PALETTE;
   const colors = PALETTE.map(({ color }) => color);
   const isColor = color => colors.includes(color);
+  const colorName = color => PALETTE.find(p=>p.color===color)?.name || (color==='#edadd0'?'Rosa':'');
   const isNewCode = code => typeof code === "string" && /^\d{6,10}$/.test(code);
   // Old six-character invitations/recovery links remain valid.
   const isJoinCode = code => typeof code === "string" && (isNewCode(code) || /^[A-Z0-9]{6}$/i.test(code));
@@ -24,7 +25,8 @@ const LobbyUI = (() => {
     const used = new Set();
     const restored = members.map((m, i) => {
       const color = players?.[i]?.color || m.color;
-      if (!isColor(color) || used.has(color)) return null;
+      // Retired pink remains owned in saved rooms, but cannot be newly selected.
+      if ((!isColor(color) && color !== '#edadd0') || used.has(color)) return null;
       used.add(color); return color;
     });
     return restored.map(color => {
@@ -32,6 +34,6 @@ const LobbyUI = (() => {
       const available = colors.find(c => !used.has(c)); used.add(available); return available;
     });
   }
-  return { PALETTE, isColor, isNewCode, isJoinCode, randomCode, freeColor, restoreColors };
+  return { PALETTE, isColor, colorName, isNewCode, isJoinCode, randomCode, freeColor, restoreColors };
 })();
 if (typeof module !== "undefined" && module.exports) module.exports = LobbyUI;

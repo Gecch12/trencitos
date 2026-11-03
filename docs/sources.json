@@ -32,7 +32,11 @@
     "shell.js",
     "shell.css",
     "shell-icons.js",
-    "game-timing.js"
+    "game-timing.js",
+    "wagon-people.mjs",
+    "hippie-model.mjs",
+    "hippie-geometry.mjs",
+    "hippie-hair.mjs"
   ],
   "domain.md": [
     "engine.js",
@@ -156,5 +160,38 @@
     "match-archive.js",
     "wagon-models.mjs",
     "wagon-renderer.js"
+  ],
+  "work/wagon-variants.md": [
+    "data.js",
+    "lobby-ui.js",
+    "app.js",
+    "board-3d.js",
+    "wagon-models.mjs",
+    "wagon-renderer.js",
+    "wagon-preview.js",
+    "tests/wagon-models.test.js",
+    "tests/browser-wagon-variants.cjs",
+    "tests/browser-wagon-gallery.cjs",
+    "index.html",
+    "lobby.css",
+    "shell.css",
+    "translations.js"
+  ],
+  "work/hippie-train.md": [
+    "wagon-people.mjs",
+    "hippie-model.mjs",
+    "hippie-geometry.mjs",
+    "hippie-hair.mjs",
+    "data.js",
+    "wagon-models.mjs",
+    "wagon-renderer.js",
+    "wagon-preview.js",
+    "board-3d.js",
+    "server.js",
+    "translations.js",
+    "lobby.css",
+    "tests/hippie-model.test.js",
+    "tests/browser-hippie.cjs",
+    "tests/helpers/midsommar-preview.html"
   ]
 }

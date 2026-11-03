@@ -1,8 +1,54 @@
 import * as THREE from './vendor/three.module.js';
-import { WAGON_STYLES, wagonParts, wagonStyle } from './wagon-models.mjs';
+import { WAGON_STYLES, PASSENGER_VARIANTS, PASSENGER_CAST_COUNT, wagonAppearance, wagonParts, wagonStyle } from './wagon-models.mjs';
+import { HIPPIE_TRAIN, HIPPIE_VARIANTS, hippieCrowdParts } from './hippie-model.mjs';
+import { bakeHippieCrowd } from './hippie-geometry.mjs';
+
+// Immutable part templates are shared by all preview and board renderers.
+let sharedTemplates;
+function getTemplates() {
+  if (!sharedTemplates) {
+    sharedTemplates = new Map(WAGON_STYLES.map(s=>[s.model,wagonParts(s.model)]));
+    for (const variant of PASSENGER_VARIANTS) for (let cast=0;cast<PASSENGER_CAST_COUNT;cast++) {
+      sharedTemplates.set(`passenger:${variant}:${cast}`,wagonParts('passenger',{variant,cast}));
+    }
+  }
+  return sharedTemplates;
+}
 
 // Share batches across colors and models. No mesh per wagon, no perpetual animation.
 export function createWagonRenderer({ renderer, instances, put, capacity = 300 }) {
+  let crowdDetail = 'low';
+  const crowdBatches = new Map();
+  const crowdMaterial = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:.86, metalness:0 });
+  // The same destination-highlight tint as ordinary wagon parts, applied after
+  // vertex colours. A per-instance value keeps mixed highlighted routes batched.
+  crowdMaterial.onBeforeCompile = shader => {
+    shader.uniforms.hippieMuted = { value:new THREE.Color('#bbd6d9') };
+    shader.vertexShader = 'attribute float crowdFade; varying float vCrowdFade;\n' + shader.vertexShader;
+    shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvCrowdFade = crowdFade;');
+    shader.fragmentShader = 'varying float vCrowdFade; uniform vec3 hippieMuted;\n' + shader.fragmentShader;
+    shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = vCrowdFade < 0.0 ? diffuseColor.rgb * 0.28 : mix(diffuseColor.rgb, hippieMuted, vCrowdFade);');
+  };
+  crowdMaterial.customProgramCacheKey = () => 'hippie-crowd-fade-v1';
+  function drawCrowd(cell, faded, appearance) {
+    const variant = HIPPIE_VARIANTS.some(v=>v.id===appearance.variant) ? appearance.variant : HIPPIE_VARIANTS[0].id;
+    const key = `${variant}:${crowdDetail}`;
+    if (!crowdBatches.has(key)) {
+      const geometry = bakeHippieCrowd(hippieCrowdParts({variant,detail:crowdDetail}),crowdDetail);
+      // Reflect into the board's Y axis before instancing, including winding.
+      // Negative instance scales are unsupported; all instances keep positive scale.
+      geometry.scale(1,-1,1);
+      const indices = geometry.index.array;
+      for (let i=0;i<indices.length;i+=3) [indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];
+      geometry.index.needsUpdate=true;
+      geometry.name=`hippie-crowd:${key}`;
+      geometry.setAttribute('crowdFade',new THREE.InstancedBufferAttribute(new Float32Array(capacity),1));
+      crowdBatches.set(key,instances(geometry,capacity,crowdMaterial));
+    }
+    const mesh=crowdBatches.get(key),fade=mesh.geometry.getAttribute('crowdFade');
+    fade.setX(mesh.count,faded==='dim'?-1:faded?.72:0);fade.needsUpdate=true;
+    put(mesh,cell.x,cell.y,0,cell.angle,1,1,1,'#ffffff');
+  }
   const shapes = {
     box: new THREE.BoxGeometry(1, 1, 1),
     wheel: new THREE.CylinderGeometry(.5, .5, 1, 10),
@@ -123,10 +169,113 @@ export function createWagonRenderer({ renderer, instances, put, capacity = 300 }
     const a = i*Math.PI/3;
     return new THREE.SphereGeometry(1,8,4).scale(.23,.23,.45).translate(.27*Math.cos(a),.27*Math.sin(a),0);
   }));
-  shapes['mushroom-cap'] = new THREE.SphereGeometry(.5,16,8,0,Math.PI*2,0,Math.PI/2)
-    .rotateX(Math.PI/2).scale(1,1,2).translate(0,0,-.5);
-  shapes.crystal = latheStrips([[[0,-.5],[.5,-.5],[.5,.12],[0,.5]]],6).rotateX(Math.PI/2);
-  shapes.crystal.computeVertexNormals();
+  shapes['person-head'] = new THREE.SphereGeometry(.5,24,16);
+  // Soft shoulders and a narrower waist, instead of a beveled rectangular block.
+  const torsoProfile = [[0,-.5],[.32,-.5],[.36,-.43],[.39,-.1],[.5,.18],[.48,.3],[.39,.43],[.23,.5],[0,.5]];
+  shapes['person-torso'] = latheStrips([torsoProfile],20).rotateX(Math.PI/2);
+  const hairCap = () => new THREE.SphereGeometry(.5,16,8,0,Math.PI*2,0,Math.PI/2).rotateX(Math.PI/2);
+  function normalized(geometry) {
+    geometry.computeBoundingBox();
+    const center=geometry.boundingBox.getCenter(new THREE.Vector3()),size=geometry.boundingBox.getSize(new THREE.Vector3());
+    geometry.translate(-center.x,-center.y,-center.z);geometry.scale(1/size.x,1/size.y,1/size.z);return geometry;
+  }
+  shapes['person-limb'] = normalized(new THREE.CapsuleGeometry(.5,1,4,8).rotateX(Math.PI/2));
+  const hairShapes = {
+    short: hairCap(),
+    bob: combine([hairCap(),new THREE.SphereGeometry(.5,16,8).scale(1,.55,1.2).translate(0,.25,-.18)]),
+    curly: combine([hairCap(),...Array.from({length:7},(_,i)=>{
+      const a=i*Math.PI*2/7;
+      return new THREE.SphereGeometry(.19,10,8).translate(.34*Math.cos(a),.34*Math.sin(a),.22);
+    })]),
+    bun: combine([hairCap(),new THREE.SphereGeometry(.24,12,10).translate(0,.23,.57)]),
+  };
+  for (const [style,geometry] of Object.entries(hairShapes)) {
+    shapes[`hair-${style}`]=normalized(geometry);
+    shapes[`hair-${style}-back`]=geometry.clone().rotateZ(Math.PI);
+  }
+  shapes['shirt-stripes'] = combine([-.28,.28].map(z=>new THREE.BoxGeometry(1,1,.22).translate(0,0,z)));
+  shapes['shirt-collar'] = combine([
+    profilePrism([[-.5,.5],[-.06,.28],[-.22,-.18],[-.5,.13]]),
+    profilePrism([[.5,.5],[.06,.28],[.22,-.18],[.5,.13]]),
+  ]);
+  shapes['shirt-vest'] = combine([-.34,.34].map(x=>profilePrism([[-.15,-.5],[.15,-.5],[.15,.1],[.06,.5],[-.15,.5]]).translate(x,0,0)));
+  shapes['shirt-lapels'] = profilePrism([[-.5,.5],[-.17,.5],[0,.02],[.17,.5],[.5,.5],[.24,-.06],[.3,-.5],[-.3,-.5],[-.24,-.06]]);
+  // Small subdivided accents follow the curved shirt, including its tilted pose.
+  for (const outfit of ['stripes','collar','vest','lapels']) {
+    const key=`shirt-${outfit}`, original=shapes[key], source=original.index?original.toNonIndexed():original;
+    const positions=source.attributes.position.array, wrapped=[];
+    function surface([x,y,z]) {
+      x*=.66; z=z*.68+.03;
+      const next=torsoProfile.findIndex((p,i)=>i>0&&p[1]>=z), [r0,z0]=torsoProfile[next-1], [r1,z1]=torsoProfile[next];
+      const radius=r0+(r1-r0)*(z-z0)/(z1-z0);
+      return [x,-Math.sqrt(Math.max(0,radius*radius-x*x))-.016+y*.008,z];
+    }
+    function subdivide(a,b,c,depth) {
+      if (!depth) { wrapped.push(...surface(a),...surface(b),...surface(c)); return; }
+      const mid=(a,b)=>a.map((n,i)=>(n+b[i])/2), ab=mid(a,b),bc=mid(b,c),ca=mid(c,a);
+      subdivide(a,ab,ca,depth-1);subdivide(ab,b,bc,depth-1);subdivide(ca,bc,c,depth-1);subdivide(ab,bc,ca,depth-1);
+    }
+    for(let i=0;i<positions.length;i+=9)subdivide(Array.from(positions.slice(i,i+3)),Array.from(positions.slice(i+3,i+6)),Array.from(positions.slice(i+6,i+9)),2);
+    const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(wrapped,3));geometry.computeVertexNormals();
+    shapes[key]=geometry;shapes[`${key}-back`]=geometry.clone().rotateZ(Math.PI);
+    if(source!==original)source.dispose();original.dispose();
+  }
+  shapes['window-frame'] = combine([
+    ...[-.45,.45].map(x=>new THREE.BoxGeometry(.1,1,1).translate(x,0,0)),
+    ...[-.45,.45].map(z=>new THREE.BoxGeometry(.8,1,.1).translate(0,0,z)),
+  ]);
+  // Repeated carriage details are single shared geometries, not extra meshes per window.
+  shapes['coach-window-frames'] = normalized(combine([-1,1].flatMap(side=>[-6.4,-3.2,0,3.2,6.4].map(x=>
+    shapes['window-frame'].clone().scale(2.3,.16,2.3).translate(x,side*3.84,0)))));
+  shapes['coach-end-panels'] = combine([-1,1].map(end=>new THREE.BoxGeometry(.008,1,1).translate(end*.496,0,0)));
+  shapes['coach-door-frames'] = combine([-1,1].flatMap(end=>[
+    ...[-.475,.475].map(y=>new THREE.BoxGeometry(.008,.05,1).translate(end*.496,y,0)),
+    ...[-.48,.48].map(z=>new THREE.BoxGeometry(.008,.9,.04).translate(end*.496,0,z)),
+  ]));
+  shapes['coach-handles'] = normalized(combine([-1,1].flatMap(end=>[
+    ...[-1.7,1.7].map(y=>new THREE.CylinderGeometry(.07,.07,2.4,8).rotateX(Math.PI/2).translate(end*9.35,y,0)),
+    new THREE.BoxGeometry(.2,.45,.12).translate(end*9.35,.75,-.1),
+  ])));
+  shapes['coach-steps'] = normalized(combine([-1,1].flatMap(end=>[
+    new THREE.BoxGeometry(.8,2.9,.22).translate(end*9.4,0,.24),
+    new THREE.BoxGeometry(.8,3.5,.22).translate(end*10.1,0,-.24),
+  ])));
+  shapes['coach-belt'] = combine([-1,1].map(side=>new THREE.BoxGeometry(1,.025,1).translate(0,side*.4875,0)));
+  shapes['coach-belt-double'] = combine([-1,1].flatMap(side=>[-.36,.36].map(z=>new THREE.BoxGeometry(1,.025,.28).translate(0,side*.4875,z))));
+  shapes['coach-roof-seams'] = normalized(combine([-6.5,0,6.5].map(x=>shapes.roof.clone().scale(.12,7.84,2.13).translate(x,0,0))));
+  shapes['coach-vent'] = normalized(combine([
+    new THREE.CylinderGeometry(.26,.32,.45,12).rotateX(Math.PI/2).translate(0,0,-.2),
+    new THREE.SphereGeometry(.5,12,6,0,Math.PI*2,0,Math.PI/2).rotateX(Math.PI/2),
+  ]));
+  // Gathered fabric leaves the central view open. Relief folds read without tiny textures.
+  function curtain(side) {
+    const fabric=new THREE.Shape();
+    fabric.moveTo(-.5,-.5);fabric.lineTo(-.19,-.5);
+    fabric.bezierCurveTo(-.2,-.32,-.36,-.22,-.34,-.06);
+    fabric.bezierCurveTo(-.31,.13,-.06,.31,-.02,.5);
+    fabric.lineTo(-.5,.5);fabric.closePath();
+    const shape=new THREE.ExtrudeGeometry(fabric,{depth:1,bevelEnabled:false,steps:1,curveSegments:8});
+    shape.applyMatrix4(new THREE.Matrix4().set(1,0,0,0,0,0,-1,.5,0,1,0,0,0,0,0,1));
+    const positions=shape.attributes.position;
+    for(let i=0;i<positions.count;i++) {
+      const x=positions.getX(i);
+      positions.setY(i,positions.getY(i)*.65+Math.sin((x+.5)*Math.PI*8)*.12);
+    }
+    shape.computeVertexNormals();if(side===1)shape.rotateZ(Math.PI);return shape;
+  }
+  shapes['coach-curtain-left']=curtain(-1);
+  shapes['coach-curtain-right']=curtain(1);
+  shapes['coach-curtain-pair']=combine([
+    curtain(-1),curtain(1),new THREE.BoxGeometry(1,.7,.12).translate(0,0,.44),
+  ]);
+  shapes['coach-curtain-blind']=combine([
+    new THREE.BoxGeometry(1,.6,.6).translate(0,0,.2),
+    ...[-.08,.09,.26,.43].map(z=>new THREE.BoxGeometry(1,1,.04).translate(0,0,z)),
+  ]);
+  shapes.star = profilePrism(Array.from({length:10},(_,i)=>{
+    const a=Math.PI/2+i*Math.PI/5, r=i%2?.23:.5;
+    return [r*Math.cos(a),r*Math.sin(a)];
+  }));
   // A pointed hull and a broad stern, unlike the symmetric tanker and road cars.
   const hullOutline = [[-.5,-.42],[.16,-.5],[.35,-.32],[.5,0],[.35,.32],[.16,.5],[-.5,.42]];
   const hull = [], bottomHull = hullOutline.map(([x,y]) => [x*.88,y*.45,-.5]);
@@ -159,12 +308,14 @@ export function createWagonRenderer({ renderer, instances, put, capacity = 300 }
   const materials = {
     paint: new THREE.MeshStandardMaterial({ roughness: .65, metalness: .06 }),
     cargo: new THREE.MeshStandardMaterial({ roughness: .9, metalness: 0, flatShading: true }),
+    person: new THREE.MeshStandardMaterial({ roughness: .8, metalness: 0 }),
     metal: new THREE.MeshStandardMaterial({ roughness: .38, metalness: .65, envMap: environment.texture, envMapIntensity: .65 }),
     steel: new THREE.MeshStandardMaterial({ roughness: .48, metalness: .85, envMap: environment.texture, envMapIntensity: .8 }),
     glass: new THREE.MeshStandardMaterial({ roughness: .18, metalness: .25, envMap: environment.texture, envMapIntensity: .5 }),
     gold: new THREE.MeshStandardMaterial({ roughness: .24, metalness: 1, envMap: environment.texture, envMapIntensity: 1.1 }),
   };
-  const templates = new Map(WAGON_STYLES.map(s => [s.model, wagonParts(s.model)]));
+  const templates = getTemplates();
+  for (const [name,geometry] of Object.entries(shapes)) geometry.name=name;
   const batches = new Map();
   // Max occurrences of each primitive in one model, multiplied by the board bound.
   const capacities = new Map();
@@ -187,21 +338,28 @@ export function createWagonRenderer({ renderer, instances, put, capacity = 300 }
     const key = `${style.color}:${style.finish}:${role}:${faded}`;
     if (colors.has(key)) return colors.get(key);
     const gold = style.finish === 'gold';
-    const color = new THREE.Color(role === 'paint' ? (gold ? '#eec454' : style.color) : role === 'trim' ? (gold ? '#ffe6a0' : style.color) : role);
+    const color = new THREE.Color(role === 'paint' || role === 'shade' ? (gold ? '#eec454' : style.color) : role === 'trim' ? (gold ? '#ffe6a0' : style.color) : role);
+    if (role === 'shade') color.multiplyScalar(.58);
     if (role === 'trim' && !gold) color.lerp(new THREE.Color('#ecedd9'), .28);
     if (faded === 'dim') color.multiplyScalar(.28);
     else if (faded) color.lerp(muted, .72);
     colors.set(key, color); return color;
   }
-  function draw(cell, player, faded) {
+  function draw(cell, player, faded, appearance) {
     const style = wagonStyle(player.color, player.wagon);
+    appearance ||= wagonAppearance(style.model);
+    const template = style.model === 'passenger' ? `passenger:${appearance.variant}:${appearance.cast}` : style.model;
     const a = cell.angle * Math.PI / 180, cos = Math.cos(a), sin = Math.sin(a);
-    for (const part of templates.get(style.model)) {
+    for (const part of templates.get(template)) {
       const material = part.material === 'paint' && style.finish === 'gold' ? 'gold' : part.material;
       const [x, y, z] = part.xyz;
-      put(batches.get(`${part.shape}:${material}`), cell.x + x * cos - y * sin, cell.y + x * sin + y * cos, z, cell.angle, ...part.size, paintFor(style, part.color, faded));
+      put(batches.get(`${part.shape}:${material}`), cell.x + x * cos - y * sin, cell.y + x * sin + y * cos, z, cell.angle, ...part.size, paintFor(style, part.color, faded), part.rotation);
     }
-    return { model: style.model };
+    if (style.model === 'hippie') drawCrowd(cell,faded,appearance);
+    return { model: style.model, ...appearance };
   }
-  return { draw, dispose() { environment.dispose(); Object.values(shapes).forEach(g => g.dispose()); Object.values(materials).forEach(m => m.dispose()); } };
+  return { draw,
+    setCrowdDetail(detail) { crowdDetail=detail==='high'?'high':'low'; },
+    crowdStats() { return [...crowdBatches].filter(([,m])=>m.count).map(([key,m])=>({key,count:m.count,people:m.count*Object.values(HIPPIE_TRAIN.people).reduce((sum,n)=>sum+n,0)})); },
+    dispose() { crowdBatches.forEach(m=>m.geometry.dispose());crowdBatches.clear();crowdMaterial.dispose();environment.dispose(); Object.values(shapes).forEach(g => g.dispose()); Object.values(materials).forEach(m => m.dispose()); } };
 }
