@@ -48,7 +48,7 @@ test("legacy result hydration preserves recorded scores, rank, winners, tickets 
   const result=g.result.find(r=>r.seat===0);result.route+=6;result.score+=6;result.winner=!result.winner;delete result.details;
   const other=g.result.find(r=>r.seat===1),existing=other.details,order=g.result.map(r=>r.seat);
   const saved=structuredClone(g.result);
-  E.view(g,-1);
+  E.normalize(g,1000);E.view(g,-1);
   assert.deepEqual(g.result.map(r=>r.seat),order);assert.equal(other.details,existing);
   for(let i=0;i<saved.length;i++) {
     const {details,...actual}=g.result[i],{details:oldDetails,...expected}=saved[i];

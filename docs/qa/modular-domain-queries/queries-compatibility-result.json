@@ -1,0 +1,10 @@
+{
+  "base_commit": "34ac499",
+  "passed": true,
+  "cases": 144,
+  "completed_at": "2026-11-03T02:13:38.280Z",
+  "comparison": "Normalized complete game state and every seat/spectator projection excluding serverNow",
+  "method": "12 seeded games per phase/legacy fixture, 2-5 players; before: ensureTiming then view; after: explicit normalize then view; idempotence verified at a later now",
+  "baseline_sha256": "bfbf9a85140a934cdd5240541e88a60c05d962077bc32ef7a3edf2ab055de030",
+  "engine_sha256": "728507c56857b4c718ecaabf8035f5c153498148bebe656459f2d7c1ef42aae4"
+}

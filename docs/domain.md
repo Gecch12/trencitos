@@ -19,6 +19,9 @@ reciben mapa/propiedad, billetes y parámetros de puntuación, sin textos o efec
 El [robo y mercado de cartas](../game/domain/train-cards.js) recibe pilas, límites
 y azar explícitos. Devuelve cambios sin alterar el estado recibido; la fachada
 conserva el orden de eventos, privacidad y resolución de turno.
+Las [consultas](../game/queries/match-view.js) devuelven copias independientes de
+la partida. La adaptación de relojes/resultados antiguos es una escritura explícita
+(`normalize`) previa a consultar; no ocurre al leer ni cambia frames históricos.
 La extracción conserva las reglas descritas aquí; avance y límites en
 [fase 2](work/modular-platform-domain.md).
 

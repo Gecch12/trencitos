@@ -174,6 +174,12 @@ normalización de guardados y el completado de resultados suceden al cargar o
 terminar, antes de consultar. La proyección espectadora incluye también el filtro
 final hoy llamado `safePublic`; `Engine.view(g,-1)` aislado no basta para ese caso.
 
+El sexto corte de fase 2 materializa `projectMatch` y `Engine.normalize`. La
+fachada conserva `view` y su reloj predeterminado, con `{now}` opcional; la consulta
+recibe el tiempo explícito y devuelve copias. La composición de `safePublic` sigue
+en servidor/archivo hasta reorganizar la capa de aplicación. Contrato de carga y
+límites implementados en [arquitectura](../architecture.md).
+
 ## Repositorios y confirmación durable
 
 Puertos de aplicación mínimos al llegar a fase 3:

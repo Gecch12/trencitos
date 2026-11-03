@@ -61,6 +61,12 @@ Cada paso incluye fecha, acción, eventos y una cadena SHA-256. La cadena detect
 alteraciones accidentales; no equivale a una firma externa contra un administrador
 con acceso para reescribir el archivo entero.
 
+Antes de captar un paso nuevo se normaliza la partida viva mediante
+`Engine.normalize`; sus vistas ya son copias independientes. Esto completa los
+detalles de resultados legados sin cambiar sus totales. Leer una repetición usa
+sus proyecciones guardadas: no ejecuta el normalizador sobre frames anteriores
+ni reescribe sus datos o hashes para añadir detalles actuales.
+
 Archivo local: el manifiesto `version: 2` conserva salas, metadatos y reclamaciones;
 los pasos viven en `STATE_FILE.archive/<hash-del-id>.jsonl`, un archivo por partida.
 Solo se serializan/anexan pasos nuevos. Se sincronizan antes de reemplazar

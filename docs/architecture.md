@@ -54,6 +54,8 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Costes de estación y asignación conjunta de vías prestadas | [stations.js](../game/domain/stations.js): `decideStation`, `canBuildStation`, `assignStations` |
 | Conectividad, caminos de destino y recorrido más largo | [network.js](../game/domain/network.js): `connected`, `connectionPath`, `longestTrail` |
 | Puntuación, clasificación y desglose | [scoring.js](../game/domain/scoring.js): `scoreMatch`, `rankResults`, `resultDetails`, `destinationDetails`; [puente legado](../game/compat/legacy-scoring.js) |
+| Vistas copiadas por puesto e historial filtrado | [match-view.js](../game/queries/match-view.js): `projectMatch`, `historyEntryView` |
+| Normalización explícita de partidas antiguas | [engine.js](../engine.js): `normalize`; [legacy-timing.js](../game/compat/legacy-timing.js): `planTiming`; [legacy-scoring.js](../game/compat/legacy-scoring.js): `completeResults` |
 | Ciudades, rutas, billetes y paleta | [data.js](../data.js) |
 | Valores permitidos de relojes y defaults compartidos | [game-timing.js](../game-timing.js): `valid`, `normalize` |
 | Relojes, desconexiones y recuperación | [game-clock.js](../game-clock.js), [multiplayer.js](../multiplayer.js) |
@@ -121,17 +123,27 @@ los límites de reciclado siguen coordinados por acciones y vencimientos.
 La fachada aún comprueba fase/puesto, despacha vencimientos y
 aplica los planes; emite historial/eventos y conserva el formato de guardados.
 `awardRoute` comparte la adjudicación entre construcción, túnel pagado y túnel
-sin suplemento. La adaptación de guardados en `ensureTiming` sigue en la fachada.
+sin suplemento. `ensureTiming` mantiene su firma y aplica el plan de compatibilidad
+de relojes; `normalize` añade el completado explícito de resultados guardados.
 [legacy-errors.js](../game/compat/legacy-errors.js) convierte los errores extraídos
 a los mensajes existentes. El suplemento se calcula sobre una copia de la mano
 tras reservar la base, antes de gastar cualquier carta.
 
+`view(game, seat, {now})` delega a `projectMatch`: selecciona campos autorizados y
+copia toda la proyección, sin referencias mutables a la partida. `now` es opcional
+en la fachada y obligatorio en el módulo de consulta, que no lee el reloj global.
+Leer no añade detalles ni adapta plazos. El servidor normaliza al restaurar salas
+de archivo/remotas y antes de persistir/publicar; el motor lo hace antes de
+comandos/vencimientos, el reloj antes de programarse y el archivo antes de captar
+un paso nuevo. Los snapshots de rollback ya provienen de estados normalizados.
+Los llamadores que cargan partidas antiguas directamente deben ejecutar
+`normalize(game, now)` antes de consultar. No se normalizan frames históricos.
+`safePublic` sigue siendo el filtro adicional de destinos finales para espectadores.
+
 No hay registro de mapas activo ni conversión de IDs de Europa todavía. Los
 otros consumidores siguen utilizando el formato legado. Las políticas extraídas
 no convierten en puro todo el motor: el ensamblado de la partida, aplicación de
-efectos, coordinación de vencimientos/cierre y consultas aún residen
-en la fachada. `view` todavía puede completar el desglose de un resultado antiguo;
-retirar esa normalización de las consultas sigue pendiente.
+efectos y coordinación de vencimientos/cierre aún residen en la fachada.
 Alcance y pruebas en
 [la fase de dominio](work/modular-platform-domain.md).
 

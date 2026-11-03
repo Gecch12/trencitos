@@ -13,6 +13,9 @@ const Network=require('./game/domain/network');
 const Scoring=require('./game/domain/scoring');
 const LegacyScoring=require('./game/compat/legacy-scoring');
 const TrainCards=require('./game/domain/train-cards');
+const LegacyTiming=require('./game/compat/legacy-timing');
+const MatchView=require('./game/queries/match-view');
+const {historyEntries,historyEntryView}=MatchView;
 const {legacyError}=require('./game/compat/legacy-errors');
 // Per-action randomness stays outside serialized state. Simulations can supply
 // an isolated stream for all draws/recycles without patching global crypto.
@@ -48,25 +51,15 @@ function startTurn(g,now=Date.now()){
  if(plan.emitTurn)event(g,'turn',g.current);
 }
 function ensureTiming(g,now=Date.now()){
- if(g.phase==='tunnel'&&g.pending&&!g.pending.stage){
-  // Resume older payment decisions without replaying the reveal or granting time.
-  g.turnDeadline=Number.isFinite(g.turnDeadline)?g.turnDeadline:now+(g.timing?.turnSeconds*1000||TURN_MS);
-  Object.assign(g.pending,{stage:'decision',startedAt:now,until:null,turnRemaining:Math.max(0,g.turnDeadline-now),
-   offerRemaining:g.players.map(p=>p.offer?Math.max(0,p.offer.deadline-now):null)});
- }
- if(g.phase==='tunnel'&&g.pending?.stage)return;
- if(g.phase==='initial'){
-  // Upgrade sequential saved games without discarding choices or granting a
-  // new minute. The existing absolute deadline becomes the shared deadline.
-  g.initialDeadline??=Number.isFinite(g.turnDeadline)?g.turnDeadline:now+(g.timing?.initialSeconds*1000||INITIAL_MS);
-  g.initialDone=g.players.filter(p=>!p.pending.length).length;
-  g.current=g.first;g.turnSeat=g.first;g.turnClockPhase='initial';g.turnWaiting=false;g.turnDeadline=g.initialDeadline;
-  return;
- }
- if(g.phase==='tickets'){g.offerSerial=(g.offerSerial||0)+1;g.players[g.current].offer={id:g.offerSerial,tickets:g.pending.tickets,deadline:now+OFFER_MS};g.phase='play';next(g,now)}
- if(['finished','closing'].includes(g.phase)){g.turnDeadline=null;g.turnWaiting=false;return}
- const waiting=!!(g.phase==='play'&&g.players[g.current].offer);
- if(g.turnSeat!==g.current||g.turnClockPhase!==(g.phase==='initial'?'initial':'play')||!!g.turnWaiting!==waiting||(!waiting&&!Number.isFinite(g.turnDeadline)))startTurn(g,now);
+ const plan=LegacyTiming.planTiming(g,{now,rules:turnRules(g),offerMs:OFFER_MS});
+ if(plan.pendingChanges)Object.assign(g.pending,plan.pendingChanges);
+ if(plan.offer)g.players[plan.offer.seat].offer=plan.offer.value;
+ Object.assign(g,plan.changes);
+ if(plan.finalRoundStarted)note(g,'¡Última ronda! Todos tienen un turno final, incluido quien la activó.');
+ if(plan.finish)finish(g);else if(plan.emitTurn)event(g,'turn',g.current);
+}
+function normalize(g,now=Date.now()){
+ ensureTiming(g,now);LegacyScoring.completeResults(g,SCORING_RULES);return g;
 }
 function fail(message){throw new Error(message)}
 // Preserve legacy pile containers between draws; recycling/renewal replaces them.
@@ -97,12 +90,6 @@ function newRandomGame(names,now=Date.now(),random=crypto.randomInt,timing=null,
  // randomness controls the deal/market without changing that existing contract.
  const g=newGame(names,random(names.length),now,timing,options);
  note(g,I18n.message`${g.players[g.first].name} empieza la partida (sorteo aleatorio).`,g.first);return g;
-}
-function historyEntries(g){return g.logs.map((text,i)=>g.history?.[i]?.text===text?g.history[i]:{id:null,text,seat:null})}
-function historyEntryView(entry,seat){
- if(!entry.draw)return entry;
- const {color,...draw}=entry.draw;
- return {...entry,draw:{...draw,...(draw.index>=0||entry.seat===seat?{color}:{})}};
 }
 function note(g,msg,seat=null,details={}){
  const message=typeof msg === "object" ? msg : null; if(message) msg=I18n.format(message);
@@ -226,7 +213,7 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
 // a server restart never fast-forwards an entire absent game's turns.
 function expire(g,now=Date.now(),random=randomFor(g)){const previous=actionRandom.get(g);actionRandom.set(g,random);expiring.add(g);try{return expireImpl(g,now,random)}finally{expiring.delete(g);if(previous)actionRandom.set(g,previous);else actionRandom.delete(g)}}
 function expireImpl(g,now=Date.now(),random=crypto.randomInt){
- ensureTiming(g,now);let changed=false;
+ normalize(g,now);let changed=false;
  if(g.phase==='tunnel'&&g.pending?.stage){
   const t=g.pending,seat=g.current,p=g.players[seat],plan=Tunnel.advanceTunnel({tunnel:t,turnDeadline:g.turnDeadline},{now,rules:TUNNEL_RULES});
   if(plan.kind==='decision'||plan.kind==='build'){
@@ -289,32 +276,7 @@ function finish(g,force=false,{random=randomFor(g)}={}){
  g.result=Scoring.scoreMatch(state,{map,rules:SCORING_RULES}).map(result=>LegacyScoring.legacyResult(result,g.players[result.seat]));
  note(g,'Partida finalizada. ¡Resultados calculados!')}
 function destinationDetails(g,seat,assignment){const {map,owners}=LegacyScoring.projectBoard(g);return Scoring.destinationDetails({...LegacyScoring.projectPlayer(g.players[seat]),seat,owners},{map},assignment)}
-function addScoreDetails(g){
- const {map,owners}=LegacyScoring.projectBoard(g),state={owners,players:g.players.map(LegacyScoring.projectPlayer)};
- const trails=g.players.map((_,seat)=>Network.longestTrail(map.routes.filter(r=>owners.get(r.id)===seat)));
- for(const result of g.result){
-  if(result.details)continue;
-  const details=Scoring.resultDetails(state,LegacyScoring.projectResult(result),g.result,{map,rules:SCORING_RULES,trails});
-  result.details=LegacyScoring.legacyDetails(details,result.tickets);
- }
+function view(g,seat,{now=Date.now()}={}){
+ return MatchView.projectMatch(g,seat,{now,tunnelCardMs:TUNNEL_CARD_MS,destinationDetails});
 }
-function drawEvent(g,seat){const e=g.lastDraw;if(!e)return null;return {id:e.id,seat:e.seat,index:e.index,...(e.index>=0||e.seat===seat?{color:e.color}:{})}}
-function view(g,seat){const spectator=seat===-1,p=spectator?{hand:[],tickets:[],pending:[],offer:null}:g.players[seat],own=seat===g.current,details=spectator?{progress:[],paths:[]}:destinationDetails(g,seat);if(g.phase==='finished'&&g.result.some(r=>!r.details))addScoreDetails(g);return {
- spectator,
- uiVersion:9,timing:g.timing||null,serverNow:Date.now(),turnDeadline:g.turnDeadline,turnSerial:g.turnSerial,turnWaiting:!!g.turnWaiting,
- initialDeadline:g.initialDeadline,initialReadyCount:g.players.filter(p=>!p.pending.length).length,
- waitingDeadline:g.turnWaiting?g.players[g.current].offer?.deadline:null,
- closingDeadline:g.phase==='closing'?Math.max(...g.players.map(p=>p.offer?.deadline||0)):null,
- events:(g.events||[]).map(e=>{const {color,base,...safe}=e;return {...safe,...(e.type==='tunnel_reveal'?{base}:{}),...(e.type==='draw'&&(e.index>=0||e.seat===seat)?{color}:{})}}),
- drawEvent:drawEvent(g,seat),phase:g.phase,current:g.current,seat,
- players:g.players.map(x=>({name:x.name,color:x.color,trains:x.trains,stations:x.stations,score:x.score,placed:x.placed,handCount:x.hand.length,ticketsCount:x.tickets.length,initialReady:!x.pending.length})),
- routes:g.routes,face:g.face,deckCount:g.deck.length,discardCount:g.discard.length,ticketDeckCount:g.shortDeck.length,
- hand:p.hand,tickets:p.tickets,ticketProgress:details.progress,ticketPaths:details.paths,
- drawCount:own?g.drawCount:0,initial:g.phase==='initial'&&p.pending.length?p.pending:null,
- pending:p.offer?.tickets||null,ticketOffer:p.offer||null,
- sharedTunnel:g.phase==='tunnel'&&g.pending?.stage?{id:g.pending.revealId,seat:g.current,routeId:g.pending.routeId,paymentColor:g.pending.color,
-  revealed:g.pending.revealed,surcharge:g.pending.surcharge,stage:g.pending.stage,startedAt:g.pending.startedAt,until:g.pending.until,outcome:g.pending.outcome,
-  base:{...g.pending.base},...(g.pending.stage==='result'?{extra:g.pending.extra?{...g.pending.extra}:null,resultStartedAt:g.pending.resultStartedAt,reason:g.pending.reason}:{}),
-  cardMs:TUNNEL_CARD_MS,turnRemaining:g.pending.turnRemaining,offerRemaining:g.pending.offerRemaining[seat]??null}:null,
- tunnel:own&&g.phase==='tunnel'?g.pending:null,finalRemaining:g.finalRemaining,logs:g.logs,history:historyEntries(g).map(entry=>historyEntryView(entry,seat)),result:g.phase==='finished'?g.result:null}}
-module.exports={observe,newGame,newRandomGame,note,historyEntryView,action,view,connected,connectionPath,longest,stationAssignments,finish,pay,block,draw,refill,recycleDiscards,next,ensureTiming,expire,deadlines,tunnelBusy,TURN_MS,INITIAL_MS,OFFER_MS,TUNNEL_CARD_MS,TUNNEL_RESULT_MS,SCORE,ROUTES,TICKETS,CITIES,COLORS,possibleClaim,possibleStation};
+module.exports={observe,newGame,newRandomGame,note,historyEntryView,action,view,connected,connectionPath,longest,stationAssignments,finish,pay,block,draw,refill,recycleDiscards,next,ensureTiming,normalize,expire,deadlines,tunnelBusy,TURN_MS,INITIAL_MS,OFFER_MS,TUNNEL_CARD_MS,TUNNEL_RESULT_MS,SCORE,ROUTES,TICKETS,CITIES,COLORS,possibleClaim,possibleStation};

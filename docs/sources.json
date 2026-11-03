@@ -1,5 +1,6 @@
 {
   "architecture.md": [
+    "game/queries/",
     "game/domain/",
     "game/compat/",
     "server.js",
@@ -37,6 +38,7 @@
     "game-timing.js"
   ],
   "domain.md": [
+    "game/queries/",
     "game/domain/",
     "engine.js",
     "data.js",
@@ -186,6 +188,7 @@
     "tests/route-claim-contract.test.js"
   ],
   "decisions/match-domain-contracts.md": [
+    "game/queries/",
     "game/domain/",
     "game/compat/",
     "engine.js",
@@ -198,6 +201,7 @@
     "tests/route-claim-contract.test.js"
   ],
   "work/modular-platform-domain.md": [
+    "game/queries/",
     "engine.js",
     "game/domain/",
     "game/compat/",
@@ -212,7 +216,14 @@
     "tests/domain-stations-scoring.test.js",
     "tests/stations-scoring-contract.test.js",
     "tests/domain-train-cards.test.js",
-    "tests/train-cards-contract.test.js"
+    "tests/train-cards-contract.test.js",
+    "server.js",
+    "game-clock.js",
+    "match-archive.js",
+    "tests/match-queries.test.js",
+    "tests/legacy-load-server.test.js",
+    "tests/match-archive.test.js",
+    "tests/initial-results.test.js"
   ],
   "work/wagon-variants.md": [
     "data.js",

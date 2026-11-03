@@ -32,6 +32,7 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null}={}) {
     if(!room.game || room.archiveClosedAt) return;
     room.matchId ||= randomUUID();
     const g=room.game, previous=room._archiveState;
+    Engine.normalize(g);
     const members=room.members.map(m=>({name:m.name,color:m.color,bot:!!m.bot,autopilot:!!m.autopilot,connected:!!m.bot||!!(m.ws&&!m.ws.closed)}));
     // Remove volatile serverNow from the recorded projections; retain deadlines
     // and authoritative timestamps to reproduce clocks at each recorded step.

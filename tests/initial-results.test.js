@@ -94,7 +94,8 @@ test("old finished saves gain an audit breakdown without changing the stored sco
   const g = scoreGame(); E.finish(g);
   const totals = g.result.map(r => r.score);
   for (const r of g.result) delete r.details;
-  const view = E.view(JSON.parse(JSON.stringify(g)), 0);
+  const restored = JSON.parse(JSON.stringify(g));E.normalize(restored, 1000);
+  const view = E.view(restored, 0);
   assert.deepEqual(view.result.map(r => r.score), totals);
   assert.ok(view.result.every(r => r.details));
 });

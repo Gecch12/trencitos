@@ -12,7 +12,7 @@ function createGameClock({ rooms, sendRoom, dispatch = job => job(), expireGame 
   }
   function sync(room) {
     if (!room.game || rooms.get(room.code) !== room || room.game.phase === "finished" || !canTick(room)) { cancel(room); return; }
-    Engine.ensureTiming(room.game, now());
+    Engine.normalize(room.game, now());
     const deadlines = Engine.deadlines(room.game);
     if (!deadlines.length) { cancel(room); return; }
     const deadline = Math.min(...deadlines);

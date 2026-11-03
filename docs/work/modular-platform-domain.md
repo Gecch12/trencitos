@@ -22,7 +22,7 @@ cambios de esta entrega. El trabajo visual de otros chats permanece separado.
 - [x] Preparación de recursos, reparto y elecciones/ofertas de destinos extraídos, con azar suministrado.
 - [x] Estaciones, conectividad, puntuación y desglose extraídos, con puente para resultados guardados.
 - [x] Cartas de tren y mercado extraídos, con azar explícito y puente compatible.
-- [ ] Consultas sin mutación y compatibilidad de resultados/temporizadores fuera de ellas.
+- [x] Consultas sin mutación ni alias y normalización explícita de resultados/temporizadores.
 - [ ] Europa completa verificada, incluyendo bots, privacidad, guardado y replay.
 
 ## Primer corte: pagos y construcción
@@ -402,11 +402,88 @@ dispositivos físicos. Entrega local, sin integración de otros worktrees ni
 publicación. La fase 2 permanece activa hasta completar consultas y aceptación
 conjunta.
 
+## Sexto corte: consultas y compatibilidad explícita
+
+Base: `34ac499` más los cambios de esta entrega.
+
+- [match-view.js](../../game/queries/match-view.js) proyecta la partida por puesto,
+  filtra eventos/historial y copia el resultado completo. No modifica el estado
+  ni devuelve referencias mutables a él; tampoco consulta reloj/azar. Recibe `now`, duración
+  visual de carta y cálculo de destinos. Rechaza puestos inválidos sin convertir
+  cadenas como `"0"` en acceso a una mano privada.
+- `Engine.view(game, seat, {now})` conserva la fachada y el reloj predeterminado.
+  La lectura de un resultado antiguo incompleto ya no lo repara: el llamador debe
+  normalizar primero. Las pruebas anteriores de hidratación se adaptaron a ese
+  punto explícito, conservando sus verificaciones de totales y referencias.
+- [legacy-timing.js](../../game/compat/legacy-timing.js) planifica adaptación de
+  selección inicial secuencial, fase antigua de billetes y túnel sin etapas.
+  Conserva plazos existentes y usa el dominio de turno para el avance; la fachada
+  aplica sus cambios/eventos. `ensureTiming` mantiene compatibilidad pública.
+- `Engine.normalize(game, now)` aplica relojes y `completeResults` del
+  [puente de puntuación](../../game/compat/legacy-scoring.js). Es idempotente,
+  conserva totales/clasificación/ganadores y no reemplaza detalles presentes.
+- Servidor: normaliza tras restaurar salas de archivo o backend remoto, antes
+  de tomar snapshots confirmados, y antes de persistir/publicar. Motor/reloj:
+  normalizan antes de comandos, vencimientos y programación. Práctica y bots
+  pasan por esas mismas entradas; no se cambian sus estrategias.
+- Archivo: normaliza la partida viva antes de captar un paso nuevo. Leer replay
+  conserva proyecciones y hashes históricos, incluso si faltaban detalles.
+  El filtro `safePublic` de destinos finales sigue en servidor/archivo; no se
+  cambia el acceso de participantes/espectadores ni el formato de las grabaciones.
+
+### Evidencia del sexto corte
+
+- [Consultas](../../tests/match-queries.test.js): nueve estados/fases congelados,
+  todas las referencias anidadas separadas, vistas estables tras acciones,
+  reloj explícito, rechazos de puesto, privacidad de historial y normalización
+  idempotente de iniciales, billetes, túneles y resultados. Incluye ejecución en
+  VM sin reloj/azar/transporte ambientales.
+- [Carga del servidor](../../tests/legacy-load-server.test.js): archivo y remoto
+  simulado normalizan antes de publicar, conservan totales/plazos/revisión y
+  guardan el estado compatible; reconexión real por WebSocket local.
+- [Archivo](../../tests/match-archive.test.js): captura de resultado antiguo y
+  lectura de replay sin normalizar frames ni cambiar la cadena de hashes.
+- Suite enfocada de once archivos: **99/99** correctas, incluyendo práctica,
+  bots permanentes, relojes, resultados, túneles, eventos y privacidad.
+- [Comparación con la base](../qa/modular-domain-queries/queries-compatibility-result.json):
+  **144/144** estados normalizados y vistas de todos los puestos/espectador
+  idénticos (excepto `serverNow`). Doce semillas, 2–5 jugadores y doce escenarios
+  actuales/legados, incluida espera por oferta, cierre y etapas del túnel.
+  Antes se usaba `ensureTiming` seguido de `view`; ahora `normalize` seguido
+  de `view`. Se verifica idempotencia con un tiempo posterior.
+
+Ejecución del 2026-11-02 (Lima), Node `v25.6.1`, sobre la base indicada y el diff
+de este corte:
+
+- `node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js`:
+  **470/470**, sin fallos ni omisiones. [Resultado y huellas del código](../qa/modular-domain-queries/node-tests-result.json)
+  y [salida TAP](../qa/modular-domain-queries/node-tests.tap).
+- `QA_PORT=0 npm run test:board3d`: **aprobado**, Chrome `156.0.8078.80`.
+  [Resultado](../qa/modular-domain-queries/browser-tests-result.json) y
+  [reporte](../qa/modular-domain-queries/browser/threejs-report.json): ocho
+  recorridos, nueve combinaciones de viewport/zoom y partida de cuatro jugadores
+  completa con **245 acciones**, reconexión y cero errores. Incluye 169 robos
+  de cartas, 62 intentos de construcción, pago/desistimiento de túneles, estación
+  y oferta/confirmación de destinos. Se inspeccionaron el [resultado final](../qa/modular-domain-queries/browser/threejs-finished.png)
+  y el [móvil emulado](../qa/modular-domain-queries/browser/threejs-mobile.png).
+- `node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
+  Se revisaron contratos y fichas históricas de bots/controles de mesa sin
+  reemplazar sus evidencias. No cambiaron datos de Europa, archivos visuales,
+  estrategias de bots ni conductor de navegador. `docs/qa/threejs-*` restaurado.
+
+Entorno local con puertos/estado aislados y autenticación externa desactivada.
+El backend remoto y las pruebas SQL usan simuladores; no se acredita Render,
+Supabase real, una imagen Docker ni dispositivos físicos. Entrega local sin
+integración de otros worktrees ni publicación. La aceptación conjunta de fase 2
+permanece pendiente.
+
 ## Siguiente corte
 
-Retirar normalización/mutación de las consultas: adaptar guardados en los puntos
-de carga y antes de ejecutar comandos, conservar plazos y resultados históricos,
-y construir vistas autorizadas sin referencias mutables al estado. Verificar
-todos los consumidores (servidor, práctica, bots y archivo/replay) antes de retirar
-compatibilidad de la fachada. Después realizar la aceptación conjunta de Europa
-antes de cerrar fase 2.
+Realizar la aceptación conjunta de Europa: revisar los límites finales del
+dominio, consultas y puente, y los recorridos de bots, privacidad, guardado/replay
+y errores de persistencia antes de cerrar fase 2. Revisar además el empaquetado:
+el `Dockerfile` actual tiene una lista explícita desactualizada que no copia
+`game/` ni módulos como `i18n.js`/`match-archive.js`; no se acredita una imagen
+Docker arrancable con las pruebas de Node. `render.yaml` usa runtime Node.
+La separación de aplicación/infraestructura y frontend corresponde a fase 3,
+con un checkpoint revisado de vagones antes de mover archivos visuales.

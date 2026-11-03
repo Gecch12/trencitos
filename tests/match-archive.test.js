@@ -115,3 +115,28 @@ test('completed archive is sealed before later disconnects and room expiry',asyn
  assert.deepEqual(archive.state.matches[room.matchId],before);
  assert.equal(before.status,'completed');assert.ok(room.archiveClosedAt);
 });
+
+test('capture normalizes old live results while replay preserves legacy frames and hashes',async()=>{
+ const {archive,room}=fixture('public');Engine.finish(room.game,true);
+ for(const row of room.game.result)delete row.details;
+ archive.capture(room);archive.commit(archive.prepare());
+ assert.ok(room.game.result.every(row=>row.details));
+ const record=archive.state.matches[room.matchId];
+ // Represent a historical recording whose stored final projections lack details.
+ const final=structuredClone(room._archiveState);
+ for(const row of final.game.result)delete row.details;
+ for(const view of final.views)for(const row of view.result||[])delete row.details;
+ const frame={seq:0,at:123,action:null,events:[],previousHash:null,snapshot:final};frame.hash=frameHash(frame);
+ record.frames=[frame];record.steps=1;record.digest=frame.hash;
+ const before=structuredClone(record),original=Engine.normalize;
+ Engine.normalize=()=>{throw Error('Replay must not normalize historical frames');};
+ try {
+  for(const identity of [{guestId:'a'.repeat(64)},{}]){
+   const replay=await archive.replay(identity,room.matchId);
+   assert.ok(Replay.at(replay.frames,0).views[0].result.every(row=>!row.details));
+  }
+  const audit=await archive.replay({guestId:'a'.repeat(64)},room.matchId,true);
+  assert.deepEqual(audit.frames,[frame]);assert.deepEqual(record,before);
+  const {hash,...hashed}=frame;assert.equal(hash,frameHash(hashed));
+ }finally{Engine.normalize=original;}
+});

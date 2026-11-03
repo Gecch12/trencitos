@@ -1,4 +1,6 @@
 "use strict";
+const Scoring = require("../domain/scoring");
+const Network = require("../domain/network");
 
 const projectTicket = ticket => ({ id: ticket.id, a: ticket.a, b: ticket.b, points: ticket.p });
 
@@ -26,4 +28,17 @@ function legacyResult(result, player) {
   return { ...result, tickets: player.tickets, details: legacyDetails(result.details, player.tickets) };
 }
 
-module.exports = { projectBoard, projectPlayer, projectResult, legacyDetails, legacyResult };
+// Explicit compatibility write, never called from a query. Existing totals,
+// rank, winners, ticket references and already stored details remain intact.
+function completeResults(game, rules) {
+  if (game.phase !== "finished" || !game.result.some(result => !result.details)) return;
+  const { map, owners } = projectBoard(game), state = { owners, players: game.players.map(projectPlayer) };
+  const trails = game.players.map((_, seat) => Network.longestTrail(map.routes.filter(route => owners.get(route.id) === seat)));
+  for (const result of game.result) {
+    if (result.details) continue;
+    const details = Scoring.resultDetails(state, projectResult(result), game.result, { map, rules, trails });
+    result.details = legacyDetails(details, result.tickets);
+  }
+}
+
+module.exports = { projectBoard, projectPlayer, projectResult, legacyDetails, legacyResult, completeResults };

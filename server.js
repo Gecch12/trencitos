@@ -35,6 +35,7 @@ function restoreLoaded(data) {
     if (!r.practice && Date.now() - r.updated < TTL) {
       if (r.emptySince != null && Date.now() - r.emptySince >= GRACE_MS) continue;
       shiftDeadlines(r.game, Math.max(0, Date.now() - (r.savedAt || Date.now())));
+      if (r.game) Engine.normalize(r.game);
       r.emptySince = Date.now();
       const colors = LobbyUI.restoreColors(r.members, r.game?.players);
       r.members.forEach((m, i) => { m.color = colors[i]; m.ws = null; m.disconnectedAt = Date.now(); });
@@ -378,7 +379,7 @@ function sendRoom(r, automatic = false) {
   if (!automatic) r.updated = Date.now();
   if (!r.practice && storageFailureAt === null) multiplayer.reconcile(r);
   if (rooms.get(r.code) !== r) return;
-  if (r.game) Engine.ensureTiming(r.game);
+  if (r.game) Engine.normalize(r.game);
   r.savedAt = Date.now();
   if (storageFailureAt === null) { archive.capture(r); persist(); }
   r.members.forEach((m, i) => {
