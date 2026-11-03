@@ -139,3 +139,54 @@ test('a failed player command commit restores game, receipt and archive without 
     assert.deepEqual(api.state.matches[f.room.matchId].frames, frames);
   } finally { api.fail = false; }
 });
+
+async function initialBotRoom() {
+  const peer = await client();peer.send({ type: 'create', name: 'Human' });
+  const lobby = await peer.next('lobby');
+  for (const count of [2, 3]) {
+    peer.send({ type: 'add_bot' });await peer.next('lobby', m => m.members.length === count);
+  }
+  peer.send({ type: 'start' });await peer.next('state');
+  return { peer, room: app.rooms.get(lobby.code) };
+}
+
+test('a permanent bot batch waits for commit and a lost response does not repeat its choices or history', async () => {
+  await stop();await boot();
+  const { peer, room } = await initialBotRoom(), revision = room.revision;
+  const savedBefore = structuredClone(api.state.rooms.find(r => r.code === room.code));
+  const framesBefore = structuredClone(api.state.matches[room.matchId].frames), start = api.calls.length;
+  const release = api.hold();
+  const commits = () => api.calls.slice(start).filter(c => c.method === 'ferrovia_save_checkpoint_v2' &&
+    c.body.p_rooms.some(r => r.code === room.code && r.game.initialDone === 2));
+  try {
+    const deadline = Date.now() + 5000;
+    while (!commits().length && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 10));
+    assert.equal(commits().length, 1);
+    await assert.rejects(peer.next('state', m => m.game.revision > revision, 60));
+    assert.deepEqual(api.state.rooms.find(r => r.code === room.code), savedBefore);
+    assert.deepEqual(api.state.matches[room.matchId].frames, framesBefore);
+    api.lostResponses = 1;
+  } finally { release(); }
+  await peer.next('state', m => m.game.revision === revision + 2);
+  assert.equal(room.game.initialDone, 2);assert.equal(room.game.players[0].pending.length, 4);
+  assert.equal(commits().length, 2);assert.deepEqual(commits()[0].body, commits()[1].body);
+  assert.equal(api.state.rooms.find(r => r.code === room.code).revision, revision + 2);
+  const archivedFrames = commits()[0].body.p_archive.filter(entry => entry.match.id === room.matchId).flatMap(entry => entry.frames);
+  assert.deepEqual(api.state.matches[room.matchId].frames, [...framesBefore, ...archivedFrames]);
+  assert.ok(archivedFrames.length >= 2);
+});
+
+test('a failed automatic batch restores choices, revision and archive without exposing an uncommitted state', async () => {
+  const { peer, room } = await initialBotRoom();
+  const game = structuredClone(room.game), revision = room.revision, hash = room.archiveHash, sequence = room.archiveSeq;
+  const frames = structuredClone(api.state.matches[room.matchId].frames);
+  api.fail = true;
+  try {
+    await peer.next('error', m => m.code === 'STORAGE_FAILED');
+    await assert.rejects(peer.next('state', m => m.game.revision > revision, 60));
+    assert.deepEqual(room.game, game);assert.equal(room.revision, revision);
+    assert.equal(room.archiveHash, hash);assert.equal(room.archiveSeq, sequence);
+    assert.deepEqual(api.state.matches[room.matchId].frames, frames);
+    assert.equal((await fetch(`http://127.0.0.1:${port}/healthz`)).status, 503);
+  } finally { api.fail = false; }
+});

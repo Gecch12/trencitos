@@ -141,7 +141,8 @@ no se sustituye el total histórico por uno recalculado.
 ## Ausencia y práctica
 
 Las políticas viven en [multiplayer.js](../multiplayer.js),
-[game-clock.js](../game-clock.js) y [practice.js](../practice.js):
+[game-clock.js](../game-clock.js) y [practice.js](../practice.js), con coordinación
+de vencimientos y jugadas en [automatic-play.js](../game/application/automatic-play.js):
 
 - Sala previa: desconexión reserva puesto humano 60 s; salida explícita lo libera.
   Los bots añadidos permanecen en su plaza hasta retirarlos o eliminar la sala.

@@ -1,8 +1,6 @@
 "use strict";
-const I18n = require("./i18n");
 const { randomInt } = require("node:crypto");
-const Engine = require("./engine");
-const { chooseBotAction } = require("./bots");
+const { createLegacyAutomaticPlay } = require("./game/compat/legacy-automatic-play");
 
 const ABSENCE_MS = 30000;
 
@@ -16,6 +14,7 @@ function createPracticeController({
   setTimer = setTimeout,
   clearTimer = clearTimeout,
   random = randomInt,
+  automaticPlay = createLegacyAutomaticPlay({ stageRoom: sendRoom, botRandom: random }),
 }) {
   // Timers never belong to the serializable game state.
   const active = new Map();
@@ -66,53 +65,22 @@ function createPracticeController({
       clearTimer(state.expiry);
       state.expiry = state.deadline = null;
     }
-    const pendingBots = () => room.members.flatMap((member, i) => member.bot && room.game.players[i].pending.length ? [i] : []);
-    const pendingOffers = () => room.game.phase === "tunnel" ? [] : room.members.flatMap((member, i) => member.bot && room.game.players[i].offer ? [i] : []);
-    const canAct = () => Engine.tunnelBusy(room.game) ? false : room.game.phase === "initial" ? pendingBots().length > 0
-      : room.game.phase !== "finished" && (pendingOffers().length > 0 || room.game.phase !== "closing" && room.members[room.game.current]?.bot);
-    if (!canAct()) {
+    if (!automaticPlay.canPracticeAct(room)) {
       cancelBot(state);
       return;
     }
     if (state.bot !== null) return;
     state.bot = setTimer(() => dispatch(() => {
       state.bot = null;
-      if (!live(room) || blocked() || !connected(room) || !canAct()) return;
-      // Resolve an elapsed deadline before choosing a bot move. The same time
-      // is used by action(), so a delayed callback cannot act for the old seat.
-      const actionTime = Date.now();
-      if (Engine.expire(room.game, actionTime)) { sendRoom(room); return; }
-      if (room.game.phase === "initial" || pendingOffers().length) {
-        for (const seat of room.game.phase === "initial" ? pendingBots() : pendingOffers()) {
-          const action = chooseBotAction(room.game, seat, random);
-          if (action) Engine.action(room.game, seat, action, { now: actionTime });
-        }
-        sendRoom(room); return;
-      }
-      const action = chooseBotAction(room.game, room.game.current, random);
-      if (action) {
-        Engine.action(room.game, room.game.current, action, { now: actionTime });
-      } else {
-        // A temporary practice opponent may yield if all remaining legal
-        // actions are strategically pointless. Human pass rules stay in Engine.
-        Engine.note(room.game, I18n.message`${room.game.players[room.game.current].name} no encuentra una jugada útil y cede el turno.`, room.game.current);
-        Engine.next(room.game);
-      }
-      sendRoom(room);
+      if (!live(room) || blocked() || !connected(room)) return;
+      automaticPlay.playPracticeBots(room);
     }), 800 + random(201));
     state.bot.unref?.();
   }
   function finish(room) {
     if (!live(room) || room.game.phase === "finished") return;
     cancelBot(runtime(room));
-    // A pending tunnel has not been paid for yet; abandon it before scoring.
-    if (room.game.phase === "tunnel" && room.game.pending.stage !== "result") room.game.discard.push(...room.game.pending.revealed);
-    Engine.recycleDiscards(room.game);
-    room.game.pending = null;
-    room.game.drawCount = 0;
-    room.earlyFinish = true;
-    Engine.finish(room.game, true);
-    sendRoom(room);
+    automaticPlay.finishPractice(room);
   }
   function expired(room) {
     const deadline = active.get(room)?.deadline;

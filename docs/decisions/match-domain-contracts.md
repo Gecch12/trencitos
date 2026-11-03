@@ -133,6 +133,13 @@ publicación actuales, y su aceptación remota solo se transmite después del
 commit de la cola global. Contrato implementado en [arquitectura](../architecture.md)
 y avance en [fase 3](../work/modular-platform-application.md).
 
+El segundo corte añade `automatic-play.js` para vencimientos, bots permanentes,
+reemplazos y práctica, ensamblado por `legacy-automatic-play.js`. Los
+temporizadores delegan dentro del mismo `dispatch`; se mantienen las diferencias
+de revisión y preparación entre entradas, descritas en arquitectura. La gestión
+de conexiones permanece en los controladores y el commit conjunto sigue en el
+puente existente; los puertos objetivo de abajo todavía no están implementados.
+
 Separar dos operaciones explícitas:
 
 ```js

@@ -93,10 +93,11 @@ una operación explícita en los puntos de carga/ejecución. Europa fue verifica
 con bots, privacidad, guardado/replay y errores de persistencia; también se corrigió
 y comprobó el empaquetado Docker local.
 
-La [fase 3](modular-platform-application.md) ya separa el caso de jugada humana
-del servidor, conservando confirmación durable de partida e historial,
+La [fase 3](modular-platform-application.md) ya separa jugadas humanas, vencimientos
+y jugadas automáticas de bots permanentes, reemplazos y práctica
+de los adaptadores de entrada, conservando confirmación durable de partida e historial,
 deduplicación y rollback. El puente de guardado/publicación sigue en el servidor;
-bots/relojes, consultas autorizadas y organización de frontend/backend requieren
+su separación, consultas autorizadas y organización de frontend/backend requieren
 los siguientes cortes. Antes de mover archivos visuales, integrar
 un checkpoint revisado del trabajo de vagones. Las ediciones posteriores de
 otros worktrees no se sincronizan automáticamente con esta rama.

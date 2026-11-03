@@ -6,6 +6,7 @@ const http = require("node:http"),
 const Engine = require("./engine");
 const { createPlayerActionHandler } = require("./game/application/player-action");
 const { actionReply } = require("./game/compat/legacy-action-reply");
+const { createLegacyAutomaticPlay } = require("./game/compat/legacy-automatic-play");
 const GameTiming = require("./game-timing");
 const {createMatchArchive,safePublic}=require("./match-archive");
 const {guestId,ensureGuest}=require("./guest-identity");
@@ -90,14 +91,11 @@ const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, rest
 const dispatch = job => stopping ? undefined : durable ? durable.run(() => { if (!stopping) job(); }) : job();
 const submitPlayerAction = createPlayerActionHandler({ engine: Engine, stageRoom: sendRoom,
   storagePaused: () => storageFailureAt !== null, now: () => Date.now(), random: max => crypto.randomInt(max) });
-const practice = createPracticeController({ rooms, sendRoom, dispatch, blocked:()=>storageFailureAt!==null, onRemove: room => { clocks.cancel(room); archive.capture(room,"Práctica cerrada."); return persist(); } });
-const clocks = createGameClock({ rooms, sendRoom, dispatch, canTick: r => storageFailureAt === null && (r.practice || r.emptySince == null),
-  expireGame: r => { const changed = Engine.expire(r.game); if (changed) r.revision = (r.revision || 0) + 1; return changed; } });
-const multiplayer = createMultiplayerController({ rooms, sendRoom, removeRoom, dispatch,
-  blocked: () => storageFailureAt !== null,
-  expireGame: r => { if (!Engine.expire(r.game)) return false; r.revision = (r.revision || 0) + 1; sendRoom(r, true); return true; },
-  performAction: (r, seat, action) => { try { Engine.action(r.game, seat, action); r.revision = (r.revision || 0) + 1; sendRoom(r, true); } catch (e) { console.error("Replacement bot:", e.message); } } });
-const roomBots = createRoomBots({ rooms, sendRoom, dispatch, blocked: () => storageFailureAt !== null });
+const automaticPlay = createLegacyAutomaticPlay({ stageRoom: sendRoom });
+const practice = createPracticeController({ rooms, sendRoom, automaticPlay, dispatch, blocked:()=>storageFailureAt!==null, onRemove: room => { clocks.cancel(room); archive.capture(room,"Práctica cerrada."); return persist(); } });
+const clocks = createGameClock({ rooms, sendRoom, automaticPlay, dispatch, canTick: r => storageFailureAt === null && (r.practice || r.emptySince == null) });
+const multiplayer = createMultiplayerController({ rooms, sendRoom, automaticPlay, removeRoom, dispatch, blocked: () => storageFailureAt !== null });
+const roomBots = createRoomBots({ rooms, sendRoom, automaticPlay, dispatch, blocked: () => storageFailureAt !== null });
 function snapshot(r) {
   return { archiveHash:r.archiveHash,matchId:r.matchId,archiveSeq:r.archiveSeq,archiveFull:r.archiveFull,archiveStartedAt:r.archiveStartedAt,archiveClosedAt:r.archiveClosedAt,_archiveState:r._archiveState, game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
     hostSeat: r.hostSeat, visibility: r.visibility, maxPlayers: r.maxPlayers, timing: r.timing ? {...r.timing} : undefined,

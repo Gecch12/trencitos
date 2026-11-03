@@ -45,7 +45,7 @@ test('room alarm follows stages instead of spinning on frozen ticket deadlines',
   const g=setup(false), room={code:'TUNNEL',game:g}, rooms=new Map([[room.code,room]]);
   let now=12000, timer, calls=0;
   const clock=createGameClock({rooms,now:()=>now,setTimer:(fn,ms)=>(timer={fn,ms}),clearTimer:()=>{},
-    expireGame:r=>E.expire(r.game,now),sendRoom:()=>calls++});
+    sendRoom:()=>calls++});
   clock.sync(room);assert.equal(timer.ms,2800);
   now+=timer.ms;timer.fn();assert.equal(g.pending.stage,'result');assert.equal(timer.ms,E.TUNNEL_RESULT_MS);
   now+=timer.ms;timer.fn();assert.equal(g.current,1);assert.equal(g.players[1].offer.deadline,22800+E.TUNNEL_RESULT_MS);

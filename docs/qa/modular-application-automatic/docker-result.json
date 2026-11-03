@@ -1,0 +1,138 @@
+{
+  "base_commit": "2af73a56aa28e3e617e925b36ff8d1d6735656f1",
+  "isolation": "local Docker; network none; read-only root; tmpfs state; default node user; no production environment",
+  "image": {
+    "Id": "sha256:713268256a5d5d675db2fb0bcb1f3af01ce13859bf456eae4e307de48eb24e75",
+    "Architecture": "arm64",
+    "Os": "linux",
+    "user": "node",
+    "command": [
+      "node",
+      "server.js"
+    ]
+  },
+  "startup": {
+    "node": "v22.23.4",
+    "uid": 1000,
+    "health": {
+      "ok": true,
+      "storage": "file",
+      "rooms": 0
+    },
+    "stateWritable": true,
+    "productionOnly": true
+  },
+  "test_exit_code": 0,
+  "commands": [
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "image",
+        "inspect",
+        "--format",
+        "{{json .}}",
+        "trencitos-application-automatic"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "run",
+        "--detach",
+        "--network",
+        "none",
+        "--read-only",
+        "--tmpfs",
+        "/data:uid=1000,gid=1000",
+        "-e",
+        "STATE_BACKEND=file",
+        "-e",
+        "AUTH_ENABLED=false",
+        "trencitos-application-automatic"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "exec",
+        "cb83832cf46dff27dfee1bf2180272c8e1632579ac685ba0c37dbd73eb17ed82",
+        "node",
+        "-e",
+        "const assert=require('node:assert/strict'),fs=require('node:fs');\n(async()=>{let health;for(let i=0;i<30;i++){try{const r=await fetch('http://127.0.0.1:3000/healthz');assert.equal(r.status,200);health=await r.json();break;}catch(e){if(i===29)throw e;await new Promise(ok=>setTimeout(ok,100));}}\nassert.deepEqual(health,{ok:true,storage:'file',rooms:0});assert.equal(process.getuid(),1000);\nfs.writeFileSync('/data/write-check','ok');assert.equal(fs.readFileSync('/data/write-check','utf8'),'ok');fs.unlinkSync('/data/write-check');\nfor(const p of ['.env','room-state.json','room-state.json.archive','tests','docs','scripts','node_modules/playwright','node_modules/@electric-sql/pglite'])assert.equal(fs.existsSync('/app/'+p),false,p);\nconsole.log(JSON.stringify({node:process.version,uid:process.getuid(),health,stateWritable:true,productionOnly:true}));})().catch(e=>{console.error(e);process.exit(1)});"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "logs",
+        "cb83832cf46dff27dfee1bf2180272c8e1632579ac685ba0c37dbd73eb17ed82"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "rm",
+        "-f",
+        "cb83832cf46dff27dfee1bf2180272c8e1632579ac685ba0c37dbd73eb17ed82"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--read-only",
+        "--tmpfs",
+        "/data:uid=1000,gid=1000",
+        "--tmpfs",
+        "/tmp:mode=1777",
+        "-e",
+        "STATE_BACKEND=file",
+        "-e",
+        "AUTH_ENABLED=false",
+        "-v",
+        "/Users/angelaltarodri/Desktop/free/trains/worktrees/modular-game-platform/tests:/app/tests:ro",
+        "trencitos-application-automatic",
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "--test-name-pattern=runtime assets|static SVG|WebSocket practice flow",
+        "tests/deployment.test.js",
+        "tests/server.test.js"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "completed_at": "2026-11-03T02:55:35.262285+00:00",
+  "source_sha256": {
+    "Dockerfile": "ac3137b9efa30ee1636db02ea5a8e965fdb3501643f0280735484860fc8d7284",
+    ".dockerignore": "e0b82edb2e80a4a1a51c70e25a2d9cc6be23b3d15e21813377e2eee092a9130c",
+    "package-lock.json": "e87d35d818ad33717a190b3d48b215e9ad6daed442a850163752b7f8d0ec27f6",
+    "tests/deployment.test.js": "d693420df4a58ce87be2e1f76a01d0c00e6643c6c766674894faf66b8493e915",
+    "server.js": "b261eaa020cd22d5954c824f3242499ff34f4ba17bbea835fc02dcc84e8bc56b",
+    "game/application/player-action.js": "402bb4db5446ce39b677acb43e1b10db86c899307602d74f39ea84ceb2e2294b",
+    "game/compat/legacy-action-reply.js": "41a9664bfa462933b5cbca6f5d0698796e7b2d27f04081f55654262ba1d2655a",
+    "game/application/automatic-play.js": "a36b8a92b54d040ac5dc0a86fe36a5a1e12619bcad89a805ceb8a1aadd7acdb4",
+    "game/compat/legacy-automatic-play.js": "8e5baf45d0549b4c31f49d15f14d3b117705b64eafd700d9a51547646cf4ef61",
+    "practice.js": "4d222c4848a84198c45cd20f961248a2c67435fcd73890982b9b08e13b908fa8",
+    "room-bots.js": "274499fdb59d351cf23dfd3d705ec3f847c8fe470150b8c3451f0cb615f304b4",
+    "multiplayer.js": "5f0f1690fcb3278e6bc9de492e6114b852bd100ad42e55a5b82faae5b85977f6",
+    "game-clock.js": "0115231487cea0e1c5b3ac8ecd0ca7748108616b60fe02ac40e23de7195b457d"
+  }
+}

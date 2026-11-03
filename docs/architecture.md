@@ -46,6 +46,7 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | --- | --- |
 | HTTP, WebSocket, salas, credenciales, despachar y confirmar acciones | [server.js](../server.js): `dispatch`, `persist`, `sendRoom` |
 | Coordinación de jugadas humanas y respuesta compatible | [player-action.js](../game/application/player-action.js): `createPlayerActionHandler`; [legacy-action-reply.js](../game/compat/legacy-action-reply.js): `actionReply` |
+| Vencimientos y jugadas automáticas | [automatic-play.js](../game/application/automatic-play.js): `createAutomaticPlay`; [composición legada](../game/compat/legacy-automatic-play.js): `createLegacyAutomaticPlay` |
 | Fachada de reglas, fases, efectos, cierre y privacidad | [engine.js](../engine.js): `newRandomGame`, `action`, `expire`, `finish`, `view` |
 | Políticas de pago y decisión de construcción | [payment.js](../game/domain/payment.js): `planPayment`, `reservePayment`; [route-claim.js](../game/domain/route-claim.js): `decideRouteClaim`, `blocksParallelRoute` |
 | Transiciones de túnel y comienzo/avance de turno | [tunnel.js](../game/domain/tunnel.js): `beginTunnel`, `decideTunnel`, `advanceTunnel`; [turn.js](../game/domain/turn.js): `planTurnStart`, `planNextTurn` |
@@ -73,7 +74,7 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Proyección ortográfica compartida con objetivos SVG | [board-camera.js](../board-camera.js): `view` |
 | Geometría visual, curvas y etiquetas | [map-layout.js](../map-layout.js): `createNetwork`, `pointAt`, `placeLabels` |
 
-## Primer caso de aplicación
+## Casos de aplicación
 
 `createPlayerActionHandler` recibe motor, `now`, `random`, `storagePaused` y
 `stageRoom`. Opera sobre la sala legada y un puesto autenticado por el servidor;
@@ -95,8 +96,38 @@ preparación pendiente de commit remoto. El resultado se envía por `peer.send`
 dentro del `dispatch` existente: su outbox espera el commit global y descarta la
 respuesta si falla. La aceptación del caso de uso nunca sustituye esa confirmación.
 Autenticación, límites de solicitudes y autorización de espectadores siguen en
-transporte; bots/relojes siguen con sus entradas anteriores. Detalle, diferencias
-de práctica y trabajo pendiente en [fase 3](work/modular-platform-application.md).
+transporte. Detalle y trabajo pendiente en [fase 3](work/modular-platform-application.md).
+
+`createAutomaticPlay` coordina vencimientos, jugadas de bots permanentes,
+reemplazos, bots de práctica y cierre anticipado de práctica. Recibe motor,
+políticas de bot, reloj, dos fuentes de azar (política y motor), mensajes y
+`stageRoom`. No importa transporte, almacenamiento, temporizadores ni reloj
+global. `legacy-automatic-play.js` ensambla esas dependencias con `Engine`, las
+políticas existentes, traducciones y azar criptográfico. La fachada del motor
+todavía conserva dependencias ambientales internas, por ejemplo al reciclar
+cartas directamente durante el cierre; esto no convierte todo `Engine` en puro.
+
+Los controladores conservan temporizadores, conexión/ausencia, pertenencia de
+sala y entrada a `dispatch`; delegan la coordinación de jugadas en aplicación.
+`multiplayer.js` también conserva transferencia de anfitrión, recuperación del
+control y desplazamiento de plazos durante ausencias. El reloj normaliza partidas
+y consulta su próximo plazo antes de programar el siguiente despertar.
+
+| Entrada automática | Revisión y preparación conservadas |
+| --- | --- |
+| Reloj o vencimiento previo de reemplazo | Incrementa una vez si hubo avance; prepara con `automatic=true`. |
+| Bots permanentes | Primero vence plazos; si avanzó, termina. En otro caso ejecuta los puestos pendientes, incrementa por puesto y prepara una vez con `automatic=true`. |
+| Bots de práctica | Primero vence plazos; si avanzó, termina. Agrupa elecciones pendientes o ejecuta una jugada. Prepara sin incremento de revisión ni marca automática en esta entrada. |
+| Reemplazo | Después del vencimiento comprueba el control; una acción válida incrementa y prepara con `automatic=true`. Sin acción espera al plazo normal. |
+| Cierre de práctica | Libera un túnel sin pagar, resuelve ofertas y puntúa una vez; prepara sin incrementar revisión. |
+
+El reloj compartido sí incrementa revisión al vencer una práctica: se conserva
+la diferencia respecto al temporizador de sus bots. Práctica mantiene separado
+el reloj de ausencia del reloj de jugada; su azar de política también determina
+la demora de 800–1000 ms, sin sustituir el azar del motor. Permanentes/reemplazos
+mantienen 900 ms. El reemplazo conserva el reporte de excepciones de su acción
+y preparación; los otros casos las propagan al despachador. La cola durable y el
+puente actual siguen responsabilizándose de commit, rollback e historial.
 
 ## Extracción gradual del dominio
 

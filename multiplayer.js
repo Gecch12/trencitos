@@ -1,7 +1,7 @@
 "use strict";
 const I18n = require("./i18n");
 const Engine = require("./engine");
-const { chooseReplacementAction } = require("./bots");
+const { createLegacyAutomaticPlay } = require("./game/compat/legacy-automatic-play");
 
 const GRACE_MS = 60000;
 const connected = member => !!member.ws && !member.ws.closed;
@@ -19,8 +19,9 @@ function shiftDeadlines(game, elapsed) {
 }
 
 // Room lifecycle is separate from rules. No timer or socket is persisted.
-function createMultiplayerController({ rooms, sendRoom, removeRoom, expireGame, performAction,
-  dispatch = job => job(), blocked = () => false, now = Date.now, setTimer = setTimeout, clearTimer = clearTimeout }) {
+function createMultiplayerController({ rooms, sendRoom, removeRoom,
+  dispatch = job => job(), blocked = () => false, now = Date.now, setTimer = setTimeout, clearTimer = clearTimeout,
+  automaticPlay = createLegacyAutomaticPlay({ stageRoom: sendRoom, now }) }) {
   const active = new Map();
   const live = room => !room.practice && rooms.get(room.code) === room;
   function cancel(room) {
@@ -102,13 +103,7 @@ function createMultiplayerController({ rooms, sendRoom, removeRoom, expireGame, 
       ["initial", "finished", "closing"].includes(room.game.phase) || room.game.turnWaiting || Engine.tunnelBusy(room.game)) return;
     state.bot = setTimer(() => dispatch(() => {
       if (!live(room) || blocked() || room.emptySince != null) return;
-      if (expireGame(room)) return;
-      const seat = room.game.current;
-      if (!room.members[seat]?.autopilot) return;
-      const action = chooseReplacementAction(room.game, seat);
-      if (action) performAction(room, seat, action);
-      // When no draw or construction is legal, the regular deadline advances
-      // the turn. Replacement bots never take additional destination tickets.
+      automaticPlay.playReplacement(room);
     }), 900);
     state.bot.unref?.();
   }

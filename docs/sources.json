@@ -39,6 +39,7 @@
     "game-timing.js"
   ],
   "domain.md": [
+    "game/application/automatic-play.js",
     "game/queries/",
     "game/domain/",
     "engine.js",
@@ -263,6 +264,13 @@
     "tests/supabase-server.test.js",
     "tests/history-server.test.js",
     "tests/durable-queue.test.js",
-    "tests/deployment.test.js"
+    "tests/deployment.test.js",
+    "game/compat/legacy-automatic-play.js",
+    "tests/automatic-play.test.js",
+    "tests/game-clock.test.js",
+    "tests/room-bots.test.js",
+    "tests/practice.test.js",
+    "tests/multiplayer.test.js",
+    "tests/shared-tunnel.test.js"
   ]
 }

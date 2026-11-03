@@ -20,8 +20,6 @@ function fixture(started = true) {
     setTimer(fn, ms) { const id = ++serial; timers.set(id, { at: time + ms, fn }); return id; },
     clearTimer: id => timers.delete(id), sendRoom: publish,
     removeRoom: r => { rooms.delete(r.code); ctrl.cancel(r); },
-    expireGame: r => { const changed = E.expire(r.game, time); if (changed) publish(r); return changed; },
-    performAction: (r, seat, a) => { E.action(r.game, seat, a, { now: time }); publish(r); },
   });
   function tick(ms) {
     const end = time + ms;

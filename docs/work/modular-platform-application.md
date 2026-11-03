@@ -19,7 +19,7 @@ otros worktrees ni se publica en Render.
 ## Hitos de la fase
 
 - [x] Extraer el caso de jugada humana, conservar protocolo y comprobar reintentos/rollback.
-- [ ] Separar entradas automáticas y coordinar vencimientos, bots y práctica desde aplicación.
+- [x] Separar entradas automáticas y coordinar vencimientos, bots y práctica desde aplicación.
 - [ ] Separar preparación/confirmación/publicación y definir puertos de repositorio/commit conjuntos con historial.
 - [ ] Centralizar vistas autorizadas de jugador/espectador, conservando privacidad de replay.
 - [ ] Introducir recibos con huella de comando y compatibilidad de los 128 IDs legados.
@@ -107,9 +107,81 @@ remotas/SQL usan simuladores; Docker es local sin red externa, y el navegador
 usa emulación móvil. No se acredita Render, Supabase real ni dispositivos físicos.
 Entrega en esta rama, sin integrar otros worktrees, push ni despliegue.
 
+## Segundo corte: entradas automáticas
+
+Base `2af73a5` más los cambios de esta entrega. Se extrae la coordinación de
+relojes, bots permanentes, reemplazos, bots de práctica y cierre anticipado a
+[automatic-play.js](../../game/application/automatic-play.js). El
+[adaptador legado](../../game/compat/legacy-automatic-play.js) proporciona motor,
+políticas existentes, reloj, azar, traducciones y reporte de errores. El servidor
+ensambla una instancia y la entrega a los cuatro controladores; estos conservan
+temporizadores, conexión/ausencia y entrada a la cola serializada.
+
+Se preservan los lotes de elecciones privadas, vencimiento antes de decidir,
+demoras, revisión y marca automática propias de cada entrada. Un reemplazo sin
+jugada sigue esperando al reloj; práctica y permanentes conservan su posibilidad
+de ceder turno. Práctica mantiene separado el reloj de ausencia del de jugada,
+y su azar de política/demora del azar del motor. El cierre devuelve las cartas
+reveladas de un túnel sin pagar y puntúa una vez. La tabla del contrato efectivo
+queda en [arquitectura](../architecture.md).
+
+Las dependencias son explícitas en aplicación, pero la fachada `Engine` conserva
+dependencias internas legadas. Todavía se modifica el formato existente de sala;
+`stageRoom` sigue reuniendo historial, guardado, vistas y reprogramación.
+El reemplazo conserva el manejo previo de excepciones de acción/preparación.
+Esta extracción no introduce repositorios ni uniforma las revisiones de práctica.
+
+## Evidencia del segundo corte
+
+- [Aplicación automática](../../tests/automatic-play.test.js): 13 pruebas con
+  motor real, reloj y azar controlados. Comprueban lotes y orden de registro,
+  vencimiento antes de consultar políticas, rollback del puente, robos separados,
+  cierre de ofertas, espera durante revelación, cesión/reemplazo, cierre sin doble
+  puntuación, conservación de cartas y ejecución en VM sin globals ambientales.
+- [Servidor remoto](../../tests/supabase-server.test.js): un lote de dos bots no
+  publica estado antes del commit; una respuesta perdida reintenta el mismo
+  cuerpo sin duplicar elecciones ni frames. Un fallo restaura partida, revisión,
+  hash/secuencia y archivo, con almacenamiento pausado y sin estado adelantado.
+  Las diez pruebas de este archivo aprobaron con el simulador local.
+- Temporizadores y ciclo de vida: 52 pruebas de reloj, bots permanentes,
+  multijugador, práctica y túneles compartidos aprobaron. Se conservan pausas por
+  desconexión/guardado, reconexión, plazos y aislamiento de salas eliminadas.
+
+Ejecución del 2026-11-02 (Lima), sobre la base indicada y el diff de este corte:
+
+- Suite completa, Node `v25.6.1`: **500/500**, sin fallos ni omisiones,
+  `node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js`.
+  Incluye las pruebas enfocadas anteriores. [Resultado y huellas](../qa/modular-application-automatic/node-tests-result.json),
+  [TAP](../qa/modular-application-automatic/node-tests.tap).
+- `QA_PORT=0 npm run test:board3d`: **aprobado**, Chrome `156.0.8078.80`.
+  Ocho recorridos de interacción, nueve combinaciones de viewport/zoom y partida
+  completa de cuatro jugadores con **254 acciones**, reconexión y cero errores.
+  Incluye 63 intentos de construcción, pagos/desistimientos de túnel, cuatro
+  estaciones y cinco ofertas/confirmaciones de destinos.
+  [Resultado](../qa/modular-application-automatic/browser-tests-result.json),
+  [reporte](../qa/modular-application-automatic/browser/threejs-report.json).
+  Se inspeccionaron [resultado final](../qa/modular-application-automatic/browser/threejs-finished.png)
+  y [móvil emulado](../qa/modular-application-automatic/browser/threejs-mobile.png).
+- Docker `linux/arm64`, Node `v22.23.4`: arranque, `healthz`, UID 1000 y estado
+  escribible correctos; **3/3** pruebas HTTP/WebSocket sobre código empaquetado.
+  La práctica con bots funciona y los dos módulos nuevos devuelven 404 por HTTP.
+  [Construcción](../qa/modular-application-automatic/docker-build.txt),
+  [resultado](../qa/modular-application-automatic/docker-result.json),
+  [TAP](../qa/modular-application-automatic/docker-tests.tap).
+- `node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
+  Revisados arquitectura, dominio, contratos, operación y fichas afectadas;
+  estrategia, navegación y evidencias de fases anteriores conservan su alcance.
+  Los archivos históricos `docs/qa/threejs-*` se restauraron sin cambios.
+
+Segundo corte aceptado localmente; fase 3 continúa activa. No se modifican
+reglas, estrategia, datos de Europa ni archivos visuales. Supabase/SQL se
+comprueban con simuladores; Docker usa red externa deshabilitada y el navegador
+emulación móvil. No se acredita producción ni dispositivos físicos. Entrega
+aislada en esta rama, sin integrar otros worktrees, push ni despliegue.
+
 ## Siguiente corte
 
-Extraer las entradas de vencimiento y acción automática utilizadas por reloj,
-bots permanentes, reemplazos y práctica. Conservar sus diferencias actuales y
-el orden de registro/guardado antes de sustituir el puente `stageRoom` por
-preparación, commit y publicación separados. No mover aún archivos visuales.
+Separar preparación, commit y publicación del puente `stageRoom`. Definir un
+puerto de confirmación conjunta de sala e historial para archivo/remoto,
+conservando rollback, outbox y orden global. La reorganización de proyecciones,
+recibos y frontend/backend continúa después; aún no mover archivos visuales.

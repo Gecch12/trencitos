@@ -1,9 +1,11 @@
 "use strict";
 const Engine = require("./engine");
+const { createLegacyAutomaticPlay } = require("./game/compat/legacy-automatic-play");
 
 // One wake-up per room, at its earliest absolute deadline. Runtime handles are
 // separate from persisted state. No browser can pause or extend a deadline.
-function createGameClock({ rooms, sendRoom, dispatch = job => job(), expireGame = room => Engine.expire(room.game, now()), canTick = () => true, now = Date.now, setTimer = setTimeout, clearTimer = clearTimeout }) {
+function createGameClock({ rooms, sendRoom, dispatch = job => job(), canTick = () => true, now = Date.now, setTimer = setTimeout, clearTimer = clearTimeout,
+  automaticPlay = createLegacyAutomaticPlay({ stageRoom: sendRoom, now }) }) {
   const active = new Map();
   function cancel(room) {
     const state = active.get(room);
@@ -21,7 +23,7 @@ function createGameClock({ rooms, sendRoom, dispatch = job => job(), expireGame 
     const timer = setTimer(() => dispatch(() => {
       active.delete(room);
       if (rooms.get(room.code) !== room || !canTick(room)) return;
-      if (expireGame(room)) sendRoom(room, true);
+      automaticPlay.expire(room);
       sync(room);
     }), Math.max(0, deadline - now()));
     timer.unref?.();
