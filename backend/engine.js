@@ -22,7 +22,8 @@ const {maps:registeredMaps}=require('./maps');
 const {createMatchContexts,validateSetupTickets}=require('./match-context');
 const defaultRules=require('./rules/europe-classic-v1');
 const {MATCH_SCHEMA_VERSION,restoreMatchState}=require('../game/compat/match-state');
-// Legacy exports remain Europe-only until bots and presentation migrate.
+// Legacy data/payment exports remain Europe-only for old callers and fixtures.
+// Active bots resolve contextFor(game) and use the domain payment policy.
 const SCORE=defaultRules.routePoints;
 const TURN_MS=defaultRules.turn.turnMs,INITIAL_MS=defaultRules.turn.initialMs,OFFER_MS=defaultRules.offerMs;
 const TUNNEL_CARD_MS=defaultRules.tunnel.cardMs,TUNNEL_RESULT_MS=defaultRules.tunnel.resultMs;

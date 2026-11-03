@@ -1,6 +1,7 @@
 "use strict";
-const E = require("./engine");
-const P = require("./practice-planner");
+function createTactics({ planner: P, context }) {
+const { rules, tickets } = context;
+const cityIds = new Set(context.map.cities.map(city => city.id));
 
 function subsets(items, minimum = 1) {
   const result = [];
@@ -11,13 +12,13 @@ function subsets(items, minimum = 1) {
   return result;
 }
 function chooseInitial(g, seat, random, fallback) {
-  const p = g.players[seat], counts = P.countCards(p.hand), choices = [];
-  for (const indexes of subsets(p.pending, 2).sort((a, b) => a.length - b.length)) {
+  const p = g.players[seat], counts = P.countCards(p.hand), choices = [], minimum = rules.destinations.initialMinimum;
+  for (const indexes of subsets(p.pending, minimum).sort((a, b) => a.length - b.length)) {
     const tickets = indexes.map(i => p.pending[i]);
     const context = P.networks(g, seat, tickets, counts, 34);
     for (const plan of context.options.filter(n => n.completed.length === tickets.length && n.probability >= .7)) {
-      const pair = choices.filter(c => c.indexes.length === 2 && c.indexes.every(i => indexes.includes(i))).sort((a, b) => b.value - a.value)[0];
-      if (indexes.length > 2 && (!pair || plan.resources.turns > pair.turns + (indexes.length - 2) * 2)) continue;
+      const pair = choices.filter(c => c.indexes.length === minimum && c.indexes.every(i => indexes.includes(i))).sort((a, b) => b.value - a.value)[0];
+      if (indexes.length > minimum && (!pair || plan.resources.turns > pair.turns + (indexes.length - minimum) * 2)) continue;
       // Tickets accepted now carry their full failure penalty. Shared extra
       // tickets add reward without automatically making a larger plan better.
       const destination = tickets.reduce((sum, t) => sum + t.p, 0) * (2 * plan.probability - 1);
@@ -35,7 +36,7 @@ function estimateTickets(g, seat, tickets, turns = P.horizon(g, seat)) {
   const p = g.players[seat], counts = P.countCards(p.hand), base = P.ticketOutcome(g, seat);
   const available = P.availableRoutes(g, seat);
   const cost = r => {
-    const color = r.color === "gray" ? E.COLORS.reduce((a, b) => counts[a] >= counts[b] ? a : b) : r.color;
+    const color = r.color === "gray" ? rules.colors.reduce((a, b) => counts[a] >= counts[b] ? a : b) : r.color;
     return 1 + P.missing(r, color, counts) * .85 + (r.tunnel ? .4 : 0);
   };
   const graph = P.graphFor(base.connections, available, cost);
@@ -57,7 +58,7 @@ function chooseOffer(g, seat) {
   const current = P.networks(g, seat, p.tickets, counts, horizon);
   const currentPotential = Math.max(0, ...current.options.map(n => n.gain * n.probability - n.resources.turns));
   let best = null;
-  for (const indexes of subsets(offered)) {
+  for (const indexes of subsets(offered, rules.destinations.offerMinimum)) {
     const tickets = [...p.tickets, ...indexes.map(i => offered[i])];
     const after = P.ticketOutcome(g, seat, { tickets });
     const plans = P.networks(g, seat, tickets, counts, horizon);
@@ -72,11 +73,11 @@ function ticketOpportunity(g, seat, plan, retired = new Set()) {
   const p = g.players[seat];
   if (!g.ticketDeckCount || p.offer || g.drawCount || (plan && plan.resources.turns > 2)) return null;
   const owned = new Set(p.tickets.map(t => t.id));
-  const candidates = E.TICKETS.filter(t => !t.long && !owned.has(t.id) && !retired.has(t.id));
+  const candidates = tickets.filter(t => !t.long && !owned.has(t.id) && !retired.has(t.id));
   if (!candidates.length) return null;
   const turns = g.finalRemaining != null ? 0 : Math.max(0, P.horizon(g, seat) - 1);
   const values = estimateTickets(g, seat, candidates, turns).map(t => t.value);
-  const n = Math.min(3, g.ticketDeckCount, values.length);
+  const n = Math.min(rules.destinations.offerCount, g.ticketDeckCount, values.length);
   let total = 0, combinations = 0;
   function visit(start, chosen) {
     if (chosen.length === n) {
@@ -94,17 +95,17 @@ function ticketOpportunity(g, seat, plan, retired = new Set()) {
 function stationCandidates(g, seat, plan = null, allowFuture = true) {
   const p = g.players[seat];
   if (!p.stations || g.drawCount) return [];
-  const payment = P.paymentFor({ n: 4 - p.stations, color: "gray", ferry: 0 }, p.hand, plan?.routes || [], g.face);
+  const payment = P.paymentFor({ n: rules.stations.stationCosts[rules.setup.stations - p.stations], color: "gray", ferry: 0 }, p.hand, plan?.routes || [], g.face);
   if (!payment) return [];
   const occupied = new Set(g.players.flatMap(p => p.placed)), base = P.ticketOutcome(g, seat);
   const foreign = g.routes.filter(r => r.owner !== null && r.owner !== seat);
   const nearby = new Set([...base.connections.flatMap(r => [r.a, r.b]), ...p.tickets.flatMap(t => [t.a, t.b])]);
-  const cities = [...new Set(foreign.flatMap(r => [r.a, r.b]))].filter(city => E.CITIES[city] && !occupied.has(city) && nearby.has(city));
+  const cities = [...new Set(foreign.flatMap(r => [r.a, r.b]))].filter(city => cityIds.has(city) && !occupied.has(city) && nearby.has(city));
   const turns = P.horizon(g, seat), counts = P.afterPayment(P.countCards(p.hand), payment);
   const available = P.availableRoutes(g, seat);
   return cities.map(city => {
     const placed = [...p.placed, city], outcome = P.ticketOutcome(g, seat, { placed });
-    const immediate = outcome.score - base.score - 4;
+    const immediate = outcome.score - base.score - rules.scoring.unusedStationPoints;
     let value = immediate;
     // A station can also repair a blocked corridor before its last own segment
     // is built. Every hypothetical completion is scored with one assignment.
@@ -117,7 +118,7 @@ function stationCandidates(g, seat, plan = null, allowFuture = true) {
           const routes = path.filter(r => r.owner === null), resources = P.allocation(routes, counts, g.face);
           if (routes.reduce((sum, r) => sum + r.n, 0) > p.trains || resources.turns + 1 > turns) continue;
           const final = P.ticketOutcome(g, seat, { placed, routes });
-          value = Math.max(value, (final.score - base.score - 4) / (1 + resources.turns));
+          value = Math.max(value, (final.score - base.score - rules.scoring.unusedStationPoints) / (1 + resources.turns));
         }
       }
     }
@@ -126,4 +127,6 @@ function stationCandidates(g, seat, plan = null, allowFuture = true) {
     return { action: { type: "station", city, color: payment.color, wildCount: payment.wild }, value, immediate };
   }).filter(c => c.value > .5).sort((a, b) => b.value - a.value).slice(0, 3);
 }
-module.exports = { chooseInitial, chooseOffer, estimateTickets, ticketOpportunity, stationCandidates };
+return { chooseInitial, chooseOffer, estimateTickets, ticketOpportunity, stationCandidates };
+}
+module.exports = { createTactics };

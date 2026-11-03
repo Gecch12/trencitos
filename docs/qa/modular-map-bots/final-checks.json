@@ -1,0 +1,47 @@
+{
+  "checked_at": "2026-11-03T05:10:12.533213+00:00",
+  "base_commit": "ad237596fded42b57a21662dd62310c9a02e7771",
+  "results": {
+    "node-tests-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "ebc436a84acf19bdbcac4247318a29b7ea4e428328d9e800bec1fe19f7849a58",
+      "log_hash_matches": true
+    },
+    "browser-tests-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "970d388db96e51099c66ed413d272f8f710e80b20625bc222b10fa385e0fbf78",
+      "log_hash_matches": true
+    },
+    "docker-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "abbb3c81d06e0eda2f7e0fc49d27d2b2227a3a811526c7c787de6360941dd244",
+      "log_hash_matches": true
+    }
+  },
+  "historical_qa_unchanged": true,
+  "frozen_europe_fixture_and_old_policies_unchanged": true,
+  "diff_check": "passed",
+  "docs_check": "OK: 49 documentos, 23 fichas. No se validan URLs externas ni anclas.",
+  "artifact_sha256": {
+    "backend/bots.js": "999db781c8a55d0172b3a7aa8f18fe846f81921195d76fb082a96fa927050007",
+    "backend/practice-bot.js": "158cba22a7573090780992d8947388a904b05240fafb429799cc59be172069dd",
+    "backend/practice-planner.js": "af80e95627037ff28805eecc241ad38a0c8c30717a6e91dffdc6ed856caaa5b7",
+    "backend/practice-tactics.js": "66edfe98e5499571cb957e48c083235e24ef5e5f2cd2ec1512fee7e1f3ad7a12",
+    "backend/practice-search.js": "9a05a1bb77e5d958cfcad24887beb736574b0657350fc7f7acc576ddb3ca88ad",
+    "backend/engine.js": "fc60dfd25fba508af2cb18faa406dad9c91fb7233f9bbda0f466809a04980539",
+    "game/compat/legacy-automatic-play.js": "a99fc03d1d16e39c3dc53ff5f5cc194e3beab5b08d3b1bfb678543ea1f8f3b20",
+    "tests/bot-map-context.test.js": "5524bf9862f4fc961b8271a3ae9f437ec9ebf71c9fd62735772b21d908b14794",
+    "tests/fixtures/bots-europe-v1.json": "e287069bd0c24c112e5770f5bbad672115e7d0cc7fcd26316af56cac2d874f91",
+    "tests/helpers/bot-map.js": "69308622989e2eacc0d1488ca6bd0e37c4f2bdcfe43817a217cb9689915b7820",
+    "tests/helpers/practice-tools.js": "3559ade914af6f065a39529d684d9d50bd30e4eec0255cfd3cf051b9add56b9a",
+    "tests/fixtures/europe-legacy-v1.json": "ff924b0cb2c0a33aabedd356fc5d90f02210118b88ab3f0d722b8f91a68d836c",
+    "tests/helpers/bots-baseline.js": "f14f40d63d757b8d19b0299982493f648bd3cfdbcb84bcec920aaa1e33203edd",
+    "tests/helpers/practice-bot-baseline.js": "143350e78f14d6cd4917ccc7cacb1f5739fc9ba3c39a5e25641a81bec8a6b94c",
+    "tests/helpers/bots-stage1.js": "ee78fb1ad901900a29cb013567c60b8a19bab990efc9ef25c45f848ab42edaf2",
+    "tests/helpers/practice-bot-stage1.js": "f96f43b569824026617d4b1272300d5985e211f49e7b70013f7768a9303e4eae",
+    "tests/helpers/practice-planner-stage1.js": "f19ea7a636aa5d7b9da1370adbc6cfa678a36279d2fc36481cc1527c2023c962"
+  }
+}

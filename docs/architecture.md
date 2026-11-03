@@ -95,9 +95,10 @@ filas legadas con topología, dueños y billetes, usadas por scoring y consultas
 
 Los exports `ROUTES`, `TICKETS`, `CITIES`, `COLORS`, `SCORE`, duraciones y `pay`
 siguen siendo compatibilidad europea para consumidores pendientes de migrar.
-Las vistas públicas aún no incluyen referencias de mapa. Bots, sala, archivo,
-replay y frontend no están habilitados para un segundo mapa: las pruebas de
-contexto ejercitan el motor directamente y no certifican ese recorrido completo.
+Los bots activos ya usan el contexto de partida; las vistas públicas aún no
+incluyen referencias de mapa. Sala, archivo, replay y frontend no están
+habilitados para un segundo mapa. Las pruebas intercalan partidas completas
+en motor/controlador automático, sin certificar todavía ese recorrido en el producto.
 
 ### Estado versionado y restauración durable
 
@@ -619,11 +620,28 @@ persistencia o representación del tablero.
 
 ## Planificación de práctica
 
-`practice-planner.observe` construye una observación explícita: mano y destinos
+`createBots({engine})` compone las políticas de práctica y reemplazo con el mismo
+motor que valida sus acciones. La exportación habitual mantiene sus firmas.
+Resuelve `engine.contextFor(game)` y reutiliza planificador, tácticas y búsqueda
+por definición inmutable; cada partida/asiento conserva su propia memoria débil.
+El adaptador de juego automático admite ese motor explícito, sin cambiar el
+catálogo predeterminado de las salas. No hay un «mapa actual» global.
+
+Las fábricas `createPlanner`, `createTactics`, `createSearch` y `createPracticeBot`
+reciben el contexto. Obtienen de él catálogo de billetes, ciudades válidas,
+colores, inventario de cartas, puntos, costes de estación y umbral de cierre.
+Los pagos usan la política de dominio con esas reglas; ninguna política activa
+consulta los exports europeos de compatibilidad. Los conjuntos de vías se
+identifican mediante IDs ordenados y JSON, conservando tipo y delimitadores.
+Una longitud sin puntuación se rechaza, sin inventar puntos.
+
+`planner.observe` construye una observación explícita: mano y destinos
 propios, tablero, mercado, cantidades públicas y robos visibles. Las manos
 y destinos ajenos solo aportan sus cantidades públicas; no se leen elementos
 de los mazos, colores de robos ciegos ni detalles de túneles rivales. `practice-bot` conserva planes e inferencias de cada asiento en
 un `WeakMap` privado, sin incluirlos en vistas o persistencia.
+La observación interna lleva referencias de mapa/reglas y versión de estado;
+no es el DTO del cliente. Observación y muestreo rechazan un contexto distinto.
 
 El planificador genera hasta tres caminos alternativos por destino y conserva
 hasta doce redes candidatas. Evalúa la unión de tramos, el presupuesto total de
@@ -644,7 +662,9 @@ con hasta tres turnos propios y 48 acciones por rama (288 acciones como máximo)
 Simula respuestas rivales con una política sencilla y sin búsquedas recursivas.
 Las manos muestreadas respetan cantidades públicas y robos visibles recordados;
 los destinos rivales son hipótesis a partir de su red. Cada rama ejecuta el motor
-real sobre un estado independiente. `Engine.action` admite un RNG por acción
+inyectado sobre un estado independiente con las mismas referencias y versión.
+El muestreo parte del catálogo público del mapa y del inventario del reglamento,
+sin consultar las cartas o destinos reales ocultos. `Engine.action` admite un RNG por acción
 que abarca también reciclados/mercado, guardado temporalmente en un `WeakMap`;
 la ejecución normal conserva `crypto.randomInt`. No modifica el RNG global.
 Se exige una mejora sobre la decisión táctica tras penalizar el desacuerdo
@@ -656,6 +676,10 @@ La comparación reproducible carga módulos y aleatoriedad aislados en
 motor. Las políticas original y de primera etapa están congeladas en los helpers
 de pruebas y no se cargan en producción. La política `heuristic` permite medir
 la versión completa con la búsqueda desactivada. Resultado y alcance: [ficha de bots](work/practice-ai.md).
+La migración de contexto se contrasta con [tres trazas europeas congeladas](../tests/fixtures/bots-europe-v1.json)
+antes del cambio y [pruebas de bots por mapa](../tests/bot-map-context.test.js),
+incluidas privacidad, simulaciones, restauración y partidas completas alternadas.
+Esto conserva la estrategia existente; no acredita balance ni introduce otro reglamento.
 
 ## Cuenta opcional
 

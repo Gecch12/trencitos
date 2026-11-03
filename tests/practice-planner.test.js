@@ -2,7 +2,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const E = require("../backend/engine");
-const P = require("../backend/practice-planner");
+const { P } = require("./helpers/practice-tools").practiceTools(E);
 const { chooseBotAction } = require("../backend/bots");
 const { match } = require("./helpers/bot-match");
 const first = () => 0;

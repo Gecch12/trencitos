@@ -299,6 +299,15 @@ y guardan la migración con el checkpoint habitual. El estado crudo de auditorí
 añade campos solo en pasos nuevos; no se modifica el contrato de vistas ni se
 reescribe el prefijo histórico. La identidad de vías europeas continúa numérica.
 
+El cuarto corte vincula las políticas de bots y sus simulaciones al contexto
+inmutable de cada mapa. Se eligen fábricas pequeñas e inyección del mismo motor,
+con memoria por partida/asiento, para evitar un mapa global mutable y conservar
+las heurísticas existentes. Las partidas hipotéticas llevan referencias y usan
+las mismas reglas de pagos/puntos; sus mazos proceden del catálogo público y las
+cantidades observables. No se añade otro reglamento ni un sistema de plugins.
+La aceptación con mapas alternados abarca motor y juego automático; selección,
+contrato público, archivo y presentación del segundo mapa siguen pendientes.
+
 El tercer corte de fase 2 permite inyectar azar en reparto/mercado inicial y
 elecciones de cierre forzado. Conserva el parámetro legado del sorteo de primer
 puesto y añade opciones para el reparto. Firmas implementadas y límites actuales

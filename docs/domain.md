@@ -37,8 +37,10 @@ falla, sin elegir un mapa alternativo. El único reglamento
 incorporado es `europe-classic@1`, con los valores existentes; al iniciar se
 comprueba además que el mapa pueda repartir todos los billetes iniciales.
 La restauración valida las identidades guardadas de red, billetes, túneles,
-estaciones y resultados sin recalcular puntos anteriores. La selección por sala
-y adaptación del resto de consumidores siguen pendientes en
+estaciones y resultados sin recalcular puntos anteriores. Bots de práctica y
+reemplazo ya usan el contexto de su partida; sus simulaciones conservan ese mapa
+y solo infieren secretos desde cantidades públicas. La estrategia no cambia.
+La selección por sala y adaptación de vistas, archivo y frontend siguen pendientes en
 [fase 4](work/modular-platform-maps.md); detalles del puente en
 [arquitectura](architecture.md).
 

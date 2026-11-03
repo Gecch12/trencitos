@@ -1,7 +1,18 @@
 "use strict";
 const { randomInt } = require("node:crypto");
-const Engine = require("./engine");
-const { choosePracticeAction } = require("./practice-bot");
+const defaultEngine = require("./engine");
+const { planPayment } = require("../game/domain/payment");
+const { createPracticeBot } = require("./practice-bot");
+
+function createBots({ engine: Engine = defaultEngine } = {}) {
+// Policies share immutable definitions, while practice memory remains per game
+// and seat. One dispatcher can interleave different maps without global state.
+const policies = new WeakMap();
+function practiceFor(game) {
+  const context = Engine.contextFor(game);
+  if (!policies.has(context)) policies.set(context, createPracticeBot({ engine: Engine, context }));
+  return policies.get(context);
+}
 
 function pick(items, random = randomInt) {
   return items.length ? items[random(items.length)] : null;
@@ -12,11 +23,15 @@ function pick(items, random = randomInt) {
 function chooseSimpleAction(game, seat, random = randomInt, { randomBuild = false } = {}) {
   const player = game.players[seat];
   if (!player || game.phase === "finished" || Engine.tunnelBusy(game)) return null;
+  const { rules } = Engine.contextFor(game);
+  const pay = (hand, color, quantity, wildNeeded = 0) =>
+    planPayment(hand, { color, quantity, wildNeeded }, rules.claim);
   if (game.phase === "initial") {
     if (!player.pending.length) return null;
     const indexes = player.pending.map((_, i) => i);
-    const first = indexes.splice(random(indexes.length), 1)[0];
-    return { type: "choose_initial", indexes: [first, pick(indexes, random)] };
+    const selected = [];
+    for (let i = 0; i < rules.destinations.initialMinimum; i++) selected.push(indexes.splice(random(indexes.length), 1)[0]);
+    return { type: "choose_initial", indexes: selected };
   }
   if (seat !== game.current) return null;
   if (game.phase === "tunnel") {
@@ -26,7 +41,7 @@ function chooseSimpleAction(game, seat, random = randomInt, { randomBuild = fals
       remaining.splice(remaining.indexOf(color), 1);
     for (let i = 0; i < base.wild; i++)
       remaining.splice(remaining.indexOf("wild"), 1);
-    const extra = Engine.pay(remaining, color, surcharge);
+    const extra = pay(remaining, color, surcharge);
     return extra
       ? { type: "pay_tunnel", extraWild: extra.wild }
       : { type: "decline_tunnel" };
@@ -40,9 +55,9 @@ function chooseSimpleAction(game, seat, random = randomInt, { randomBuild = fals
       if (route.owner !== null || route.n > player.trains || Engine.block(game, route, seat))
         continue;
       const colors = route.color === "gray"
-        ? [...Engine.COLORS, "wild"]
+        ? [...rules.colors, "wild"]
         : [route.color, "wild"];
-      const payments = colors.map((color) => Engine.pay(player.hand, color, route.n, route.ferry))
+      const payments = colors.map((color) => pay(player.hand, color, route.n, route.ferry))
         .filter((payment) => payment && payment.wild >= route.ferry &&
           (payment.regular > 0 || payment.color === "wild"));
       if (!payments.length) continue;
@@ -63,5 +78,8 @@ function chooseSimpleAction(game, seat, random = randomInt, { randomBuild = fals
 
 // Keep the previously agreed replacement policy independent of practice AI.
 const chooseReplacementAction = (game, seat, random = randomInt) => chooseSimpleAction(game, seat, random, { randomBuild: true });
-const chooseBotAction = (game, seat, random = randomInt, options) => Engine.tunnelBusy(game) ? null : choosePracticeAction(game, seat, random, chooseSimpleAction, options);
-module.exports = { chooseBotAction, chooseReplacementAction };
+const chooseBotAction = (game, seat, random = randomInt, options) => Engine.tunnelBusy(game) ? null
+  : practiceFor(game).choosePracticeAction(game, seat, random, chooseSimpleAction, options);
+return { chooseBotAction, chooseReplacementAction };
+}
+module.exports = { ...createBots(), createBots };

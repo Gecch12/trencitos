@@ -1,5 +1,5 @@
 ---
-{"id":"modular-platform-maps","status":"active","parent":"modular-game-platform","depends_on":["modular-platform-application"],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-02"}
+{"id":"modular-platform-maps","status":"active","parent":"modular-game-platform","depends_on":["modular-platform-application"],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-03"}
 ---
 # Fase 4: mapas versionados
 
@@ -21,7 +21,8 @@ la rama aislada; no se sincronizan automáticamente otros worktrees ni se public
 - [x] Congelar correspondencias de IDs y comprobar equivalencia con los datos y repartos anteriores.
 - [x] Resolver mapa/reglas por partida y sustituir accesos por posición en construcción y túneles del motor.
 - [x] Versionar referencias de estado/guardado y preservar compatibilidad de archivos y replay anteriores.
-- [ ] Adaptar bots, consultas y transporte a la definición de cada partida, incluidos los demás supuestos sobre IDs.
+- [x] Adaptar bots y simulaciones a la definición de cada partida, conservando estrategia y privacidad.
+- [ ] Adaptar consultas y transporte a la definición de cada partida, incluidos los demás supuestos sobre IDs.
 - [ ] Separar composición visual por mapa, habilitar selección y conservar Three.js y cosméticos.
 - [ ] Aceptación conjunta: Europa y mapa pequeño jugables simultáneamente, con guardado/reconexión/replay.
 
@@ -226,11 +227,69 @@ Supabase/SQL se comprueban mediante simuladores; móvil, por emulación. Sin pus
 merge, cambios en producción ni despliegue. Las fichas cerradas conservan sus
 evidencias históricas; esta ficha registra la evolución posterior.
 
+## Cuarto corte: bots y simulaciones por contexto
+
+Base: `ad23759`. `createBots({engine})` resuelve el contexto de cada partida y
+compone planificador, tácticas y búsqueda con definiciones inmutables. Reemplazo
+y práctica usan colores, pagos, puntos, ciudades, billetes, inventario y límites
+del reglamento activo; no consultan las constantes europeas del motor. La
+memoria sigue siendo privada y separada por partida/asiento, sin entrar en guardados.
+
+Observaciones y mundos hipotéticos conservan versión y referencias. El muestreo
+usa billetes públicos del mapa y cantidades observables, nunca las cartas ocultas
+reales. Las simulaciones ejecutan el mismo motor inyectado. Los conjuntos de vías
+tienen claves independientes del orden que distinguen tipos y comas dentro del ID.
+Contrato implementado en [arquitectura](../architecture.md).
+
+[Las pruebas del corte](../../tests/bot-map-context.test.js) incluyen referencias
+incompatibles, getters que impiden leer constantes europeas o cartas ocultas,
+estaciones fuera de Europa, destinos retirados, pagos de ferris/túneles y mundos
+muestreados válidos. Intercalan partidas completas de Europa y un mapa sintético
+de ocho ciudades, restaurándolas durante el recorrido mediante `restoreState`.
+Esto prueba motor/controlador, todavía sin interfaz ni replay de un segundo mapa.
+
+[Tres partidas congeladas](../../tests/fixtures/bots-europe-v1.json), capturadas
+antes de modificar las políticas, conservan exactamente sus **622 decisiones**
+y resultados: bots actuales contra la base anterior, cuatro bots actuales y dos
+bots sin búsqueda. Las políticas históricas y la fixture de reparto permanecen
+intactas. No se modifican heurísticas ni se certifica balance del mapa sintético.
+
+## Evidencia del cuarto corte
+
+Validación local del 2026-11-03 (Lima), sobre `ad23759` más los cambios de esta
+entrega. Entorno limpio, estado temporal y servicios remotos simulados:
+
+- Node `v25.6.1`: **575/575**, sin fallos ni omisiones, incluidas las nueve pruebas
+  nuevas del corte. Suite serial completa, con estrategia, privacidad, partidas,
+  almacenamiento, recibos y replay.
+  [Resultado y huellas](../qa/modular-map-bots/node-tests-result.json),
+  [TAP](../qa/modular-map-bots/node-tests.tap).
+- `QA_PORT=0 npm run test:board3d`, Chrome `156.0.8078.80`: ocho recorridos,
+  nueve combinaciones de viewport/zoom, partida terminada de cuatro jugadores
+  con **228 acciones**, reconexión y cero errores. Incluye estaciones y ofertas
+  de destinos; el recorrido específico comprueba túnel sin suplemento.
+  Capturas final y móvil revisadas.
+  [Resultado](../qa/modular-map-bots/browser-tests-result.json),
+  [informe](../qa/modular-map-bots/browser/threejs-report.json).
+- Docker `linux/arm64`, Node `v22.23.4`: **28/28** sobre el código empaquetado.
+  Incluye bots por mapa, trazas europeas, restauración y compatibilidad,
+  recursos públicos/privados, flujo de práctica y recibos/reinicio/rollback.
+  `healthz`, UID 1000 y escritura de estado correctos; raíz de solo lectura,
+  almacenamiento temporal, sin red externa ni dependencias de desarrollo.
+  [Construcción](../qa/modular-map-bots/docker-build.txt),
+  [resultado](../qa/modular-map-bots/docker-result.json),
+  [TAP](../qa/modular-map-bots/docker-tests.tap).
+- Documentación y `git diff --check` correctos; fuentes/logs contrastados con sus
+  huellas. QA anteriores, fixture europea y políticas históricas intactas.
+  [Comprobación final](../qa/modular-map-bots/final-checks.json).
+
+Cuarto corte aceptado localmente. La prueba del segundo mapa abarca el motor y
+el controlador automático; el navegador sigue mostrando Europa. Supabase/SQL
+se verifican con simuladores y móvil por emulación. Sin push, merge ni despliegue.
+
 ## Siguiente corte
 
-Adaptar los consumidores del motor —primero bots y sus simulaciones— para obtener
-billetes, ciudades, puntuaciones y pagos del contexto de la partida, retirando
-las constantes globales de Europa y supuestos numéricos restantes. Luego definir
-el contrato público de referencias/definiciones para vistas, archivo y frontend
-antes de habilitar selección y composición de otro mapa. La fase requiere aún
-una aceptación conjunta de dos mapas jugables en el producto.
+Definir e implementar el contrato público de referencias/definiciones para
+consultas, transporte y archivo, preservando la lectura de replays antiguos.
+Después adaptar frontend/layout y habilitar selección de otro mapa. La fase
+requiere aún aceptación conjunta de dos mapas jugables en el producto.

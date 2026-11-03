@@ -1,9 +1,9 @@
 "use strict";
-const E = require("./engine");
-const P = require("./practice-planner");
-const T = require("./practice-tactics");
+const { MATCH_SCHEMA_VERSION } = require("../game/compat/match-state");
 const LIMITS = Object.freeze({ candidates: 3, samples: 2, ownTurns: 3, actionsPerBranch: 48 });
 const randomStream = seed => max => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return Math.floor(seed / 4294967296 * max); };
+function createSearch({ engine: E, planner: P, tactics: T, context }) {
+const { rules, tickets } = context;
 function shuffled(items, random) {
   const result = [...items];
   for (let i = result.length - 1; i > 0; i--) { const j = random(i + 1); [result[i], result[j]] = [result[j], result[i]]; }
@@ -13,7 +13,8 @@ function shuffled(items, random) {
 // Input is the redacted observation, never a real game. Only hypothetical
 // opponent hands, destinations and deck orders are constructed here.
 function sampleWorld(g, seat, known, random, retired = new Set()) {
-  const counts = Object.fromEntries([...E.COLORS, "wild"].map(c => [c, c === "wild" ? 14 : 12]));
+  if (E.contextFor(g) !== context) throw Error("Bot simulation belongs to another match context");
+  const counts = Object.fromEntries(rules.setup.trainCards.map(({color, count}) => [color, count]));
   for (const c of [...g.players[seat].hand, ...g.face]) counts[c] = Math.max(0, counts[c] - 1);
   const hands = g.players.map((p, i) => i === seat ? [...p.hand] : []);
   for (let i = 0; i < hands.length; i++) if (i !== seat) {
@@ -28,7 +29,7 @@ function sampleWorld(g, seat, known, random, retired = new Set()) {
     hands[i].push(...unseen.splice(0, Math.max(0, g.players[i].handCount - hands[i].length)));
   }
   const ownIds = new Set(g.players[seat].tickets.map(t => t.id));
-  let ticketPool = E.TICKETS.filter(t => !ownIds.has(t.id) && !retired.has(t.id));
+  let ticketPool = tickets.filter(t => !ownIds.has(t.id) && !retired.has(t.id));
   const opponents = g.players.flatMap((p, i) => i !== seat && p.ticketsCount ? [i] : []);
   const neededLong = Math.max(0, opponents.reduce((sum, i) => sum + g.players[i].ticketsCount, 0)
     - Math.max(0, ticketPool.filter(t => !t.long).length - g.ticketDeckCount));
@@ -51,19 +52,20 @@ function sampleWorld(g, seat, known, random, retired = new Set()) {
         tickets.push(...ticketPool.splice(eligible[index].index, 1));
       }
     }
-    return { name: `Sample ${i}`, color: E.COLORS[i], trains: p.trains, stations: p.stations,
+    return { name: `Sample ${i}`, color: rules.colors[i], trains: p.trains, stations: p.stations,
       placed: [...p.placed], score: p.score || 0, hand: hands[i], tickets, pending: [], offer: null };
   });
-  return { phase: "play", current: seat, first: seat, initialDone: players.length, players,
+  return { schemaVersion: MATCH_SCHEMA_VERSION, mapRef: { ...context.mapRef }, rulesRef: { ...context.rulesRef },
+    phase: "play", current: seat, first: seat, initialDone: players.length, players,
     routes: g.routes.map(r => ({ ...r })), face: [...g.face], deck: unseen.splice(0, g.deckCount),
     discard: unseen.splice(0, g.discardCount), shortDeck: shuffled(ticketPool.filter(t => !t.long), random).slice(0, g.ticketDeckCount),
     drawCount: 0, finalRemaining: g.finalRemaining, lastTrigger: null, pending: null, logs: [], result: null,
-    turnSerial: g.turnSerial || 1, turnSeat: seat, turnClockPhase: "play", turnWaiting: false, turnDeadline: 60000 };
+    turnSerial: g.turnSerial || 1, turnSeat: seat, turnClockPhase: "play", turnWaiting: false, turnDeadline: rules.turn.turnMs };
 }
 function settleTunnel(game, seat) {
   const t = game.pending, counts = P.afterPayment(P.countCards(game.players[seat].hand), t.base);
   const hand = Object.entries(counts).flatMap(([c, n]) => Array(Math.max(0, n)).fill(c));
-  const payment = E.pay(hand, t.color, t.surcharge);
+  const payment = P.pay(hand, t.color, t.surcharge);
   return payment ? { type: "pay_tunnel", extraWild: payment.wild } : { type: "decline_tunnel" };
 }
 
@@ -80,7 +82,7 @@ function rolloutAction(game, seat, random, rootSeat = seat) {
   const g = P.observe(game, seat), counts = P.countCards(p.hand), outcome = P.ticketOutcome(g, seat);
   const available = P.availableRoutes(g, seat), benefits = new Map();
   const colors = new Map(available.map(r => [r.id, r.color === "gray"
-    ? E.COLORS.reduce((a, b) => counts[a] >= counts[b] ? a : b) : r.color]));
+    ? rules.colors.reduce((a, b) => counts[a] >= counts[b] ? a : b) : r.color]));
   const graph = P.graphFor(P.planningConnections(g, seat), available, r => 1 + P.missing(r, colors.get(r.id), counts) * .7);
   for (const t of p.tickets.filter((_, i) => !outcome.tickets[i]).slice(0, 8)) {
     const path = P.pathBetween(graph, t.a, t.b)?.filter(r => r.owner === null);
@@ -89,7 +91,7 @@ function rolloutAction(game, seat, random, rootSeat = seat) {
   }
   const candidates = available.map(r => {
     const color = colors.get(r.id), need = P.missing(r, color, counts);
-    const payment = E.pay(p.hand, color, r.n, r.ferry || 0);
+    const payment = P.pay(p.hand, color, r.n, r.ferry || 0);
     const value = (P.points(r) + (benefits.get(r.id) || 0) + 2) / (1 + need * .7);
     return { r, color, payment, value };
   }).sort((a, b) => b.value - a.value);
@@ -125,7 +127,7 @@ function utility(game, seat) {
   const g = P.observe(game, seat), p = g.players[seat], outcome = P.ticketOutcome(g, seat), counts = P.countCards(p.hand);
   const available = P.availableRoutes(g, seat), turns = g.finalRemaining != null ? 0 : P.horizon(g, seat);
   const graph = P.graphFor(P.planningConnections(g, seat), available, r => {
-    const color = r.color === "gray" ? E.COLORS.reduce((a, b) => counts[a] >= counts[b] ? a : b) : r.color;
+    const color = r.color === "gray" ? rules.colors.reduce((a, b) => counts[a] >= counts[b] ? a : b) : r.color;
     return 1 + P.missing(r, color, counts) * .85;
   });
   const paths = p.tickets.flatMap((t, i) => {
@@ -145,9 +147,9 @@ function utility(game, seat) {
   }, 0));
   const ownLength = P.trailLength(g.routes, seat, 1200);
   let express = ownLength * .12;
-  if (turns <= 5) express = ownLength >= Math.max(...g.players.map((_, i) => i === seat ? 0 : P.trailLength(g.routes, i, 1200))) ? 10 : 0;
-  const opposition = Math.max(...g.players.filter((_, i) => i !== seat).map(p => p.score + p.stations * 4));
-  return p.score + p.stations * 4 + outcome.score + potential + p.hand.length * .5 + express - opposition * .3;
+  if (turns <= 5) express = ownLength >= Math.max(...g.players.map((_, i) => i === seat ? 0 : P.trailLength(g.routes, i, 1200))) ? rules.scoring.expressPoints : 0;
+  const opposition = Math.max(...g.players.filter((_, i) => i !== seat).map(p => p.score + p.stations * rules.scoring.unusedStationPoints));
+  return p.score + p.stations * rules.scoring.unusedStationPoints + outcome.score + potential + p.hand.length * .5 + express - opposition * .3;
 }
 
 function chooseLookahead(g, seat, actions, memory, random) {
@@ -188,4 +190,6 @@ function chooseLookahead(g, seat, actions, memory, random) {
   results.sort((a, b) => b.value - a.value);
   return { action: results[0].action, branches: unique.length * seeds.length, nodes, results };
 }
-module.exports = { chooseLookahead, sampleWorld, rolloutAction, utility, randomStream, LIMITS };
+return { chooseLookahead, sampleWorld, rolloutAction, utility };
+}
+module.exports = { createSearch, randomStream, LIMITS };

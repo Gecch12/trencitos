@@ -1,0 +1,145 @@
+{
+  "base_commit": "ad23759",
+  "description": "Seeded bot decisions before migrating policies to per-match context; Europe classic v1.",
+  "games": [
+    {
+      "options": {
+        "seed": 137
+      },
+      "decisions": 248,
+      "trace_sha256": "1f57536fb286c08da17161f586e19bac1adacce0dc7ec8e40d380bcab3952706",
+      "result": {
+        "steps": 292,
+        "actionCounts": {
+          "choose_initial": 1,
+          "draw_train": 45,
+          "claim": 16,
+          "station": 1
+        },
+        "turns": 163,
+        "result": [
+          {
+            "seat": 1,
+            "score": 115,
+            "winner": true,
+            "completed": 2,
+            "destination": 27
+          },
+          {
+            "seat": 2,
+            "score": 79,
+            "winner": false,
+            "completed": 2,
+            "destination": 16
+          },
+          {
+            "seat": 3,
+            "score": 74,
+            "winner": false,
+            "completed": 2,
+            "destination": 16
+          },
+          {
+            "seat": 0,
+            "score": 61,
+            "winner": false,
+            "completed": 1,
+            "destination": -8
+          }
+        ],
+        "durations": []
+      }
+    },
+    {
+      "options": {
+        "seed": 29,
+        "seats": [
+          "new",
+          "new",
+          "new",
+          "new"
+        ]
+      },
+      "decisions": 247,
+      "trace_sha256": "f8cfb674bd59d5a79eb73aef2a03bb7921d69e46bdb3437dfdeccbf9d91ca606",
+      "result": {
+        "steps": 269,
+        "actionCounts": {
+          "choose_initial": 4,
+          "claim": 63,
+          "draw_train": 164,
+          "station": 3,
+          "pay_tunnel": 3,
+          "draw_tickets": 3,
+          "keep_tickets": 3,
+          "decline_tunnel": 4
+        },
+        "turns": 161,
+        "result": [
+          {
+            "seat": 3,
+            "score": 141,
+            "winner": true,
+            "completed": 5,
+            "destination": 58
+          },
+          {
+            "seat": 1,
+            "score": 93,
+            "winner": false,
+            "completed": 4,
+            "destination": 38
+          },
+          {
+            "seat": 2,
+            "score": 87,
+            "winner": false,
+            "completed": 2,
+            "destination": 20
+          },
+          {
+            "seat": 0,
+            "score": 87,
+            "winner": false,
+            "completed": 2,
+            "destination": 28
+          }
+        ],
+        "durations": []
+      }
+    },
+    {
+      "options": {
+        "seed": 51,
+        "seats": [
+          "heuristic",
+          "heuristic"
+        ]
+      },
+      "decisions": 127,
+      "trace_sha256": "3554e6f01a0c227788b5b2c7ce4bbf0313a9eca918f30e4b80a7d1e07bf4294e",
+      "result": {
+        "steps": 133,
+        "actionCounts": {},
+        "turns": 84,
+        "result": [
+          {
+            "seat": 0,
+            "score": 126,
+            "winner": true,
+            "completed": 4,
+            "destination": 45
+          },
+          {
+            "seat": 1,
+            "score": 99,
+            "winner": false,
+            "completed": 4,
+            "destination": 28
+          }
+        ],
+        "durations": []
+      }
+    }
+  ]
+}

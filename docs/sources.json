@@ -68,7 +68,12 @@
     "shared/maps/",
     "backend/match-context.js",
     "backend/rules/",
-    "game/compat/match-state.js"
+    "game/compat/match-state.js",
+    "backend/bots.js",
+    "backend/practice-bot.js",
+    "backend/practice-planner.js",
+    "backend/practice-search.js",
+    "backend/practice-tactics.js"
   ],
   "operations.md": [
     "package.json",
@@ -372,6 +377,16 @@
     "tests/match-state.test.js",
     "tests/match-state-server.test.js",
     "tests/legacy-load-server.test.js",
-    "tests/room-store.test.js"
+    "tests/room-store.test.js",
+    "backend/bots.js",
+    "backend/practice-bot.js",
+    "backend/practice-planner.js",
+    "backend/practice-search.js",
+    "backend/practice-tactics.js",
+    "game/compat/legacy-automatic-play.js",
+    "tests/bot-map-context.test.js",
+    "tests/helpers/bot-map.js",
+    "tests/helpers/practice-tools.js",
+    "tests/fixtures/bots-europe-v1.json"
   ]
 }

@@ -1,8 +1,13 @@
 "use strict";
-const E = require("./engine");
-const P = require("./practice-planner");
-const T = require("./practice-tactics");
-const S = require("./practice-search");
+const { createPlanner } = require("./practice-planner");
+const { createTactics } = require("./practice-tactics");
+const { createSearch } = require("./practice-search");
+
+function createPracticeBot({ engine, context }) {
+const { rules } = context;
+const P = createPlanner({ engine, context });
+const T = createTactics({ planner: P, context });
+const S = createSearch({ engine, planner: P, tactics: T, context });
 
 // Disposable, private memory. No plan or inferred rival cards enter saves/views.
 const memories = new WeakMap();
@@ -34,7 +39,7 @@ function tunnelAction(g, seat, memory, fallback) {
   const { color, surcharge, base, routeId } = g.tunnel;
   const counts = P.countCards(g.players[seat].hand), reserved = P.afterPayment(counts, base);
   const remaining = Object.entries(reserved).flatMap(([c, n]) => Array(Math.max(0, n)).fill(c));
-  const extra = E.pay(remaining, color, surcharge);
+  const extra = P.pay(remaining, color, surcharge);
   if (!extra) return { type: "decline_tunnel" };
   const route = g.routes.find(r => r.id === routeId);
   if (!route) return fallback();
@@ -100,7 +105,7 @@ function choosePracticeAction(game, seat, random, fallback, { search = true } = 
     const rest = (plan?.routes || []).filter(r => r.id !== route.id);
     const payment = P.paymentFor(route, player.hand, rest, g.face, memory.colors);
     const color = plan?.resources.colors.get(route.id) || (route.color === "gray"
-      ? memory.target?.routeId === route.id ? memory.target.color : E.COLORS.reduce((a, b) => counts[a] >= counts[b] ? a : b) : route.color);
+      ? memory.target?.routeId === route.id ? memory.target.color : rules.colors.reduce((a, b) => counts[a] >= counts[b] ? a : b) : route.color);
     const need = P.missing(route, color, counts);
     const completion = Math.max(0, P.ticketOutcome(g, seat, { routes: [route] }).score - context.base.score);
     const urgent = P.urgency(g, seat, route, plan, context, memory.known);
@@ -117,10 +122,10 @@ function choosePracticeAction(game, seat, random, fallback, { search = true } = 
   if (turns <= 6 && affordable.length) {
     const lengths = g.players.map((_, i) => P.trailLength(g.routes, i));
     const rival = Math.max(...lengths.filter((_, i) => i !== seat));
-    const before = lengths[seat] >= rival ? 10 : 0;
+    const before = lengths[seat] >= rival ? rules.scoring.expressPoints : 0;
     for (const c of affordable) {
       const length = P.trailLength(g.routes.map(r => r.id === c.route.id ? { ...r, owner: seat } : r), seat);
-      c.express = (length >= rival ? 10 : 0) - before;
+      c.express = (length >= rival ? rules.scoring.expressPoints : 0) - before;
     }
   }
   const finishValue = c => (P.points(c.route) + c.completion + (c.express || 0)) * c.success;
@@ -162,7 +167,7 @@ function choosePracticeAction(game, seat, random, fallback, { search = true } = 
   if (g.drawCount) return drawAction(g, candidates, target, plan, counts, random);
 
   // Ending the game forfeits the remainder of a feasible destination network.
-  const closingLoss = c => player.trains - c.route.n <= 2 && plan && plan.routes.length > 1
+  const closingLoss = c => player.trains - c.route.n <= rules.turn.finalTrainThreshold && plan && plan.routes.length > 1
     ? Math.max(0, plan.gain - c.completion) * plan.probability : 0;
   const completing = affordable.filter(c => c.completion && (!c.reserve || !canDraw));
   if (completing.length) return decide(claim(choose(completing.map(c => ({ ...c, value: finishValue(c) + c.urgent - closingLoss(c) })), random, 1)));
@@ -183,4 +188,6 @@ function choosePracticeAction(game, seat, random, fallback, { search = true } = 
   if (affordable.length && (!canDraw || player.hand.length >= 18)) return decide(claim(choose(affordable, random)));
   return decide(drawAction(g, candidates, target, plan, counts, random));
 }
-module.exports = { choosePracticeAction };
+return { choosePracticeAction };
+}
+module.exports = { createPracticeBot };

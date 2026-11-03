@@ -1,5 +1,5 @@
 ---
-{"id":"modular-game-platform","status":"active","parent":null,"depends_on":[],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-02"}
+{"id":"modular-game-platform","status":"active","parent":null,"depends_on":[],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-03"}
 ---
 # Plataforma modular y mapas de Trencitos
 
@@ -104,6 +104,8 @@ estables. El primer corte separa Europa y congela el puente numérico; el segund
 resuelve el contexto de cada partida y busca vías por identidad en el motor.
 El tercero versiona el estado y valida su restauración en archivo y remoto,
 conservando replays anteriores.
+El cuarto adapta bots, planes y simulaciones al contexto, con partidas completas
+de dos mapas alternadas en el controlador automático y estrategia europea conservada.
 El producto sigue ofreciendo Europa. La independencia se aceptará cuando Europa
 y un mapa pequeño funcionen simultáneamente en partidas completas con sus
 guardados, bots, consultas y presentación.

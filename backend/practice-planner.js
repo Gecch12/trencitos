@@ -1,8 +1,24 @@
 "use strict";
-const E = require("./engine");
-const suits = [...E.COLORS, "wild"];
+const { planPayment } = require("../game/domain/payment");
+const { MATCH_SCHEMA_VERSION } = require("../game/compat/match-state");
+
+// Route sets are independent of traversal order. Preserve ID types and escape
+// delimiters: ["a,b", "c"] and ["a", "b,c"] are different networks.
+const routeSetKey = routes => JSON.stringify(routes.map(r => r.id).sort((a, b) =>
+  typeof a !== typeof b ? (typeof a === "number" ? -1 : 1)
+    : typeof a === "number" ? a - b : a < b ? -1 : a > b ? 1 : 0));
+
+function createPlanner({ engine: E, context }) {
+const { rules } = context;
+const suits = [...rules.colors, "wild"];
+const pay = (hand, color, quantity, wildNeeded = 0, wildCount) =>
+  planPayment(hand, { color, quantity, wildNeeded, wildCount }, rules.claim);
 const countCards = hand => Object.fromEntries(suits.map(c => [c, hand.filter(x => x === c).length]));
-const points = r => E.SCORE[r.n] || r.n;
+const points = r => {
+  const value = rules.routePoints[r.n];
+  if (value === undefined) throw Error(`Unsupported route length: ${r.n}`);
+  return value;
+};
 const missing = (r, color, c) => Math.max(0, (r.ferry || 0) - c.wild, r.n - (color === "wild" ? 0 : c[color]) - c.wild);
 const availableRoutes = (g, seat) => g.routes.filter(r => r.owner === null && r.n <= g.players[seat].trains && !E.block(g, r, seat));
 const sameEnds = (a, b) => a.a === b.a && a.b === b.b || a.a === b.b && a.b === b.a;
@@ -10,7 +26,9 @@ const sameEnds = (a, b) => a.a === b.a && a.b === b.b || a.a === b.b && a.b === 
 // A small explicit observation boundary. Opponent hand length is public; no
 // opponent card, destination or hidden deck element crosses this boundary.
 function observe(game, seat) {
+  if (E.contextFor(game) !== context) throw Error("Bot observation belongs to another match context");
   return {
+    schemaVersion: MATCH_SCHEMA_VERSION, mapRef: { ...context.mapRef }, rulesRef: { ...context.rulesRef },
     phase: game.phase, current: game.current, turnSerial: game.turnSerial, drawCount: game.drawCount,
     finalRemaining: game.finalRemaining, turnWaiting: game.turnWaiting,
     players: game.players.map((p, i) => ({ trains: p.trains, score: p.score, handCount: p.hand.length,
@@ -69,7 +87,7 @@ function pathBetween(graph, from, to) {
   return routes.reverse();
 }
 const union = routes => [...new Map(routes.map(r => [r.id, r])).values()];
-const key = routes => routes.map(r => r.id).sort((a, b) => a - b).join(",");
+const key = routeSetKey;
 
 function alternatives(owned, available, ticket, cost, seat) {
   const first = pathBetween(graphFor(owned, available, cost), ticket.a, ticket.b);
@@ -85,20 +103,20 @@ function alternatives(owned, available, ticket, cost, seat) {
 }
 
 function allocation(routes, counts, face = [], preferred = new Map()) {
-  const demand = Object.fromEntries(E.COLORS.map(c => [c, 0])), colors = new Map();
+  const demand = Object.fromEntries(rules.colors.map(c => [c, 0])), colors = new Map();
   let mandatory = 0;
   for (const r of routes) {
     mandatory += r.ferry || 0;
     if (r.color !== "gray") { demand[r.color] += r.n - (r.ferry || 0); colors.set(r.id, r.color); }
   }
   for (const r of routes.filter(r => r.color === "gray").sort((a, b) => b.n - a.n)) {
-    const color = [...E.COLORS].sort((a, b) => {
+    const color = [...rules.colors].sort((a, b) => {
       const value = c => Math.min(r.n, counts[c] - demand[c]) + (preferred.get(r.id) === c ? .15 : 0) + (face.includes(c) ? .1 : 0);
       return value(b) - value(a);
     })[0];
     demand[color] += r.n - (r.ferry || 0); colors.set(r.id, color);
   }
-  const deficits = Object.fromEntries(E.COLORS.map(c => [c, Math.max(0, demand[c] - counts[c])]));
+  const deficits = Object.fromEntries(rules.colors.map(c => [c, Math.max(0, demand[c] - counts[c])]));
   const regularMissing = Object.values(deficits).reduce((a, b) => a + b, 0);
   const wildMissing = Math.max(0, mandatory - counts.wild);
   const shortage = wildMissing + Math.max(0, regularMissing - Math.max(0, counts.wild - mandatory));
@@ -118,12 +136,12 @@ function horizon(g, seat) {
     const available = availableRoutes(g, i);
     if (!available.length) continue;
     const length = Math.max(2, Math.min(6, average));
-    const needed = Math.max(0, p.trains - 2);
+    const needed = Math.max(0, p.trains - rules.turn.finalTrainThreshold);
     const builds = Math.max(1, Math.ceil(needed / length));
     const draws = Math.max(0, needed - p.handCount) * .65;
     // A rival with few trains and a large hand can end immediately even if
     // their previous constructions were short.
-    const quick = available.some(r => p.trains - r.n <= 2 && p.handCount >= r.n);
+    const quick = available.some(r => p.trains - r.n <= rules.turn.finalTrainThreshold && p.handCount >= r.n);
     turns = Math.min(turns, quick ? 2 : builds + draws + 1);
   }
   return turns;
@@ -134,7 +152,7 @@ function networks(g, seat, tickets, counts, remainingTurns, preferred = new Map(
   const owned = planningConnections(g, seat), available = availableRoutes(g, seat), availableIds = new Set(available.map(r => r.id));
   const pending = tickets.filter((t, i) => !base.tickets[i]);
   const cost = r => {
-    const color = r.color === "gray" ? E.COLORS.reduce((a, b) => counts[a] >= counts[b] ? a : b) : r.color;
+    const color = r.color === "gray" ? rules.colors.reduce((a, b) => counts[a] >= counts[b] ? a : b) : r.color;
     return 1 + r.n * .12 + missing(r, color, counts) * .7 + (r.ferry || 0) * .25 + (r.tunnel ? .45 : 0);
   };
   const evaluate = routes => {
@@ -173,7 +191,7 @@ function ticketOutcome(g, seat, { tickets = g.players[seat].tickets, routes = []
   const added = new Set(routes.map(r => r.id));
   const board = routes.length ? g.routes.map(r => added.has(r.id) ? { ...r, owner: seat } : r) : g.routes;
   const players = g.players.map((p, i) => i === seat ? { ...p, tickets, placed } : p);
-  const result = E.stationAssignments({ routes: board, players }, seat);
+  const result = E.stationAssignments({ ...g, routes: board, players }, seat);
   const borrowed = new Set(result.assigned.filter(id => id !== null));
   return { ...result, connections: board.filter(r => r.owner === seat || borrowed.has(r.id)) };
 }
@@ -193,7 +211,7 @@ function pressure(g, seat, route, known) {
     const cities = new Set(own.flatMap(r => [r.a, r.b]));
     const adjacent = Number(cities.has(route.a)) + Number(cities.has(route.b));
     const cards = known[i] || {};
-    const matching = route.color === "gray" ? Math.max(0, ...E.COLORS.map(c => cards[c] || 0)) : cards[route.color] || 0;
+    const matching = route.color === "gray" ? Math.max(0, ...rules.colors.map(c => cards[c] || 0)) : cards[route.color] || 0;
     threat = Math.max(threat, adjacent * .3 + Math.min(.3, (matching + (cards.wild || 0)) / route.n * .3)
       + (adjacent && g.players[i].handCount >= route.n ? .2 : 0));
   }
@@ -203,7 +221,7 @@ function urgency(g, seat, route, plan, context, known) {
   if (!plan?.routes.some(r => r.id === route.id)) return 0;
   const excluded = new Set([route.id]);
   // With 2–3 players an opponent taking either parallel lane removes both.
-  if (g.players.length <= 3) for (const r of context.available) if (sameEnds(r, route)) excluded.add(r.id);
+  if (g.players.length < rules.claim.doubleRoutesMinPlayers) for (const r of context.available) if (sameEnds(r, route)) excluded.add(r.id);
   const graph = graphFor(context.owned, context.available, context.cost, excluded);
   const planned = graphFor(context.owned, plan.routes, context.cost);
   let loss = 0;
@@ -228,8 +246,8 @@ function afterPayment(counts, payment) {
 }
 function paymentFor(route, hand, rest = [], face = [], preferred = new Map()) {
   const counts = countCards(hand);
-  return (route.color === "gray" ? [...E.COLORS, "wild"] : [route.color, "wild"])
-    .map(c => E.pay(hand, c, route.n, route.ferry || 0))
+  return (route.color === "gray" ? [...rules.colors, "wild"] : [route.color, "wild"])
+    .map(c => pay(hand, c, route.n, route.ferry || 0))
     .filter(p => p && (p.regular > 0 || p.color === "wild"))
     .map(p => ({ ...p, cost: allocation(rest, afterPayment(counts, p), face, preferred).turns + p.wild * .25 }))
     .sort((a, b) => a.cost - b.cost)[0] || null;
@@ -243,7 +261,9 @@ function tunnelSuccess(g, seat, route, payment) {
   // Prior over unseen cards, conditioned only on our hand and the market.
   const visible = [...g.players[seat].hand, ...g.face];
   const matches = c => c === "wild" || c === payment.color;
-  const p = Math.max(0, Math.min(1, ((payment.color === "wild" ? 14 : 26) - visible.filter(matches).length) / Math.max(1, 110 - visible.length)));
+  const total = rules.setup.trainCards.reduce((sum, card) => sum + card.count, 0);
+  const matching = rules.setup.trainCards.filter(card => matches(card.color)).reduce((sum, card) => sum + card.count, 0);
+  const p = Math.max(0, Math.min(1, (matching - visible.filter(matches).length) / Math.max(1, total - visible.length)));
   let chance = 0;
   const combinations = [[1], [1, 1], [1, 2, 1], [1, 3, 3, 1]][reveals];
   for (let n = 0; n <= reserve; n++) chance += combinations[n] * p ** n * (1 - p) ** (reveals - n);
@@ -269,5 +289,7 @@ function trailLength(routes, seat, limit = 4000) {
   for (const city of adj.keys()) { walk(city, 0n, 0); if (visits > limit) break; }
   return best;
 }
-module.exports = { observe, rememberPublic, countCards, points, missing, availableRoutes, allocation, horizon, networks,
+return { observe, rememberPublic, countCards, pay, points, missing, availableRoutes, allocation, horizon, networks,
   urgency, afterPayment, paymentFor, tunnelSuccess, trailLength, ticketOutcome, planningConnections, graphFor, pathBetween };
+}
+module.exports = { createPlanner, routeSetKey };
