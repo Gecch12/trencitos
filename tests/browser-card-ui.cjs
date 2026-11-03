@@ -58,14 +58,24 @@ function room(code,refresh) {
  for(const variant of ['normal','resize','reduced','interrupt']) {
   const r=room({normal:'QAREF0',resize:'QAREF1',reduced:'QAREF2',interrupt:'QAREF3'}[variant],true);app.rooms.set(r.code,r);
   const a=await page(r,0,variant==='reduced'?{reducedMotion:'reduce'}:{}),b=await page(r,1);
-  // Observe even the 120 ms reduced-motion crossfade without timing-sensitive polling.
-  await a.evaluate(()=>{window.refreshSeen=[];new MutationObserver(()=>{const layer=document.querySelector('.market-refresh-layer');if(layer&&!window.refreshSeen.length)window.refreshSeen.push({cards:layer.children.length,disabled:[...document.querySelectorAll('#market button')].every(b=>b.disabled),durations:layer.getAnimations({subtree:true}).map(a=>a.effect.getTiming().duration)});}).observe(document.querySelector('#market'),{childList:true,subtree:true});});
+  // Observe both clients at insertion, including the 120 ms crossfade. A
+  // round trip to the rival can outlast the actor's animation on a busy runner.
+  for(const client of [a,b])await client.evaluate(()=>{
+   window.refreshSeen=[];
+   new MutationObserver(()=>{
+    const layer=document.querySelector('.market-refresh-layer');if(!layer||refreshSeen.length)return;
+    const seen={cards:layer.children.length,disabled:[...document.querySelectorAll('#market button')].every(b=>b.disabled),durations:layer.getAnimations({subtree:true}).map(a=>a.effect.getTiming().duration)};
+    const send=sock.send;let sent=0;
+    sock.send=function(...args){sent++;return send.apply(this,args);};
+    try{act('draw_train',{index:0});}finally{sock.send=send;}
+    seen.blockedDrawSent=sent;refreshSeen.push(seen);
+   }).observe(document.querySelector('#market'),{childList:true,subtree:true});
+  });
   await a.locator('[data-market-index="2"]').click();await a.waitForFunction(()=>window.refreshSeen.length);
-  const seen=await a.evaluate(()=>window.refreshSeen[0]);assert.equal(seen.cards,10);assert.equal(seen.disabled,true);assert.ok(seen.durations.every(d=>d===(variant==='reduced'?120:1200)));
+  const seen=await a.evaluate(()=>window.refreshSeen[0]);assert.equal(seen.cards,10);assert.equal(seen.disabled,true);assert.equal(seen.blockedDrawSent,0);assert.ok(seen.durations.every(d=>d===(variant==='reduced'?120:1200)));
   if(variant==='normal') {
    assert.equal(await a.locator('[data-history-id^="turn:"] .history-market-refresh img').count(),5);
-   await b.waitForSelector('.market-refresh-layer');
-   const draws=r.game.drawSerial;await a.evaluate(()=>act('draw_train',{index:0}));assert.equal(r.game.drawSerial,draws);
+   await b.waitForFunction(()=>refreshSeen.length);
    await a.waitForTimeout(250);await a.locator('#market').screenshot({path:path.join(out,'market-renewal.png'),animations:'allow'});
   } else if(variant==='resize') await a.setViewportSize({width:1000,height:800});
   else if(variant==='interrupt') {

@@ -104,3 +104,10 @@ todavía seleccionaba cualquier miniatura, incluyendo la reposición que sigue
 al robo en el nuevo diario. Se acota a las cartas robadas y comprueba su secuencia
 completa (oculta, roja) en actor/rival/espectador. Los dos recorridos añadidos al
 workflow usan también SwiftShader explícito en CI, igual que los anteriores.
+
+En el tercer intento, el bloqueo de robos se comprobaba después de esperar al
+otro cliente; la animación del actor ya podía haber terminado. La comprobación
+se realiza al insertar la capa: controles desactivados y cero envíos al intentar
+robar. Ambos clientes conservan la observación, incluso si la animación termina
+antes de la siguiente consulta de Playwright. Se mantienen las duraciones y
+las comprobaciones de estado final.
