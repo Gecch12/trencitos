@@ -102,6 +102,8 @@ con otros worktrees.
 La [fase 4](modular-platform-maps.md) introduce definiciones versionadas e IDs
 estables. El primer corte separa Europa y congela el puente numérico; el segundo
 resuelve el contexto de cada partida y busca vías por identidad en el motor.
+El tercero versiona el estado y valida su restauración en archivo y remoto,
+conservando replays anteriores.
 El producto sigue ofreciendo Europa. La independencia se aceptará cuando Europa
 y un mapa pequeño funcionen simultáneamente en partidas completas con sus
 guardados, bots, consultas y presentación.

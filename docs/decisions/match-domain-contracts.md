@@ -62,8 +62,10 @@ un valor inventado por el renderizador o el bot.
 El primer corte de [fase 4](../work/modular-platform-maps.md) ya implementa
 `MapDefinition`, su catálogo validado y la tabla europea congelada. El segundo
 corte incorpora un reglamento fijo `europe-classic@1` y resolución de contexto
-por partida en el motor. La carga/validación genérica de `RuleSet`, `MatchState`
-versionado y `MapLayout` por definición siguen siendo contratos objetivo.
+por partida en el motor. El tercero introduce estado persistido v1 con referencias
+exactas y restauración validada, conservando las filas legadas con dueños y billetes.
+La representación objetivo completa de `MatchState`, la carga/validación genérica
+de `RuleSet` y `MapLayout` por definición siguen siendo contratos objetivo.
 El puente conserva temporalmente los números del runtime europeo anterior.
 
 ### Identidades y versiones
@@ -288,6 +290,14 @@ predeterminadas y estados sin ambas referencias mantienen el formato europeo
 anterior; una referencia parcial/desconocida falla. Esta transición no sustituye
 la migración validada de los envoltorios persistidos ni habilita el segundo mapa
 en sala, bots o replay. Contrato implementado en [arquitectura](../architecture.md).
+
+El tercer corte incorpora `schemaVersion:1` y ambas referencias a toda creación,
+incluidas salas/práctica. `restoreState` valida una copia antes de añadir cabecera
+a los formatos sin versión conocidos; una versión nueva incompleta nunca se
+interpreta como legado. Archivo y remoto restauran el lote antes de instalar salas
+y guardan la migración con el checkpoint habitual. El estado crudo de auditoría
+añade campos solo en pasos nuevos; no se modifica el contrato de vistas ni se
+reescribe el prefijo histórico. La identidad de vías europeas continúa numérica.
 
 El tercer corte de fase 2 permite inyectar azar en reparto/mercado inicial y
 elecciones de cierre forzado. Conserva el parámetro legado del sorteo de primer

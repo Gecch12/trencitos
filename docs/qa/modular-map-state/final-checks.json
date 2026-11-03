@@ -1,0 +1,38 @@
+{
+  "checked_at": "2026-11-03T04:53:58.405082+00:00",
+  "base_commit": "c9769978dd0a379fea96605f7ec85f1acc9d3742",
+  "results": {
+    "node-tests-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "05d91c7ed4f289d09a61839e9d292f4679a1f16f4c7e38e6a1eb1588e43273a7",
+      "log_hash_matches": true
+    },
+    "browser-tests-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "abd013737735ba1bcb927eaeb7ff20b4a2e47b3f77615832208cff3c89b8e027",
+      "log_hash_matches": true
+    },
+    "docker-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "e31b9a07fe3d3588d087275c322289880fd4fcc5e269434d50b5dc6e6ffeef33"
+    }
+  },
+  "historical_qa_unchanged": true,
+  "frozen_europe_fixture_unchanged": true,
+  "diff_check": "passed",
+  "docs_check": "passed (49 documents, 23 work items)",
+  "artifact_sha256": {
+    "backend/engine.js": "2be36bb28da747217a5573b6823712f78fcd626724ed8b60953216db9dff0599",
+    "backend/match-context.js": "c7c7264e5cd73ecf905df91e1d6d5293d4f3485c4d177445411849cea133502d",
+    "backend/server.js": "d2cd0067bc1fafae52f4bd6803a94173d8f6b86b511a8426d0adaa82067a52c8",
+    "backend/room-store.js": "639f31846f5715b09a3cb957e81669778d8ae4a3ac70c55ba3620208dcc3f1e2",
+    "game/compat/match-state.js": "9044481df510de0645a69741aee9a22f40ca25b16cd752b093845794a9b11629",
+    "tests/match-state.test.js": "a82eb897b7d42f5ade73b37463456afa4b3f52b8748542e05c7e9615e7f00c4a",
+    "tests/match-state-server.test.js": "fccc77ef59c55cf99b8af98dc3da8c0f92212a4bc242371bf760cb70429a3d6c",
+    "tests/europe-map-compat.test.js": "12b2d0e41584d53d7caab96c2fcc7a0a990cd7974a768f06d8566454b175f996",
+    "tests/fixtures/europe-legacy-v1.json": "ff924b0cb2c0a33aabedd356fc5d90f02210118b88ab3f0d722b8f91a68d836c"
+  }
+}

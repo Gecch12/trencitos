@@ -67,7 +67,8 @@
     "backend/maps.js",
     "shared/maps/",
     "backend/match-context.js",
-    "backend/rules/"
+    "backend/rules/",
+    "game/compat/match-state.js"
   ],
   "operations.md": [
     "package.json",
@@ -84,7 +85,8 @@
     "backend/maps.js",
     "shared/maps/",
     "shared/data.js",
-    "frontend/index.html"
+    "frontend/index.html",
+    "game/compat/match-state.js"
   ],
   "work/board-3d.md": [
     "frontend/map-layout.js",
@@ -176,7 +178,14 @@
     "tests/history-queries.test.js",
     "game/application/player-action.js",
     "game/infrastructure/command-fingerprint.js",
-    "tests/command-receipts-server.test.js"
+    "tests/command-receipts-server.test.js",
+    "game/compat/match-state.js",
+    "backend/match-context.js",
+    "backend/room-store.js",
+    "tests/match-state.test.js",
+    "tests/match-state-server.test.js",
+    "tests/legacy-load-server.test.js",
+    "tests/room-store.test.js"
   ],
   "work/table-controls.md": [
     "shared/game-timing.js",
@@ -357,6 +366,12 @@
     "tests/fixtures/europe-legacy-v1.json",
     "backend/match-context.js",
     "backend/rules/",
-    "tests/engine-map-context.test.js"
+    "tests/engine-map-context.test.js",
+    "game/compat/match-state.js",
+    "backend/room-store.js",
+    "tests/match-state.test.js",
+    "tests/match-state-server.test.js",
+    "tests/legacy-load-server.test.js",
+    "tests/room-store.test.js"
   ]
 }

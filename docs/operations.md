@@ -141,6 +141,15 @@ el manifiesto ya no incluye los pasos de las repeticiones. No borres esa carpeta
 para reducir el tamaño del estado. El contrato de confirmación y recuperación
 está en [historial/replay](history-replay.md).
 
+El estado de cada partida usa su propio `schemaVersion:1` con referencias exactas
+de mapa y reglamento. La carga valida y migra copias de los formatos legados antes
+de instalar salas; el checkpoint habitual confirma el resultado. Si una partida
+o versión no es compatible, el arranque falla sin sobrescribir el guardado. Una
+versión desconocida del envoltorio local tampoco cae en una `.bak` antigua; la
+recuperación de archivos corruptos conocidos sigue disponible. No elimines
+versiones o referencias para forzar una carga: conserva los originales y utiliza
+un lector compatible. El esquema RPC/SQL y los frames históricos no cambian.
+
 La app de Codex tiene registrado `trains`, cuyo repo está en `trencitos`.
 Un chat local bajo ese proyecto debe usar explícitamente la ruta de su worktree
 para herramientas y servidores. La configuración de chat no demuestra aislamiento.

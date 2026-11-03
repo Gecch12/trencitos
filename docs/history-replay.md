@@ -83,6 +83,15 @@ detalles de resultados legados sin cambiar sus totales. Leer una repetición usa
 sus proyecciones guardadas: no ejecuta el normalizador sobre frames anteriores
 ni reescribe sus datos o hashes para añadir detalles actuales.
 
+Las partidas vivas nuevas llevan `schemaVersion:1`, `mapRef` y `rulesRef`.
+`Engine.restoreState` valida y adapta partidas al cargar salas; nunca se aplica a
+frames históricos. Al continuar una grabación antigua, solo el estado completo
+o las diferencias del paso nuevo incorporan la cabecera dentro de `game`. El
+prefijo anterior y su cadena de hashes permanecen intactos. Las vistas grabadas
+y su protocolo siguen siendo los anteriores; la versión del archivo sigue en 1
+y la etiqueta histórica `rulesVersion: europe-classic-1` se conserva. Esto prepara
+la auditoría del estado, sin habilitar replay de otro mapa todavía.
+
 Archivo local: el manifiesto `version: 2` conserva salas, metadatos y reclamaciones;
 los pasos viven en `STATE_FILE.archive/<hash-del-id>.jsonl`, un archivo por partida.
 Solo se serializan/anexan pasos nuevos. Se sincronizan antes de reemplazar
@@ -99,6 +108,11 @@ historial acumulado. Los pasos siguen cargándose al arrancar para servir replay
 esta mejora reduce el coste de guardar, no la memoria total del historial.
 Para respaldar/restaurar hay que conservar juntos manifiesto, `.bak` y directorio
 `.archive`; [operación local](operations.md) explica el procedimiento.
+
+Una versión local de envoltorio desconocida se rechaza y no intenta sustituirse
+por un respaldo antiguo. La validación del estado de partida sucede antes del
+primer commit, también en Supabase. Si falla, no se cierra ni reescribe el historial
+como consecuencia de una restauración parcial.
 
 Supabase: [003_match_archive.sql](../supabase/003_match_archive.sql)
 crea metadatos, pasos y reclamaciones de invitados. La lectura usa

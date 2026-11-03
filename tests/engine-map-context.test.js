@@ -41,6 +41,7 @@ function inventory(game) {
 
 test("one engine resolves simultaneous Europe and two exact map versions without global selection",()=>{
   const engine=runtime(mini(),mini("2")),legacy=ready(engine),g=ready(engine,4,{mapRef:reference}),v2=ready(engine,4,{mapRef:{...reference,version:"2"}});
+  for(const key of ["schemaVersion","mapRef","rulesRef"])delete legacy[key];
   assert.equal(Object.hasOwn(legacy,"mapRef"),false);assert.deepEqual(engine.contextFor(legacy).mapRef,{id:"europe",version:"1"});
   assert.deepEqual(g.rulesRef,RULES_REFERENCE);assert.equal(g.routes.length,4);
   assert.equal(g.players[0].tickets[0].id.startsWith("ticket-"),true);

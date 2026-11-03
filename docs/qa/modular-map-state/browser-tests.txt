@@ -1,0 +1,8 @@
+
+> trencitos@0.6.1-beta test:board3d
+> node tests/browser-threejs.cjs
+
+Full game: 75 accepted actions, play
+Full game: 150 accepted actions, play
+Full game: 225 accepted actions, play
+{"passed":true,"actions":230,"tests":8,"performance":[{"mode":"3d","cpuCameraMs":{"n":79,"median":1.899999976158142,"p95":2.100000023841858,"max":2.100000023841858},"frameIntervalMs":{"n":79,"median":16.699999928474426,"p95":16.800000071525574,"max":16.800000071525574}}]}

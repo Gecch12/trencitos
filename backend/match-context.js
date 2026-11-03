@@ -2,6 +2,7 @@
 const { validateMapForRules } = require("../game/maps/catalog");
 const legacyEurope = require("../shared/maps/europe-legacy-v1");
 const rules = require("./rules/europe-classic-v1");
+const {validateMatchHeader} = require("../game/compat/match-state");
 const { EUROPE_REFERENCE } = require("./maps");
 const RULES_REFERENCE = Object.freeze({id:rules.id,version:rules.version});
 const fail = (code, message) => { throw Object.assign(new Error(message), {code}); };
@@ -33,6 +34,7 @@ function createMatchContexts(maps) {
     return context;
   }
   function forGame(game) {
+    validateMatchHeader(game);
     const hasMap = Object.hasOwn(game,"mapRef"), hasRules = Object.hasOwn(game,"rulesRef");
     if (!hasMap && !hasRules) return resolve(EUROPE_REFERENCE,RULES_REFERENCE);
     if (!hasMap || !hasRules) fail("INCOMPLETE_MATCH_REFERENCES", "A referenced match needs both map and rules");
@@ -41,7 +43,7 @@ function createMatchContexts(maps) {
   function forSetup(options) {
     const hasMap = Object.hasOwn(options,"mapRef"), hasRules = Object.hasOwn(options,"rulesRef");
     const context = resolve(hasMap?options.mapRef:EUROPE_REFERENCE,hasRules?options.rulesRef:RULES_REFERENCE);
-    return {context, references:hasMap||hasRules ? {mapRef:{...context.mapRef},rulesRef:{...context.rulesRef}} : {}};
+    return {context, references:{mapRef:{...context.mapRef},rulesRef:{...context.rulesRef}}};
   }
   return Object.freeze({forGame,forSetup});
 }

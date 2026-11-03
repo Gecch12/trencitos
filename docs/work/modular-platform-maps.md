@@ -20,7 +20,7 @@ la rama aislada; no se sincronizan automáticamente otros worktrees ni se public
 - [x] Definición inmutable de Europa y catálogo con versiones explícitas y validación estructural.
 - [x] Congelar correspondencias de IDs y comprobar equivalencia con los datos y repartos anteriores.
 - [x] Resolver mapa/reglas por partida y sustituir accesos por posición en construcción y túneles del motor.
-- [ ] Versionar referencias de estado/guardado y preservar compatibilidad de archivos y replay anteriores.
+- [x] Versionar referencias de estado/guardado y preservar compatibilidad de archivos y replay anteriores.
 - [ ] Adaptar bots, consultas y transporte a la definición de cada partida, incluidos los demás supuestos sobre IDs.
 - [ ] Separar composición visual por mapa, habilitar selección y conservar Three.js y cosméticos.
 - [ ] Aceptación conjunta: Europa y mapa pequeño jugables simultáneamente, con guardado/reconexión/replay.
@@ -162,13 +162,75 @@ conservan sus evidencias históricas; el avance actual vive aquí. Supabase/SQL
 siguen cubiertos por simuladores y móvil por emulación. No certifica dos mapas
 en el producto, Render ni una migración durable. Sin push, merge o despliegue.
 
+## Tercer corte: estado versionado y restauración
+
+Base: `c976997`. Toda creación del motor, incluidas salas/práctica, incorpora
+`schemaVersion:1`, `mapRef` y `rulesRef`. El contenido anterior de reparto y
+recursos conserva sus huellas al excluir únicamente esos tres campos; la fixture
+congelada se mantiene intacta. [El adaptador de estado](../../game/compat/match-state.js)
+reconoce los formatos sin versión conocidos y devuelve copias validadas con
+cabecera, sin convertir los IDs europeos ni recalcular puntos anteriores.
+
+Comprueba las referencias exactas, la red completa y sus atributos, puestos,
+billetes, túneles, ciudades/estaciones y IDs guardados en eventos y resultados.
+Una versión desconocida, referencia incompleta o identidad incompatible falla
+antes de reanudar. Archivo y remoto pasan por la misma restauración de salas;
+el lote se prepara antes de instalarlo y su migración se confirma mediante el
+checkpoint existente. Los snapshots usados por rollback ya llevan cabecera.
+Una versión desconocida de envoltorio local no se reemplaza con un respaldo viejo.
+
+El estado crudo de auditoría añade referencias solo en pasos nuevos. Las vistas,
+versiones de replay y frames/hashes anteriores permanecen intactos: replay nunca
+llama a `restoreState`. No hay cambio SQL ni selección de un segundo mapa en
+salas. Contratos implementados en [arquitectura](../architecture.md) e
+[historial](../history-replay.md).
+
+Las pruebas de [estado](../../tests/match-state.test.js) cubren migración
+idempotente sin mutar entrada, fases legadas, IDs opacos, estados inválidos,
+cabecera y compatibilidad de replay. La [restauración integrada](../../tests/match-state-server.test.js)
+ejecuta array antiguo, historial integrado, manifiesto v2 y Supabase simulado,
+conservando el prefijo de grabación y la copia anterior del archivo. Un lote con
+una partida incompatible no confirma salas ni cierra/regraba el historial.
+[Carga legada](../../tests/legacy-load-server.test.js), recibos y pruebas remotas
+mantienen cobertura de reconexión, relojes, reinicio y rollback conjunto.
+
+## Evidencia del tercer corte
+
+Validación local del 2026-11-02 (Lima), sobre `c976997` más los cambios de esta
+entrega, con estado temporal y servicios remotos simulados:
+
+- Node `v25.6.1`: **566/566**, sin fallos ni omisiones, incluidas 14 pruebas nuevas.
+  `node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js`.
+  [Resultado y huellas](../qa/modular-map-state/node-tests-result.json),
+  [TAP](../qa/modular-map-state/node-tests.tap).
+- `QA_PORT=0 npm run test:board3d`, Chrome `156.0.8078.80`: ocho recorridos,
+  nueve combinaciones de viewport/zoom, partida de cuatro jugadores terminada
+  con **230 acciones**, reconexión y cero errores. Incluye construcción, pagos y
+  desistimientos de túneles, estación y destinos. Capturas final y móvil revisadas.
+  [Resultado](../qa/modular-map-state/browser-tests-result.json),
+  [informe](../qa/modular-map-state/browser/threejs-report.json).
+- Docker `linux/arm64`, Node `v22.23.4`: **19/19** sobre el código empaquetado.
+  Migración de las cuatro fuentes, rechazo sin commit, replay, datos/repartos
+  europeos, recursos públicos/privados, bots y recibos/reinicio/rollback.
+  `healthz`, UID 1000 y estado temporal escribible correctos; raíz de solo lectura,
+  sin red externa ni dependencias de desarrollo.
+  [Construcción](../qa/modular-map-state/docker-build.txt),
+  [resultado](../qa/modular-map-state/docker-result.json),
+  [TAP](../qa/modular-map-state/docker-tests.tap).
+- Documentación y `git diff --check` correctos; fuentes/logs verificados contra
+  sus huellas, fixture europea congelada y QA anteriores intactos.
+  [Comprobación final](../qa/modular-map-state/final-checks.json).
+
+Tercer corte aceptado localmente. No habilita un segundo mapa en el producto.
+Supabase/SQL se comprueban mediante simuladores; móvil, por emulación. Sin push,
+merge, cambios en producción ni despliegue. Las fichas cerradas conservan sus
+evidencias históricas; esta ficha registra la evolución posterior.
+
 ## Siguiente corte
 
-Definir y aplicar el esquema de estado con referencias exactas desde la creación
-de sala y la carga durable. Distinguir formatos legados conocidos de estados
-nuevos incompletos; validar mapa/reglamento e IDs de vías, túneles y billetes antes
-de reanudar. Cubrir archivo, restauración/rollback y envoltorio remoto. Conservar
-los frames y hashes de replay antiguos, y decidir explícitamente el contrato de
-los nuevos pasos antes de añadir referencias a vistas. Después migrar bots,
-transporte y composición visual. La fase requiere aún una aceptación conjunta
-de dos mapas jugables en el producto.
+Adaptar los consumidores del motor —primero bots y sus simulaciones— para obtener
+billetes, ciudades, puntuaciones y pagos del contexto de la partida, retirando
+las constantes globales de Europa y supuestos numéricos restantes. Luego definir
+el contrato público de referencias/definiciones para vistas, archivo y frontend
+antes de habilitar selección y composición de otro mapa. La fase requiere aún
+una aceptación conjunta de dos mapas jugables en el producto.

@@ -44,6 +44,8 @@ function loadState(file) {
   file = path.resolve(file);
   function read(candidate) {
     const raw = fs.readFileSync(candidate, "utf8"), data = JSON.parse(raw);
+    if (data && !Array.isArray(data) && Object.hasOwn(data,"version") && data.version !== 2)
+      throw Object.assign(new Error("Versión de almacenamiento local no compatible; se conservan los archivos."),{code:"UNSUPPORTED_STORAGE_VERSION"});
     validateRooms(Array.isArray(data)?data:data.rooms);
     const result = data.version === 2 ? { rooms: data.rooms, archive: readArchive(file, data.archive) } : data;
     checkpoints.set(file, { raw, manifests: data.version === 2 ? data.archive.matches : {} });
@@ -51,12 +53,14 @@ function loadState(file) {
   }
   try { return read(file); }
   catch (error) {
+    // A newer format is not corruption: never downgrade to an older backup.
+    if (error.code === "UNSUPPORTED_STORAGE_VERSION") throw error;
     if (error.code === "ENOENT" && !fs.existsSync(file) && !fs.existsSync(file + ".bak")) {
       checkpoints.set(file, { raw: null, manifests: {} });
       return {rooms:[],archive:{matches:{},claims:{}}};
     }
     try { const saved = read(file + ".bak"); console.error("Recuperando partidas desde la copia de seguridad."); return saved; }
-    catch { throw new Error("No se pudo leer el estado ni su copia. Se conservan los archivos para recuperación."); }
+    catch (backupError) { if(backupError.code==="UNSUPPORTED_STORAGE_VERSION")throw backupError;throw new Error("No se pudo leer el estado ni su copia. Se conservan los archivos para recuperación."); }
   }
 }
 function loadRooms(file) { const data=loadState(file); return Array.isArray(data)?data:data.rooms; }

@@ -79,13 +79,12 @@ usarlo si satisface colores, longitudes y mecánicas. Antes de sortear, la creac
 comprueba que alcance la cantidad de billetes largos/cortos para los participantes.
 
 `newGame(..., {random,mapRef,rulesRef})` y las opciones finales de `newRandomGame`
-admiten esas referencias. Al pedir una explícita, la otra toma su valor inicial
-conocido y ambas se copian al estado. Al leer un estado, deben estar ambas o
-ninguna: referencias incompletas, inválidas o desconocidas producen error, sin
-recurrir a Europa. La ausencia de ambas conserva el puente legado europeo;
-la creación predeterminada todavía no añade campos, preservando los repartos
-congelados. Es una transición interna, no el esquema definitivo de `MatchState`.
-La migración validada de guardados y sus versiones sigue pendiente.
+admiten esas referencias. Toda partida nueva lleva `schemaVersion:1`, `mapRef`
+y `rulesRef`; los valores predeterminados son Europa v1 y `europe-classic@1`.
+Al pedir una referencia explícita, la otra toma su valor inicial conocido.
+Referencias incompletas, inválidas o desconocidas producen error, sin recurrir
+a Europa. Los repartos congelados siguen coincidiendo al retirar únicamente
+esos tres campos añadidos; la fixture histórica no se reescribió.
 
 Construcción y ambas resoluciones de túnel buscan con `routeById`, por igualdad
 estricta: reordenar vías no cambia el objetivo; el número `0` y la cadena `"0"`
@@ -99,6 +98,44 @@ siguen siendo compatibilidad europea para consumidores pendientes de migrar.
 Las vistas públicas aún no incluyen referencias de mapa. Bots, sala, archivo,
 replay y frontend no están habilitados para un segundo mapa: las pruebas de
 contexto ejercitan el motor directamente y no certifican ese recorrido completo.
+
+### Estado versionado y restauración durable
+
+[match-state.js](../game/compat/match-state.js) implementa la primera versión
+del estado persistido sobre las filas legadas: cabecera explícita y validación
+contra el contexto, sin convertir aún la propiedad a una tabla separada.
+Es independiente de `version:2` del manifiesto local, `schema_version:1` del RPC,
+la revisión de checkpoint/sala, `schemaVersion:1` del archivo de replay y
+`uiVersion:9` de las vistas. No requiere cambios SQL ni de protocolo público.
+
+`Engine.restoreState(game)` devuelve una copia validada y con cabecera. Acepta
+estados actuales y dos formas sin versión: Europa sin referencias y el formato
+transitorio con ambas referencias exactas. Solo añade la cabecera después de
+validar contenido; no infiere mapas por ciudades ni convierte IDs. Una versión
+de estado presente pero desconocida, o v1 sin referencias, se rechaza. Los
+estados de Europa conservan números incluso en arrays reordenados.
+
+La validación comprueba red completa sin IDs duplicados, extremos y atributos de
+vía conforme a la definición, dueños/puestos, billetes de mazos/manos/ofertas y
+su unicidad activa, ciudades/estaciones, túneles pendientes y referencias de
+eventos, asignaciones, recorridos y resultados guardados. También exige la forma
+básica necesaria para reanudar. No recalcula puntos anteriores ni certifica todo
+el historial de jugadas o el balance de un mapa.
+
+`server.restoreLoaded` prepara todas las partidas y comprueba que sus puestos
+coincidan con los miembros de sala antes de instalar ninguna. Después ajusta el
+tiempo de ausencia y normaliza los formatos antiguos de reloj/resultado. El
+primer checkpoint habitual confirma la migración junto con el historial. Un
+error interrumpe la carga antes de bootstrap/commit, conservando el estado
+durable. Archivo y remoto comparten esta frontera; rollback usa las copias ya
+versionadas del último checkpoint, sin volver a migrar ni extender relojes.
+
+Los envoltorios locales conocidos siguen siendo array, `{rooms,archive}` y
+manifiesto v2. Una versión de envoltorio desconocida falla explícitamente y no
+recurre a un respaldo anterior. La recuperación de corrupción física/JSON con
+`.bak` conserva su comportamiento. El replay no llama a `restoreState`: solo los
+pasos nuevos incorporan la cabecera dentro del estado de auditoría, manteniendo
+los frames/hashes previos y sus vistas. Contrato en [historial](history-replay.md).
 
 ## Recorrido de una jugada
 
@@ -158,7 +195,7 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Lobby, estado y grabación con proyección común por puesto | [authorized-views.js](../game/queries/authorized-views.js): `createAuthorizedViews`; [composición legada](../game/compat/legacy-authorized-views.js) |
 | Acceso al historial y proyección de replay guardado | [history-queries.js](../game/application/history-queries.js): `createHistoryQueries`; [replay-view.js](../game/queries/replay-view.js): `projectSummary`, `projectReplay` |
 | Vistas copiadas por puesto e historial filtrado | [match-view.js](../game/queries/match-view.js): `projectMatch`, `historyEntryView` |
-| Normalización explícita de partidas antiguas | [engine.js](../backend/engine.js): `normalize`; [legacy-timing.js](../game/compat/legacy-timing.js): `planTiming`; [legacy-scoring.js](../game/compat/legacy-scoring.js): `completeResults` |
+| Restauración y normalización explícita de partidas antiguas | [engine.js](../backend/engine.js): `restoreState`, `normalize`; [match-state.js](../game/compat/match-state.js); [legacy-timing.js](../game/compat/legacy-timing.js): `planTiming`; [legacy-scoring.js](../game/compat/legacy-scoring.js): `completeResults` |
 | Definiciones y validación de mapas | [catálogo](../game/maps/catalog.js), [composición registrada](../backend/maps.js), [Europa v1](../shared/maps/europe-v1.js) |
 | Fachada pública de datos, paleta e IDs numéricos anteriores | [data.js](../shared/data.js), [puente europeo](../shared/maps/europe-legacy-v1.js) |
 | Valores permitidos de relojes y defaults compartidos | [game-timing.js](../shared/game-timing.js): `valid`, `normalize` |
@@ -402,8 +439,9 @@ Leer no añade detalles ni adapta plazos. El servidor normaliza al restaurar sal
 de archivo/remotas y antes de persistir/publicar; el motor lo hace antes de
 comandos/vencimientos, el reloj antes de programarse y el archivo antes de captar
 un paso nuevo. Los snapshots de rollback ya provienen de estados normalizados.
-Los llamadores que cargan partidas antiguas directamente deben ejecutar
-`normalize(game, now)` antes de consultar. No se normalizan frames históricos.
+Los llamadores que cargan partidas guardadas directamente deben usar la copia de
+`restoreState(game)`, ajustar la ausencia cuando corresponda y ejecutar
+`normalize(game, now)` antes de consultar. No se restauran ni normalizan frames históricos.
 `safePublic` sigue siendo el filtro adicional de destinos finales para espectadores.
 
 El registro y los contextos descritos arriba ya resuelven mapas en el motor;

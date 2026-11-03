@@ -12,6 +12,7 @@ for (const backend of ["file", "supabase"]) test(`${backend} load normalizes old
   finished.result[0].route += 7;finished.result[0].score += 7;
   const totals = finished.result.map(r => r.score);for (const result of finished.result) delete result.details;
   const initial = E.newGame(["A", "B"], 0, savedAt, null, { random: () => 0 });
+  for(const game of [finished,initial])for(const key of ["schemaVersion","mapRef","rulesRef"])delete game[key];
   delete initial.initialDeadline;initial.current = 1;initial.turnSeat = 1;initial.turnDeadline = savedAt + 45000;
   const saved = [finished, initial].map((game, i) => ({ code: `1234567${i}`, updated: savedAt, savedAt, revision: 7,
     hostSeat: 0, visibility: "private", game, members: game.players.map((p, seat) => ({ name: p.name, color: p.color, tokenHash: hashToken(seat ? "b".repeat(64) : token) })) }));
@@ -34,6 +35,7 @@ for (const backend of ["file", "supabase"]) test(`${backend} load normalizes old
     assert.ok(clock.game.turnDeadline - clock.emptySince >= 44000);
     const committed = backend === "file" ? loadState(process.env.STATE_FILE).rooms : api.state.rooms;
     assert.ok(committed.find(r => r.code === saved[0].code).game.result.every(r => r.details));
+    for(const room of committed){assert.equal(room.game.schemaVersion,1);assert.deepEqual(room.game.mapRef,{id:"europe",version:"1"});assert.deepEqual(room.game.rulesRef,{id:"europe-classic",version:"1"});}
     const before = structuredClone(g);E.view(g, 0, { now: Date.now() });assert.deepEqual(g, before);
     app.server.listen(0, "127.0.0.1");await once(app.server, "listening");
     peer = await connect(app.server.address().port);peer.send({ type: "join", code: saved[0].code, token });

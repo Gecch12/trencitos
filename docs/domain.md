@@ -30,11 +30,15 @@ La correspondencia entre IDs nuevos y números anteriores está congelada; los
 mensajes y guardados aún conservan estos números. El registro rechaza versiones
 inexistentes y redes inválidas. El motor ya resuelve mapa y reglamento por partida
 y construye vías por igualdad de ID, sin usar su posición en un array. Sus
-opciones explícitas conservan ambas referencias después de serializar; las
-partidas legadas sin referencias siguen siendo Europa. El único reglamento
+partidas nuevas conservan versión de estado y ambas referencias después de
+serializar; las partidas legadas sin referencias se validan como Europa antes de
+añadir su cabecera. Un estado versionado sin referencias o con versión desconocida
+falla, sin elegir un mapa alternativo. El único reglamento
 incorporado es `europe-classic@1`, con los valores existentes; al iniciar se
 comprueba además que el mapa pueda repartir todos los billetes iniciales.
-La migración de guardados y la selección por sala siguen pendientes en
+La restauración valida las identidades guardadas de red, billetes, túneles,
+estaciones y resultados sin recalcular puntos anteriores. La selección por sala
+y adaptación del resto de consumidores siguen pendientes en
 [fase 4](work/modular-platform-maps.md); detalles del puente en
 [arquitectura](architecture.md).
 

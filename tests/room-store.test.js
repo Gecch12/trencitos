@@ -25,6 +25,15 @@ test("corrupt saves without a valid backup fail closed instead of overwriting ga
   assert.throws(() => loadRooms(f.file), /conservan los archivos/);
   assert.equal(fs.readFileSync(f.file, "utf8"), "broken");
 });
+test("unknown local envelope versions never downgrade to a legacy backup", t => {
+  const f=fixture(t);saveRooms(f.file,f.rooms);
+  const legacy=fs.readFileSync(f.file,"utf8");fs.writeFileSync(f.file+".bak",legacy);
+  for(const version of [3,"2",null]){
+    const unknown=JSON.stringify({version,rooms:[serializableRoom(f.room)]});fs.writeFileSync(f.file,unknown);
+    assert.throws(()=>loadState(f.file),{code:"UNSUPPORTED_STORAGE_VERSION"});
+    assert.equal(fs.readFileSync(f.file,"utf8"),unknown);assert.equal(fs.readFileSync(f.file+".bak","utf8"),legacy);
+  }
+});
 test("write failures propagate to the authoritative server", t => {
   const f = fixture(t); assert.throws(() => saveRooms(path.join(f.dir, "missing", "state"), f.rooms));
 });

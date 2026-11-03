@@ -21,6 +21,7 @@ const {COLORS,CITIES,ROUTES,TICKETS}=require('../shared/data');
 const {maps:registeredMaps}=require('./maps');
 const {createMatchContexts,validateSetupTickets}=require('./match-context');
 const defaultRules=require('./rules/europe-classic-v1');
+const {MATCH_SCHEMA_VERSION,restoreMatchState}=require('../game/compat/match-state');
 // Legacy exports remain Europe-only until bots and presentation migrate.
 const SCORE=defaultRules.routePoints;
 const TURN_MS=defaultRules.turn.turnMs,INITIAL_MS=defaultRules.turn.initialMs,OFFER_MS=defaultRules.offerMs;
@@ -32,6 +33,7 @@ const cityName=(g,id)=>contextFor(g).cityName(id);
 const routeById=(g,id)=>g.routes.find(route=>route.id===id);
 const requireRoute=(g,id)=>{const route=routeById(g,id);if(!route)throw legacyError({code:'ROUTE_UNAVAILABLE'});return route;};
 const stationContext=g=>({map:contextFor(g).map,rules:rulesFor(g).stations});
+const restoreState=g=>restoreMatchState(g,contextFor(g));
 // Per-action randomness stays outside serialized state. Simulations can supply
 // an isolated stream for all draws/recycles without patching global crypto.
 const actionRandom=new WeakMap(), observers=new WeakMap(), expiring=new WeakSet();
@@ -80,7 +82,7 @@ function newGame(names,first=0,now=Date.now(),timing=null,options={}){
  if(Array.isArray(names)&&names.length>=context.rules.setup.minPlayers&&names.length<=context.rules.setup.maxPlayers)validateSetupTickets(context,names.length);
  const decision=Setup.prepareGame({names,first},{map:{tickets:context.tickets.map(t=>({...t}))},rules:context.rules.setup,random});
  if(!decision.ok)throw legacyError(decision.error);
- const g={...references,phase:'initial',current:first,first,initialDone:0,...decision.plan,routes:context.routes.map(r=>({...r,owner:null})),
+ const g={schemaVersion:MATCH_SCHEMA_VERSION,...references,phase:'initial',current:first,first,initialDone:0,...decision.plan,routes:context.routes.map(r=>({...r,owner:null})),
  discard:[],face:[],finalRemaining:null,lastTrigger:null,drawCount:0,pending:null,logs:[],result:null};
  if(timing)g.timing=GameTiming.normalize(timing);
  actionRandom.set(g,random);
@@ -292,6 +294,6 @@ function destinationDetails(g,seat,assignment){const {map,owners}=LegacyScoring.
 function view(g,seat,{now=Date.now()}={}){
  return MatchView.projectMatch(g,seat,{now,tunnelCardMs:rulesFor(g).tunnel.cardMs,destinationDetails});
 }
-return {contextFor,routeById,observe,newGame,newRandomGame,note,historyEntryView,action,view,connected,connectionPath,longest,stationAssignments,finish,pay,block,draw,refill,recycleDiscards,next,ensureTiming,normalize,expire,deadlines,tunnelBusy,TURN_MS,INITIAL_MS,OFFER_MS,TUNNEL_CARD_MS,TUNNEL_RESULT_MS,SCORE,ROUTES,TICKETS,CITIES,COLORS,possibleClaim,possibleStation};
+return {contextFor,restoreState,routeById,observe,newGame,newRandomGame,note,historyEntryView,action,view,connected,connectionPath,longest,stationAssignments,finish,pay,block,draw,refill,recycleDiscards,next,ensureTiming,normalize,expire,deadlines,tunnelBusy,TURN_MS,INITIAL_MS,OFFER_MS,TUNNEL_CARD_MS,TUNNEL_RESULT_MS,SCORE,ROUTES,TICKETS,CITIES,COLORS,possibleClaim,possibleStation};
 }
 module.exports={...createEngine(),createEngine};

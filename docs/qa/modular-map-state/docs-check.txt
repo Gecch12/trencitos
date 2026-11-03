@@ -1,0 +1,13 @@
+REVISAR docs/architecture.md: backend/engine.js, backend/match-context.js, backend/room-store.js, backend/server.js, game/compat/match-state.js (documento también modificado)
+REVISAR docs/domain.md: backend/engine.js, backend/match-context.js, backend/room-store.js, backend/server.js, game/compat/match-state.js (documento también modificado)
+REVISAR docs/operations.md: tests/deployment.test.js, game/compat/match-state.js (documento también modificado)
+REVISAR docs/work/practice-ai.md: backend/engine.js
+REVISAR docs/history-replay.md: backend/match-context.js, backend/room-store.js, tests/legacy-load-server.test.js, tests/room-store.test.js, game/compat/match-state.js, tests/match-state-server.test.js, tests/match-state.test.js (documento también modificado)
+REVISAR docs/work/modular-game-platform.md: backend/engine.js, backend/room-store.js, backend/server.js (documento también modificado)
+REVISAR docs/work/modular-platform-contracts.md: backend/engine.js, backend/room-store.js, backend/server.js
+REVISAR docs/decisions/match-domain-contracts.md: backend/engine.js, backend/match-context.js, backend/room-store.js, backend/server.js, game/compat/match-state.js (documento también modificado)
+REVISAR docs/work/modular-platform-domain.md: backend/engine.js, backend/server.js, tests/deployment.test.js, tests/legacy-load-server.test.js, game/compat/match-state.js
+REVISAR docs/work/modular-platform-application.md: backend/engine.js, backend/match-context.js, backend/room-store.js, backend/server.js, tests/deployment.test.js, tests/room-store.test.js
+REVISAR docs/work/modular-platform-maps.md: backend/engine.js, backend/match-context.js, backend/room-store.js, tests/engine-map-context.test.js, tests/europe-map-compat.test.js, tests/legacy-load-server.test.js, tests/room-store.test.js, game/compat/match-state.js, tests/match-state-server.test.js, tests/match-state.test.js (documento también modificado)
+REVISAR solicita contraste semántico; no demuestra drift ni exige editar texto correcto.
+OK: 49 documentos, 23 fichas. No se validan URLs externas ni anclas.

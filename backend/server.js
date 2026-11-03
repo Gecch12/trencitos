@@ -39,7 +39,14 @@ const TTL = 24 * 60 * 60 * 1000,
   rooms = new Map(),
   peers = new Set();
 function restoreLoaded(data) {
-  for (const r of data) {
+  // Prepare every persisted match before installing rooms or touching history.
+  // A bad reference must not leave a partially restored checkpoint to be saved.
+  const restored = data.map(r => {
+    const game=r.game!=null?Engine.restoreState(r.game):r.game;
+    if(game&&game.players.length!==r.members.length)throw Object.assign(Error("Invalid saved match: room seats"),{code:"INVALID_MATCH_STATE"});
+    return {...r,members:r.members.map(m=>({...m})),game};
+  }), live=[];
+  for (const r of restored) {
     if (!r.practice && Date.now() - r.updated < TTL) {
       if (r.emptySince != null && Date.now() - r.emptySince >= GRACE_MS) continue;
       shiftDeadlines(r.game, Math.max(0, Date.now() - (r.savedAt || Date.now())));
@@ -47,9 +54,10 @@ function restoreLoaded(data) {
       r.emptySince = Date.now();
       const colors = LobbyUI.restoreColors(r.members, r.game?.players);
       r.members.forEach((m, i) => { m.color = colors[i]; m.ws = null; m.disconnectedAt = Date.now(); });
-      rooms.set(r.code, r);
+      live.push(r);
     }
   }
+  for(const r of live)rooms.set(r.code,r);
 }
 const initialState=remoteStore?null:loadState(STORE);
 const projections = createLegacyAuthorizedViews();
