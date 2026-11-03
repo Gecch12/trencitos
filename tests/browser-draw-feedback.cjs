@@ -81,7 +81,7 @@ async function done(f,count){
 async function close(f){await f.context.close();f.rival.close();await app.drain();}
 (async()=>{
  await app.ready;await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
- browser=await chromium.launch({channel:'chrome',headless:true});
+ browser=await chromium.launch({channel:'chrome',headless:true,args:process.env.CI?['--enable-unsafe-swiftshader']:[]});
  {
   const f=await open('QADR01');await clicks(f,-1,-1);
   assert.ok((await f.page.locator('.draw-flight img').evaluateAll(images=>images.map(i=>i.src))).every(src=>src.endsWith('/back.svg')));

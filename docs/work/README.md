@@ -5,6 +5,8 @@ genera la lista de estados y relaciones; este índice no mantiene otra copia.
 
 Iniciativa acordada:
 
+- [Pruebas y despliegue automático](continuous-delivery.md): CI en GitHub y
+  publicación de main en Render cuando pasen las comprobaciones.
 - [Consolidación de carpeta y main](workspace-consolidation.md): ubicación de
   trabajo, preservación de cambios y retiro de worktrees históricos.
 - [Plataforma modular y mapas](modular-game-platform.md): fases de reorganización,

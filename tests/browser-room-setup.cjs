@@ -16,7 +16,7 @@ async function visibleLayout(page,label){
   fs.mkdirSync(out,{recursive:true});await app.ready;
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   const base=`http://127.0.0.1:${app.server.address().port}`;
-  browser=await chromium.launch({channel:'chrome',headless:true});report.browser=browser.version();
+  browser=await chromium.launch({channel:'chrome',headless:true,args:process.env.CI?['--enable-unsafe-swiftshader']:[]});report.browser=browser.version();
   const hostContext=await browser.newContext({viewport:{width:1920,height:980}}),guestContext=await browser.newContext({viewport:{width:1440,height:900}});
   page=await hostContext.newPage();const guest=await guestContext.newPage();
   for(const p of [page,guest]){p.on('pageerror',e=>report.errors.push(e.message));p.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});p.setDefaultTimeout(15000);}

@@ -510,5 +510,12 @@
     "scripts/preview-passenger-extreme.cjs",
     "tests/passenger-extreme.test.js",
     "tests/browser-passenger-extreme.cjs"
+  ],
+  "work/continuous-delivery.md": [
+    ".github/workflows/ci.yml",
+    "render.yaml",
+    "package.json",
+    "tests/browser-room-setup.cjs",
+    "tests/browser-draw-feedback.cjs"
   ]
 }

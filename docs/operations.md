@@ -17,6 +17,7 @@ del sandbox no demuestra un fallo del juego.
 
 ```sh
 npm test
+npm run test:ci
 node scripts/check-docs.js
 node scripts/check-docs.js --index
 node scripts/check-docs.js --base HEAD
@@ -26,6 +27,12 @@ node scripts/benchmark-bots.js --seed 3001 --seeds 25 --players 4 --opponent sta
 `check-docs.js --base HEAD` revisa cambios desde una referencia y cambios locales. Sus
 avisos de fuentes afectadas solicitan revisión semántica; no exigen editar un
 documento que sigue siendo correcto.
+
+[GitHub Actions](../.github/workflows/ci.yml) ejecuta la suite completa en serie,
+valida documentación y prueba el lobby y los robos de cartas en Chrome sobre
+Ubuntu/Node 26. Usa estado temporal y un doble local para guardado remoto, sin
+credenciales de producción. La evidencia del navegador se conserva siete días.
+Avance de activación y entrega en [CI y Render](work/continuous-delivery.md).
 
 El benchmark enfrenta un bot nuevo con tres rivales (para cuatro jugadores),
 rotándolo por todos los asientos para cada semilla. `--opponent stage1` usa la
