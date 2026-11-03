@@ -12,7 +12,7 @@ function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000 })
   if (!secret || !secret.startsWith("sb_secret_"))
     throw new Error("Configura SUPABASE_SECRET_KEY con una clave secreta sb_secret_, solo en el servidor.");
   const writer = randomUUID();
-  let version = null, fenced = false;
+  let version = null, fenced = false, roomDeltaSupported = false;
   function failure(code) {
     const error = new Error(code === "STORE_CONFLICT" ? "Otra instancia tomó el control del almacenamiento. Reconecta al nuevo servidor."
       : "No se pudo confirmar el guardado remoto. Reinicia el servidor para recuperar el último estado confirmado.");
@@ -42,12 +42,14 @@ function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000 })
       }
     }
   }
-  async function saveCheckpoint({ rooms: data, archive }) {
+  async function saveCheckpoint({ rooms: data, archive, roomDelta }) {
     if (fenced || version === null) throw failure("STORE_CONFLICT");
     const commit = randomUUID();
     try {
-      const result = await rpc(archive ? "ferrovia_save_checkpoint_v2" : "ferrovia_save_checkpoint", {
-        p_writer: writer, p_version: version, p_commit: commit, p_rooms: data, ...(archive ? {p_archive:archive} : {}),
+      const incremental = roomDeltaSupported && roomDelta;
+      const result = await rpc(incremental ? "ferrovia_save_checkpoint_delta" : archive ? "ferrovia_save_checkpoint_v2" : "ferrovia_save_checkpoint", {
+        p_writer: writer, p_version: version, p_commit: commit,
+        ...(incremental ? {p_changed:roomDelta.changed,p_removed:roomDelta.removed,p_saved_at:roomDelta.savedAt,p_archive:archive||[]} : {p_rooms:data,...(archive?{p_archive:archive}:{})}),
       });
       if (result?.commit !== commit || result.version !== version + 1) throw failure("STORE_UNCERTAIN");
       version = result.version;
@@ -85,6 +87,7 @@ function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000 })
         throw new Error("Versión de almacenamiento remoto no compatible; no se sobrescribió nada.");
       validateRooms(checkpoint.rooms);
       version = checkpoint.version;
+      roomDeltaSupported = checkpoint.capabilities?.roomDelta === 1;
       return checkpoint.rooms;
     },
     saveCheckpoint,

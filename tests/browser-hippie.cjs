@@ -1,7 +1,7 @@
 // Real server, lobby, persisted ownership, construction and replay. No production state.
 const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {chromium}=require('playwright'),E=require('../backend/engine'),{saveRooms,loadRooms}=require('../backend/room-store');
-const temp=fs.mkdtempSync(path.join(os.tmpdir(),'trencitos-hippie-')),out=path.resolve('.qa/midsommar-scenes');
+const temp=fs.mkdtempSync(path.join(os.tmpdir(),'trencitos-hippie-')),out=path.resolve(process.env.QA_OUT||'.qa/midsommar-scenes');
 Object.assign(process.env,{STATE_BACKEND:'file',STATE_FILE:path.join(temp,'rooms.json'),AUTH_ENABLED:'false'});
 const game=E.newGame(['Midsommar','Rojo','Azul','Jade','Índigo'],0);
 game.players.forEach((_,i)=>E.action(game,i,{type:'choose_initial',indexes:[0,1]}));
@@ -136,7 +136,7 @@ fs.mkdirSync(out,{recursive:true});
   const match=await page.evaluate(()=>fetch('/api/history').then(r=>r.json()).then(h=>h.matches.find(m=>m.id)));
   const recording=await page.evaluate(id=>fetch('/api/history/'+id).then(r=>r.json()),match.id);
   assert.ok(!/"(?:variant|hairstyle|beard|cast)":/.test(JSON.stringify(recording)),'no decorative choices in history');
-  await page.goto(base+'/replay?id='+match.id);await page.waitForFunction(()=>game&&board3D);await page.locator('#replayLast').click();
+  await page.goto(base+'/replay?id='+match.id);await page.waitForFunction(()=>game&&board3D);if(await page.locator('#replayDock').getAttribute('open')===null)await page.locator('#replayDock > summary').click();await page.locator('#replayLast').click();
   assert.deepEqual((await page.evaluate(()=>board3D.stats())).hippies,before.hippies);await page.close();
   report.checks.push('225-piece mixed board, 45 Midsommar wagons; highlight/fades, reconnect, spectator, replay and mobile preserve appearance without storing decorations');
 

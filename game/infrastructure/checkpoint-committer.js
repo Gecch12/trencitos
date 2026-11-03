@@ -20,12 +20,22 @@ function createFileCheckpointCommitter({ file, archive }) {
 }
 
 function createRemoteCheckpointCommitter({ store, archive }) {
+  let committed=new Map(),initialized=false;
   return {
-    prepare(repository) {
-      return { rooms: roomRecords(repository), archive: structuredClone(archive.pending) };
+    prepare(repository, dirtyCodes=null) {
+      const rooms=[],changed=[];
+      for(const room of repository.values()) {
+        if(room.practice)continue;
+        const prior=committed.get(room.code);
+        const record=!prior||!dirtyCodes||dirtyCodes.has(room.code)?structuredClone(serializableRoom(room)):{...prior,savedAt:room.savedAt};
+        rooms.push(record);if(!prior||!dirtyCodes||dirtyCodes.has(room.code))changed.push(record);
+      }
+      const live=new Set(rooms.map(r=>r.code));
+      return {rooms,archive:structuredClone(archive.pending),...(initialized?{roomDelta:{changed,removed:[...committed.keys()].filter(code=>!live.has(code)),savedAt:Math.max(0,...rooms.map(r=>r.savedAt||0))}}:{})};
     },
     async commit(batch) {
       await store.saveCheckpoint(batch);
+      committed=new Map(batch.rooms.map(room=>[room.code,room]));initialized=true;
       archive.commit();
     },
   };

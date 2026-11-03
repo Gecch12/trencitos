@@ -1,0 +1,10 @@
+{
+  "command": "npm test",
+  "tests": 624,
+  "pass": 624,
+  "fail": 0,
+  "node": "v25.6.1",
+  "base_commit": "87cc369245a7eaff43c33f9fdee9ec31e9b8411c",
+  "note": "Suite finished before final replay actor tooltip/public-POV polish and browser driver timing adjustments; those exercised in final graphical checks.",
+  "log_sha256": "e1c00bf562155122c9d1feee8eba9143fb1b9f70db8960c526c22875a64f523f"
+}

@@ -5,14 +5,18 @@
 // only marks the serialized job dirty; its outer queue calls commit before delivery.
 function createCheckpointHandler({ repository, committer, now, deferCommit,
   onLocalCommit, onLocalFailure }) {
+  let dirtyCodes = new Set(), allDirty = false;
   function stampRooms() {
     for (const room of repository.values()) if (!room.practice) room.savedAt = now();
   }
   function commit() {
-    const batch = committer.prepare(repository);
-    return committer.commit(batch);
+    const batch = committer.prepare(repository, allDirty ? null : dirtyCodes);
+    const result=committer.commit(batch);
+    dirtyCodes=new Set();allDirty=false;
+    return result;
   }
-  function persist() {
+  function persist(room) {
+    if(room)dirtyCodes.add(room.code);else allDirty=true;
     if (deferCommit) {
       stampRooms();
       deferCommit();

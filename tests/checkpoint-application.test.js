@@ -168,3 +168,27 @@ test("the legacy save entry still rejects asynchronously and checks writer autho
   assert.doesNotThrow(() => { result = store.save(unreadable); });
   await assert.rejects(result, /room read failed/);
 });
+
+test('incremental preparation clones only changed games and clears removed rooms after a successful commit',async t=>{
+ const f=fixture(t),other={...structuredClone(f.room),code:'OTHER1'};f.repository.set(other.code,other);
+ const batches=[],committer=createRemoteCheckpointCommitter({store:{saveCheckpoint:async batch=>batches.push(batch)},archive:f.archive});
+ const first=committer.prepare(f.repository);assert.equal(first.roomDelta,undefined);await committer.commit(first);
+ // An unchanged room's game must never be traversed during the next preparation.
+ const old=other.game;Object.defineProperty(other,'game',{get(){throw Error('unchanged game traversed');},configurable:true});
+ f.room.revision++;f.room.savedAt=other.savedAt=5000;
+ const next=committer.prepare(f.repository,new Set([f.room.code]));assert.deepEqual(next.roomDelta.changed.map(r=>r.code),[f.room.code]);assert.equal(next.roomDelta.savedAt,5000);assert.equal(next.rooms.find(r=>r.code===other.code).savedAt,5000);await committer.commit(next);
+ Object.defineProperty(other,'game',{value:old,writable:true,configurable:true});f.repository.delete(other.code);
+ const last=committer.prepare(f.repository,new Set());assert.deepEqual(last.roomDelta.removed,[other.code]);assert.deepEqual(last.roomDelta.changed,[]);await committer.commit(last);
+ assert.deepEqual(committer.prepare(f.repository,new Set()).roomDelta.removed,[]);
+});
+
+test('staging an already recorded outcome reuses authorized views but identity changes still update ownership',t=>{
+ const f=fixture(t),base=require('../game/compat/legacy-authorized-views').createLegacyAuthorizedViews();let projections=0;
+ const archive=createMatchArchive({projections:{...base,recording:room=>{projections++;return base.recording(room);}}});
+ // A fresh recording object has no runtime memo from the fixture archive.
+ for(const key of ['matchId','archiveHash','archiveSeq','archiveStartedAt','_archiveState','_archiveIdentity'])delete f.room[key];
+ archive.capture(f.room);archive.commit(archive.prepare());assert.equal(projections,1);
+ archive.capture(f.room);assert.equal(projections,1);assert.equal(archive.pending.length,0);
+ f.room.members[0].guestId='a'.repeat(64);archive.capture(f.room);assert.equal(projections,2);assert.equal(archive.pending[0].match.players[0].guestId,'a'.repeat(64));
+ assert.ok(!JSON.stringify(archive.pending[0].frames).includes('a'.repeat(64)));
+});

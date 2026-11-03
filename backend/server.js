@@ -100,7 +100,7 @@ const checkpoint = createCheckpointHandler({ repository: rooms,
 });
 const persist = checkpoint.persist;
 const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, restore: restoreRuntime,
-  commit: checkpoint.commit, measure: metrics.record,
+  commit: checkpoint.commit, measure: metrics.record, batchSize:16,
   onFailure: error => {
     console.error("Remote storage paused:", error.code || "INTERNAL");
     storageFailureAt ??= Date.now();
@@ -135,7 +135,7 @@ const clocks = createGameClock({ rooms, sendRoom, automaticPlay, runBot, dispatc
 const multiplayer = createMultiplayerController({ rooms, sendRoom, automaticPlay, runBot, removeRoom, dispatch, blocked: () => storageFailureAt !== null });
 const roomBots = createRoomBots({ rooms, sendRoom, automaticPlay, runBot, dispatch, blocked: () => storageFailureAt !== null });
 function snapshot(r) {
-  return { archiveHash:r.archiveHash,matchId:r.matchId,archiveSeq:r.archiveSeq,archiveFull:r.archiveFull,archiveStartedAt:r.archiveStartedAt,archiveClosedAt:r.archiveClosedAt,_archiveState:r._archiveState, game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
+  return { archiveHash:r.archiveHash,matchId:r.matchId,archiveSeq:r.archiveSeq,archiveFull:r.archiveFull,archiveStartedAt:r.archiveStartedAt,archiveClosedAt:r.archiveClosedAt,_archiveState:r._archiveState,_archiveIdentity:r._archiveIdentity, game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
     hostSeat: r.hostSeat, visibility: r.visibility, maxPlayers: r.maxPlayers, mapRef: r.mapRef ? {...r.mapRef} : undefined, timing: r.timing ? {...r.timing} : undefined,
     members: r.members.map(m => ({ member: m, data: { token: m.token || m.ws?.token, tokenHash: m.tokenHash,
       name: m.name, bot: m.bot, color: m.color, accountId: m.accountId, guestId:m.guestId, actionIds: [...(m.actionIds || [])], actionReceipts: structuredClone(m.actionReceipts || []), autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
@@ -147,7 +147,7 @@ function restoreLocalCheckpoint(e) {
     const saved = committed.get(r);
     if (saved) {
       r.game = structuredClone(saved.game); r.revision = saved.revision;
-      for(const key of ["archiveHash","matchId","archiveSeq","archiveFull","archiveStartedAt","archiveClosedAt","_archiveState"])r[key]=saved[key];
+      for(const key of ["archiveHash","matchId","archiveSeq","archiveFull","archiveStartedAt","archiveClosedAt","_archiveState","_archiveIdentity"])r[key]=saved[key];
       watchRecording(r);
       r.hostSeat = saved.hostSeat; r.visibility = saved.visibility; r.maxPlayers = saved.maxPlayers; r.mapRef = saved.mapRef; r.timing = saved.timing;
       for (const member of r.members) if (!saved.members.some(entry => entry.member === member) && member.ws) {

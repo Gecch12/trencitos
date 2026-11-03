@@ -394,7 +394,7 @@ los committers y los adaptadores de recuperación conservan confirmación e hist
 
 `createRoomStager` comprueba que la sala siga en el repositorio, actualiza
 actividad si corresponde, reconcilia el ciclo de vida, normaliza el motor y
-captura historial. Luego solicita `checkpoint.persist()`, encola vistas, programa
+captura historial. Luego solicita `checkpoint.persist(room)`, encola vistas, programa
 temporizadores y encola directorio. Si la reconciliación elimina la sala, termina
 sin otro checkpoint ni vistas. Si el almacenamiento ya está pausado, omite la
 captura/guardado y conserva las vistas de recuperación.
@@ -840,3 +840,26 @@ plazos juntos. Foco temporal y spotlight de destinos se combinan y restauran.
 velocidad e historial de la grabación. `history-ui.js` conserva listado/perfil.
 La consulta opcional de análisis deriva longitudes del dominio y lee completitud
 histórica de los destinos; no vuelve a ejecutar la partida.
+
+
+## Checkpoints incrementales y agrupación de comandos
+
+La cola sigue ordenando mutaciones de un único escritor. Acumula hasta 16 trabajos
+que ya estaban esperando y confirma sus efectos e historial en una sola transacción;
+no añade un temporizador para formar lotes ni adelanta ACKs. Un error revierte el
+lote completo. Esto reduce viajes consecutivos a la base entre salas; no convierte
+el servidor en múltiples escritores ni promete escala horizontal.
+
+`createCheckpointHandler` identifica salas modificadas. El committer remoto conserva
+DTOs ya confirmados y clona únicamente los juegos cambiados; bajas se transmiten
+explícitamente. La primera escritura del proceso siempre es un checkpoint completo
+para retirar salas caducadas durante la carga. SQL 005 anuncia `roomDelta:1` al
+reclamar el checkpoint; sin esa capacidad se conserva la RPC completa anterior.
+La RPC incremental combina salas modificadas, bajas y un `savedAt` común con el
+checkpoint actual, y utiliza la misma confirmación atómica con archivo, versión,
+lease del escritor e ID idempotente. No expone tablas ni RPC a roles de navegador.
+
+El observador del motor captura el resultado una vez. Si el staging posterior ve
+exactamente el mismo juego e identidad/conectividad, reutiliza esa captura y evita
+recalcular vistas privadas y diff. Su memo es runtime y participa en rollback;
+no se incorpora a frames ni se publica.

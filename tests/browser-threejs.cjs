@@ -9,10 +9,11 @@ const { start } = require('./helpers/threejs-preview');
 const { connect } = require('./helpers/ws-client');
 const { chooseBotAction } = require('../backend/bots');
 const { tunnelBusy } = require('../backend/engine');
-const root = path.resolve(__dirname, '..'), out = path.join(root, 'docs/qa');
+const root = path.resolve(__dirname, '..'), out = path.resolve(process.env.QA_OUT || path.join(root, 'docs/qa'));
 const report = { date: new Date().toISOString(), platform: `${os.platform()} ${os.release()} ${os.arch()}`, cpu: os.cpus()[0].model, tests: [], errors: [] };
 const save = () => fs.writeFileSync(path.join(out, 'threejs-report.json'), JSON.stringify(report, null, 2) + '\n');
 (async () => {
+  fs.mkdirSync(out, {recursive:true});
   const { server, rooms, token, port } = await start(Number(process.env.QA_PORT || 3119));
   const base = `http://127.0.0.1:${port}`;
   const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'chrome', headless: true });
@@ -148,6 +149,7 @@ const save = () => fs.writeFileSync(path.join(out, 'threejs-report.json'), JSON.
     const r = rooms.get(matchCode); const counts = {}; let actions=0, reconnect=false;
     while(r.game.phase !== 'finished' && actions < 1000) {
       const g=r.game;
+      if(g.construction?.until>Date.now()){await page.waitForTimeout(g.construction.until-Date.now()+20);continue;}
       // Reveal/result are server-timed stages. Wait for the authorized view;
       // bots correctly produce no action until a decision or next turn exists.
       if (tunnelBusy(g)) {
@@ -163,7 +165,7 @@ const save = () => fs.writeFileSync(path.join(out, 'threejs-report.json'), JSON.
       if(seat===0) {
         // act() ignores draws while the market renewal animation owns the
         // cards. Wait for the same readiness as a human before expecting ACK.
-        await page.waitForFunction(type=>!pendingAction && (type!=='draw_train'||!marketRefresh), action.type);
+        await page.waitForFunction(type=>!pendingAction && !constructionBusy() && (type!=='draw_train'||!marketRefresh), action.type);
         await page.evaluate(a=>act(a.type,a),action);
       }
       else {

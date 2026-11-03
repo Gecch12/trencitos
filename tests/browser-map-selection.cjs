@@ -29,6 +29,7 @@ async function boot(){delete require.cache[require.resolve('../backend/server')]
   while(sessions.some(s=>app.rooms.get(s.code).game.phase!=='finished')&&total<1600){
     for(const s of sessions){
       const room=app.rooms.get(s.code),g=room.game;if(g.phase==='finished')continue;
+      if(g.construction?.until>Date.now()){await s.page.waitForTimeout(g.construction.until-Date.now()+20);continue;}
       if(E.tunnelBusy(g)){
         await s.page.waitForFunction(()=>game?.phase!=='tunnel'||game.sharedTunnel?.stage==='decision');continue;
       }
@@ -37,7 +38,7 @@ async function boot(){delete require.cache[require.resolve('../backend/server')]
       assert.ok(action,`No legal bot decision for ${s.id} ${g.phase}`);
       const nextRevision=(room.revision||0)+1;
       if(seat===0){
-        await s.page.waitForFunction(type=>!pendingAction&&(type!=='draw_train'||!marketRefresh),action.type);
+        await s.page.waitForFunction(type=>!pendingAction&&!constructionBusy()&&(type!=='draw_train'||!marketRefresh),action.type);
         await s.page.evaluate(a=>act(a.type,a),action);
       }else{
         const id=`map-action-${s.actions}`;s.peer.send({type:'action',id,revision:room.revision,action});

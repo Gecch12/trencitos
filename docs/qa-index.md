@@ -11,6 +11,7 @@ El resultado de una ejecución nueva se registra en su ficha de trabajo.
 | Dominio, consultas y aceptación de Europa | [Fase 2, pruebas y límites](work/modular-platform-domain.md) |
 | Catálogo versionado y compatibilidad de mapas | [Fase 4, pruebas y límites](work/modular-platform-maps.md) |
 | Casos de uso y confirmación de jugadas | [Fase 3, pruebas y límites](work/modular-platform-application.md) |
+| Sudamérica, replay de análisis y rendimiento | [Entrega conjunta y pruebas](work/south-america-release.md) |
 | Beta inicial | [QC histórico](../QC.md) |
 | Navegación, perfil y salas públicas | [Ficha, comparación responsive y capturas](work/navigation-rooms.md) |
 | Historial, replay, invitados e idiomas | [Ficha y pruebas remotas](work/history-replay.md) |

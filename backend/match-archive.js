@@ -17,6 +17,10 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null,engine=Eng
     room.matchId ||= randomUUID();
     const g=room.game, previous=room._archiveState;
     engine.normalize(g);
+    const identity=JSON.stringify(room.members.map(m=>[m.name,m.color,!!m.bot,m.accountId||null,m.guestId||null,!!m.autopilot,!!m.bot||!!(m.ws&&!m.ws.closed)]));
+    // The action observer already recorded this exact state. Staging commonly
+    // calls capture again; skip its expensive authorized views and replay diff.
+    if(previous&&!endReason&&!room.archiveAction&&room._archiveIdentity===identity&&JSON.stringify(g)===JSON.stringify(previous.game))return;
     const {members,views,definition}=projections.recording(room);
     const next=structuredClone({game:g,views,members,definition});
     const changes=previous?Replay.diff(previous,next):[];
@@ -50,6 +54,7 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null,engine=Eng
       mode:room.practice?'Práctica':'Clásico',visibility:room.visibility||'private',startedAt:room.archiveStartedAt,updatedAt:now,closedAt:status==='active'?null:room.archiveClosedAt||now,status,endReason:status==='abandoned'?endReason||'Práctica terminada anticipadamente.':null,complete:!!room.archiveFull,steps:seq+1,digest:room.archiveHash,players,
       scores:g.players.map((p,seat)=>({seat,route:p.score,...(status==='completed'?structuredClone(g.result.find(r=>r.seat===seat)):{score:p.score,partial:true})}))};
     if(status!=='active') room.archiveClosedAt ||= now;
+    room._archiveIdentity=identity;
     pending.set(room.matchId,old);
   }
   function applyPending(target) {

@@ -1,0 +1,149 @@
+{
+  "date": "2026-11-03T06:43:29.351Z",
+  "scope": "Local server, four rooms, simulated database RTT 120ms; no production access",
+  "runtime": "v25.6.1",
+  "summary": {
+    "single": {
+      "count": 6,
+      "p50": 129.00799999999998,
+      "p95": 136.757208,
+      "max": 142.338417
+    },
+    "concurrent": {
+      "count": 24,
+      "p50": 285.26129200000014,
+      "p95": 531.306208,
+      "max": 550.9633749999998
+    }
+  },
+  "requests": {
+    "count": 30,
+    "totalBytes": 2084555,
+    "roomBytes": 1777812,
+    "methods": [
+      "ferrovia_save_checkpoint_v2"
+    ]
+  },
+  "samples": [
+    {
+      "mode": "single",
+      "milliseconds": 128.06895899999998
+    },
+    {
+      "mode": "single",
+      "milliseconds": 129.00799999999998
+    },
+    {
+      "mode": "single",
+      "milliseconds": 142.338417
+    },
+    {
+      "mode": "single",
+      "milliseconds": 136.757208
+    },
+    {
+      "mode": "single",
+      "milliseconds": 132.999417
+    },
+    {
+      "mode": "single",
+      "milliseconds": 128.92616699999996
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 131.16341699999998
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 259.32012499999996
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 391.925792
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 519.8703330000001
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 140.8486660000001
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 275.010542
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 405.94333300000017
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 531.306208
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 135.11879199999998
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 262.9172500000002
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 392.10037499999976
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 522.633
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 146.48108299999967
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 284.1815410000004
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 412.0567500000002
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 540.6835409999999
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 148.76108399999976
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 285.26129200000014
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 423.49487499999987
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 550.9633749999998
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 140.2041250000002
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 272.693084
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 401.19679099999985
+    },
+    {
+      "mode": "concurrent",
+      "milliseconds": 525.3847500000002
+    }
+  ]
+}

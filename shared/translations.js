@@ -509,6 +509,8 @@ const Translations = {
   "Clásico": "Classic",
   "Europa": "Europe",
   "Laboratorio": "Laboratory",
+  "Construcción fuera de vista": "Construction outside your view",
+  "Acción de este paso": "Action at this step",
   "Preparando repetición…": "Preparing replay…",
   "Participante": "Participant",
   "Público": "Public",

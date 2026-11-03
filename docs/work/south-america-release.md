@@ -17,9 +17,9 @@ contratan planes de pago. Se preserva el trabajo de vagones del checkout origina
   billetes, selección por sala, geometría y reglas verificadas; balance beta.
 - [x] Partida natural con cuatro bots: acciones legales, conservación de recursos,
   ronda final y puntuación; guardado/replay y tablero comprobados en navegador.
-- [ ] Rendimiento: localizar esperas, medir fases de comandos, reducir mensajes y
+- [x] Rendimiento: localizar esperas, medir fases de comandos, reducir mensajes y
   trabajo repetido, conservar confirmación durable y recuperación.
-- [ ] Interfaz: carga de replay, controles compactos, perspectiva, historial completo,
+- [x] Interfaz: carga de replay, controles compactos, perspectiva, historial completo,
   estadísticas y navegación por hitos; construcción visible y reloj justo.
 - [ ] Integración: reconciliar cambios de main, ejecutar pruebas de regresión,
   publicar revisión exacta y comprobar servicio real.
@@ -44,8 +44,8 @@ y una pausa de construcción coordinada con el reloj del servidor.
 
 Integración y primera validación: [motor y geometría](../qa/south-america/engine.json),
 12 pruebas correctas. Cuatro bots finalizaron naturalmente en 166 turnos;
-recursos conservados y restauración en el paso 50. Pendiente verificación visual. Los informes de
-ejecución se añadirán a `docs/qa/south-america/`. La revisión visual y el balance
+recursos conservados y restauración en el paso 50. La verificación visual posterior
+se registra abajo y en `docs/qa/south-america-release/`. La revisión visual y el balance
 competitivo posterior de Ángel no sustituyen estas comprobaciones técnicas.
 
 
@@ -73,5 +73,47 @@ competitivo posterior de Ángel no sustituyen estas comprobaciones técnicas.
 La primera suite conjunta detectó cinco regresiones: compatibilidad del cuerpo
 histórico de replay, flush previo al cierre de una conexión, contrato de health y
 una prueba que actuaba durante la nueva pausa. Se corrigieron sin regrabar las
-fixtures históricas. La siguiente validación debe repetir la suite completa,
-los escenarios gráficos y el recorrido con workers antes de integrar/publicar.
+fixtures históricas. La suite completa posterior pasó sus 624 pruebas sin regrabar fixtures;
+el recorrido con workers y los escenarios gráficos se registran abajo.
+
+
+## Persistencia y mediciones locales
+
+Se implementaron lotes durables de hasta 16 trabajos pendientes, DTOs incrementales,
+SQL 005 compatible con el servidor anterior y eliminación de la segunda proyección
+idéntica del historial. SQL 005 se aplicó correctamente en Supabase el 2026-11-03; se comprobó
+que el editor contenía exactamente el archivo local, sin iniciar otro escritor.
+20 pruebas de servidor remoto/checkpoint/SQL y 24 de historial/compatibilidad pasan.
+La [partida con workers](../qa/south-america-worker/browser-report.json) terminó
+naturalmente en 190 turnos, con cuatro bots permanentes y 189 vagones renderizados.
+
+Ensayo aislado: cuatro salas y RTT de base simulado de 120 ms, 30 comandos.
+[Antes](../qa/latency-update/before.json) / [después](../qa/latency-update/after-final.json):
+p95 concurrente 531 → 309 ms; RPCs 30 → 18; bytes de sala 1.778 MB → 0.475 MB.
+La mediana de una sola sala fue 129 → 136 ms: no se atribuye una mejora individual
+al batching. Estas cifras no incluyen la red pública ni prueban el balance del mapa.
+El intervalo de ~195 ms observado en producción se aborda con frames agrupados y
+TCP_NODELAY, pero su desaparición solo podrá verificarse tras publicar.
+
+## Aceptación de entrega
+
+- [Suite Node](../qa/south-america-release/node-tests-result.json): **624/624**.
+- [Docker](../qa/south-america-release/docker-result.json): **55/55**, arranque
+  como usuario node, raíz de solo lectura, sin red ni dependencias de desarrollo.
+- [Replay final](../qa/south-america-release/analysis-tests-result.json): escritorio
+  y móvil, público y participante, 264 pasos, sin errores de navegador.
+- [Midsommar](../qa/south-america-release/midsommar/report.json): seis modelos,
+  21 familias, tablero mixto de 225 piezas, construcción, resaltado, reconexión,
+  espectador, replay, inglés y móvil; sin errores.
+- El checkout original se preservó completo en `2ba28ac` antes de integrar. Los
+  módulos visuales coinciden con esta rama; sus pruebas solo adaptan imports,
+  temporización de construcción y controles compactos del replay.
+
+- [Three.js](../qa/south-america-release/browser-tests-result.json): partida natural
+  de 224 acciones, construcción/ronda final, ocho verificaciones gráficas,
+  teclado, pinch, recuperación WebGL y ausencia de bucle de render al estar quieto.
+- [Dos mapas](../qa/south-america-release/selection-tests-result.json): Europa
+  (131 acciones) y Laboratorio (184), ambas finalizadas, reinicio y reconexión,
+  auditoría, privacidad, replay y apariencia conservados.
+
+Pendiente integrar main y verificar el despliegue exacto y la latencia pública.

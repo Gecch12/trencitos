@@ -10,7 +10,7 @@ el guardado ni usa su clave secreta. El navegador no accede directamente a la ba
 1. En tu cuenta propia, crea un proyecto en una organización **Free**. Usa una contraseña de base de datos fuerte y guárdala; no la necesitas para configurar esta aplicación.
 2. Elige una región próxima a la de Render para reducir la demora al confirmar cada jugada.
 3. En **SQL Editor → New query**, copia el contenido completo de [`../supabase/001_active_games.sql`](../supabase/001_active_games.sql) y ejecútalo.
-   Para la versión con historial, ejecutar además [003_match_archive.sql](../supabase/003_match_archive.sql) y [004_archive_paging.sql](../supabase/004_archive_paging.sql) antes de desplegar el código. Son aditivas y conservan las salas existentes; no inician un segundo escritor.
+   Para la versión con historial, ejecutar además [003_match_archive.sql](../supabase/003_match_archive.sql) y [004_archive_paging.sql](../supabase/004_archive_paging.sql) antes de desplegar el código. La entrega modular añade [005_checkpoint_delta.sql](../supabase/005_checkpoint_delta.sql) para transferir solo salas modificadas, manteniendo compatibilidad con las RPC previas. Son aditivas y conservan las salas existentes; no inician un segundo escritor.
 4. En **Settings → API Keys**, crea o copia una **secret key** (`sb_secret_…`). No uses una publishable key ni una clave legacy `anon`. Copia también el **Project URL**, con formato `https://….supabase.co`, desde el diálogo Connect o la configuración de API.
 5. Deja la Data API habilitada para `public`. La tabla tiene RLS activado, sin políticas públicas; `anon` y `authenticated` no pueden leerla ni ejecutar las funciones. Solo el servidor, con su clave secreta, accede a los datos.
 

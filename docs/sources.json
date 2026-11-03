@@ -65,7 +65,13 @@
     "frontend/layouts/laboratory-v1.js",
     "tests/laboratory-map.test.js",
     "tests/map-selection-server.test.js",
-    "tests/browser-map-selection.cjs"
+    "tests/browser-map-selection.cjs",
+    "backend/peer-output.js",
+    "backend/runtime-metrics.js",
+    "backend/bot-worker.js",
+    "backend/bot-planner.js",
+    "backend/bot-runner.js",
+    "supabase/005_checkpoint_delta.sql"
   ],
   "domain.md": [
     "game/application/automatic-play.js",
@@ -99,7 +105,8 @@
     "frontend/layouts/laboratory-v1.js",
     "tests/laboratory-map.test.js",
     "tests/map-selection-server.test.js",
-    "tests/browser-map-selection.cjs"
+    "tests/browser-map-selection.cjs",
+    "game/application/construction-pause.js"
   ],
   "operations.md": [
     "package.json",
@@ -117,7 +124,8 @@
     "shared/maps/",
     "shared/data.js",
     "frontend/index.html",
-    "game/compat/match-state.js"
+    "game/compat/match-state.js",
+    "supabase/005_checkpoint_delta.sql"
   ],
   "work/board-3d.md": [
     "frontend/map-layout.js",
@@ -229,7 +237,12 @@
     "tests/match-presentation.test.js",
     "tests/helpers/client-map.js",
     "tests/fixtures/europe-layout-v1.json",
-    "tests/browser-client-map.cjs"
+    "tests/browser-client-map.cjs",
+    "frontend/replay-ui.js",
+    "frontend/replay.css",
+    "game/queries/replay-analysis.js",
+    "tests/replay-analysis.test.js",
+    "tests/browser-replay-analysis.cjs"
   ],
   "work/table-controls.md": [
     "shared/game-timing.js",
@@ -467,5 +480,22 @@
     "tests/laboratory-map.test.js",
     "tests/map-selection-server.test.js",
     "tests/browser-map-selection.cjs"
+  ],
+  "work/south-america-release.md": [
+    "shared/maps/south-america-v3.3-beta.js",
+    "frontend/layouts/south-america-v3.3-beta.js",
+    "tests/south-america.test.js",
+    "tests/browser-south-america.cjs",
+    "backend/durable-queue.js",
+    "backend/bot-runner.js",
+    "backend/bot-planner.js",
+    "backend/peer-output.js",
+    "backend/runtime-metrics.js",
+    "game/application/construction-pause.js",
+    "game/infrastructure/checkpoint-committer.js",
+    "supabase/005_checkpoint_delta.sql",
+    "frontend/replay-ui.js",
+    "frontend/replay.css",
+    "game/queries/replay-analysis.js"
   ]
 }

@@ -1,6 +1,6 @@
 "use strict";
 // Contract-level double, not a substitute for applying the SQL on Supabase.
-function fakeSupabase() {
+function fakeSupabase({roomDelta=false}={}) {
   const state = { schema_version: 1, version: 0, rooms: [], matches:{}, claims:{}, writer: null, commit: null };
   const calls = [];
   let fail = false, lostResponses = 0, wait = null;
@@ -15,7 +15,7 @@ function fakeSupabase() {
       calls.push({ method, body, headers: options.headers });
       if (wait) await wait;
       if (fail) return json({ message: 'Unavailable' }, 503);
-      if (method === 'ferrovia_claim_checkpoint') { state.writer = body.p_writer; return json(state); }
+      if (method === 'ferrovia_claim_checkpoint') { state.writer = body.p_writer; return json({...state,...(roomDelta?{capabilities:{roomDelta:1}}:{})}); }
       if (method === 'trencitos_close_missing') return json({ok:true});
       if (method === 'trencitos_claim_guest') {state.claims[body.p_guest]=body.p_account;return json({ok:true});}
       if (method === 'trencitos_read_archive_summary') return json({matches:(body.p_match?[state.matches[body.p_match]].filter(Boolean):Object.values(state.matches)).map(({frames,...metadata})=>metadata),claims:state.claims});
@@ -24,7 +24,11 @@ function fakeSupabase() {
         return json({ message: 'FERROVIA_WRITER_CONFLICT' }, 400);
       if (state.commit !== body.p_commit) {
         for(const entry of body.p_archive||[]){const id=entry.match.id,old=state.matches[id];state.matches[id]={...structuredClone(entry.match),frames:[...(old?.frames||[]),...structuredClone(entry.frames)]};}
-        state.rooms = structuredClone(body.p_rooms); state.version++; state.commit = body.p_commit;
+        if(method==='ferrovia_save_checkpoint_delta'){
+          const changed=new Map(body.p_changed.map(r=>[r.code,r])),removed=new Set(body.p_removed);
+          state.rooms=[...state.rooms.filter(r=>!removed.has(r.code)&&!changed.has(r.code)),...changed.values()].map(r=>({...structuredClone(r),savedAt:body.p_saved_at})).sort((a,b)=>a.code.localeCompare(b.code));
+        }else state.rooms = structuredClone(body.p_rooms);
+        state.version++; state.commit = body.p_commit;
       }
       if (lostResponses) { lostResponses--; throw new Error('Connection lost after commit'); }
       return json({ version: state.version, commit: state.commit });

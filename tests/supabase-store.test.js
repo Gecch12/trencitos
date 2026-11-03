@@ -62,3 +62,11 @@ test('SQL denies browser roles and fences/idempotently commits under a row lock'
   assert.match(sql, /r\.last_commit = p_commit/); assert.match(sql, /r\.version <> p_version/);
   assert.doesNotMatch(sql, /security definer|create policy/i);
 });
+
+test('negotiated room deltas send only changed rooms and retry the exact atomic payload',async()=>{
+ const api=fakeSupabase({roomDelta:true}),store=createSupabaseStore({url:'https://fixture.supabase.co',secret:'sb_secret_test',fetchImpl:api.fetch});await store.load();
+ await store.saveCheckpoint({rooms:[{code:'A',members:[]},{code:'B',members:[]}],archive:[]});api.lostResponses=1;
+ const changed={code:'A',members:[],revision:2};await store.saveCheckpoint({rooms:[changed,{code:'B',members:[]}],archive:[],roomDelta:{changed:[changed],removed:[],savedAt:500}});
+ const calls=api.calls.filter(c=>c.method==='ferrovia_save_checkpoint_delta');assert.equal(calls.length,2);assert.deepEqual(calls[0].body,calls[1].body);assert.equal(calls[0].body.p_rooms,undefined);assert.deepEqual(calls[0].body.p_changed,[changed]);
+ assert.equal(api.state.version,2);assert.deepEqual(api.state.rooms.map(r=>r.code),['A','B']);assert.ok(api.state.rooms.every(r=>r.savedAt===500));
+});

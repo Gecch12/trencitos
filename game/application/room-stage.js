@@ -15,7 +15,7 @@ function createRoomStager({ repository, engine, history, checkpoint, now, storag
     room.savedAt = now();
     if (!storagePaused()) {
       history.capture(room);
-      checkpoint.persist();
+      checkpoint.persist(room);
     }
     // A local failure has already restored committed data and marked storage
     // paused. Publish that recovery view, never the failed candidate state.

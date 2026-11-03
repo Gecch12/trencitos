@@ -1,0 +1,65 @@
+{
+  "date": "2026-11-03T06:53:36.094Z",
+  "tests": [
+    {
+      "name": "server restart restores both live matches and reconnects all four seats",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "games": [
+    {
+      "id": "europe",
+      "actions": 131,
+      "counts": {
+        "choose_initial": 2,
+        "claim": 32,
+        "draw_train": 87,
+        "draw_tickets": 3,
+        "keep_tickets": 3,
+        "decline_tunnel": 1,
+        "pay_tunnel": 2,
+        "station": 1
+      },
+      "phase": "finished",
+      "replay": true,
+      "privacy": true,
+      "audit": true,
+      "cosmetics": {
+        "models": {
+          "tanker": 41,
+          "passenger": 43
+        },
+        "passengerInstances": 43
+      },
+      "wagons": 84
+    },
+    {
+      "id": "laboratory",
+      "actions": 184,
+      "counts": {
+        "choose_initial": 2,
+        "draw_train": 110,
+        "claim": 19,
+        "pay_tunnel": 1,
+        "draw_tickets": 24,
+        "keep_tickets": 24,
+        "station": 4
+      },
+      "phase": "finished",
+      "replay": true,
+      "privacy": true,
+      "audit": true,
+      "cosmetics": {
+        "models": {
+          "passenger": 44,
+          "tanker": 35
+        },
+        "passengerInstances": 44
+      },
+      "wagons": 79
+    }
+  ],
+  "browser": "156.0.8078.80",
+  "passed": true
+}

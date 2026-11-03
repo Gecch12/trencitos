@@ -1,0 +1,97 @@
+{
+  "at": "2026-11-03T06:57:46.720Z",
+  "compact": false,
+  "pings": [
+    241.22804100000008,
+    241.24491599999988,
+    240.62962499999958,
+    237.28899999999976
+  ],
+  "samples": [
+    {
+      "ackMs": 340.3370420000001,
+      "stateMs": 340.30375000000004,
+      "lobbyToStateMs": 0.5472920000001977,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    },
+    {
+      "ackMs": 536.1899999999996,
+      "stateMs": 346.35899999999947,
+      "lobbyToStateMs": 9.540083999999297,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    },
+    {
+      "ackMs": 535.476834,
+      "stateMs": 535.411709,
+      "lobbyToStateMs": 196.27670900000066,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    },
+    {
+      "ackMs": 609.7064580000006,
+      "stateMs": 609.649375,
+      "lobbyToStateMs": 196.08100000000013,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    },
+    {
+      "ackMs": 520.8267499999993,
+      "stateMs": 324.5354579999994,
+      "lobbyToStateMs": 0.5036249999993743,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    },
+    {
+      "ackMs": 537.5231669999994,
+      "stateMs": 537.4984590000004,
+      "lobbyToStateMs": 193.05249999999978,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    },
+    {
+      "ackMs": 539.3938749999998,
+      "stateMs": 539.324208,
+      "lobbyToStateMs": 199.996000000001,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    },
+    {
+      "ackMs": 552.7516670000005,
+      "stateMs": 552.7385000000013,
+      "lobbyToStateMs": 203.94137500000033,
+      "types": [
+        "lobby",
+        "storage",
+        "state"
+      ]
+    }
+  ],
+  "health": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 2
+  }
+}
