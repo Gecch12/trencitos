@@ -94,7 +94,7 @@ test("domain modules run without ambient clock, randomness, transport or externa
   const math=Object.create(Math);math.random=forbidden;
   const cache={};
   function load(name) {
-    if(!["payment","route-claim","tunnel","turn","random","setup","destinations","network","stations","scoring"].includes(name)) return forbidden();
+    if(!["payment","route-claim","tunnel","turn","random","setup","destinations","network","stations","scoring","train-cards"].includes(name)) return forbidden();
     if(cache[name]) return cache[name];
     const module={exports:{}};
     const source=fs.readFileSync(path.join(__dirname,"../game/domain",`${name}.js`),"utf8");
@@ -131,5 +131,10 @@ test("domain modules run without ambient clock, randomness, transport or externa
     {name:"A",score:2,stations:1,placed:[],tickets:[{id:"dest",a:"A",b:"B",points:4}]},
     {name:"B",score:0,stations:1,placed:[],tickets:[]},
   ]},{map:{routes:[{id:"route",a:"A",b:"B",length:2}]},rules:{routePoints:{2:2},unusedStationPoints:4,expressPoints:10,tieBreakers:["score","completed","stations","express"]}});
+  const cards=load("train-cards"),cardRules={marketSize:3,refreshWildCount:2,drawsPerTurn:2};
+  const piles={deck:["copper","blue","red"],discard:[],face:["wild","wild","wild"],drawCount:0};
+  const renewed=cards.refillMarket(piles,{rules:cardRules,random:max=>max-1});
+  assert.equal(renewed.piles.face.filter(c=>c==='wild').length,1);
+  assert.equal(cards.decideTrainDraw({...renewed.piles,drawCount:0},{index:-1},{rules:cardRules,random:max=>max-1}).ok,true);
   assert.equal(scored[0].score,20);assert.equal(scored[0].details.destinations[0].points,4);
 });

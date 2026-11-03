@@ -210,7 +210,9 @@
     "tests/domain-setup-destinations.test.js",
     "tests/setup-destinations-contract.test.js",
     "tests/domain-stations-scoring.test.js",
-    "tests/stations-scoring-contract.test.js"
+    "tests/stations-scoring-contract.test.js",
+    "tests/domain-train-cards.test.js",
+    "tests/train-cards-contract.test.js"
   ],
   "work/wagon-variants.md": [
     "data.js",

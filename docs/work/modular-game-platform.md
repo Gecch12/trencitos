@@ -85,11 +85,11 @@ por separado. El cierre de esta ficha no implica publicación.
 El [modelo de fase 1](../decisions/match-domain-contracts.md) define los contratos
 y el puente. La [ficha de dominio](modular-platform-domain.md) conserva avance,
 evidencia y alcance pendiente. Pagos/construcción, transiciones de túnel/turno,
-reparto, elecciones de destinos, estaciones y puntuación ya cuentan con políticas
+reparto, elecciones de destinos, estaciones, puntuación y cartas/mercado ya cuentan con políticas
 independientes de textos y efectos externos. `engine.js`
 conserva la fachada, el formato de guardado y la aplicación de sus planes.
-La ficha desarrolla el siguiente recorrido de cartas/mercado, seguido de
-normalización fuera de las consultas.
+La ficha desarrolla el siguiente recorrido de normalización fuera de las
+consultas y aceptación conjunta de Europa.
 
 No declarar terminada toda la fase 2 al extraer solo el primer recorrido. La
 separación de frontend espera a fase 3; antes de mover archivos visuales, integrar
@@ -105,6 +105,6 @@ La [fase 0](modular-platform-baseline.md) conserva la base y sus límites; la
 [fase 1](modular-platform-contracts.md) conserva el diseño contrastado y las
 pruebas de aceptación del primer recorrido. La
 [fase 2](modular-platform-domain.md) contiene las extracciones de pagos,
-construcción, transiciones de túnel/turno, reparto, destinos, estaciones y
-puntuación; quedan reglas en la fachada. Siguiente paso y
+construcción, transiciones de túnel/turno, reparto, destinos, estaciones,
+puntuación y cartas/mercado; queda coordinación en la fachada. Siguiente paso y
 validación de la entrega en esa ficha.

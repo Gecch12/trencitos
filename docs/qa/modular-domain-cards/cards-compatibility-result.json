@@ -1,0 +1,10 @@
+{
+  "base_commit": "ab159b3",
+  "completed_at": "2026-11-03T02:03:09.592Z",
+  "passed": true,
+  "cases": 160,
+  "comparison": "Full states, seat/spectator views without serverNow, observer events, random-call bounds, pile identity after each step",
+  "method": "20 deterministic seeds, 2-5 players, eight pile scenarios: normal, renewable market, impossible market, partial/depleted piles, only visible wilds, empty, discard fallback and tunnel isolation; accepted/rejected draws, timeouts and exported pile helpers",
+  "baseline_sha256": "cd7cc978aadefb1c6ed6c12893285bb141c6ceb8b5a4fffddf29b7bc609887cf",
+  "engine_sha256": "ab3e63af66efc45823897a249a9dd90c89cf796b729c7dbe7f9e8b7d35150800"
+}

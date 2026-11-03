@@ -1,0 +1,601 @@
+{
+  "date": "2026-11-03T02:03:15.131Z",
+  "platform": "darwin 25.5.0 arm64",
+  "cpu": "Apple M1 Pro",
+  "tests": [
+    {
+      "name": "same route/payment/result in independent 3D rooms via pointer UI",
+      "results": [
+        {
+          "id": 0,
+          "owner": 0,
+          "hand": [
+            "blue",
+            "green",
+            "red",
+            "yellow"
+          ],
+          "trains": 40,
+          "score": 8,
+          "private": true,
+          "wagons": 19
+        },
+        {
+          "id": 0,
+          "owner": 0,
+          "hand": [
+            "blue",
+            "green",
+            "red",
+            "yellow"
+          ],
+          "trains": 40,
+          "score": 8,
+          "private": true,
+          "wagons": 19
+        }
+      ]
+    },
+    {
+      "name": "station construction from keyboard through authoritative server",
+      "passed": true
+    },
+    {
+      "name": "zero surcharge tunnel resolves and appears after reveal",
+      "passed": true
+    },
+    {
+      "name": "pointer selects elevated station roof",
+      "passed": true
+    },
+    {
+      "name": "no continuous WebGL loop while idle",
+      "passed": true
+    },
+    {
+      "name": "two-finger pinch zoom without accidental selection",
+      "zoom": 1.8,
+      "menu": false
+    },
+    {
+      "name": "keyboard focuses offscreen city, reveals its label and opens menu",
+      "passed": true
+    },
+    {
+      "name": "context loss offers 3D retry without losing the room",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "browser": "156.0.8078.74",
+  "performance": [
+    {
+      "mode": "3d",
+      "viewport": "1460x940",
+      "cpuCameraMs": {
+        "n": 79,
+        "median": 1.8000000715255737,
+        "p95": 2,
+        "max": 2.200000047683716
+      },
+      "frameIntervalMs": {
+        "n": 79,
+        "median": 16.600000023841858,
+        "p95": 17.600000023841858,
+        "max": 17.800000071525574
+      },
+      "stats": {
+        "selection": {
+          "route": null,
+          "city": "PAR"
+        },
+        "freeCells": 75,
+        "ownershipBands": 77,
+        "spotlightRoutes": [],
+        "borrowedRoutes": [],
+        "animations": [],
+        "revision": "187",
+        "draws": 92,
+        "wagons": 225,
+        "models": {
+          "passenger": 45,
+          "tanker": 45,
+          "alfalfa": 45,
+          "grain": 45,
+          "goods": 45
+        },
+        "passengers": [
+          {
+            "route": 0,
+            "index": 0,
+            "variant": "lean",
+            "cast": 0
+          },
+          {
+            "route": 0,
+            "index": 1,
+            "variant": "trio",
+            "cast": 9
+          },
+          {
+            "route": 0,
+            "index": 2,
+            "variant": "classic",
+            "cast": 21
+          },
+          {
+            "route": 0,
+            "index": 3,
+            "variant": "solo",
+            "cast": 1
+          },
+          {
+            "route": 1,
+            "index": 0,
+            "variant": "solo",
+            "cast": 29
+          },
+          {
+            "route": 1,
+            "index": 1,
+            "variant": "trio",
+            "cast": 23
+          },
+          {
+            "route": 1,
+            "index": 2,
+            "variant": "classic",
+            "cast": 1
+          },
+          {
+            "route": 1,
+            "index": 3,
+            "variant": "duo",
+            "cast": 9
+          },
+          {
+            "route": 2,
+            "index": 0,
+            "variant": "classic",
+            "cast": 27
+          },
+          {
+            "route": 2,
+            "index": 1,
+            "variant": "trio",
+            "cast": 8
+          },
+          {
+            "route": 3,
+            "index": 0,
+            "variant": "wave",
+            "cast": 6
+          },
+          {
+            "route": 3,
+            "index": 1,
+            "variant": "trio",
+            "cast": 14
+          },
+          {
+            "route": 4,
+            "index": 0,
+            "variant": "duo",
+            "cast": 2
+          },
+          {
+            "route": 4,
+            "index": 1,
+            "variant": "trio",
+            "cast": 4
+          },
+          {
+            "route": 5,
+            "index": 0,
+            "variant": "wave",
+            "cast": 23
+          },
+          {
+            "route": 5,
+            "index": 1,
+            "variant": "duo",
+            "cast": 4
+          },
+          {
+            "route": 6,
+            "index": 0,
+            "variant": "lean",
+            "cast": 23
+          },
+          {
+            "route": 6,
+            "index": 1,
+            "variant": "duo",
+            "cast": 21
+          },
+          {
+            "route": 7,
+            "index": 0,
+            "variant": "trio",
+            "cast": 30
+          },
+          {
+            "route": 8,
+            "index": 0,
+            "variant": "wave",
+            "cast": 14
+          },
+          {
+            "route": 8,
+            "index": 1,
+            "variant": "duo",
+            "cast": 12
+          },
+          {
+            "route": 8,
+            "index": 2,
+            "variant": "trio",
+            "cast": 15
+          },
+          {
+            "route": 9,
+            "index": 0,
+            "variant": "duo",
+            "cast": 21
+          },
+          {
+            "route": 9,
+            "index": 1,
+            "variant": "classic",
+            "cast": 9
+          },
+          {
+            "route": 9,
+            "index": 2,
+            "variant": "lean",
+            "cast": 15
+          },
+          {
+            "route": 9,
+            "index": 3,
+            "variant": "wave",
+            "cast": 4
+          },
+          {
+            "route": 10,
+            "index": 0,
+            "variant": "solo",
+            "cast": 28
+          },
+          {
+            "route": 10,
+            "index": 1,
+            "variant": "lean",
+            "cast": 31
+          },
+          {
+            "route": 11,
+            "index": 0,
+            "variant": "wave",
+            "cast": 30
+          },
+          {
+            "route": 11,
+            "index": 1,
+            "variant": "classic",
+            "cast": 7
+          },
+          {
+            "route": 12,
+            "index": 0,
+            "variant": "classic",
+            "cast": 7
+          },
+          {
+            "route": 12,
+            "index": 1,
+            "variant": "duo",
+            "cast": 3
+          },
+          {
+            "route": 12,
+            "index": 2,
+            "variant": "lean",
+            "cast": 29
+          },
+          {
+            "route": 13,
+            "index": 0,
+            "variant": "lean",
+            "cast": 31
+          },
+          {
+            "route": 13,
+            "index": 1,
+            "variant": "wave",
+            "cast": 0
+          },
+          {
+            "route": 13,
+            "index": 2,
+            "variant": "classic",
+            "cast": 26
+          },
+          {
+            "route": 14,
+            "index": 0,
+            "variant": "classic",
+            "cast": 0
+          },
+          {
+            "route": 14,
+            "index": 1,
+            "variant": "solo",
+            "cast": 18
+          },
+          {
+            "route": 14,
+            "index": 2,
+            "variant": "trio",
+            "cast": 18
+          },
+          {
+            "route": 15,
+            "index": 0,
+            "variant": "duo",
+            "cast": 18
+          },
+          {
+            "route": 15,
+            "index": 1,
+            "variant": "classic",
+            "cast": 5
+          },
+          {
+            "route": 15,
+            "index": 2,
+            "variant": "wave",
+            "cast": 22
+          },
+          {
+            "route": 15,
+            "index": 3,
+            "variant": "trio",
+            "cast": 23
+          },
+          {
+            "route": 19,
+            "index": 0,
+            "variant": "duo",
+            "cast": 26
+          },
+          {
+            "route": 19,
+            "index": 1,
+            "variant": "classic",
+            "cast": 16
+          }
+        ],
+        "stations": 15,
+        "samples": [
+          37.200000047683716,
+          1.600000023841858,
+          0.5,
+          0.7000000476837158,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5999999046325684,
+          0.3999999761581421,
+          0.30000007152557373,
+          0.2999999523162842,
+          0.3999999761581421,
+          0.30000007152557373,
+          0.3999999761581421,
+          0.2999999523162842,
+          0.3999999761581421,
+          0.30000007152557373,
+          0.30000007152557373,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.5,
+          0.5,
+          0.3999999761581421,
+          0.5,
+          0.3999999761581421,
+          0.5,
+          0.20000004768371582,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.2999999523162842,
+          0.30000007152557373,
+          0.2999999523162842,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.30000007152557373,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.2999999523162842,
+          0.3999999761581421,
+          0.30000007152557373,
+          0.3999999761581421,
+          0.30000007152557373,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.30000007152557373,
+          0.40000009536743164,
+          0.2999999523162842,
+          0.40000009536743164,
+          0.3999999761581421,
+          0.2999999523162842,
+          0.5,
+          0.2999999523162842,
+          0.3999999761581421,
+          0.40000009536743164,
+          0.3999999761581421,
+          0.2999999523162842,
+          0.40000009536743164,
+          0.5,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.2999999523162842,
+          0.30000007152557373,
+          0.30000007152557373,
+          0.3999999761581421,
+          0.40000009536743164,
+          0.3999999761581421,
+          0.30000007152557373,
+          0.40000009536743164,
+          0.3999999761581421,
+          0.5,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.3999999761581421,
+          0.2999999523162842,
+          0.2999999523162842,
+          0.3999999761581421,
+          0.2999999523162842,
+          0.30000007152557373,
+          0.3999999761581421,
+          0.2999999523162842,
+          0.3999999761581421,
+          0.30000007152557373,
+          0.3999999761581421,
+          0.30000007152557373,
+          0.3999999761581421
+        ],
+        "calls": 58,
+        "triangles": 646356,
+        "geometries": 47,
+        "textures": 3,
+        "pixelRatio": 1
+      },
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)"
+    }
+  ],
+  "legibility": [
+    {
+      "width": 1460,
+      "height": 940,
+      "zoom": 0.25,
+      "visible": 9,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 1.2710574864626038e-13
+    },
+    {
+      "width": 1460,
+      "height": 940,
+      "zoom": 1,
+      "visible": 47,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 2.2737367544323206e-13
+    },
+    {
+      "width": 1460,
+      "height": 940,
+      "zoom": 6,
+      "visible": 2,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 1.2244447150657162e-12
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "zoom": 0.25,
+      "visible": 6,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 1.1368683772161603e-13
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "zoom": 1,
+      "visible": 47,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 1.6077746776921858e-13
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "zoom": 6,
+      "visible": 4,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 9.094947017729282e-13
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "zoom": 0.25,
+      "visible": 5,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 6.355287432313019e-14
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "zoom": 1,
+      "visible": 9,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 8.038873388460929e-14
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "zoom": 6,
+      "visible": 6,
+      "overlaps": [],
+      "overflow": false,
+      "projectionError": 2.8421709430404007e-13
+    }
+  ],
+  "fullGame": {
+    "actions": 262,
+    "counts": {
+      "choose_initial": 4,
+      "draw_train": 173,
+      "claim": 65,
+      "decline_tunnel": 4,
+      "pay_tunnel": 3,
+      "station": 3,
+      "draw_tickets": 5,
+      "keep_tickets": 5
+    },
+    "reconnect": true,
+    "phase": "finished",
+    "results": [
+      {
+        "seat": 2,
+        "score": 123
+      },
+      {
+        "seat": 3,
+        "score": 103
+      },
+      {
+        "seat": 0,
+        "score": 97
+      },
+      {
+        "seat": 1,
+        "score": 84
+      }
+    ],
+    "renderedWagons": 166
+  },
+  "passed": true
+}

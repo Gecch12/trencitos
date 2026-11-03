@@ -12,7 +12,7 @@ const Stations=require('./game/domain/stations');
 const Network=require('./game/domain/network');
 const Scoring=require('./game/domain/scoring');
 const LegacyScoring=require('./game/compat/legacy-scoring');
-const {shuffle}=require('./game/domain/random');
+const TrainCards=require('./game/domain/train-cards');
 const {legacyError}=require('./game/compat/legacy-errors');
 // Per-action randomness stays outside serialized state. Simulations can supply
 // an isolated stream for all draws/recycles without patching global crypto.
@@ -29,6 +29,8 @@ const TUNNEL_RULES={colors:COLORS,cardMs:TUNNEL_CARD_MS,resultMs:TUNNEL_RESULT_M
 const SETUP_RULES={minPlayers:2,maxPlayers:5,maxNameLength:24,playerColors:PLAYER_COLORS,
  trainCards:[...COLORS.map(color=>({color,count:12})),{color:'wild',count:14}],
  initialHand:4,initialLongTickets:1,initialShortTickets:3,trains:45,stations:3};
+const TRAIN_CARD_RULES={marketSize:5,refreshWildCount:3,drawsPerTurn:2};
+const cardContext=g=>({rules:TRAIN_CARD_RULES,random:randomFor(g)});
 const DESTINATION_RULES={initialMinimum:2,offerMinimum:1,offerCount:3};
 const STATION_CONTEXT={map:{cities:Object.keys(CITIES).map(id=>({id}))},rules:{colors:COLORS,stationCosts:[1,2,3]}};
 const SCORING_RULES={routePoints:SCORE,unusedStationPoints:4,expressPoints:10,tieBreakers:['score','completed','stations','express']};
@@ -67,32 +69,17 @@ function ensureTiming(g,now=Date.now()){
  if(g.turnSeat!==g.current||g.turnClockPhase!==(g.phase==='initial'?'initial':'play')||!!g.turnWaiting!==waiting||(!waiting&&!Number.isFinite(g.turnDeadline)))startTurn(g,now);
 }
 function fail(message){throw new Error(message)}
-function draw(g){if(!g.deck.length&&g.discard.length){g.deck=shuffle(g.discard,randomFor(g));g.discard=[]}return g.deck.pop()||null}
-// House rule: each resolved event returns its whole discard batch to the deck.
-// Pending tunnel reveals are deliberately NOT in discard until resolution.
-function recycleDiscards(g){if(g.discard.length){g.deck=shuffle([...g.deck,...g.discard],randomFor(g));g.discard=[]}}
-function combinations(n,k){if(k<0||k>n)return 0;let total=1;for(let i=1;i<=k;i++)total=total*(n-i+1)/i;return Math.round(total)}
-function refill(g){
- while(g.face.length<5){const c=draw(g);if(!c)break;g.face.push(c)}
- if(g.face.length<5||g.face.filter(c=>c==='wild').length<3)return;
- const before=[...g.face];
- g.discard.push(...g.face);g.face=[];recycleDiscards(g);
- // Sample the same distribution as redealing until a valid market, without
- // unbounded retries (a market with <3 available regular cards is impossible).
- const wild=g.deck.filter(c=>c==='wild').length,regular=g.deck.length-wild;
- const weights=[0,1,2].map(k=>combinations(wild,k)*combinations(regular,5-k));
- const total=weights.reduce((a,b)=>a+b,0);
- if(!total){while(g.face.length<5){const c=draw(g);if(!c)break;g.face.push(c)}event(g,'market_refresh',null,{before,after:[...g.face]});return}
- let pick=randomFor(g)(total),neededWild=0;
- while(pick>=weights[neededWild])pick-=weights[neededWild++];
- let neededRegular=5-neededWild;
- for(let i=g.deck.length-1;i>=0&&(neededWild||neededRegular);i--){
-  const isWild=g.deck[i]==='wild';
-  if(isWild?neededWild:neededRegular){g.face.push(...g.deck.splice(i,1));if(isWild)neededWild--;else neededRegular--}
+// Preserve legacy pile containers between draws; recycling/renewal replaces them.
+function applyCardPiles(g,plan){
+ for(const key of ['deck','discard','face']){
+  if(key==='face'?plan.refresh:plan.recycled)g[key]=plan.piles[key];
+  else g[key].splice(0,g[key].length,...plan.piles[key]);
  }
- g.face=shuffle(g.face,randomFor(g));
- event(g,'market_refresh',null,{before,after:[...g.face]});
+ if(plan.refresh)event(g,'market_refresh',null,plan.refresh);
 }
+function draw(g){const plan=TrainCards.drawCard(g,cardContext(g));applyCardPiles(g,plan);return plan.card}
+function recycleDiscards(g){if(g.discard.length)applyCardPiles(g,TrainCards.recycleDiscards(g,cardContext(g)))}
+function refill(g){applyCardPiles(g,TrainCards.refillMarket(g,cardContext(g)))}
 function newGame(names,first=0,now=Date.now(),timing=null,{random=crypto.randomInt}={}){
  const decision=Setup.prepareGame({names,first},{map:{tickets:TICKETS},rules:SETUP_RULES,random});
  if(!decision.ok)throw legacyError(decision.error);
@@ -130,7 +117,7 @@ function next(g,now=Date.now()){
  if(plan.finish){finish(g);return}
  if(plan.emitTurn)event(g,'turn',g.current);
 }
-function canDrawMore(g){return Boolean(g.deck.length||g.discard.length||g.face.some((c)=>!(g.drawCount===1&&c==='wild')))}
+function canDrawMore(g){return TrainCards.canDrawMore(g)}
 function pay(hand,color,quantity,wildNeeded=0,wildCount){return Payment.planPayment(hand,{color,quantity,wildNeeded,wildCount},CLAIM_RULES)}
 function spend(g,p,comp){for(let k=0;k<comp.regular;k++){const i=p.hand.indexOf(comp.color);if(i<0)throw Error('Descuadre de mano');g.discard.push(...p.hand.splice(i,1))}
  for(let k=0;k<comp.wild;k++){const i=p.hand.indexOf('wild');if(i<0)throw Error('Descuadre de comodines');g.discard.push(...p.hand.splice(i,1))}}
@@ -191,16 +178,15 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
  }
  if(g.phase!=='play')fail('Estado de partida incorrecto.');
  if(msg.type==='draw_train'){
-  if(!Number.isInteger(msg.index)||msg.index < -1||msg.index>=g.face.length)fail('Carta inexistente.');
-  let c=msg.index===-1?draw(g):g.face[msg.index];if(!c)fail('No hay cartas disponibles.');
-  if(msg.index>=0&&c==='wild'&&g.drawCount>0)fail('No se permite tomar una locomotora visible como segunda carta.');
-  if(msg.index>=0){const replacement=draw(g);if(replacement)g.face[msg.index]=replacement;else g.face.splice(msg.index,1);refill(g)}p.hand.push(c);g.drawCount++;
+  const decision=TrainCards.decideTrainDraw(g,{index:msg.index},cardContext(g));
+  if(!decision.ok)throw legacyError(decision.error);
+  const plan=decision.plan,c=plan.card;applyCardPiles(g,plan);p.hand.push(c);g.drawCount=plan.drawCount;
   // Store the accepted draw once. Views redact blind colors for every other seat.
   g.drawSerial=(g.drawSerial||0)+1;
   g.lastDraw={id:g.drawSerial,seat,index:msg.index,color:c};
   event(g,'draw',seat,{index:msg.index,color:c});
   note(g,I18n.message`${p.name} robó una carta de tren.`,seat,{draw:{index:msg.index,color:c}});
-  if((msg.index>=0&&c==='wild')||g.drawCount===2||!canDrawMore(g))next(g,now);return;
+  if(plan.endTurn)next(g,now);return;
  }
  if(g.drawCount>0)fail('Debes terminar de robar cartas.');
  if(msg.type==='claim'){
@@ -279,7 +265,7 @@ function expireImpl(g,now=Date.now(),random=crypto.randomInt){
  g.players[seat].missedTurns=(g.players[seat].missedTurns||0)+1;
  if(g.phase==='tunnel')applyAction(g,seat,{type:'decline_tunnel'},now);
  else{
-  const remaining=2-g.drawCount;
+  const remaining=TRAIN_CARD_RULES.drawsPerTurn-g.drawCount;
   for(let i=0;i<remaining&&g.turnSerial===serial&&g.phase==='play';i++){
    if(!g.deck.length&&!g.discard.length)break;
    applyAction(g,seat,{type:'draw_train',index:-1},now);

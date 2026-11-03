@@ -21,7 +21,7 @@ cambios de esta entrega. El trabajo visual de otros chats permanece separado.
 - [x] Transiciones de túnel y turno extraídas, con tiempo explícito y cartas reveladas suministradas.
 - [x] Preparación de recursos, reparto y elecciones/ofertas de destinos extraídos, con azar suministrado.
 - [x] Estaciones, conectividad, puntuación y desglose extraídos, con puente para resultados guardados.
-- [ ] Cartas de tren y mercado extraídos.
+- [x] Cartas de tren y mercado extraídos, con azar explícito y puente compatible.
 - [ ] Consultas sin mutación y compatibilidad de resultados/temporizadores fuera de ellas.
 - [ ] Europa completa verificada, incluyendo bots, privacidad, guardado y replay.
 
@@ -322,7 +322,7 @@ Las pruebas SQL/remotas usan simuladores; no acreditan Render, Supabase real ni
 dispositivos físicos. Se restauró la evidencia histórica `docs/qa/threejs-*`.
 Entrega local, sin integración de otros worktrees ni publicación.
 
-### Límites pendientes
+### Límites al terminar el cuarto corte
 
 El ensamblado legado, robo/reciclado y renovación del mercado, coordinación de
 vencimientos/cierre y consultas permanecen en la fachada. Las políticas reciben
@@ -330,10 +330,83 @@ definiciones válidas; el catálogo/validador versionado sigue en fase 4. La bú
 exacta del recorrido más largo conserva su complejidad: no se ha certificado el
 rendimiento de redes arbitrarias futuras ni un cambio de estrategia de bots.
 
+## Quinto corte: cartas de tren y mercado
+
+Base: `ab159b3` más los cambios de esta entrega.
+
+- [train-cards.js](../../game/domain/train-cards.js) concentra el ciclo de las
+  cartas de tren: robo visible/oculto, reposición de casilla, reciclado,
+  renovación del mercado y disponibilidad para continuar robando. Trabaja sobre
+  copias privadas de las pilas, recibe azar explícito y devuelve planes sin
+  consultar reloj, transporte, datos de Europa ni estado global.
+- Tamaño de mercado, umbral de renovación y número de cartas por turno se
+  suministran como reglas. La locomotora visible consume el turno y solo puede
+  tomarse como primera carta; la oculta cuenta como una. El agotamiento puede
+  terminar el turno antes del límite, incluso si solo quedan locomotoras visibles.
+- El muestreo condicionado conserva la distribución y orden de consumo de azar
+  anteriores. Si no existe mercado completo válido, reparte una sola vez tras
+  reciclar, sin bucle de reintentos. Los revelados de un túnel pendiente siguen
+  fuera de estas pilas hasta su resolución.
+- La fachada conserva `draw`, `refill` y `recycleDiscards`, aplica los planes y
+  mantiene los contenedores legados entre robos; reciclado/renovación los
+  reemplazan como antes. Publica `market_refresh` antes de `draw`, conserva
+  contadores, historial, observadores y avance único. El puente de errores
+  mantiene los tres mensajes existentes de robo inválido.
+
+No cambia el reglamento de Europa, el protocolo ni el formato de guardado. La
+coordinación de vencimientos sigue decidiendo cuándo ejecutar robos automáticos
+y cuándo reciclar; las políticas reciben definiciones válidas. El catálogo y su
+validador, y la activación de mapas nuevos, siguen en fases posteriores.
+
+### Evidencia del quinto corte
+
+- [Dominio](../../tests/domain-train-cards.test.js): no mutación, rechazo sin
+  azar, conservación de cartas, agotamiento, mercado parcial/imposible,
+  ponderaciones combinatorias, límites alternativos y exclusión de revelados.
+- [Fachada](../../tests/train-cards-contract.test.js): referencias, orden de
+  eventos, privacidad tras guardar/cargar, observadores, vencimientos y avance.
+- Frontera ambiental ampliada: el módulo se carga y ejecuta con reloj, azar
+  global, transporte e importaciones externas prohibidos.
+- Suite enfocada de ocho archivos: **86/86** correctas, incluyendo las pruebas
+  existentes de reciclado, eventos, relojes y túneles.
+- [Comparación con la base](../qa/modular-domain-cards/cards-compatibility-result.json):
+  **160/160** casos idénticos. Veinte semillas, 2–5 jugadores y ocho escenarios
+  de pilas. Compara tras cada paso estado completo, vistas de puestos/espectador
+  salvo `serverNow`, eventos de observación, límites de cada llamada aleatoria
+  e identidad de contenedores. Incluye robos aceptados/rechazados, vencimientos,
+  aislamiento de túnel y helpers públicos.
+
+Ejecución del 2026-11-02 (Lima), Node `v25.6.1`, sobre la base indicada y el diff
+de este corte:
+
+- `node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js`:
+  **457/457**, sin fallos ni omisiones. [Resultado y huellas del código](../qa/modular-domain-cards/node-tests-result.json)
+  y [salida TAP](../qa/modular-domain-cards/node-tests.tap).
+- `QA_PORT=0 npm run test:board3d`: **aprobado**, Chrome `156.0.8078.74`.
+  [Resultado](../qa/modular-domain-cards/browser-tests-result.json) y
+  [reporte](../qa/modular-domain-cards/browser/threejs-report.json): ocho
+  recorridos, nueve combinaciones de viewport/zoom y partida de cuatro jugadores
+  completa con **262 acciones**, reconexión y cero errores. Incluye 173 robos
+  de cartas de tren, 65 intentos de construcción, pagos/desistimientos de túnel,
+  tres estaciones y cinco ofertas de destinos con sus confirmaciones. Se
+  inspeccionaron [resultado final](../qa/modular-domain-cards/browser/threejs-finished.png)
+  y [móvil emulado](../qa/modular-domain-cards/browser/threejs-mobile.png).
+- `node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
+  Contratos y ficha de bots revisados; conservan su evidencia histórica. Las
+  estrategias, archivos visuales, datos de Europa y conductor de navegador no
+  cambiaron en este corte. Se restauró la evidencia histórica `docs/qa/threejs-*`.
+
+Entorno local con estado de archivo y puertos aislados, sin autenticación externa.
+Las pruebas SQL/remotas usan simuladores; no acreditan Render, Supabase real ni
+dispositivos físicos. Entrega local, sin integración de otros worktrees ni
+publicación. La fase 2 permanece activa hasta completar consultas y aceptación
+conjunta.
+
 ## Siguiente corte
 
-Extraer cartas de tren y mercado: robo visible/oculto, locomotora como segunda
-carta, reciclado inmediato, renovación de tres locomotoras y agotamiento de mazo.
-Conservar multiconjunto de cartas, consumo de azar, eventos privados/públicos y
-avance único de turno. Después retirar normalización/mutación de las consultas
-y realizar la aceptación conjunta de Europa antes de cerrar fase 2.
+Retirar normalización/mutación de las consultas: adaptar guardados en los puntos
+de carga y antes de ejecutar comandos, conservar plazos y resultados históricos,
+y construir vistas autorizadas sin referencias mutables al estado. Verificar
+todos los consumidores (servidor, práctica, bots y archivo/replay) antes de retirar
+compatibilidad de la fachada. Después realizar la aceptación conjunta de Europa
+antes de cerrar fase 2.

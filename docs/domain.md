@@ -16,6 +16,9 @@ mínimos, cantidad ofrecida, reloj y generador de azar para decisiones automáti
 Las [estaciones](../game/domain/stations.js), [red](../game/domain/network.js) y
 [puntuación](../game/domain/scoring.js) también son políticas independientes:
 reciben mapa/propiedad, billetes y parámetros de puntuación, sin textos o efectos.
+El [robo y mercado de cartas](../game/domain/train-cards.js) recibe pilas, límites
+y azar explícitos. Devuelve cambios sin alterar el estado recibido; la fachada
+conserva el orden de eventos, privacidad y resolución de turno.
 La extracción conserva las reglas descritas aquí; avance y límites en
 [fase 2](work/modular-platform-domain.md).
 

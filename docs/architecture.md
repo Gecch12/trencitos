@@ -50,6 +50,7 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Transiciones de túnel y comienzo/avance de turno | [tunnel.js](../game/domain/tunnel.js): `beginTunnel`, `decideTunnel`, `advanceTunnel`; [turn.js](../game/domain/turn.js): `planTurnStart`, `planNextTurn` |
 | Preparación de recursos, reparto y elecciones de destinos | [setup.js](../game/domain/setup.js): `prepareGame`; [destinations.js](../game/domain/destinations.js): `decideInitialChoice`, `planOffer`, `decideOfferChoice`, `randomSelection` |
 | Barajado y muestreo con generador suministrado | [random.js](../game/domain/random.js): `shuffle`, `sampleIndexes` |
+| Robo de cartas, reciclado y renovación del mercado | [train-cards.js](../game/domain/train-cards.js): `decideTrainDraw`, `drawCard`, `recycleDiscards`, `refillMarket`, `canDrawMore` |
 | Costes de estación y asignación conjunta de vías prestadas | [stations.js](../game/domain/stations.js): `decideStation`, `canBuildStation`, `assignStations` |
 | Conectividad, caminos de destino y recorrido más largo | [network.js](../game/domain/network.js): `connected`, `connectionPath`, `longestTrail` |
 | Puntuación, clasificación y desglose | [scoring.js](../game/domain/scoring.js): `scoreMatch`, `rankResults`, `resultDetails`, `destinationDetails`; [puente legado](../game/compat/legacy-scoring.js) |
@@ -108,7 +109,16 @@ al devolver resultados conserva el formato legado y las referencias de billetes.
 `resultDetails` explica totales/asignaciones guardados sin recalcular la
 clasificación: `routeAdjustment` conserva diferencias históricas de puntuación.
 
-La fachada aún comprueba fase/puesto, despacha vencimientos, obtiene cartas y
+`train-cards.js` prepara robos, reciclado y renovación sobre una copia de las
+pilas. Recibe tamaño de mercado, umbral de locomotoras, cartas por turno y azar;
+devuelve pilas, carta obtenida, señal de fin de turno y evidencia de renovación.
+Conserva el muestreo condicionado del mercado y su salida finita cuando no hay
+cartas normales suficientes. La fachada aplica las pilas con las referencias
+legadas, publica renovación antes del robo y filtra colores ocultos en `view`.
+Los helpers públicos `draw`, `refill` y `recycleDiscards` mantienen sus firmas;
+los límites de reciclado siguen coordinados por acciones y vencimientos.
+
+La fachada aún comprueba fase/puesto, despacha vencimientos y
 aplica los planes; emite historial/eventos y conserva el formato de guardados.
 `awardRoute` comparte la adjudicación entre construcción, túnel pagado y túnel
 sin suplemento. La adaptación de guardados en `ensureTiming` sigue en la fachada.
@@ -118,8 +128,8 @@ tras reservar la base, antes de gastar cualquier carta.
 
 No hay registro de mapas activo ni conversión de IDs de Europa todavía. Los
 otros consumidores siguen utilizando el formato legado. Las políticas extraídas
-no convierten en puro todo el motor: el ensamblado de la partida, robo/reciclado y
-mercado de cartas, coordinación de vencimientos/cierre y consultas aún residen
+no convierten en puro todo el motor: el ensamblado de la partida, aplicación de
+efectos, coordinación de vencimientos/cierre y consultas aún residen
 en la fachada. `view` todavía puede completar el desglose de un resultado antiguo;
 retirar esa normalización de las consultas sigue pendiente.
 Alcance y pruebas en
