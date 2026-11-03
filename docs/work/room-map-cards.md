@@ -1,5 +1,5 @@
 ---
-{"id":"room-map-cards","status":"validated","parent":null,"depends_on":["south-america-release"],"branch":"codex/lobby-map-cards","delivery":"worktree","updated":"2026-11-03"}
+{"id":"room-map-cards","status":"done","parent":null,"depends_on":["south-america-release"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Lobby: mapas visuales y vagón compacto
 
@@ -34,8 +34,8 @@ no envía cambios; el control conserva `aria-disabled` para usuarios y asistente
 
 ## Siguiente paso
 
-Integrar y publicar la revisión validada, después comprobar recursos y selección
-en producción. El código de backend solo añade los dos recursos estáticos nuevos.
+Entrega publicada. Ajustes posteriores se basarán en las pruebas de uso de Ángel.
+El código de backend solo añade los dos recursos estáticos nuevos.
 
 ## Validación final
 
@@ -48,3 +48,17 @@ seleccionada visible tras recargar en móvil y el inicio real en ambos clientes.
 Capturas: [escritorio](../qa/room-setup/desktop.png), [móvil](../qa/room-setup/mobile.png),
 [colección](../qa/room-setup/collection-desktop.png) y
 [colección móvil](../qa/room-setup/collection-mobile.png).
+
+## Entrega
+
+Código `8146ffa` en `origin/main`; Render Live el 2026-11-03 a las 09:23:30 Lima.
+El checkout local de `main` recibió ediciones concurrentes de otro trabajo durante
+la validación. Se preservaron intactas y se publicó directamente desde esta rama
+a `origin/main` con avance normal, sin stash, reset ni incluir código ajeno.
+El checkout local de main debe reconciliar su trabajo antes de actualizarse;
+[producción](../production.md) conserva la revisión efectivamente publicada.
+
+La comprobación remota confirmó 45 recursos idénticos y siete rutas privadas
+con 404. En Chrome se creó una sala privada de QA, se eligió Sudamérica por
+tarjeta y se abrieron las seis variantes de Midsommar; cierre normal y sin
+errores de consola. [Captura publicada](../qa/room-setup/production-desktop.png).
