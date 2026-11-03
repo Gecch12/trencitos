@@ -1,9 +1,9 @@
-// Real lobby: connected side-view train, one 3/4 wagon on mobile, isolated file-backed server.
+// Compact lobby preview: one real wagon, all viewports/families, camera and resource checks.
 const assert = require('node:assert/strict');
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
 const { chromium } = require('playwright');
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'trencitos-gallery-'));
-const out = path.resolve('.qa/wagon-mobile-three-quarter');
+const out = path.resolve(process.env.QA_OUT || '.qa/wagon-compact-preview');
 Object.assign(process.env, { STATE_BACKEND: 'file', STATE_FILE: path.join(temp, 'rooms.json'), AUTH_ENABLED: 'false' });
 const app = require('../backend/server');
 const report = { checks: [], layouts: [], errors: [] };
@@ -79,14 +79,13 @@ let browser;
     await choose('#d45748');
     await page.evaluate(() => { window.firstPreviewCanvas = document.querySelector('#wagonPreviewStage canvas'); });
     assert.equal(await page.locator('#wagonPreviewStage canvas').count(), 1);
-    assert.deepEqual(await page.locator('.wagon-preview-item').evaluateAll(items => items.map(item => item.dataset.variant)),
-      ['classic', 'solo', 'duo', 'trio', 'lean', 'wave']);
-    assert.equal(await page.locator('#wagonPreview').innerText(), '');
-    assert.equal(await page.locator('#wagonPreview figcaption, #wagonPreviewHint, #wagonPreviewCount').count(), 0);
+    assert.equal(await page.locator('#wagonPreviewStage .wagon-preview-item').count(), 0);
+    assert.match(await page.locator('#wagonPreview').innerText(), /Pasajeros/);
+    assert.equal(await page.locator('#openWagonCollection').isVisible(), true);
     assert.ok(await page.evaluate(() => previewDraws > 0), 'real WebGL draw calls');
-    report.checks.push('Six passenger compositions in one WebGL canvas without titles, labels, counters or explanatory text');
+    report.checks.push('One real compact wagon and a visible collection entry');
 
-    for (const [width, height, count] of [[2048,1131,6], [1440,900,6], [768,1024,6], [600,900,1], [601,900,6], [390,844,1], [844,390,1], [320,700,1]]) {
+    for (const [width, height, count] of [[2048,1131,1], [1440,900,1], [768,1024,1], [600,900,1], [601,900,1], [390,844,1], [844,390,1], [320,700,1]]) {
       await page.setViewportSize({ width, height });
       if (await page.locator('button[data-room-tab="settings"]').isVisible()) await page.locator('button[data-room-tab="settings"]').click();
       await page.locator('#wagonPreview').scrollIntoViewIfNeeded();
@@ -101,23 +100,14 @@ let browser;
           overflow: document.documentElement.scrollWidth > innerWidth,
         };
       });
-      assert.equal(layout.visibleCount, count, `${width}×${height}px wagon count`);
-      assert.ok(Math.abs(layout.galleryWidth - layout.sectionWidth) <= 2, 'uses whole appearance section');
+      assert.equal(layout.visibleCount, 0, `${width}×${height}px single preview needs no variant labels`);
+      assert.ok(layout.galleryWidth <= layout.sectionWidth + 2, 'fits appearance section');
       assert.equal(layout.overflow, false);
-      assert.ok(layout.galleryHeight <= 78, 'compact height');
+      assert.ok(layout.galleryHeight <= 160, 'compact height');
       assert.equal(layout.scrollable, false, 'no horizontal scrolling, including mobile');
-      if (count === 1) {
-        assert.ok(geometry.direction[0] < -.2 && geometry.direction[1] > .5 && geometry.direction[2] < -.2,
-          'mobile shows the front, side and roof in the original 3/4 view');
-      } else {
-        assert.ok(Math.abs(geometry.direction[0]) < .0001 && Math.abs(geometry.direction[2]) < .0001 && geometry.direction[1] > .9999,
-          'desktop keeps the connected train in side elevation');
-      }
-      assert.equal(geometry.couplers.length, count * 2, 'actual drawn wagon count');
-      for (let i = 1; i < geometry.couplers.length - 1; i += 2) {
-        assert.ok(Math.abs((geometry.couplers[i] + .55) - (geometry.couplers[i + 1] - .55)) < .0001,
-          'adjacent couplers meet without gaps or overlapping carriages');
-      }
+      assert.ok(geometry.direction[0] < -.2 && geometry.direction[1] > .5 && geometry.direction[2] < -.2,
+        'compact preview shows front, side and roof');
+      assert.equal(geometry.couplers.length, 2, 'actual drawn wagon count');
       assert.ok(geometry.projectedMin.every(value => value >= -1) && geometry.projectedMax.every(value => value <= 1),
         `all geometry fits inside the camera: ${JSON.stringify({ width, height, geometry })}`);
       report.layouts.push({ width, height, ...layout, geometry });
@@ -128,20 +118,20 @@ let browser;
         await page.locator('button[data-room-tab="settings"]').click();
         await page.locator('#wagonPreview').scrollIntoViewIfNeeded();
         await frames();
-        assert.equal(await page.locator('.wagon-preview-item:not([hidden])').count(), 1);
+        assert.equal(await page.locator('.wagon-preview-item:not([hidden])').count(), 0);
       }
     }
-    report.checks.push('Six connected wagons from the side on desktop/tablet; one in 3/4 view on mobile portrait/landscape, including live breakpoint changes; no clipping or scrolling');
+    report.checks.push('One 3/4 wagon at all eight viewport sizes, no clipping or scrolling; actual couplers confirm one model');
 
     await page.setViewportSize({ width: 1440, height: 900 });
     const { WAGON_STYLES } = await import('../frontend/wagon-models.mjs');
     for (const style of WAGON_STYLES) {
       await choose(style.color);
-      const count = ['passenger','hippie'].includes(style.model) ? 6 : 1;
+      const count = 0;
       assert.equal(await page.locator('.wagon-preview-item').count(), count, style.model);
       assert.equal(await page.locator('.wagon-preview-item:not([hidden])').count(), count, style.model);
       assert.ok((await page.locator('#wagonPreviewStage').getAttribute('aria-label')).startsWith(style.label + ','));
-      assert.equal(await page.locator('#wagonPreview').innerText(), '');
+      assert.ok((await page.locator('#wagonPreview').innerText()).length > 0);
       assert.equal(await page.evaluate(() => firstPreviewCanvas === document.querySelector('#wagonPreviewStage canvas')), true);
     }
     await page.locator('#wagonPreview').screenshot({ path: path.join(out, 'single-design.png') });
@@ -155,15 +145,15 @@ let browser;
     await choose('#458ad4'); await choose('#d45748');
     await page.locator('#wagonPreview').scrollIntoViewIfNeeded(); await frames();
     assert.deepEqual(await page.locator('#wagonPreview').screenshot(), before, 'returning to a color preserves its example appearances');
-    report.checks.push('All 21 families use their actual variant count, reuse the canvas, stay stable on return and do not redraw continuously');
+    report.checks.push('All 21 families reuse the compact canvas, stay stable on return and do not redraw continuously');
 
     await page.evaluate(() => I18n.select('en')); await page.reload();
     await page.waitForFunction(() => !!wagonPreview);
-    assert.equal(await page.locator('#wagonPreview').innerText(), '');
-    assert.deepEqual(await page.locator('.wagon-preview-item').evaluateAll(items => items.map(item => item.getAttribute('aria-label'))),
-      ['Classic', 'One passenger', 'Two passengers', 'Three passengers', 'Leaning out', 'Waving'].map(label => 'Passengers: ' + label));
+    assert.ok((await page.locator('#wagonPreview').innerText()).length > 0);
+    assert.equal(await page.locator('#wagonPreviewName').innerText(), 'Passengers');
+    assert.equal(await page.locator('#openWagonCollection').innerText(), 'View all 6 wagons');
     await page.locator('#wagonPreview').screenshot({ path: path.join(out, 'gallery-english.png') });
-    report.checks.push('Reload retains selection; English accessibility names remain available without visible descriptions');
+    report.checks.push('Reload retains selection; English caption and collection link are translated');
 
     await page.evaluate(() => document.querySelector('#wagonPreviewStage canvas').dispatchEvent(new Event('webglcontextlost', { cancelable: true })));
     assert.equal(await page.locator('#wagonPreviewError').isVisible(), true);

@@ -14,6 +14,7 @@
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
     <link rel="stylesheet" href="board-3d.css" />
     <link rel="stylesheet" href="shell.css" />
+    <link rel="stylesheet" href="room-setup.css" />
   </head>
   <body>
     <a href="#lobby" class="skip-link">Saltar al contenido</a>
@@ -104,12 +105,18 @@
           <header class="room-title"><h1>Sala: <span id="roomcode"></span></h1><button id="leaveLobby" type="button" class="icon-button" aria-label="Salir de la sala" data-icon="close"></button></header>
           <div class="room-settings-scroll">
             <section class="room-invitation"><h2>Invitar amigos</h2><div><input id="roomInviteLink" readonly aria-label="Enlace de invitación" /><button id="copyLink" class="shell-primary" type="button">Copiar</button></div></section>
-            <div class="room-game-options">
-              <section class="room-setting-group"><h2>Modo de juego</h2><div class="setting-cards"><div class="setting-card selected" data-icon="play"><strong>Clásico</strong></div></div></section>
-              <section class="room-setting-group"><h2><label for="roomMapChoice">Mapa</label></h2><div class="setting-cards"><div class="setting-card selected map-setting"><svg id="roomMapPreview" aria-hidden="true"></svg><select id="roomMapChoice" aria-label="Mapa"></select></div></div></section>
-              <section class="room-setting-group"><h2>Visibilidad</h2><button id="roomVisibility" class="setting-card visibility-setting" type="button" value="public" aria-label="Cambiar visibilidad" aria-describedby="roomVisibilityHint"><span data-visibility-icon></span><strong>Pública</strong></button></section>
-              <section class="room-setting-group capacity-setting"><h2><label for="roomCapacity">Jugadores</label></h2><div class="setting-card selected"><div class="room-stepper" data-setting="roomCapacity"></div></div></section>
-            </div>
+            <section class="room-map-section" aria-labelledby="roomMapTitle">
+              <div class="room-section-heading"><h2 id="roomMapTitle">Mapa</h2><span id="roomMapAccess" class="shell-muted"></span></div>
+              <div id="roomMapCards" class="map-card-list" role="radiogroup" aria-labelledby="roomMapTitle" aria-describedby="roomMapScrollHint"></div>
+              <p id="roomMapScrollHint" class="shell-muted map-scroll-hint" hidden>Desliza para ver más mapas</p>
+            </section>
+            <section class="room-setting-group room-configuration" aria-labelledby="roomConfigurationTitle">
+              <div class="room-section-heading"><h2 id="roomConfigurationTitle">Configuración</h2><span class="room-mode"><span data-icon="play"></span>Clásico</span></div>
+              <div class="room-game-options">
+                <section class="room-setting-group"><h3>Visibilidad</h3><button id="roomVisibility" class="setting-card visibility-setting" type="button" value="public" aria-label="Cambiar visibilidad" aria-describedby="roomVisibilityHint"><span data-visibility-icon></span><strong>Pública</strong></button></section>
+                <section class="room-setting-group capacity-setting"><h3><label for="roomCapacity">Jugadores</label></h3><div class="setting-card selected"><div class="room-stepper" data-setting="roomCapacity"></div></div></section>
+              </div>
+            </section>
             <p id="roomVisibilityHint" class="shell-muted room-visibility-hint">Visible en Partidas abiertas. La partida se podrá observar.</p>
             <section class="room-setting-group room-timing" aria-labelledby="roomTimingTitle"><h2 id="roomTimingTitle">Tiempos</h2><div class="room-setting-fields">
               <div class="room-setting-field"><label for="roomTurnSeconds">Tiempo por turno</label><div class="room-stepper" data-setting="roomTurnSeconds"></div></div>
@@ -119,6 +126,7 @@
             <section class="room-setting-group appearance-setting"><fieldset class="color-choice"><legend>Tu color <span id="chosenColorName"></span></legend><div id="roomColors" class="color-options"></div></fieldset>
               <figure id="wagonPreview" class="wagon-preview" aria-label="Vista previa de tu vagón" hidden>
                 <div id="wagonPreviewStage" class="wagon-preview-stage" role="group" aria-label="Vista previa de tu vagón"></div>
+                <figcaption><strong id="wagonPreviewName">Tu vagón</strong><button id="openWagonCollection" type="button" class="wagon-collection-link" aria-haspopup="dialog">Ver los 6 vagones</button></figcaption>
                 <p id="wagonPreviewError" hidden>La vista previa no está disponible.</p>
               </figure>
               <p id="roomNote" class="shell-muted" role="status"></p>
@@ -130,6 +138,12 @@
       </section>
       <p id="lobbyError" class="shell-error" role="alert"></p>
     </main>
+    <dialog id="wagonCollectionDialog" class="shell-dialog wagon-collection-dialog" aria-labelledby="wagonCollectionTitle" aria-describedby="wagonCollectionDescription">
+      <button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button>
+      <h2 id="wagonCollectionTitle">Tus vagones</h2><p id="wagonCollectionDescription"></p>
+      <div id="wagonCollectionStage" class="wagon-collection-stage" role="group" aria-label="Colección de vagones"></div>
+      <p id="wagonCollectionError" role="status" hidden>La vista previa no está disponible.</p>
+    </dialog>
     <dialog id="joinDialog" class="shell-dialog" aria-labelledby="joinTitle"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button><h2 id="joinTitle">Join Room</h2>
       <form id="homeJoin" novalidate><label for="code">Código de invitación</label><input id="code" maxlength="10" autocomplete="off" spellcheck="false" placeholder="Introduce el código" aria-describedby="joinCodeHint joinCodeError" required /><p id="joinCodeHint" class="shell-muted">Pídeselo a quien creó la sala.</p><p id="joinCodeError" class="field-error" role="alert"></p><button id="join" type="submit" class="shell-primary full">Unirme a la sala</button></form>
     </dialog>
@@ -283,6 +297,7 @@
     <script src="account-ui.js"></script>
     <script src="shell-icons.js"></script>
     <script src="replay-state.js"></script><script src="history-ui.js"></script>
+    <script src="room-map-picker.js"></script>
     <script src="shell.js"></script>
     <script src="app.js"></script>
   </body>

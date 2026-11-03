@@ -1,0 +1,20 @@
+{
+  "at": "2026-11-03T14:21:06.452894+00:00",
+  "base": "933a0fb",
+  "command": "npm test",
+  "tests": 633,
+  "pass": 633,
+  "fail": 0,
+  "logSha256": "714fb01676a1933be00905b55fdcdf03bda0a63350a4568e2524f8374e855e5b",
+  "sourceSha256": {
+    "frontend/app.js": "0a8cb352f515c711220226d7641f77b73a16fe3551276ce5d75376757c60593d",
+    "frontend/index.html": "69b964add27fb7c9cc7848b972be21ecccafc9b420d0c56c8af7b5a15ec7d041",
+    "frontend/room-map-picker.js": "ed53ffe4a72f0cce0d2af280d06ff2046696eba81763e93a808e1ca2f27354aa",
+    "frontend/room-setup.css": "45dd9def3235e1d7339669d13488a04f9dd5a7f83119bad0e2395a1c45fb151c",
+    "frontend/wagon-preview.js": "7a4a2ea9198c22e0e31813498cd91ddaac7fed274d36939f0e53a861fc5f3b0c",
+    "frontend/shell.js": "e9994a6a837643c38791109c921bb13c513d91747a7f44215e1a6c3ecedc1b21",
+    "frontend/shell.css": "9a4ae3930ee09593c44a63f9b59da7777377f5e50db26aeb9b64e47286dc87f6",
+    "shared/translations.js": "4cdead099bc6f36fa1fb998f274e03290b258768349932094a98295b5f6b1478",
+    "backend/public-assets.js": "26316a163d4ecec6276fa3faff6919b5c86f82cb40c000bec74af36cd5f8f213"
+  }
+}

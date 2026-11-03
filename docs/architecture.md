@@ -653,34 +653,28 @@ Alcance y pruebas en
   se ignoran preferencias/enlaces antiguos de vista. Si falla WebGL, se oculta el
   mapa y se ofrece reintentar 3D, sin modificar sala ni estado del juego.
 - [wagon-preview.js](../frontend/wagon-preview.js) comparte `createWagonRenderer` con el
-  tablero. El selector usa una sola escena/cámara ortográfica, lateral en escritorio, con
-  capacidad para todas las variantes y centros separados 21,3 unidades: los
-  enganches existentes se tocan sin superponer las carrocerías. La cámara encuadra
-  el tren completo a la altura de sus laterales. `wagonVariants` aporta IDs y
-  etiquetas: las seis
-  composiciones de Pasajeros y de Midsommar Express, o un diseño clásico para familias aún sin variantes.
-  Los ejemplos conservan un aspecto estable al volver a un color; no representan
-  el orden ni los personajes exactos de una ruta. La paleta queda encima y los
-  vagones se muestran conectados en una franja de 78 px de alto, sin tarjetas,
-  bordes, fondos, títulos, nombres visibles, contador ni explicación. En móvil
-  se dibuja solo la primera variante estable en la vista 3/4 original, con cámara
-  en (24, −38, 29), encuadre de exposición y sombra al suelo; Midsommar Express
-  eleva el foco y amplía el encuadre para incluir las personas del techo
-  (hasta 600 px de ancho, o hasta 950 px de ancho y 500 px de alto para paisaje).
-  `matchMedia` actualiza la cámara y el reparto visible al cambiar de tamaño;
-  las variantes ocultas no se dibujan
-  ni se anuncian al lector de pantalla. No hay desplazamiento horizontal.
-  Los nombres visibles al lector de pantalla se conservan en `aria-label`.
-  `syncWagonPreview` sigue
-  el último color pulsado, también mientras la sala espera confirmación. El cliente
-  envía una selección a la vez y conserva solo la última pendiente; perfil,
-  almacenamiento local y miembros mantienen el color confirmado por el servidor.
-  Rechazo, desconexión o fallo de guardado restauran la selección confirmada;
-  no se permite iniciar mientras queda una selección pendiente. Solo existe un
-  canvas de previsualización; se libera al salir del selector o jugar.
-  ResizeObserver actualiza los encuadres y la distribución; no hay bucle de
-  animación continuo. El modo de una pieza con cámara de exposición sigue
-  disponible para catálogos QA.
+  tablero. Lobby y práctica muestran una pieza estable en vista 3/4, con nombre
+  y enlace al detalle. La colección se crea al abrir su diálogo: las seis variantes
+  de Pasajeros/Midsommar Express se distribuyen en tres columnas (dos en pantallas
+  pequeñas), dentro de un solo canvas lateral. Familias sin variantes muestran
+  su único diseño y el enlace «Ver detalle». Se conservan IDs, geometría y modelos
+  del tablero; la colección no cambia el orden de vagones en las rutas.
+  Midsommar eleva el foco para incluir las personas del techo. Los nombres de las
+  variantes están disponibles al lector de pantalla. Escape/cierre libera la
+  escena de la colección y devuelve el foco; salir del lobby o jugar libera ambas
+  vistas. `ResizeObserver` actualiza encuadres; renderizado bajo demanda y DPR 2.
+  El modo de tren conectado sigue disponible para catálogos QA, sin usarse en el lobby.
+  `syncWagonPreview` sigue el último color pulsado mientras espera confirmación;
+  solo se envía una selección a la vez. Perfil, almacenamiento local y miembros
+  mantienen el color confirmado; rechazo/desconexión revierten la selección y
+  no se inicia una partida con una selección pendiente.
+- [room-map-picker.js](../frontend/room-map-picker.js) presenta el catálogo de mapas
+  como tarjetas con SVG, nombre y distintivos Beta/Pruebas. El grupo de radios
+  admite teclado, foco visible y desplazamiento horizontal cuando no caben. La
+  referencia confirmada por la sala determina `aria-checked`; solo el anfitrión
+  puede solicitar cambios mediante el mismo comando `room_settings`. No cambia
+  reglas ni persistencia. [room-setup.css](../frontend/room-setup.css) organiza mapa,
+  configuración, tiempos y apariencia, con inicio fijo y scroll interno.
 - El estado completo de la partida permanece en el servidor. `view` entrega
   mano/destinos propios y datos públicos; los destinos rivales se revelan al final solo a participantes.
   `sharedTunnel` entrega evidencia pública a jugadores y espectadores; el pago

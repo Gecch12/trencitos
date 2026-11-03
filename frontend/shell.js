@@ -121,17 +121,11 @@ const AppShell = (() => {
       };
     }
     $('roomVisibility').onclick=()=>configure({visibility:state().visibility==='public'?'private':'public'});
-    $('roomMapChoice').innerHTML = MapOptions.options.map((option,i)=>`<option value="${i}">${escape(I18n.t(option.name))}</option>`).join('');
-    $('roomMapChoice').onchange = () => configure({mapRef:MapOptions.reference(MapOptions.options[+$('roomMapChoice').value])});
-    function renderMap(ref, locked) {
-      const index = MapOptions.options.findIndex(option=>option.id===ref?.id && option.version===ref?.version);
-      $('roomMapChoice').value = String(index); $('roomMapChoice').disabled = locked;
-      const layout = [EuropeLayoutV1,LaboratoryLayoutV1,SouthAmericaLayoutV33].find(layout=>layout.mapRef.id===ref?.id && layout.mapRef.version===ref?.version);
-      if (!layout) { $('roomMapPreview').innerHTML=''; return; }
-      const {x,y,width,height} = layout.bounds;
-      $('roomMapPreview').setAttribute('viewBox',`${x} ${y} ${width} ${height}`);
-      $('roomMapPreview').innerHTML = `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="#bbd6d9"/>${layout.land.map(d=>`<path d="${d}" fill="#f3ead3" stroke="#b8b49f" stroke-width="2"/>`).join('')}${Object.values(layout.cities).map(([cx,cy])=>`<circle cx="${cx}" cy="${cy}" r="5" fill="#4b6973"/>`).join('')}`;
-    }
+    const mapPicker = RoomMapPicker.create({
+      container: $('roomMapCards'), hint: $('roomMapScrollHint'),
+      options: MapOptions.options, layouts: [EuropeLayoutV1,LaboratoryLayoutV1,SouthAmericaLayoutV33],
+      select: option => configure({mapRef:MapOptions.reference(option)}), translate: text => I18n.t(text),
+    });
 
     function renderDirectory() {
       const rows = directory.filter(r => r.started === (directoryTab === 'spectate'));
@@ -156,7 +150,8 @@ const AppShell = (() => {
       $('roomInviteLink').value = location.origin+'/?room='+s.room;
       $('roomVisibility').value = s.visibility;
       const locked = !s.host || s.busy || s.started;
-      renderMap(s.mapRef,locked);
+      mapPicker.render(s.mapRef,locked);
+      $('roomMapAccess').textContent = s.host ? '' : I18n.t('El anfitrión elige el mapa');
       $('roomVisibility').disabled = locked;
       $('roomVisibility').querySelector('[data-visibility-icon]').innerHTML = ShellIcons.svg(s.visibility === 'public' ? 'globe' : 'lock');
       $('roomVisibility').querySelector('strong').textContent = I18n.t(s.visibility === 'public' ? 'Pública' : 'Privada');

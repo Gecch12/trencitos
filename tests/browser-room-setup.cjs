@@ -1,0 +1,89 @@
+// Real two-client lobby: UI -> WebSocket -> durable room -> both clients.
+const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const {chromium}=require('playwright');
+const temp=fs.mkdtempSync(path.join(os.tmpdir(),'trencitos-room-setup-'));
+Object.assign(process.env,{STATE_BACKEND:'file',STATE_FILE:path.join(temp,'rooms.json'),AUTH_ENABLED:'false'});
+const app=require('../backend/server'),{loadState}=require('../backend/room-store');
+const out=path.resolve(process.env.QA_OUT||'docs/qa/room-setup');
+const report={at:new Date().toISOString(),checks:[],errors:[]};let browser,page;
+async function visibleLayout(page,label){
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,label+' horizontal overflow');
+  const start=await page.locator('#start').boundingBox(),viewport=page.viewportSize();
+  assert.ok(start.y>=0&&start.y+start.height<=viewport.height,label+' start button stays visible');
+  await page.screenshot({path:path.join(out,label+'.png')});
+}
+(async()=>{
+  fs.mkdirSync(out,{recursive:true});await app.ready;
+  await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
+  const base=`http://127.0.0.1:${app.server.address().port}`;
+  browser=await chromium.launch({channel:'chrome',headless:true});report.browser=browser.version();
+  const hostContext=await browser.newContext({viewport:{width:1920,height:980}}),guestContext=await browser.newContext({viewport:{width:1440,height:900}});
+  page=await hostContext.newPage();const guest=await guestContext.newPage();
+  for(const p of [page,guest]){p.on('pageerror',e=>report.errors.push(e.message));p.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});p.setDefaultTimeout(15000);}
+  await page.goto(base+'/rooms');await page.locator('#create').click();
+  await page.waitForFunction(()=>room&&wagonPreview);
+  const code=await page.locator('#roomcode').innerText();
+  await guest.goto(base+'/rooms');await guest.locator('#openJoin').click();await guest.locator('#code').fill(code);await guest.locator('#join').click();
+  await guest.waitForFunction(()=>room&&wagonPreview);
+  assert.equal(await page.locator('#roomMapCards [role=radio]').count(),3);
+  assert.equal(await page.locator('#roomMapChoice').count(),0);
+  assert.equal(await guest.locator('#roomMapCards [aria-disabled=true]').count(),3);
+  await guest.locator('[data-map-id="south-america"]').click({force:true});
+  assert.equal(await guest.evaluate(()=>roomMapRef.id),'europe');
+  await page.locator('[data-map-id="south-america"]').click();
+  for(const p of [page,guest])await p.waitForFunction(()=>roomMapRef.id==='south-america'&&document.querySelector('[data-map-id="south-america"]').getAttribute('aria-checked')==='true');
+  assert.equal(loadState(process.env.STATE_FILE).rooms.find(r=>r.code===code).mapRef.id,'south-america');
+  report.checks.push('Map cards replace select; host choice persists and reaches guest; guest cannot change it');
+  await page.locator('[data-map-id="south-america"]').focus();await page.keyboard.press('ArrowRight');
+  await page.waitForFunction(()=>roomMapRef.id==='laboratory');
+  await page.keyboard.press('Home');await page.waitForFunction(()=>roomMapRef.id==='europe');
+  await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>roomMapRef.id==='south-america');
+  await page.reload();await page.waitForFunction(()=>roomMapRef.id==='south-america'&&wagonPreview);
+  assert.equal(await page.locator('[data-map-id="south-america"]').getAttribute('aria-checked'),'true');
+  report.checks.push('Arrow/Home keyboard navigation and reconnect preserve authoritative choice');
+  await page.locator('#roomColors [data-color="#ffffff"]').click();
+  await page.waitForFunction(()=>document.querySelector('#wagonPreview').dataset.model==='hippie'&&!pendingRoomColor&&!colorRequest);
+  await visibleLayout(page,'desktop');
+  await page.locator('#openWagonCollection').click();await page.waitForFunction(()=>wagonCollection);
+  assert.equal(await page.locator('#wagonCollectionStage [data-variant]').count(),6);
+  await page.screenshot({path:path.join(out,'collection-desktop.png')});
+  await page.keyboard.press('Escape');await page.waitForFunction(()=>!wagonCollection);
+  assert.equal(await page.locator('#wagonCollectionStage canvas').count(),0);
+  assert.equal(await page.locator('#openWagonCollection').evaluate(el=>document.activeElement===el),true);
+  report.checks.push('Compact preview opens all six variants; Escape disposes canvas and restores focus');
+  await page.setViewportSize({width:1280,height:720});await visibleLayout(page,'laptop');
+  await page.setViewportSize({width:390,height:844});await page.locator('[data-room-tab="settings"][role="tab"]').click();
+  await visibleLayout(page,'mobile');
+  assert.equal(await page.locator('#roomMapScrollHint').isVisible(),true);
+  await page.locator('[data-map-id="laboratory"]').click();await page.waitForFunction(()=>roomMapRef.id==='laboratory');
+  await page.reload();await page.waitForFunction(()=>roomMapRef.id==='laboratory'&&wagonPreview);
+  await page.locator('[data-room-tab="settings"][role="tab"]').click();
+  await page.waitForFunction(()=>{const el=document.querySelector('[data-map-id="laboratory"]'),card=el.getBoundingClientRect(),rail=el.parentElement.getBoundingClientRect();return card.left>=rail.left-1&&card.right<=rail.right+1;});
+  await page.locator('[data-map-id="south-america"]').click();await page.waitForFunction(()=>roomMapRef.id==='south-america');
+  await page.locator('#openWagonCollection').click();await page.waitForFunction(()=>wagonCollection);
+  assert.equal(await page.locator('#wagonCollectionStage [data-variant]:not([hidden])').count(),6);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await page.screenshot({path:path.join(out,'collection-mobile.png')});
+  await page.keyboard.press('Escape');await page.waitForFunction(()=>!wagonCollection);
+  report.checks.push('Laptop/mobile fit, sticky start, scrolling maps and all six gallery models on mobile');
+  // Families without six variants retain their single model and an accurate CTA.
+  const single=await page.evaluate(async()=>{const m=await import('/wagon-models.mjs');return LobbyUI.PALETTE.find(p=>!members.some(member=>member.color===p.color)&&m.wagonVariants(m.wagonStyle(p.color).model).length===1)?.color;});
+  if(single){await page.locator(`#roomColors [data-color="${single}"]`).click();await page.waitForFunction(c=>preferredColor===c&&!colorRequest,single);
+    assert.equal(await page.locator('#openWagonCollection').innerText(),'Ver detalle');await page.locator('#openWagonCollection').click();await page.waitForFunction(()=>wagonCollection);
+    assert.equal(await page.locator('#wagonCollectionStage [data-variant]').count(),1);await page.keyboard.press('Escape');}
+  await page.setViewportSize({width:1440,height:900});
+  await page.evaluate(()=>I18n.select('en'));await page.reload();await page.waitForFunction(()=>room&&wagonPreview);
+  assert.match(await page.locator('[data-map-id="south-america"]').innerText(),/South America/);
+  assert.match(await page.locator('[data-map-id="laboratory"]').innerText(),/Testing/);
+  await visibleLayout(page,'english');report.checks.push('Map titles, badges and controls translate into English');
+  await page.locator('#start').click();await page.waitForFunction(()=>game&&board3D);
+  await guest.waitForFunction(()=>game&&board3D);
+  assert.equal(await page.evaluate(()=>game.mapRef.id),'south-america');
+  assert.equal(await guest.evaluate(()=>game.mapRef.id),'south-america');
+  assert.equal(await page.locator('#wagonPreviewStage canvas').count(),0);
+  report.checks.push('Selected South America starts for both clients; lobby preview resources are released');
+  assert.deepEqual(report.errors,[]);report.passed=true;
+})().catch(async error=>{report.failure=error.stack;process.exitCode=1;await page?.screenshot({path:path.join(out,'failure.png')}).catch(()=>{});}).finally(async()=>{
+  if(browser)await browser.close();await app.shutdown();fs.rmSync(temp,{recursive:true,force:true});
+  fs.mkdirSync(out,{recursive:true});fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
+});

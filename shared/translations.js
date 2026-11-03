@@ -1,6 +1,15 @@
 "use strict";
 // Spanish source messages and their English translations. Values are never translated.
 const Translations = {
+  "Sudamérica": "South America",
+  "Pruebas": "Testing",
+  "Desliza para ver más mapas": "Swipe to see more maps",
+  "El anfitrión elige el mapa": "The host chooses the map",
+  "Ver los 6 vagones": "View all 6 wagons",
+  "Ver detalle": "View details",
+  "Tus vagones": "Your wagons",
+  "Colección de vagones": "Wagon collection",
+
   "Ya construiste todas tus estaciones": "You have built all your stations",
   "{0} cartas visibles y mazo oculto": "{0} face-up cards and blind deck",
   "{0} de {1} robos usados": "{0} of {1} draws used",

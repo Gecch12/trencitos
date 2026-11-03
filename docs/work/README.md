@@ -47,3 +47,5 @@ Mejoras solicitadas del juego:
 Abre solo la ficha pertinente y sus referencias. El próximo paso está allí.
 Los hitos viven dentro de la ficha hasta necesitar una entrega independiente;
 entonces usa `parent` y `depends_on`, según [el método](../maintenance.md).
+
+- [Lobby con tarjetas de mapas y vagón compacto](room-map-cards.md).

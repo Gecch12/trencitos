@@ -12,7 +12,7 @@ const save=()=>fs.writeFileSync(path.join(out,'browser-report.json'),JSON.string
   const context=await browser.newContext({viewport:{width:1460,height:940}});page=await context.newPage();page.setDefaultTimeout(20000);
   page.on('pageerror',e=>report.errors.push(e.stack));page.on('console',e=>{if(e.type()==='error')report.errors.push(e.text());});
   await page.goto(base);await page.locator('#create').click();await page.waitForFunction(()=>!!room);
-  await page.locator('#roomMapChoice').selectOption('2');await page.waitForFunction(()=>roomMapRef.id==='south-america');
+  await page.locator('[data-map-id="south-america"]').click();await page.waitForFunction(()=>roomMapRef.id==='south-america');
   const code=await page.locator('#roomcode').textContent();
   for(let n=2;n<=5;n++){await page.evaluate(()=>send({type:'add_bot'}));await page.waitForFunction(n=>members.length===n,n);}
   await page.screenshot({path:path.join(out,'lobby-four-bots.png')});await page.locator('#start').click();await page.waitForFunction(()=>game?.phase==='initial'&&board3D);
