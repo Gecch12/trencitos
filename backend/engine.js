@@ -25,6 +25,8 @@ function recorded(g,seat,action,automatic=false){observers.get(g)?.({seat,action
 const randomFor=g=>actionRandom.get(g)||crypto.randomInt;
 const {COLORS,PLAYER_COLORS,CITIES,ROUTES,TICKETS}=require('../shared/data');
 const SCORE={1:1,2:2,3:4,4:7,6:15,8:21};
+const {maps,EUROPE_REFERENCE,validateMapForRules}=require('./maps');
+validateMapForRules(maps.get(EUROPE_REFERENCE),{colors:COLORS,routePoints:SCORE,capabilities:{tunnels:true,ferries:true}});
 const CLAIM_RULES={colors:COLORS,routePoints:SCORE,doubleRoutesMinPlayers:4};
 const TURN_MS=60000, INITIAL_MS=60000, OFFER_MS=60000;
 const TUNNEL_CARD_MS=700, TUNNEL_RESULT_MS=3000;

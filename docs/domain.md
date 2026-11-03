@@ -1,7 +1,7 @@
 # Dominio y reglas existentes
 
 Describe el comportamiento de Trencitos contrastado con [engine.js](../backend/engine.js),
-[data.js](../shared/data.js) y pruebas. No equivale a una transcripción del reglamento
+[Europa v1](../shared/maps/europe-v1.js), su [puente de datos](../shared/data.js) y pruebas. No equivale a una transcripción del reglamento
 comercial: conserva las variantes del proyecto.
 
 La composición/reserva de pagos y la decisión de construir están extraídas a
@@ -24,6 +24,12 @@ la partida. La adaptación de relojes/resultados antiguos es una escritura expl�
 (`normalize`) previa a consultar; no ocurre al leer ni cambia frames históricos.
 La extracción conserva las reglas descritas aquí; avance y límites en
 [fase 2](work/modular-platform-domain.md).
+
+La red y los billetes de Europa tienen una definición inmutable versionada.
+La correspondencia entre IDs nuevos y números anteriores está congelada; los
+mensajes y guardados aún conservan estos números. El registro rechaza versiones
+inexistentes y redes inválidas. La selección y referencias por partida pertenecen
+al trabajo pendiente de [fase 4](work/modular-platform-maps.md).
 
 ## Conceptos e invariantes
 

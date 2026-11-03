@@ -80,7 +80,7 @@ por separado. El cierre de esta ficha no implica publicación.
 - Mantener Three.js, las familias de vagones, cartas y estaciones existentes.
   El SVG provisional y el visor de referencia no sustituyen el tablero principal.
 
-## Hito en curso: fase 3
+## Hito en curso: fase 4
 
 El [modelo de fase 1](../decisions/match-domain-contracts.md) define los contratos
 y el puente. La [ficha de dominio](modular-platform-domain.md) conserva la aceptación
@@ -93,18 +93,16 @@ una operación explícita en los puntos de carga/ejecución. Europa fue verifica
 con bots, privacidad, guardado/replay y errores de persistencia; también se corrigió
 y comprobó el empaquetado Docker local.
 
-La [fase 3](modular-platform-application.md) ya separa jugadas humanas, vencimientos
-y jugadas automáticas de bots permanentes, reemplazos y práctica
-de los adaptadores de entrada, conservando confirmación durable de partida e historial,
-deduplicación y rollback. Preparación, confirmación conjunta y vistas encoladas
-ya tienen puertos separados; los adaptadores conservan checkpoint global y
-formatos existentes. Lobby, estado, grabación e historial/replay ya usan
-consultas autorizadas separadas del transporte y con salidas independientes del
-estado fuente. Los recibos nuevos ya detectan IDs reutilizados con otra acción
-y conservan IDs legados, ventana de 128 y rollback conjunto. El sexto corte incorpora un checkpoint revisado
-de vagones y organiza `frontend/`, `backend/` y `shared/`, conservando `game/`,
-las URLs y el despliegue único. La aceptación conjunta de fase 3 está registrada en su ficha. Las ediciones posteriores de
-otros worktrees no se sincronizan automáticamente con esta rama.
+La [fase 3](modular-platform-application.md) está aceptada: aplicación,
+confirmación durable, recibos, consultas autorizadas y separación física de
+frontend/backend conservan el comportamiento conjunto. Su ficha mantiene
+los límites y las evidencias; no implica publicación ni sincronización automática
+con otros worktrees.
+
+La [fase 4](modular-platform-maps.md) introduce definiciones versionadas e IDs
+estables. El primer corte separa Europa y congela el puente numérico; el runtime
+sigue usando una sola red. La independencia se aceptará cuando Europa y un mapa
+pequeño funcionen simultáneamente en partidas completas.
 
 No mover archivos por tamaño ni convertir cada función en un módulo. Los límites
 siguen responsabilidades y dependencias verificables.
@@ -116,5 +114,5 @@ La [fase 0](modular-platform-baseline.md) conserva la base y sus límites; la
 pruebas de aceptación del primer recorrido. La
 [fase 2](modular-platform-domain.md) contiene las extracciones de pagos,
 construcción, transiciones de túnel/turno, reparto, destinos, estaciones,
-puntuación, cartas/mercado y consultas, más la aceptación conjunta. El siguiente
-paso de aplicación/interfaz y su evidencia están en la [fase 3](modular-platform-application.md).
+puntuación, cartas/mercado y consultas, más la aceptación conjunta. La [fase 3](modular-platform-application.md) conserva su aceptación conjunta.
+El siguiente paso y la evidencia de mapas están en la [fase 4](modular-platform-maps.md).

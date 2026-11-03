@@ -1,0 +1,48 @@
+TAP version 13
+# Could not persist rooms: EISDIR: illegal operation on a directory, open '/tmp/command-receipts-NhPpGo/state.json.tmp'
+# Subtest: file receipts survive reconnection/restart and roll back atomically without changing legacy IDs or replay
+ok 1 - file receipts survive reconnection/restart and roll back atomically without changing legacy IDs or replay
+  ---
+  duration_ms: 248.049333
+  type: 'test'
+  ...
+# Subtest: runtime assets load through HTML, JavaScript imports and CSS references
+ok 2 - runtime assets load through HTML, JavaScript imports and CSS references
+  ---
+  duration_ms: 162.37875
+  type: 'test'
+  ...
+# Loaded 47 runtime resources: /, /privacy.html, /assets/cards/red.svg, /assets/cards/blue.svg, /assets/cards/green.svg, /assets/cards/yellow.svg, /assets/cards/black.svg, /assets/cards/white.svg, /assets/cards/orange.svg, /assets/cards/purple.svg, /assets/cards/wild.svg, /assets/cards/back.svg, /assets/ticket.svg, /style.css, /game.css, /responsive.css, /lobby.css, /assets/favicon.svg, /board-3d.css, /shell.css, /translations.js, /i18n.js, /maps/europe-v1.js, /maps/europe-legacy-v1.js, /data.js, /map-layout.js, /game-timing.js, /game-ui.js, /lobby-ui.js, /board-camera.js, /account-ui.js, /shell-icons.js, /replay-state.js, /history-ui.js, /shell.js, /app.js, /privacy.css, /board-3d.js, /wagon-preview.js, /vendor/three.module.js, /wagon-renderer.js, /wagon-models.mjs, /vendor/three.core.js, /hippie-model.mjs, /hippie-geometry.mjs, /wagon-people.mjs, /hippie-hair.mjs
+# Subtest: static SVG is served safely with right MIME and traversal returns 404
+ok 3 - static SVG is served safely with right MIME and traversal returns 404
+  ---
+  duration_ms: 53.437458
+  type: 'test'
+  ...
+# Subtest: versioned Europe and its frozen numeric bridge preserve every legacy city, route and ticket
+ok 4 - versioned Europe and its frozen numeric bridge preserve every legacy city, route and ticket
+  ---
+  duration_ms: 2.54775
+  type: 'test'
+  ...
+# Subtest: complete seeded setups retain their pre-extraction fingerprints for two through five players
+ok 5 - complete seeded setups retain their pre-extraction fingerprints for two through five players
+  ---
+  duration_ms: 2.08625
+  type: 'test'
+  ...
+# Subtest: WebSocket practice flow: create, choose tickets, bots, finish, leave and create again
+ok 6 - WebSocket practice flow: create, choose tickets, bots, finish, leave and create again
+  ---
+  duration_ms: 6007.935378
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6882.117712

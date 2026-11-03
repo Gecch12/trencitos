@@ -1,0 +1,28 @@
+{
+  "checked_at": "2026-11-03T04:22:54.450610+00:00",
+  "base_commit": "21947c6b6541f77902aadfad04244f643e10348c",
+  "results": {
+    "node-tests-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "3e28593b441f8efe34298ceb5594f6ab8c50f30a9c6bdf304f2efac2a379bcf0"
+    },
+    "browser-tests-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "c7dc0772746827d07ddeb79117f442ad3814adfeafe43e408638b4420d5f6eeb"
+    },
+    "docker-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "6efd869d6050a258543bef26750f1606a7930f3f21190af50bd9df14e58620e1"
+    }
+  },
+  "historical_qa_unchanged": true,
+  "baseline_source_sha256": "382531e8e999259331cf5015d0b0b0b5d982dd929c4510ca0b593758c2148093",
+  "artifact_sha256": {
+    "shared/maps/europe-v1.js": "e6a0157567de5aa336bf6f3f7211e2a5adb323dbb160a71f34841f5d6a9778df",
+    "shared/maps/europe-legacy-v1.js": "a98444a488518e1793cc411fc37e7a11e219eba800a740768b5b623063e11f89",
+    "tests/fixtures/europe-legacy-v1.json": "ff924b0cb2c0a33aabedd356fc5d90f02210118b88ab3f0d722b8f91a68d836c"
+  }
+}

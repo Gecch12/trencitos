@@ -1,0 +1,172 @@
+TAP version 13
+# Subtest: claim plans use opaque IDs, injected scores and palette, independent of list order
+ok 1 - claim plans use opaque IDs, injected scores and palette, independent of list order
+  ---
+  duration_ms: 1.924958
+  type: 'test'
+  ...
+# Subtest: a numeric ID is an identity, never an array offset or a coerced string
+ok 2 - a numeric ID is an identity, never an array offset or a coerced string
+  ---
+  duration_ms: 0.246916
+  type: 'test'
+  ...
+# Subtest: colored tunnels return a reservation plan using their own color
+ok 3 - colored tunnels return a reservation plan using their own color
+  ---
+  duration_ms: 0.131625
+  type: 'test'
+  ...
+# Subtest: parallel ownership obeys both the owner and the injected player threshold
+ok 4 - parallel ownership obeys both the owner and the injected player threshold
+  ---
+  duration_ms: 0.456375
+  type: 'test'
+  ...
+# Subtest: legacy parallel lanes use reversed endpoints without blocking adjacent corridors
+ok 5 - legacy parallel lanes use reversed endpoints without blocking adjacent corridors
+  ---
+  duration_ms: 0.176583
+  type: 'test'
+  ...
+# Subtest: business errors are structured and keep availability, trains, color, payment precedence
+ok 6 - business errors are structured and keep availability, trains, color, payment precedence
+  ---
+  duration_ms: 0.225416
+  type: 'test'
+  ...
+# Subtest: the policy trusts map/rules data for costs and ownership, not client payload fields
+ok 7 - the policy trusts map/rules data for costs and ownership, not client payload fields
+  ---
+  duration_ms: 0.182417
+  type: 'test'
+  ...
+# Subtest: domain modules run without ambient clock, randomness, transport or external imports
+ok 8 - domain modules run without ambient clock, randomness, transport or external imports
+  ---
+  duration_ms: 7.059375
+  type: 'test'
+  ...
+# Subtest: versioned Europe and its frozen numeric bridge preserve every legacy city, route and ticket
+ok 9 - versioned Europe and its frozen numeric bridge preserve every legacy city, route and ticket
+  ---
+  duration_ms: 2.536958
+  type: 'test'
+  ...
+# Subtest: reordering definitions leaves legacy IDs, route order and deterministic deck order unchanged
+ok 10 - reordering definitions leaves legacy IDs, route order and deterministic deck order unchanged
+  ---
+  duration_ms: 0.769
+  type: 'test'
+  ...
+# Subtest: the Europe bridge cannot silently accept a different map, version, missing ID or duplicate
+ok 11 - the Europe bridge cannot silently accept a different map, version, missing ID or duplicate
+  ---
+  duration_ms: 2.488875
+  type: 'test'
+  ...
+# Subtest: browser classic scripts and Node deliver identical legacy data without server modules
+ok 12 - browser classic scripts and Node deliver identical legacy data without server modules
+  ---
+  duration_ms: 2.428833
+  type: 'test'
+  ...
+# Subtest: complete seeded setups retain their pre-extraction fingerprints for two through five players
+ok 13 - complete seeded setups retain their pre-extraction fingerprints for two through five players
+  ---
+  duration_ms: 1.342292
+  type: 'test'
+  ...
+# Subtest: catalog holds explicit versions, isolates input and exposes only frozen definitions and references
+ok 14 - catalog holds explicit versions, isolates input and exposes only frozen definitions and references
+  ---
+  duration_ms: 3.804334
+  type: 'test'
+  ...
+# Subtest: missing, malformed and duplicate versions fail explicitly without falling back to Europe
+ok 15 - missing, malformed and duplicate versions fail explicitly without falling back to Europe
+  ---
+  duration_ms: 1.175792
+  type: 'test'
+  ...
+# Subtest: definition validation rejects state, layout, missing fields and ambiguous identities
+ok 16 - definition validation rejects state, layout, missing fields and ambiguous identities
+  ---
+  duration_ms: 0.39825
+  type: 'test'
+  ...
+# Subtest: routes, corridors and destinations must agree and all cities must be reachable
+ok 17 - routes, corridors and destinations must agree and all cities must be reachable
+  ---
+  duration_ms: 0.84025
+  type: 'test'
+  ...
+# Subtest: numeric quantities and route flags are checked before a map is registered
+ok 18 - numeric quantities and route flags are checked before a map is registered
+  ---
+  duration_ms: 0.439084
+  type: 'test'
+  ...
+# Subtest: rules must supply route scores, colors and the mechanics required by the map
+ok 19 - rules must supply route scores, colors and the mechanics required by the map
+  ---
+  duration_ms: 0.312875
+  type: 'test'
+  ...
+# Subtest: Europe and an opaque-ID map can drive the same construction policy independently of array order
+ok 20 - Europe and an opaque-ID map can drive the same construction policy independently of array order
+  ---
+  duration_ms: 1.047667
+  type: 'test'
+  ...
+# Subtest: opaque IDs with prototype-like names and version delimiters do not collide
+ok 21 - opaque IDs with prototype-like names and version delimiters do not collide
+  ---
+  duration_ms: 0.131958
+  type: 'test'
+  ...
+# Subtest: catalog policies need no transport, file, clock or random dependency
+ok 22 - catalog policies need no transport, file, clock or random dependency
+  ---
+  duration_ms: 1.329916
+  type: 'test'
+  ...
+# Subtest: optional setup randomness reproduces complete states including market renewal without global RNG
+ok 23 - optional setup randomness reproduces complete states including market renewal without global RNG
+  ---
+  duration_ms: 3.883542
+  type: 'test'
+  ...
+# Subtest: setup rejects before consuming RNG and preserves legacy error messages
+ok 24 - setup rejects before consuming RNG and preserves legacy error messages
+  ---
+  duration_ms: 0.27725
+  type: 'test'
+  ...
+# Subtest: initial rejections leave play while later rejections return, retaining array and ticket references
+ok 25 - initial rejections leave play while later rejections return, retaining array and ticket references
+  ---
+  duration_ms: 1.010292
+  type: 'test'
+  ...
+# Subtest: missing or stale offer IDs cannot select tickets and rejection leaves the entire state intact
+ok 26 - missing or stale offer IDs cannot select tickets and rejection leaves the entire state intact
+  ---
+  duration_ms: 0.92425
+  type: 'test'
+  ...
+# Subtest: forced closing resolves each offer with supplied randomness before scoring
+ok 27 - forced closing resolves each offer with supplied randomness before scoring
+  ---
+  duration_ms: 1.537
+  type: 'test'
+  ...
+1..27
+# tests 27
+# suites 0
+# pass 27
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 119.621459

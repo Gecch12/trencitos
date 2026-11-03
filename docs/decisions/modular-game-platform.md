@@ -1,13 +1,13 @@
 # Evolución modular del juego y soporte de varios mapas
 
 Estado: decisión aceptada por el usuario el 2026-11-02; implementación gradual
-pendiente. Avance y aceptación en [la iniciativa](../work/modular-game-platform.md).
+en curso. Avance y aceptación en [la iniciativa](../work/modular-game-platform.md).
 Este documento describe el destino acordado, no sustituye la
 [arquitectura existente](../architecture.md).
 El [modelo y los contratos de transición](match-domain-contracts.md) concretan
 sus límites, compatibilidad y primer recorrido de extracción.
 
-## Contexto
+## Contexto al adoptar la decisión
 
 Sudamérica requiere utilizar otra red y billetes sin sustituir Europa. El motor
 actual ya es autoritativo y el renderizador 3D está separado, pero motor, interfaz

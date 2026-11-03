@@ -10,7 +10,8 @@ Iniciativa acordada:
   [base reproducible](modular-platform-baseline.md) y desarrollo del
   [modelo y contratos](modular-platform-contracts.md). Continuación:
   [extracción del dominio](modular-platform-domain.md) y
-  [aplicación e interfaz](modular-platform-application.md).
+  [aplicación e interfaz](modular-platform-application.md) y
+  [mapas versionados](modular-platform-maps.md).
 
 Orden de trabajo acordado:
 

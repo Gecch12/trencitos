@@ -40,7 +40,10 @@
     "shared/game-timing.js",
     "backend/match-archive.js",
     "server.js",
-    "backend/public-assets.js"
+    "backend/public-assets.js",
+    "game/maps/",
+    "backend/maps.js",
+    "shared/maps/"
   ],
   "domain.md": [
     "game/application/automatic-play.js",
@@ -57,7 +60,10 @@
     "backend/room-bots.js",
     "shared/game-timing.js",
     "backend/server.js",
-    "backend/room-store.js"
+    "backend/room-store.js",
+    "game/maps/",
+    "backend/maps.js",
+    "shared/maps/"
   ],
   "operations.md": [
     "package.json",
@@ -70,7 +76,11 @@
     "server.js",
     "backend/public-assets.js",
     "scripts/make_assets.py",
-    "scripts/generate_map_preview.py"
+    "scripts/generate_map_preview.py",
+    "backend/maps.js",
+    "shared/maps/",
+    "shared/data.js",
+    "frontend/index.html"
   ],
   "work/board-3d.md": [
     "frontend/map-layout.js",
@@ -224,7 +234,10 @@
     "tests/route-claim-contract.test.js",
     "tests/player-action.test.js",
     "tests/command-fingerprint.test.js",
-    "tests/command-receipts-server.test.js"
+    "tests/command-receipts-server.test.js",
+    "game/maps/",
+    "backend/maps.js",
+    "shared/maps/"
   ],
   "work/modular-platform-domain.md": [
     "game/queries/",
@@ -324,5 +337,17 @@
     "shared/translations.js",
     "tests/hippie-model.test.js",
     "tests/browser-hippie.cjs"
+  ],
+  "work/modular-platform-maps.md": [
+    "game/maps/",
+    "backend/maps.js",
+    "shared/maps/",
+    "shared/data.js",
+    "backend/engine.js",
+    "frontend/index.html",
+    "backend/public-assets.js",
+    "tests/map-catalog.test.js",
+    "tests/europe-map-compat.test.js",
+    "tests/fixtures/europe-legacy-v1.json"
   ]
 }

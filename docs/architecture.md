@@ -11,7 +11,7 @@ Evidencia, integración y límites en [la ficha del tablero](work/board-3d.md).
 | `frontend/` | HTML, estilos, navegador, Three.js y assets originales. |
 | `backend/` | Transporte HTTP/WebSocket, composición, fachada `Engine`, bots, identidad y almacenamiento. |
 | `shared/` | Datos públicos de Europa, paleta/lobby, tiempos permitidos, idiomas y formato de replay usados en ambos entornos. |
-| `game/` | Dominio, aplicación, consultas y adaptadores extraídos. Dominio/aplicación siguen sin depender del navegador o del transporte. |
+| `game/` | Dominio, aplicación, consultas, validación de mapas y adaptadores extraídos. Dominio/aplicación siguen sin depender del navegador o del transporte. |
 | `scripts/`, `tests/`, `supabase/`, `docs/` | Herramientas, verificaciones, migraciones SQL y contexto documental. |
 
 El [arranque raíz](../server.js) delega en [backend/server.js](../backend/server.js).
@@ -30,6 +30,37 @@ fuera de esa lista. Se conservan MIME, CSP, `no-store` y `nosniff`.
 legado; moverlos no termina la abstracción de mapas. `app.js` aún coordina gran
 parte de la interfaz. Los siguientes cortes se definen por responsabilidades,
 sin convertir cada función en un archivo ni añadir buses o repositorios genéricos.
+
+## Definición versionada de Europa
+
+[Europa v1](../shared/maps/europe-v1.js) es la fuente de topología y billetes:
+`schemaVersion: 1`, `id: europe`, `version: "1"`. Declara ciudades con nombre,
+corredores, vías con ID explícito/longitud/color/túnel/ferri y billetes con
+puntos y tipo. No contiene coordenadas ni propiedad. Sus arrays y objetos
+están congelados; reordenar una definición no redefine las identidades.
+
+[createMapCatalog](../game/maps/catalog.js) comprueba esquema, IDs únicos por
+colección, extremos válidos, corredores coherentes sin duplicar pares de
+ciudades, cantidades enteras y red conectada. Rechaza campos de estado/layout.
+Guarda copias inmutables por la pareja exacta `(id, version)`; `get` rechaza
+referencias inválidas y versiones desconocidas. `validateMapForRules` comprueba
+colores, puntos por longitud y capacidades de túnel/ferri. Esta porción de reglas
+no sustituye todavía el reglamento completo ni valida el reparto inicial.
+
+[backend/maps.js](../backend/maps.js) registra Europa; el motor comprueba al
+cargar que sus reglas soportan esa definición. La [fachada de datos](../shared/data.js)
+obtiene red y billetes del mismo módulo mediante [un puente fijo](../shared/maps/europe-legacy-v1.js):
+`eu-route-051` mantiene el número 51 sin depender de la posición del registro.
+La tabla conserva también el orden anterior de billetes y ciudades, necesario
+para reproducir repartos y mantener la API del navegador. Sus coordenadas son
+las de `CITIES` legado; [map-layout.js](../frontend/map-layout.js) aún contiene
+la composición del tablero europeo.
+
+El navegador recibe `/maps/europe-v1.js` y `/maps/europe-legacy-v1.js` antes de
+`/data.js`. El validador y el registro del backend son privados. Los formatos de
+partida, protocolo, guardado y replay siguen siendo los anteriores; todavía no
+hay selección de mapa por sala ni ejecución multimap. Los próximos límites y
+su aceptación están en [fase 4](work/modular-platform-maps.md).
 
 ## Recorrido de una jugada
 
@@ -90,7 +121,8 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Acceso al historial y proyección de replay guardado | [history-queries.js](../game/application/history-queries.js): `createHistoryQueries`; [replay-view.js](../game/queries/replay-view.js): `projectSummary`, `projectReplay` |
 | Vistas copiadas por puesto e historial filtrado | [match-view.js](../game/queries/match-view.js): `projectMatch`, `historyEntryView` |
 | Normalización explícita de partidas antiguas | [engine.js](../backend/engine.js): `normalize`; [legacy-timing.js](../game/compat/legacy-timing.js): `planTiming`; [legacy-scoring.js](../game/compat/legacy-scoring.js): `completeResults` |
-| Ciudades, rutas, billetes y paleta | [data.js](../shared/data.js) |
+| Definiciones y validación de mapas | [catálogo](../game/maps/catalog.js), [composición registrada](../backend/maps.js), [Europa v1](../shared/maps/europe-v1.js) |
+| Fachada pública de datos, paleta e IDs numéricos anteriores | [data.js](../shared/data.js), [puente europeo](../shared/maps/europe-legacy-v1.js) |
 | Valores permitidos de relojes y defaults compartidos | [game-timing.js](../shared/game-timing.js): `valid`, `normalize` |
 | Relojes, desconexiones y recuperación | [game-clock.js](../backend/game-clock.js), [multiplayer.js](../backend/multiplayer.js) |
 | Práctica y políticas de bots | [practice.js](../backend/practice.js), [practice-bot.js](../backend/practice-bot.js), [practice-planner.js](../backend/practice-planner.js), [practice-tactics.js](../backend/practice-tactics.js), [practice-search.js](../backend/practice-search.js), [bots.js](../backend/bots.js) |

@@ -1,0 +1,166 @@
+{
+  "base_commit": "21947c6b6541f77902aadfad04244f643e10348c",
+  "isolation": "local Docker; network none; read-only root; tmpfs state; default node user; no production environment",
+  "image": {
+    "Id": "sha256:9332baccbd19c237283e778b4ce3e666b12466e932e1c77e77d6b0d49515da55",
+    "Architecture": "arm64",
+    "Os": "linux",
+    "user": "node",
+    "command": [
+      "node",
+      "server.js"
+    ]
+  },
+  "startup": {
+    "node": "v22.23.4",
+    "uid": 1000,
+    "health": {
+      "ok": true,
+      "storage": "file",
+      "rooms": 0
+    },
+    "stateWritable": true,
+    "productionOnly": true
+  },
+  "test_exit_code": 0,
+  "commands": [
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "image",
+        "inspect",
+        "--format",
+        "{{json .}}",
+        "trencitos-map-foundation"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "run",
+        "--detach",
+        "--network",
+        "none",
+        "--read-only",
+        "--tmpfs",
+        "/data:uid=1000,gid=1000",
+        "-e",
+        "STATE_BACKEND=file",
+        "-e",
+        "AUTH_ENABLED=false",
+        "trencitos-map-foundation"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "exec",
+        "c946472c53d7ce5615be56417163c7d5b22b4798979269d65e5a724ee1ef28b7",
+        "node",
+        "-e",
+        "const assert=require('node:assert/strict'),fs=require('node:fs');\n(async()=>{let health;for(let i=0;i<30;i++){try{const r=await fetch('http://127.0.0.1:3000/healthz');assert.equal(r.status,200);health=await r.json();break;}catch(e){if(i===29)throw e;await new Promise(ok=>setTimeout(ok,100));}}\nassert.deepEqual(health,{ok:true,storage:'file',rooms:0});assert.equal(process.getuid(),1000);\nfs.writeFileSync('/data/write-check','ok');assert.equal(fs.readFileSync('/data/write-check','utf8'),'ok');fs.unlinkSync('/data/write-check');\nfor(const p of ['.env','room-state.json','room-state.json.archive','tests','docs','scripts','node_modules/playwright','node_modules/@electric-sql/pglite'])assert.equal(fs.existsSync('/app/'+p),false,p);\nconsole.log(JSON.stringify({node:process.version,uid:process.getuid(),health,stateWritable:true,productionOnly:true}));})().catch(e=>{console.error(e);process.exit(1)});"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "logs",
+        "c946472c53d7ce5615be56417163c7d5b22b4798979269d65e5a724ee1ef28b7"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "rm",
+        "-f",
+        "c946472c53d7ce5615be56417163c7d5b22b4798979269d65e5a724ee1ef28b7"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--read-only",
+        "--tmpfs",
+        "/data:uid=1000,gid=1000",
+        "--tmpfs",
+        "/tmp:mode=1777",
+        "-e",
+        "STATE_BACKEND=file",
+        "-e",
+        "AUTH_ENABLED=false",
+        "-v",
+        "/Users/angelaltarodri/Desktop/free/trains/worktrees/modular-game-platform/tests:/app/tests:ro",
+        "trencitos-map-foundation",
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "--test-name-pattern=runtime assets|static SVG|WebSocket practice flow|file receipts|versioned Europe|complete seeded setups",
+        "tests/deployment.test.js",
+        "tests/server.test.js",
+        "tests/command-receipts-server.test.js",
+        "tests/europe-map-compat.test.js"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "completed_at": "2026-11-03T04:21:56.160557+00:00",
+  "source_sha256": {
+    "Dockerfile": "3cdf32171da9fbb384de02118e76f9b1ccef9525916cb46e373a7671fdaf0116",
+    ".dockerignore": "e0b82edb2e80a4a1a51c70e25a2d9cc6be23b3d15e21813377e2eee092a9130c",
+    "package-lock.json": "e87d35d818ad33717a190b3d48b215e9ad6daed442a850163752b7f8d0ec27f6",
+    "server.js": "493b6336a59bc9bbcc55abdbcd6dc073236490aeb1fc3ca747f8c8ca812a45d9",
+    "game/maps/catalog.js": "72b1295df12c3e498ba639a86d759bd8cb48ee868643396e24ff62d9c535fb0f",
+    "backend/maps.js": "5f1cf570f85be2336222f50cdaaadd4530e550214a0f66b12cb333c267a7b67e",
+    "shared/maps/europe-v1.js": "e6a0157567de5aa336bf6f3f7211e2a5adb323dbb160a71f34841f5d6a9778df",
+    "shared/maps/europe-legacy-v1.js": "a98444a488518e1793cc411fc37e7a11e219eba800a740768b5b623063e11f89",
+    "shared/data.js": "ff9fed5598798f15f069ed89420d56ed28fe10138352ec61f84822cddb5aead9",
+    "backend/public-assets.js": "4faf165b5abe49a277b04c2553eec5e57a857bfd591a144b375ef9f8f17c15a2",
+    "frontend/hippie-model.mjs": "16fa84f6f75b1116e201fff88aa57b4f547276e57f0bec6c0d39e6746cc3047f",
+    "frontend/hippie-geometry.mjs": "0550703ad988bc90f1d9cc5bff6076bcf880842166bab62b1bf18f3fa265fdb5",
+    "frontend/hippie-hair.mjs": "7fe426991c2c8046a26ef38395bebfc6a130259bc1a1384b34c2edfbf5e8b5c3",
+    "frontend/wagon-people.mjs": "24ea91ca163ec1fd5ae6af32379a117f2ee7e5dac6dab799f843e8cb006da189",
+    "frontend/wagon-models.mjs": "1605948fb56c407beba67356f54731e994f0b40a9284b802e78b02f7a8b52725",
+    "frontend/wagon-renderer.js": "5fa2d71ffcf3e6c6a4a50b840b7cd682c321c49f162d2a8ae9c5dbfd17cc6961",
+    "tests/deployment.test.js": "440ea5d8eb7a71ba727c1973730e9bfcb09f9b59717707576c2fe4001ea6ebf0",
+    "backend/server.js": "9a83cd6c0195e69adeabca264f43982fcabda9df17da41ec49212712c2ad498b",
+    "shared/translations.js": "d1bc162a1095590694db4a104bf97a2259428ef0c30b07731e9b9a54a84146d7",
+    "tests/command-receipts-server.test.js": "8859070451cd18ceceaedc405d31bfe94ea59a610f849bf285317f988f067a61",
+    "game/infrastructure/command-fingerprint.js": "2ac4c62834f2ed4180bac889db33bd7c12fe164405b9a40874a04a601df45f58",
+    "backend/room-store.js": "54648aa15a656ebf1028ca704c013ae68696e046882e19dfc2a9013ab41e23df",
+    "backend/supabase-store.js": "b8d59ecb1dbc98d53bd49ee9354341324934956d92271d048d0d943725aa317e",
+    "game/queries/authorized-views.js": "0f6c3ffaf8b16826e63636f27284d9a89fc5d919966978cea63af7b5017dfd28",
+    "game/queries/replay-view.js": "3d9bedff73ae602191ebe2578dbc0adac263feb511c787f793ecde93f3e82f95",
+    "game/application/history-queries.js": "cae162e859189a333929452942eea5aab18b16d3942d57dff5a3d673a6ee824c",
+    "game/compat/legacy-authorized-views.js": "917fa6c6e5c0e773fb234235174b8c3724c54309ae7faeb354587aa2d1ad59a0",
+    "backend/match-archive.js": "459e79bb9f1c0ada791892dda707029ef3db8f491f5a54a1ebc69e074859ceb0",
+    "game/application/checkpoint.js": "830a626f9e6693206962445af72482c87fa015a59f520115a62a98369ad75caf",
+    "game/application/room-stage.js": "02a13e053c01c6232d7096f587e40514427334b3b8185332bddcc32e0e6922da",
+    "game/infrastructure/checkpoint-committer.js": "9991bb5b05e171fd1d2382fb266e15a0b6480876640fce1585db2177eb78de6d",
+    "game/application/player-action.js": "b2d883b0929584e1bb7c2cadbb8aadcee79ed0b99837fa128484a2353798c7b3",
+    "game/compat/legacy-action-reply.js": "507a11818dbb1dc8e9f6dbd1586ffddde1fe2de112ab5207c5f3b22d281df50d",
+    "game/application/automatic-play.js": "a36b8a92b54d040ac5dc0a86fe36a5a1e12619bcad89a805ceb8a1aadd7acdb4",
+    "game/compat/legacy-automatic-play.js": "f03ddaf82978fc13850fe39580c3fdc9f6c97547f92c1d170733e13a2b3b7499",
+    "backend/practice.js": "77feed6c86aca14e03773e63ee8afe7ccab1a2a76353577cdbe36c22653e31ad",
+    "backend/room-bots.js": "04e03528d12903752c86d6a0d1774e6488dbe39459a15d7c56ed302ce739976f",
+    "backend/multiplayer.js": "942ecce3cd897ee7c90011f634b6d03e164f773fe3a57dcbf2c2b9282c270a4c",
+    "backend/game-clock.js": "0d51d984545f094393ab3c214a2e1d5114dcc345cc2002f1c24fd3f1b875a20d"
+  }
+}

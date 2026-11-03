@@ -1,13 +1,13 @@
 # Modelo de partida y contratos de transición
 
-Diseño de fase 1, concretado el 2026-11-02 bajo la
-[decisión modular acordada](modular-game-platform.md). **No describe módulos ya
-extraídos.** Estado, validación y siguiente entrega en
-[la ficha de fase 1](../work/modular-platform-contracts.md). La
-[arquitectura existente](../architecture.md) sigue describiendo el código actual.
-La [fase 2](../work/modular-platform-domain.md) registra las políticas ya extraídas
-y sus límites; los contratos pendientes siguen siendo el destino de la transición,
-no capacidades ya disponibles.
+Diseño iniciado en fase 1 el 2026-11-02 bajo la
+[decisión modular acordada](modular-game-platform.md). Conserva el destino de la
+transición y señala los contratos que ya se concretaron; la
+[arquitectura existente](../architecture.md) describe el código actual.
+La [fase 2](../work/modular-platform-domain.md) registra las políticas extraídas,
+la [fase 3](../work/modular-platform-application.md) su coordinación y la
+[fase 4](../work/modular-platform-maps.md) los mapas versionados. Cada ficha
+conserva su aceptación y límites; lo pendiente no es capacidad disponible.
 
 ## Responsabilidades y vocabulario
 
@@ -58,6 +58,11 @@ billetes válidos, longitudes positivas con puntuación definida, colores admiti
 reglamento. La conectividad del mapa se comprueba explícitamente; la disposición
 de casillas y etiquetas se valida aparte. Una longitud sin puntuación no obtiene
 un valor inventado por el renderizador o el bot.
+
+El primer corte de [fase 4](../work/modular-platform-maps.md) ya implementa
+`MapDefinition`, su catálogo validado y la tabla europea congelada. `RuleSet`,
+`MatchState` versionado y `MapLayout` por definición siguen siendo contratos
+objetivo. El puente conserva temporalmente los números del runtime anterior.
 
 ### Identidades y versiones
 
