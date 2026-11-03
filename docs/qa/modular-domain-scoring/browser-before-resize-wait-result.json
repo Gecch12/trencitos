@@ -1,0 +1,29 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:board3d"
+  ],
+  "base_commit": "5436d5ddc81690f7919745d8b1847138ff3f0636",
+  "exit_code": 1,
+  "duration_seconds": 11.44,
+  "completed_at": "2026-11-03T01:51:44.224751+00:00",
+  "node": "v25.6.1",
+  "environment": "clean environment; isolated local file state; external auth disabled; loopback fixtures only",
+  "log_sha256": "8f090d22ce943148c31a034f02ab56a0ffbe54939a1a478855c48a530146450d",
+  "source_sha256": {
+    "engine.js": "6317dea2d4f1c8ac8351455ff08bdece72a2fc62219e6544f5a5416c08c308db",
+    "game/compat/legacy-errors.js": "f0d73cc71a678afbe90ddc5168a3ef4578fe2320fc0444d5fbee1c4dee1ac381",
+    "game/compat/legacy-scoring.js": "e42d56359d2bd8346fcafd5c7d1631dc73c4296e4ca15e7a637284bad6fa1c81",
+    "game/domain/destinations.js": "b49f58fe1ddd1c9fb4dfe020bc62e6d91693b53e403fa6eb8a625bef34b7356b",
+    "game/domain/network.js": "2faf775241a1d12cdf2d922a6f13bf7d510157123575b1d868ede538c49031cd",
+    "game/domain/payment.js": "c44058eb80c8b7e372dff0d5afdbf26a2ac327cc9780f4ff2f0970751373653c",
+    "game/domain/random.js": "a4472a9112cd11874eca0a2840e77a51b686459390467fd5edc462c5fb38e7c4",
+    "game/domain/route-claim.js": "921a956a5c91299af994228e865ccef2260a45a8c94a174149f7e2a3ba9076fa",
+    "game/domain/scoring.js": "6b9d3cdf97b23eef8ee0557251d37dd2f1da64015db33b4175de97829aeb8289",
+    "game/domain/setup.js": "6044b363ee30a2a33edb78d24f1888bc830c718741f843ed5206dc5c8a99ca5a",
+    "game/domain/stations.js": "1161eef6d0047705f58d970e47ca09ce48632b784e08e1a9fd14f1cef0eb606e",
+    "game/domain/tunnel.js": "d3d12bd6cf84872590a12834dc7646c1e32b2ac46a94ab682446853b2668b69b",
+    "game/domain/turn.js": "1131ac1aa85fafbc36b257e877278b80324aabccb829efd3c1e097c8c45ffb09"
+  }
+}

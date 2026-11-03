@@ -1,0 +1,12 @@
+{
+  "base_commit": "5436d5d",
+  "completed_at": "2026-11-03T01:51:24.839Z",
+  "passed": true,
+  "cases": 24,
+  "players": "2..5",
+  "seeds": "1..24",
+  "comparison": "Complete finished game states, private destination progress/paths and hydration of legacy results without details",
+  "method": "Captured 24 pre-extraction states with seeded setup, 32 owned Europe lanes, 0-3 stations and five destinations per player; include route-score adjustments. After extraction: assert.deepEqual for finished state, per-seat destination projection and legacy result hydration.",
+  "baseline_sha256": "fc4fd4abae489c64610c0b0ba4c0fe86d407cc1bd2c9fc5451ee7435d1287d34",
+  "engine_sha256": "6317dea2d4f1c8ac8351455ff08bdece72a2fc62219e6544f5a5416c08c308db"
+}

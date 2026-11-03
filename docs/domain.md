@@ -13,6 +13,9 @@ planes, con tiempo y duraciones explícitos. El motor aplica sus efectos.
 El [reparto](../game/domain/setup.js) recibe recursos y mazos definidos por reglas;
 las [elecciones y ofertas de destinos](../game/domain/destinations.js) reciben
 mínimos, cantidad ofrecida, reloj y generador de azar para decisiones automáticas.
+Las [estaciones](../game/domain/stations.js), [red](../game/domain/network.js) y
+[puntuación](../game/domain/scoring.js) también son políticas independientes:
+reciben mapa/propiedad, billetes y parámetros de puntuación, sin textos o efectos.
 La extracción conserva las reglas descritas aquí; avance y límites en
 [fase 2](work/modular-platform-domain.md).
 
@@ -119,8 +122,15 @@ anterior entra en decisión compartida sin reiniciar su reloj.
   conjunta que maximiza la puntuación de destinos y sirve para todos ellos.
 - Cada estación sin construir suma 4. Express suma 10 a todos los empatados en
   el recorrido propio más largo, sin repetir vías; las prestadas no cuentan.
+  Se permiten ciclos y volver a pasar por una ciudad. Se conserva la regla
+  existente de conceder Express a todos si todos tienen recorrido de longitud 0.
 - Desempates: puntuación, destinos completados, puntos de estaciones sin usar y
   Express. Puede haber varios ganadores si persiste el empate.
+
+El desglose de resultados guardados conserva sus totales, clasificación,
+ganadores y asignaciones. Si faltaba el detalle, se reconstruyen sus recorridos
+y se explica cualquier diferencia de puntos de rutas con `routeAdjustment`;
+no se sustituye el total histórico por uno recalculado.
 
 ## Ausencia y práctica
 

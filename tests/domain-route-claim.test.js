@@ -94,11 +94,11 @@ test("domain modules run without ambient clock, randomness, transport or externa
   const math=Object.create(Math);math.random=forbidden;
   const cache={};
   function load(name) {
-    if(!["payment","route-claim","tunnel","turn","random","setup","destinations"].includes(name)) return forbidden();
+    if(!["payment","route-claim","tunnel","turn","random","setup","destinations","network","stations","scoring"].includes(name)) return forbidden();
     if(cache[name]) return cache[name];
     const module={exports:{}};
     const source=fs.readFileSync(path.join(__dirname,"../game/domain",`${name}.js`),"utf8");
-    vm.runInNewContext(source,{module,require:id=>["./payment","./random"].includes(id)?load(id.slice(2)):forbidden(),
+    vm.runInNewContext(source,{module,require:id=>["./payment","./random","./network","./stations"].includes(id)?load(id.slice(2)):forbidden(),
       Date:class {constructor(){forbidden();}static now(){forbidden();}},Math:math,fetch:forbidden,setTimeout:forbidden}, {filename:name});
     return cache[name]=module.exports;
   }
@@ -124,4 +124,12 @@ test("domain modules run without ambient clock, randomness, transport or externa
   const offer=destinations.planOffer({shortDeck:[{id:"D3"}]},{now:10,rules:ticketRules}).plan.offer;
   assert.equal(destinations.decideOfferChoice({offer},{offerId:offer.id,indexes:[0]},{rules:ticketRules}).ok,true);
   assert.equal(destinations.randomSelection(offer.tickets,1,{random:()=>0})[0],0);
+  const stations=load("stations"),scoring=load("scoring");
+  assert.equal(stations.decideStation({remainingStations:1,hand:["copper"],occupiedCities:new Set()},
+    {cityId:"A",color:"copper"},{map:{cities:[{id:"A"}]},rules:{colors:["copper"],stationCosts:[1]}}).ok,true);
+  const scored=scoring.scoreMatch({owners:new Map([["route",0]]),players:[
+    {name:"A",score:2,stations:1,placed:[],tickets:[{id:"dest",a:"A",b:"B",points:4}]},
+    {name:"B",score:0,stations:1,placed:[],tickets:[]},
+  ]},{map:{routes:[{id:"route",a:"A",b:"B",length:2}]},rules:{routePoints:{2:2},unusedStationPoints:4,expressPoints:10,tieBreakers:["score","completed","stations","express"]}});
+  assert.equal(scored[0].score,20);assert.equal(scored[0].details.destinations[0].points,4);
 });

@@ -8,6 +8,10 @@ const Turn=require('./game/domain/turn');
 const Tunnel=require('./game/domain/tunnel');
 const Setup=require('./game/domain/setup');
 const Destinations=require('./game/domain/destinations');
+const Stations=require('./game/domain/stations');
+const Network=require('./game/domain/network');
+const Scoring=require('./game/domain/scoring');
+const LegacyScoring=require('./game/compat/legacy-scoring');
 const {shuffle}=require('./game/domain/random');
 const {legacyError}=require('./game/compat/legacy-errors');
 // Per-action randomness stays outside serialized state. Simulations can supply
@@ -26,6 +30,8 @@ const SETUP_RULES={minPlayers:2,maxPlayers:5,maxNameLength:24,playerColors:PLAYE
  trainCards:[...COLORS.map(color=>({color,count:12})),{color:'wild',count:14}],
  initialHand:4,initialLongTickets:1,initialShortTickets:3,trains:45,stations:3};
 const DESTINATION_RULES={initialMinimum:2,offerMinimum:1,offerCount:3};
+const STATION_CONTEXT={map:{cities:Object.keys(CITIES).map(id=>({id}))},rules:{colors:COLORS,stationCosts:[1,2,3]}};
+const SCORING_RULES={routePoints:SCORE,unusedStationPoints:4,expressPoints:10,tieBreakers:['score','completed','stations','express']};
 const destinationRules=g=>({...DESTINATION_RULES,offerClock:g.timing?
  {kind:'remaining-turn',extraMs:g.timing.ticketExtraSeconds*1000}:{kind:'fixed',durationMs:OFFER_MS}});
 const turnRules=g=>({initialMs:g.timing?.initialSeconds*1000||INITIAL_MS,turnMs:g.timing?.turnSeconds*1000||TURN_MS,finalTrainThreshold:2});
@@ -218,10 +224,10 @@ function applyActionImpl(g,seat,msg,now=Date.now()){if(!msg||typeof msg.type!=='
   event(g,'tickets',seat);note(g,I18n.message`${p.name} está eligiendo nuevos billetes.`,seat);next(g,now);return;
  }
  if(msg.type==='station'){
-  if(!CITIES[msg.city]||p.stations<1||g.players.some(x=>x.placed.includes(msg.city)))fail('No puedes construir una estación ahí.');
-  const cost=4-p.stations,comp=pay(p.hand,msg.color,cost,0,msg.wildCount);
-  if(!comp)fail('Cartas insuficientes para la estación.');
-  spend(g,p,comp);p.stations--;p.placed.push(msg.city);event(g,'build',seat,{city:msg.city});note(g,I18n.message`${p.name} construyó una estación en ${CITIES[msg.city][2]}.`,seat);next(g,now);return;
+  const decision=Stations.decideStation(stationState(g,seat),{cityId:msg.city,color:msg.color,wildCount:msg.wildCount},STATION_CONTEXT);
+  if(!decision.ok)throw legacyError(decision.error);
+  const {cityId,payment}=decision.plan;
+  spend(g,p,payment);p.stations--;p.placed.push(cityId);event(g,'build',seat,{city:cityId});note(g,I18n.message`${p.name} construyó una estación en ${CITIES[cityId][2]}.`,seat);next(g,now);return;
  }
  if(msg.type==='pass'){
   // Passing is only permitted when no other move is possible.
@@ -283,47 +289,27 @@ function expireImpl(g,now=Date.now(),random=crypto.randomInt){
  recycleDiscards(g);return true;
 }
 function possibleClaim(g,seat){const p=g.players[seat];return g.routes.some(r=>r.owner===null&&!block(g,r,seat)&&r.n<=p.trains&&[...COLORS,'wild'].some(c=>pay(p.hand,c,r.n,r.ferry))&&(r.color==='gray'||[r.color,'wild'].some(c=>pay(p.hand,c,r.n,r.ferry))))}
-function possibleStation(g,seat){const p=g.players[seat];return p.stations>0&&Object.keys(CITIES).some(city=>!g.players.some(x=>x.placed.includes(city)))&&[...COLORS,'wild'].some(c=>pay(p.hand,c,4-p.stations))}
-function connected(owned,a,b){const adj=new Map();for(let r of owned){if(!adj.has(r.a))adj.set(r.a,[]);if(!adj.has(r.b))adj.set(r.b,[]);adj.get(r.a).push(r.b);adj.get(r.b).push(r.a)}const seen=new Set([a]),stack=[a];while(stack.length){let x=stack.pop();if(x===b)return true;for(let next of adj.get(x)||[])if(!seen.has(next)){seen.add(next);stack.push(next)}}return false}
-function stationAssignments(g,seat){const p=g.players[seat],own=g.routes.filter(r=>r.owner===seat);const options=p.placed.map(city=>[null,...g.routes.filter(r=>r.owner!==null&&r.owner!==seat&&(r.a===city||r.b===city))]);let best={tickets:p.tickets.map(t=>connected(own,t.a,t.b)),completed:0,score:-Infinity,assigned:[]};
- function walk(i,chosen){if(i===options.length){const all=[...own,...chosen.filter(Boolean)];const outcomes=p.tickets.map(t=>connected(all,t.a,t.b));const pts=p.tickets.reduce((v,t,j)=>v+(outcomes[j]?t.p:-t.p),0);if(pts>best.score){best={tickets:outcomes,completed:outcomes.filter(Boolean).length,score:pts,assigned:chosen.map(r=>r?r.id:null)}}return}for(const r of options[i])walk(i+1,[...chosen,r])}
- walk(0,[]);return best}
-function longestTrail(g,seat){const e=g.routes.filter(r=>r.owner===seat),adj={};e.forEach((r,i)=>{(adj[r.a]??=[]).push(i);(adj[r.b]??=[]).push(i)});let best={length:0,routes:[],cities:[]};
- const routes=[],cities=[];
- function walk(node,used,len){cities.push(node);if(len>best.length)best={length:len,routes:[...routes],cities:[...cities]};for(let id of adj[node]||[]){let mask=1n<<BigInt(id);if(!(used&mask)){let r=e[id];routes.push(r.id);walk(r.a===node?r.b:r.a,used|mask,len+r.n);routes.pop()}}cities.pop()}
- for(let x of Object.keys(adj))walk(x,0n,0);return best}
+function stationState(g,seat){return {hand:g.players[seat].hand,remainingStations:g.players[seat].stations,occupiedCities:new Set(g.players.flatMap(p=>p.placed))}}
+function possibleStation(g,seat){return Stations.canBuildStation(stationState(g,seat),STATION_CONTEXT)}
+const connected=Network.connected,connectionPath=Network.connectionPath;
+function stationAssignments(g,seat){const {map,owners}=LegacyScoring.projectBoard(g);return Stations.assignStations({...LegacyScoring.projectPlayer(g.players[seat]),seat,owners},{map})}
+function longestTrail(g,seat){return Network.longestTrail(g.routes.filter(r=>r.owner===seat).map(r=>({id:r.id,a:r.a,b:r.b,length:r.n})))}
 function longest(g,seat){return longestTrail(g,seat).length}
 function finish(g,force=false,{random=randomFor(g)}={}){
  if(force)for(let seat=0;seat<g.players.length;seat++){const offer=g.players[seat].offer;if(offer)settleOffer(g,seat,{offerId:offer.id,indexes:Destinations.randomSelection(offer.tickets,DESTINATION_RULES.offerMinimum,{random})},false)}
  g.turnDeadline=null;g.turnWaiting=false;
  if(g.players.some(p=>p.offer)){g.phase='closing';return}
- g.phase='finished';const trails=g.players.map((_,i)=>longestTrail(g,i)),lengths=trails.map(t=>t.length),max=Math.max(...lengths);
- g.result=g.players.map((p,i)=>{let v=stationAssignments(g,i);let express=lengths[i]===max?10:0;return {seat:i,name:p.name,route:p.score,destination:v.score,completed:v.completed,stations:p.stations*4,express,longest:lengths[i],stationRoutes:v.assigned,individualTickets:v.tickets,tickets:p.tickets,score:p.score+v.score+p.stations*4+express}});
- g.result.sort((a,b)=>b.score-a.score||b.completed-a.completed||b.stations-a.stations||b.express-a.express);
- addScoreDetails(g,trails);
- let win=g.result[0];g.result.forEach(x=>{x.winner=x.score===win.score&&x.completed===win.completed&&x.stations===win.stations&&x.express===win.express});note(g,'Partida finalizada. ¡Resultados calculados!')}
-function connectionPath(routes,a,b){
- const queue=[a],previous=new Map([[a,null]]);
- for(const city of queue){if(city===b)break;for(const r of routes){const next=r.a===city?r.b:r.b===city?r.a:null;if(next&&!previous.has(next)){previous.set(next,{city,id:r.id});queue.push(next)}}}
- if(!previous.has(b))return [];
- const path=[];for(let city=b;city!==a;){const step=previous.get(city);path.unshift(step.id);city=step.city}return path;
-}
-function destinationDetails(g,seat,assignment=stationAssignments(g,seat)){const p=g.players[seat],own=g.routes.filter(r=>r.owner===seat),borrowed=assignment.assigned.filter(id=>id!==null),all=[...own,...borrowed.map(id=>g.routes[id])];return {
- progress:p.tickets.map((t,i)=>({id:t.id,completed:assignment.tickets[i],viaStation:assignment.tickets[i]&&!connected(own,t.a,t.b)})),
- paths:p.tickets.map((t,i)=>{const routes=assignment.tickets[i]?connectionPath(connected(own,t.a,t.b)?own:all,t.a,t.b):[];return {id:t.id,routes,stationRoutes:routes.filter(id=>borrowed.includes(id)),stations:p.placed.flatMap((city,j)=>assignment.assigned[j]!==null&&routes.includes(assignment.assigned[j])?[{city,routeId:assignment.assigned[j],seat}]:[])}})
-}}
-function addScoreDetails(g,trails=g.players.map((_,i)=>longestTrail(g,i))){
- const maximum=Math.max(...g.result.map(r=>r.longest));
+ g.phase='finished';const {map,owners}=LegacyScoring.projectBoard(g),state={owners,players:g.players.map(LegacyScoring.projectPlayer)};
+ g.result=Scoring.scoreMatch(state,{map,rules:SCORING_RULES}).map(result=>LegacyScoring.legacyResult(result,g.players[result.seat]));
+ note(g,'Partida finalizada. ¡Resultados calculados!')}
+function destinationDetails(g,seat,assignment){const {map,owners}=LegacyScoring.projectBoard(g);return Scoring.destinationDetails({...LegacyScoring.projectPlayer(g.players[seat]),seat,owners},{map},assignment)}
+function addScoreDetails(g){
+ const {map,owners}=LegacyScoring.projectBoard(g),state={owners,players:g.players.map(LegacyScoring.projectPlayer)};
+ const trails=g.players.map((_,seat)=>Network.longestTrail(map.routes.filter(r=>owners.get(r.id)===seat)));
  for(const result of g.result){
   if(result.details)continue;
-  const seat=result.seat,p=g.players[seat],assignment={tickets:result.individualTickets,assigned:result.stationRoutes};
-  const paths=destinationDetails(g,seat,assignment).paths;
-  const routes=g.routes.filter(r=>r.owner===seat).map(r=>({id:r.id,a:r.a,b:r.b,length:r.n,points:SCORE[r.n]}));
-  result.details={routes,routeAdjustment:result.route-routes.reduce((sum,r)=>sum+r.points,0),
-   destinations:result.tickets.map((t,i)=>({...t,completed:result.individualTickets[i],points:result.individualTickets[i]?t.p:-t.p,...paths[i]})),
-   stations:{unused:result.stations/4,points:result.stations,placed:p.placed.map((city,i)=>({city,routeId:result.stationRoutes[i]??null,seat}))},
-   express:{...trails[seat],maximum,tiedSeats:g.result.filter(r=>r.longest===maximum).map(r=>r.seat),points:result.express},
-   totals:{routes:result.route,destinations:result.destination,stations:result.stations,express:result.express,total:result.score}};
+  const details=Scoring.resultDetails(state,LegacyScoring.projectResult(result),g.result,{map,rules:SCORING_RULES,trails});
+  result.details=LegacyScoring.legacyDetails(details,result.tickets);
  }
 }
 function drawEvent(g,seat){const e=g.lastDraw;if(!e)return null;return {id:e.id,seat:e.seat,index:e.index,...(e.index>=0||e.seat===seat?{color:e.color}:{})}}

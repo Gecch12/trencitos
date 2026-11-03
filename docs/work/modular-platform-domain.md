@@ -20,7 +20,8 @@ cambios de esta entrega. El trabajo visual de otros chats permanece separado.
 - [x] Pagos y decisión de construcción extraídos, puente compatible y validación registrada.
 - [x] Transiciones de túnel y turno extraídas, con tiempo explícito y cartas reveladas suministradas.
 - [x] Preparación de recursos, reparto y elecciones/ofertas de destinos extraídos, con azar suministrado.
-- [ ] Cartas de tren/mercado, estaciones y puntuación extraídos.
+- [x] Estaciones, conectividad, puntuación y desglose extraídos, con puente para resultados guardados.
+- [ ] Cartas de tren y mercado extraídos.
 - [ ] Consultas sin mutación y compatibilidad de resultados/temporizadores fuera de ellas.
 - [ ] Europa completa verificada, incluyendo bots, privacidad, guardado y replay.
 
@@ -238,17 +239,101 @@ Las pruebas SQL/remotas usan simuladores; no acreditan Render, Supabase real ni
 dispositivos físicos. Se restauró la evidencia histórica `docs/qa/threejs-*`.
 Entrega local, sin integración de otros worktrees ni publicación.
 
-### Límites pendientes
+### Límites al terminar el tercer corte
 
 El ensamblado del estado legado, robo/reciclado y renovación de cartas, estaciones,
 puntuación, coordinación de cierre/vencimientos y consultas siguen en la fachada.
 Los módulos nuevos reciben definiciones válidas; el catálogo/validador versionado
 de mapas pertenece a fase 4. No se ha activado otro mapa ni cambiado guardados.
 
+## Cuarto corte: estaciones y puntuación
+
+Base: `5436d5d` más los cambios de esta entrega.
+
+- [stations.js](../../game/domain/stations.js) decide coste/pago y disponibilidad
+  de estación con ciudades, costes y ocupación suministrados. La consulta
+  `canBuildStation` reutiliza esa decisión. `assignStations` elige una asignación
+  conjunta para todos los destinos; no cambia de vía prestada por billete.
+- [network.js](../../game/domain/network.js) extrae conectividad, camino de
+  destino y recorrido más largo. Usa IDs opacos, admite ciclos y carriles
+  paralelos y no repite vías. El bit de cada arista usa su posición local,
+  no el ID del mapa.
+- [scoring.js](../../game/domain/scoring.js) calcula destinos, bonos, clasificación,
+  ganadores compartidos y desglose. Recibe puntos de rutas/estaciones/Express y
+  orden de desempate. Las vías prestadas completan destinos pero no Express.
+- [legacy-scoring.js](../../game/compat/legacy-scoring.js) proyecta definiciones y
+  propiedad separadas y traduce `n`/`p` a `length`/`points`. Mantiene el formato de
+  resultados y referencias de billetes esperado por los consumidores actuales.
+  Los detalles antiguos se completan usando totales/asignaciones guardados,
+  sin recalcular clasificación o ganadores ni reemplazar detalles ya presentes.
+- La fachada aplica pagos y efectos, conserva firmas públicas y espera las
+  ofertas pendientes antes de puntuar. La normalización desde `view` sigue
+  existiendo; este corte extrae su cálculo pero no adelanta el hito de consultas.
+
+La validación de ciudad ahora compara IDs presentes en el mapa; nombres de
+propiedades heredadas como `constructor` se rechazan antes del pago. Los
+desempates entre asignaciones equivalentes conservan el orden del mapa de Europa.
+No se migraron IDs ni se activó un segundo mapa.
+
+### Evidencia del cuarto corte
+
+- [Dominio](../../tests/domain-stations-scoring.test.js): costes/paleta/bonos
+  alternativos, no mutación, préstamos conjuntos, IDs desordenados y `0`/`"0"`,
+  ciclos, carriles paralelos, más de 32 vías, empates y totales históricos.
+- [Fachada](../../tests/stations-scoring-contract.test.js): costes 1/2/3,
+  eventos/avance único, rechazos sin gasto, acción tardía, privacidad durante el
+  cierre y reconstrucción parcial de resultados conservando campos anteriores.
+- La prueba de frontera ambiental ejecuta estaciones/red/puntuación con reloj,
+  azar global, transporte e importaciones externas prohibidos.
+- Suite enfocada de nueve archivos: **93/93** correctas, incluyendo resultados,
+  préstamos de bots, pagos, reciclado y privacidad existentes.
+- [Comparación con la base](../qa/modular-domain-scoring/scoring-compatibility-result.json):
+  **24/24** estados finales, proyecciones de destinos y reconstrucciones de
+  resultados antiguos iguales. Cubre 2–5 jugadores, 32 vías adjudicadas por caso,
+  0–3 estaciones por jugador y ajustes de puntos históricos.
+
+Ejecución del 2026-11-02 (Lima), Node `v25.6.1`, sobre la base indicada y el diff
+de este corte:
+
+- `node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js`:
+  **440/440**, sin fallos ni omisiones. [Resultado y huellas del código](../qa/modular-domain-scoring/node-tests-result.json)
+  y [salida TAP](../qa/modular-domain-scoring/node-tests.tap).
+- La primera ejecución de navegador se detuvo por superposición MUN/VIE al
+  cambiar a 768×1024 y zoom 1. Se conserva el [resultado fallido](../qa/modular-domain-scoring/browser-before-resize-wait-result.json)
+  y su [reporte](../qa/modular-domain-scoring/browser-before-resize-wait/threejs-report.json).
+  El conductor medía inmediatamente después de cambiar viewport/zoom, mientras
+  la cámara también se ajusta mediante `ResizeObserver`. Se añadió una espera
+  de dos frames tras cada cambio, conservando todas las comprobaciones y sin
+  modificar el código visual de la aplicación.
+- Repetición de `QA_PORT=0 npm run test:board3d`: **aprobada**, Chrome
+  `156.0.8078.74`. [Resultado](../qa/modular-domain-scoring/browser-tests-result.json)
+  y [reporte](../qa/modular-domain-scoring/browser/threejs-report.json): ocho
+  recorridos, nueve combinaciones de viewport/zoom y partida de cuatro jugadores
+  completa con **248 acciones**, reconexión y cero errores. Incluye selección
+  inicial, construcción, estación, pagos/desistimientos de túnel y dos ofertas
+  de destinos con sus confirmaciones. Se inspeccionaron el [resultado final](../qa/modular-domain-scoring/browser/threejs-finished.png)
+  y el [móvil emulado](../qa/modular-domain-scoring/browser/threejs-mobile.png).
+- `node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
+  Las fichas de tablero, base, contratos y bots conservan su evidencia histórica;
+  este corte no cambia estrategias, interfaz pública ni presentación del juego.
+
+Entorno local con estado de archivo y puertos aislados, sin autenticación externa.
+Las pruebas SQL/remotas usan simuladores; no acreditan Render, Supabase real ni
+dispositivos físicos. Se restauró la evidencia histórica `docs/qa/threejs-*`.
+Entrega local, sin integración de otros worktrees ni publicación.
+
+### Límites pendientes
+
+El ensamblado legado, robo/reciclado y renovación del mercado, coordinación de
+vencimientos/cierre y consultas permanecen en la fachada. Las políticas reciben
+definiciones válidas; el catálogo/validador versionado sigue en fase 4. La búsqueda
+exacta del recorrido más largo conserva su complejidad: no se ha certificado el
+rendimiento de redes arbitrarias futuras ni un cambio de estrategia de bots.
+
 ## Siguiente corte
 
-Extraer estaciones y puntuación: coste/ocupación de ciudad, asignación conjunta
-de vías prestadas a destinos, recorrido propio más largo, bonos y desempates.
-Conservar resultados guardados y su desglose, IDs opacos en políticas nuevas y
-privacidad antes del cierre. Después extraer cartas/mercado y normalización fuera
-de consultas. La fase 2 sigue activa; frontend y Sudamérica esperan sus fases.
+Extraer cartas de tren y mercado: robo visible/oculto, locomotora como segunda
+carta, reciclado inmediato, renovación de tres locomotoras y agotamiento de mazo.
+Conservar multiconjunto de cartas, consumo de azar, eventos privados/públicos y
+avance único de turno. Después retirar normalización/mutación de las consultas
+y realizar la aceptación conjunta de Europa antes de cerrar fase 2.

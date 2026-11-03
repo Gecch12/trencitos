@@ -208,7 +208,9 @@
     "tests/domain-transitions.test.js",
     "tests/shared-tunnel.test.js",
     "tests/domain-setup-destinations.test.js",
-    "tests/setup-destinations-contract.test.js"
+    "tests/setup-destinations-contract.test.js",
+    "tests/domain-stations-scoring.test.js",
+    "tests/stations-scoring-contract.test.js"
   ],
   "work/wagon-variants.md": [
     "data.js",

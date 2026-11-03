@@ -50,6 +50,9 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Transiciones de túnel y comienzo/avance de turno | [tunnel.js](../game/domain/tunnel.js): `beginTunnel`, `decideTunnel`, `advanceTunnel`; [turn.js](../game/domain/turn.js): `planTurnStart`, `planNextTurn` |
 | Preparación de recursos, reparto y elecciones de destinos | [setup.js](../game/domain/setup.js): `prepareGame`; [destinations.js](../game/domain/destinations.js): `decideInitialChoice`, `planOffer`, `decideOfferChoice`, `randomSelection` |
 | Barajado y muestreo con generador suministrado | [random.js](../game/domain/random.js): `shuffle`, `sampleIndexes` |
+| Costes de estación y asignación conjunta de vías prestadas | [stations.js](../game/domain/stations.js): `decideStation`, `canBuildStation`, `assignStations` |
+| Conectividad, caminos de destino y recorrido más largo | [network.js](../game/domain/network.js): `connected`, `connectionPath`, `longestTrail` |
+| Puntuación, clasificación y desglose | [scoring.js](../game/domain/scoring.js): `scoreMatch`, `rankResults`, `resultDetails`, `destinationDetails`; [puente legado](../game/compat/legacy-scoring.js) |
 | Ciudades, rutas, billetes y paleta | [data.js](../data.js) |
 | Valores permitidos de relojes y defaults compartidos | [game-timing.js](../game-timing.js): `valid`, `normalize` |
 | Relojes, desconexiones y recuperación | [game-clock.js](../game-clock.js), [multiplayer.js](../multiplayer.js) |
@@ -92,6 +95,19 @@ primer puesto. `finish(g, true, {random})` permite reproducir las elecciones al
 forzar el cierre. Ningún generador queda serializado; los llamadores existentes
 siguen usando `crypto.randomInt` por defecto.
 
+Las políticas de estaciones reciben ciudades, costes, mano y ocupación. La
+consulta de disponibilidad usa la misma decisión que construir. La asignación
+de préstamos optimiza todos los destinos conjuntamente y conserva la primera
+solución óptima en orden de mapa. La red usa IDs por identidad y cuenta cada vía
+una sola vez en el recorrido más largo, aunque se repitan ciudades.
+
+`scoreMatch` calcula totales, bonos, desempates y desglose sin modificar el estado.
+Recibe puntos de rutas, bono de estaciones, Express y orden de desempate.
+`legacy-scoring.js` adapta `n`/`p` a `length`/`points` y separa dueños de las vías;
+al devolver resultados conserva el formato legado y las referencias de billetes.
+`resultDetails` explica totales/asignaciones guardados sin recalcular la
+clasificación: `routeAdjustment` conserva diferencias históricas de puntuación.
+
 La fachada aún comprueba fase/puesto, despacha vencimientos, obtiene cartas y
 aplica los planes; emite historial/eventos y conserva el formato de guardados.
 `awardRoute` comparte la adjudicación entre construcción, túnel pagado y túnel
@@ -103,8 +119,9 @@ tras reservar la base, antes de gastar cualquier carta.
 No hay registro de mapas activo ni conversión de IDs de Europa todavía. Los
 otros consumidores siguen utilizando el formato legado. Las políticas extraídas
 no convierten en puro todo el motor: el ensamblado de la partida, robo/reciclado y
-mercado de cartas, estaciones, coordinación de vencimientos, puntuación/cierre
-y consultas aún residen en la fachada.
+mercado de cartas, coordinación de vencimientos/cierre y consultas aún residen
+en la fachada. `view` todavía puede completar el desglose de un resultado antiguo;
+retirar esa normalización de las consultas sigue pendiente.
 Alcance y pruebas en
 [la fase de dominio](work/modular-platform-domain.md).
 

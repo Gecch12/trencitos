@@ -14,6 +14,8 @@ const messages = {
   TICKET_OFFER_PENDING: "Confirma primero tus billetes pendientes.",
   NO_DESTINATION_TICKETS: "No quedan billetes de destino.",
   TICKET_OFFER_EXPIRED: "Esta selección de billetes ya no está pendiente.",
+  STATION_UNAVAILABLE: "No puedes construir una estación ahí.",
+  INSUFFICIENT_STATION_PAYMENT: "Cartas insuficientes para la estación.",
 };
 
 function legacyError({ code }) {

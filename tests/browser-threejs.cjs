@@ -98,8 +98,12 @@ const save = () => fs.writeFileSync(path.join(out, 'threejs-report.json'), JSON.
     report.legibility = [];
     for (const [width, height] of [[1460,940], [768,1024], [390,844]]) {
       await page.setViewportSize({width,height});
+      // Responsive layout and the camera ResizeObserver settle on rendering
+      // frames. Measure the resulting layout, not the previous label positions.
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       for (const z of [.25, 1, 6]) {
         await page.evaluate(z => { zoom = z; mapCenter = { x:430,y:320 }; applyZoom(); }, z);
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
         const check = await page.evaluate(() => {
           const boxes = [...document.querySelectorAll('#board [data-city-label]')].filter(g => getComputedStyle(g).display !== 'none').map(g => {
             const r = g.querySelector('text').getBoundingClientRect(); return { key:g.dataset.cityLabel, x:r.x,y:r.y,width:r.width,height:r.height };
