@@ -1,5 +1,5 @@
 ---
-{"id":"modular-platform-application","status":"active","parent":"modular-game-platform","depends_on":["modular-platform-domain"],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-02"}
+{"id":"modular-platform-application","status":"done","parent":"modular-game-platform","depends_on":["modular-platform-domain"],"branch":"codex/modular-game-platform","delivery":"worktree","updated":"2026-11-02"}
 ---
 # Fase 3: aplicación e interfaz
 
@@ -25,7 +25,7 @@ otros worktrees ni se publica en Render.
 - [x] Introducir recibos con huella de comando y compatibilidad de los 128 IDs legados.
 - [x] Integrar un checkpoint revisado de vagones antes de mover archivos visuales.
 - [x] Separar responsabilidades de frontend/backend en código y verificar empaquetado.
-- [ ] Aceptación conjunta de Europa tras todos los cortes de esta fase.
+- [x] Aceptación conjunta de Europa tras todos los cortes de esta fase.
 
 ## Primer corte: jugada humana
 
@@ -490,10 +490,33 @@ Sexto corte aceptado localmente; fase 3 sigue activa. SQL/Supabase se comprueban
 con simuladores, Docker no usa red externa y móvil es emulado. No se acredita
 producción ni dispositivos físicos. Todo queda en esta rama, sin push ni despliegue.
 
-## Siguiente corte
+## Aceptación conjunta de la fase 3
 
-Comprobar la aceptación conjunta de Europa en fase 3: jugada humana, entradas
-automáticas, checkpoint/rollback, recibos, privacidad de vistas/replay y arranque
-empaquetado. Registrar los límites restantes y cerrar la fase antes de iniciar
-mapas versionados e IDs opacos de la fase 4. Mantener el trabajo en esta rama;
-no se ha solicitado integración a `main`, push ni despliegue.
+Revisión sobre `7d59a50`, sin cambios de ejecución posteriores. Se contrastaron
+los límites de código y los resultados del sexto corte; las huellas del árbol
+actual coinciden con la comprobación final. [Registro de revisión](../qa/modular-application-acceptance/review.json).
+No se presentan esos resultados como una nueva ejecución ni se repite una suite
+sin cambios que lo justifiquen.
+
+| Criterio | Evidencia conjunta y conclusión |
+| --- | --- |
+| Jugada humana y autoridad | El transporte resuelve el puesto; aplicación coordina revisión, motor y recibos. Las pruebas de aplicación/VM y WebSocket cubren rechazo, duplicado y conflicto sin revelar estado privado. |
+| Entradas automáticas | Relojes, práctica, bots permanentes y reemplazos usan aplicación. Se cubren túneles, elecciones fuera de turno, cierre y pausas de almacenamiento. |
+| Guardado y entrega | Preparación separada del commit. Archivo y remoto conservan sala, recibos y replay juntos; pérdida de respuesta, rollback y fallo de entrega tienen recorridos de prueba. |
+| Consultas y privacidad | Vistas independientes del estado fuente; permisos de historial antes de leer frames, filtros de espectador y auditoría solo para participantes. |
+| Europa completa | Suite completa del sexto corte, partida en Chrome con reconexión y resultados, pruebas de espectador/replay y escenas visuales. |
+| Organización y distribución | Frontend/backend/shared separados; lista HTTP explícita, entrada raíz compatible, ubicación del estado y pruebas sobre Docker real. |
+
+La fase queda aceptada en este worktree. Permanecen explícitos los puentes de
+formato legado, la coordinación amplia de `app.js` y los datos/índices europeos;
+estos últimos son el alcance de fase 4. No se exige reescribir la interfaz ni
+separar servicios para cerrar los criterios acordados. La revisión visual del
+usuario de los cosméticos y las pruebas en dispositivos reales no se convierten
+en garantías técnicas ni en publicación.
+
+## Continuación
+
+Iniciar la fase 4 con definiciones versionadas y una correspondencia congelada
+entre identidades de Europa y sus números anteriores. Después adaptar el motor,
+bots, guardado, consultas y presentación para demostrar Europa y un mapa pequeño
+simultáneos. Mantener la rama aislada y un único despliegue; sin push ni publicación.

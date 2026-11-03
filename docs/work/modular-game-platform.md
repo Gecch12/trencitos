@@ -52,7 +52,7 @@ bloquea la fase 4 ni Sudamérica. Mantener un solo repositorio está acordado.
 - [x] Fase 0 aceptada según [su ficha](modular-platform-baseline.md).
 - [x] Fase 1 completada según [modelo y contratos](modular-platform-contracts.md).
 - [x] Fase 2 aceptada según [dominio y Europa](modular-platform-domain.md).
-- [ ] Fase 3: coordinación e interfaz separadas y verificadas.
+- [x] Fase 3 aceptada según [aplicación e interfaz](modular-platform-application.md).
 - [ ] Fase 4: independencia del mapa demostrada.
 - [ ] Fase 5: Sudamérica disponible para pruebas del usuario.
 - [ ] Resultado conjunto revisado: código, documentación, compatibilidad y evidencia.
@@ -103,7 +103,7 @@ consultas autorizadas separadas del transporte y con salidas independientes del
 estado fuente. Los recibos nuevos ya detectan IDs reutilizados con otra acción
 y conservan IDs legados, ventana de 128 y rollback conjunto. El sexto corte incorpora un checkpoint revisado
 de vagones y organiza `frontend/`, `backend/` y `shared/`, conservando `game/`,
-las URLs y el despliegue único. Falta la aceptación conjunta de la fase. Las ediciones posteriores de
+las URLs y el despliegue único. La aceptación conjunta de fase 3 está registrada en su ficha. Las ediciones posteriores de
 otros worktrees no se sincronizan automáticamente con esta rama.
 
 No mover archivos por tamaño ni convertir cada función en un módulo. Los límites

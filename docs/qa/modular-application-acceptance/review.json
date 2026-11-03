@@ -1,0 +1,41 @@
+{
+  "reviewed_at": "2026-11-03T04:12:03.353125+00:00",
+  "reviewed_commit": "7d59a504bb7951399c1c94919ed646390d6d762d",
+  "runtime_matches_last_validated_tree": true,
+  "new_test_execution": false,
+  "evidence": [
+    {
+      "evidence": "docs/qa/modular-platform-layout/node-tests-result.json",
+      "sha256": "83ab5d2a7cb121f9415e4518131756eec05df9e004d20ccc366b3062fa4f7a64"
+    },
+    {
+      "evidence": "docs/qa/modular-platform-layout/browser-tests-result.json",
+      "sha256": "1b573dcb335cb446632e41add3b172e358ddcd73b976e8f5f0f7c8a066f54583"
+    },
+    {
+      "evidence": "docs/qa/modular-platform-layout/docker-result.json",
+      "sha256": "86abd8ab713cbb72255016755909c26272240c87eafc003fa29106c144cf9b05"
+    },
+    {
+      "evidence": "docs/qa/modular-platform-layout/visual-tests-result.json",
+      "sha256": "0b592f877486b5f10c63eabe74c048e5bcb5f10bdba455e2f93873bd9a368a91"
+    },
+    {
+      "evidence": "docs/qa/modular-platform-layout/entrypoint-result.json",
+      "sha256": "c5e11e5012711db0674fff4227486e3952dd4cd21d2a9dd9f1c98531cf04ba6e"
+    }
+  ],
+  "reviewed_boundaries": [
+    "authorized transport to player action",
+    "clocks/practice/permanent/replacement bots to automatic application",
+    "prepare/commit/publish with file rollback and remote outbox",
+    "bounded receipts and conflict detection",
+    "detached authorized live, recording and replay queries",
+    "public assets and compatible root entry point"
+  ],
+  "remaining_work": [
+    "Map-specific constants and array offsets: phase 4",
+    "UI coordinator and legacy room/engine DTOs remain transitional",
+    "No verification of live Supabase, production deployment or physical mobile devices"
+  ]
+}
