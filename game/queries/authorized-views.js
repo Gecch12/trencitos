@@ -35,14 +35,16 @@ function createAuthorizedViews({ engine, now, isPublic, capacity, normalizeTimin
       mapRef: room.game?.mapRef || room.mapRef,
       host: seat === (room.hostSeat ?? 0), started: !!room.game, practice: !!room.practice,
       visibility: isPublic(room) ? "public" : "private", maxPlayers: capacity(room),
-      timing: normalizeTiming(room.timing), sessionVersion: 1, drawFeedbackVersion: 1,
+      timing: normalizeTiming(room.timing), sessionVersion: 1, drawFeedbackVersion: 1, drawPipelineVersion: 1,
       members: room.members.map((m, i) => ({ name: m.name, color: m.color, connected: connected(m), bot: !!m.bot,
         host: i === (room.hostSeat ?? 0), autopilot: !!m.autopilot, reclaim: !!m.reclaim, seat: i })),
     });
   }
   function state(room, seat, { storagePaused = false, includeEarlyFinish = seat !== -1 } = {}) {
     assertSeat(room, seat);
-    return { type: "state", definition: engine.definition(room.game), game: { ...match(room.game, seat),
+    return { type: "state", definition: engine.definition(room.game),
+      ...(seat !== -1 ? { drawReceipts: (room.members[seat].actionReceipts || []).filter(r => r.drawEventId !== undefined).slice(-16)
+        .map(r => ({ id: r.id, eventId: r.drawEventId })) } : {}), game: { ...match(room.game, seat),
       ...(includeEarlyFinish ? { earlyFinish: !!room.earlyFinish } : {}),
       revision: room.revision || 0, storagePaused } };
   }

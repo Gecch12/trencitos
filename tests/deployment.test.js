@@ -7,7 +7,7 @@ test('all 12 original SVG card/deck/ticket/favicon files are valid and present',
 });
 test('browser HTML references server-served local assets and no third-party scripts',()=>{
  const html=fs.readFileSync(path.join(ROOT,'frontend/index.html'),'utf8'),app=fs.readFileSync(path.join(ROOT,'frontend/app.js'),'utf8');
- assert.ok(html.includes('assets/favicon.svg'));assert.match(app, /["']assets\/cards\/["']/);assert.ok(!/<script[^>]+https?:\/\//.test(html));
+ assert.ok(html.includes('assets/favicon.svg'));assert.match(app, /["'`]assets\/cards\//);assert.ok(!/<script[^>]+https?:\/\//.test(html));
 });
 test('map preserves gestures and does not restore the retired zoom toolbar',()=>{
  const html=fs.readFileSync(path.join(ROOT,'frontend/index.html'),'utf8'),app=fs.readFileSync(path.join(ROOT,'frontend/app.js'),'utf8');

@@ -1,5 +1,5 @@
 ---
-{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"released","updated":"2026-11-03"}
+{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"worktree","updated":"2026-11-03"}
 ---
 # Cartas, pagos y limpieza de la interfaz
 
@@ -44,10 +44,54 @@ pendientes de resultados/avatar, además de las cinco propuestas sobre cartas.
 
 ## Siguiente paso
 
-La mano provisional está publicada: `55b2dd8`, Live a las 11:05:27 Lima.
-Continuar observando la confirmación real y medir por separado la pintura del
-color definitivo en robos ocultos. La respuesta provisional y sus imágenes
-ya se comprobaron en producción; evidencia y límites en [Producción](../production.md).
+Publicación solicitada por Ángel: pasar CI, desplegar la secuencia validada de
+recogida/revelación y envío encadenado, y medirla en Render. Producción sigue en `55b2dd8`,
+Live a las 11:05:27 Lima, con el comportamiento anterior y sus límites en
+[Producción](../production.md). La demora al añadir bots queda para otra tarea,
+por indicación de Ángel.
+
+## Dos intenciones y revelación durante el recorrido · 2026-11-03
+
+Ampliación aprobada con «sí, de acuerdo, implementa» tras observar demasiado
+tiempo dos cartas anónimas en la mano. Sustituye esa presentación anterior.
+
+- [x] Enviar la segunda intención al clic, dependiente del ID de la primera;
+  mantener orden, reglas, rechazo al renovar y reintentos sin robos duplicados.
+- [x] Recogida inmediata, recorrido de unos 520 ms cuando la respuesta llega
+  a tiempo, giro con color real y llegada a la mano. La espera lenta permanece
+  junto al mazo, con aviso; nunca crea un grupo de reversos en la mano.
+- [x] Ilustraciones públicas decodificadas retenidas en la página; sin recibir
+  identidades futuras del mazo. Vuelos de rivales ampliados a 560 ms.
+- [x] Correlación privada ID/evento para distinguir dos robos aunque los estados
+  lleguen antes que los ACK. Reglas, commit durable, privacidad y replay conservados.
+- [x] Completar pruebas Chrome, suite amplia, revisión visual y documentación.
+- [ ] Publicar y medir clic → color definitivo → mano en producción.
+
+Pruebas y capturas de esta ampliación en `.qa/draw-pipeline/`; no sustituyen los
+informes históricos del lanzamiento anterior. Los tiempos locales con guardado
+retenido validan orden/pintura, no prometen una latencia equivalente en Render.
+
+Verificación final:
+
+- `browser-draw-feedback.cjs`: 15 recorridos completos, sin errores de página ni
+  consola. Incluye doble robo antes del primer ACK, colores correlacionados antes
+  de ambos ACK, espera superior a 850 ms, rollback, reconexión, renovación,
+  agotamiento, resize, móvil, movimiento reducido y compatibilidad anterior.
+- Primer frame de recogida en 26 clics entre 10,3 y 46,7 ms. En el caso rápido
+  sin retener el guardado: color reconocible a 361,8 ms y mano a 531,7 ms. En el
+  doble robo con guardado retenido: colores a 850,0/793,4 ms y mano a
+  950,5/894,1 ms desde cada clic. Los tiempos usan rAF e incluyen conducción de
+  QA local; no son cifras físicas ni una comparación medida con producción.
+- `browser-card-ui.cjs`: actor/rival/espectador, miniaturas privadas/públicas,
+  vuelos rivales de 560 ms, renovación, pagos, móvil e inglés, sin errores.
+  Capturas de recogida, espera prolongada y móvil inspeccionadas.
+- Suite amplia: 651 ejecutadas en 167,4 s, 650 aprobadas y un fallo del chequeo
+  textual que solo reconocía comillas simples/dobles en rutas locales. Se
+  corrigió para admitir plantillas literales; repetición de recursos/aplicación/
+  recibos: 24/24 aprobadas. No se presenta como una segunda suite amplia.
+- La CSP permite las ilustraciones `blob:` locales en memoria; los recorridos
+  finales comprueban imágenes decodificadas y ausencia de avisos de consola.
+  Documentación y `git diff --check` correctos. Sin cambios en bots, SQL o hosting.
 
 ## Incorporación inmediata a la mano · 2026-11-03
 

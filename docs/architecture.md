@@ -251,7 +251,7 @@ contenido puede desplazarse en alturas pequeñas. Marcar/desmarcar billetes usa
 una envolvente continua; la firma conserva la secuencia de trazos original.
 
 Las cuatro métricas de cada jugador usan la vista pública del motor, incluido
-`handCount`; el contador propio añade los robos provisionales aún pendientes.
+`handCount`; el contador propio sigue las cartas incorporadas visualmente a la mano.
 No se reciben manos rivales para contar cartas. `playerAvatar` y
 los estilos comunes de `.player-avatar` mantienen las proporciones del símbolo
 en panel, historial, resultados y clasificación, aunque cambie el círculo.
@@ -265,46 +265,55 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 
 ### Respuesta provisional al robar
 
-El lobby anuncia `drawFeedbackVersion:1`. `frontend/draw-intent.js` conserva una
-elección sobre la vista pública/propia, sin modificar `game.hand`, mazos ni reglas.
-`renderHand` deriva una mano de presentación: suma las cartas visibles elegidas
-a su grupo y contador al clic; los robos ocultos forman un grupo de reversos sin
-color anticipado. El contador propio del panel de jugadores sigue esa presentación.
-Un punto y `aria-busy` distinguen cantidades pendientes; el historial, pagos,
-turnos y reglas consumen exclusivamente el estado autorizado. Un servidor sin
-esta capacidad conserva la animación posterior a la confirmación.
+El lobby anuncia `drawFeedbackVersion:1` y `drawPipelineVersion:1`.
+`frontend/draw-intent.js` conserva una elección sobre la vista pública/propia,
+sin modificar `game.hand`, mazos ni reglas. El clic inicia recogida y sonido;
+`drawPresentations` sigue el vuelo y `inflightDraws` los comandos pendientes.
+`renderHand` incorpora cada carta al aterrizar: las visibles pueden sumarse
+provisionalmente con punto y `aria-busy`; las ocultas esperan su color real fuera
+de la mano. No hay grupos anónimos en ella. El contador propio sigue esta
+presentación; pagos, turnos y reglas consumen exclusivamente el estado autorizado.
 
-El vuelo dura 180 ms (fundido de 80 ms con movimiento reducido) y termina en el
-grupo de la mano sin esperar el ACK. Si llega antes, se revela/reorienta hacia
-el color confirmado durante el mismo vuelo, sin añadir otra duración ni sonido.
-Si llega después, se sustituye el reverso en la mano directamente. Los recursos
-gráficos se precargan sin solicitar identidades futuras del mazo.
+La recogida dura 150 ms y el recorrido propio apunta a 520 ms desde su inicio,
+con separación mínima de 110 ms entre inicios de dos cartas. Una carta oculta
+espera junto al mazo si el guardado tarda; después de 850 ms muestra «Robando
+carta». Al recibir el color, lo decodifica, gira durante 180 ms y termina un
+viaje de al menos 260 ms. Si la respuesta es lenta, el tiempo total crece: la
+animación no garantiza ocultar toda la latencia. Movimiento reducido usa recogida
+de 40 ms, fundido de 100 ms y giro instantáneo. Los vuelos confirmados de otros
+jugadores duran 560 ms y conservan reversos para los robos privados rivales.
 
-La revisión y los eventos evitan contar una carta dos veces cuando el estado
-llega antes del ACK. La segunda vista previa solo permanece si puede revalidarse
-contra ese estado; renovación, cambio de turno o revisión inesperada la retiran.
-Las actualizaciones sin cambios en la mano conservan sus elementos DOM.
+Las ilustraciones públicas se cargan y decodifican una vez en la página como
+imágenes retenidas con URL `blob:` local; la CSP permite cargarlas y leerlas en
+memoria. Así su uso en vuelo/mano no necesita otra
+petición aunque HTTP sirva los SVG con `no-store`. Si falla la precarga, se usa
+la URL normal. No se precarga el orden ni la identidad futura del mazo.
 
-Solo hay un comando enviado y, como máximo, una segunda elección local. No se
-encola otra carta si la primera visible es locomotora, ya se gastó un robo, no
-hay cartas suficientes o se elige la misma posición visible. Tras confirmar,
-la segunda elección se revalida con la revisión y el turno recibidos. Una
-renovación cancela la elección aunque reaparezca el mismo color; al agotarse el
-mazo se ajusta el índice de una carta intacta desplazada hacia la izquierda.
-No se adivina la identidad de una carta nueva ni se adelanta el segundo comando.
+Con la capacidad nueva, la primera solicitud lleva `chainDraws:true`; la segunda
+sale al clic, con ID propio, revisión original y `after` apuntando al primer ID.
+El servidor las ejecuta en su cola serial y valida el recibo del primer robo,
+puesto, revisión, turno, cantidad de robos y posiciones originales. No acepta
+una tercera carta, locomotora visible como segundo robo ni reutilizar la primera
+posición visible. Una renovación invalida la segunda elección aunque reaparezca
+el mismo color; el agotamiento ajusta el índice de una carta intacta desplazada.
+No se predicen colores ocultos ni se confirma antes del commit durable.
 
-El caso de uso guarda `drawEventId` en el recibo idempotente junto a su huella.
-El ACK lo entrega únicamente al actor y después del mismo commit que sala y
-archivo. El cliente concilia la vista previa con ese evento y omite su segunda
-animación/sonido. Una repetición del comando conserva el identificador incluso
-tras reiniciar. El campo es aditivo: recibos históricos y clientes previos siguen
-siendo válidos; no cambia el formato de los eventos públicos ni revela colores.
+El recibo guarda `drawEventId` y, para un primer robo encadenable, `drawContext`
+con la revisión, turno, cantidad, índice, mercado y último evento previos. Ese
+contexto permanece en el servidor. La vista `state` agrega `drawReceipts` con
+los últimos 16 pares `{id,eventId}` del propio puesto; espectadores y grabaciones
+no los reciben. Así dos estados anteriores al ACK se correlacionan exactamente
+con sus vuelos y nunca duplican mano, sonido ni animación. El ACK conserva su
+referencia al evento; el error incluye el ID del comando rechazado. Los recibos
+persistidos permiten reintentar sin consumir otra carta, incluso tras reiniciar.
+Un servidor sin pipeline usa la segunda elección local y su envío tras el ACK;
+sin feedback usa la animación posterior a confirmar.
 
 Rechazo, guardado pausado, pérdida del puesto y desconexión retiran las vistas
-previas y descartan la elección aún no enviada. La reconexión conserva el ID del
-comando enviado para recuperarlo sin robar otra carta. Resize, pestaña oculta y
-cambio de movimiento reducido cancelan geometría y elección local; conservan la
-correlación del primer comando para no repetir su efecto cuando llegue el ACK.
+previas y descartan elecciones aún no enviadas. Los comandos ya enviados se
+reintentan en orden con sus mismos IDs al reconectar. Resize, pestaña oculta y
+cambio de movimiento reducido cancelan geometría, conservando la correlación de
+ambos comandos enviados para no repetir efectos ni perder una jugada aceptada.
 La construcción de rutas conserva su comportamiento autoritativo actual.
 
 `game/queries/destination-details.js` conserva, en un `WeakMap` por partida, la
@@ -384,9 +393,11 @@ transporte. Detalle y trabajo pendiente en [fase 3](work/modular-platform-applic
 ### Recibos de comandos
 
 `member.actionIds` conserva el orden de los últimos 128 IDs aceptados;
-`member.actionReceipts` añade `{id, fingerprint, drawEventId?}` únicamente para los
+`member.actionReceipts` añade `{id, fingerprint, drawEventId?, after?, drawContext?}` para los
 comandos aceptados por la implementación nueva; `drawEventId` es la referencia
-opcional al evento del robo para conciliar su presentación provisional.
+opcional al evento del robo para conciliar su presentación provisional. `after`
+identifica el primer robo del que depende el segundo; `drawContext` conserva las
+precondiciones de un primer robo encadenable, descritas arriba. Ambos son aditivos.
 La pertenencia al miembro de esa sala
 acota el recibo a partida/puesto; una revancha crea miembros nuevos. Se calcula
 la huella antes de ejecutar, y se registra después de una acción exitosa junto
@@ -397,7 +408,8 @@ prefijo `sha256-json-v1:` sobre el JSON de `{action}`. Ordena claves de objetos
 recursivamente y conserva orden de arrays, tipos y todos los campos del payload,
 incluso los que el motor no utiliza. No incluye ID ni revisión: esta última es
 una precondición para una acción nueva, no la identidad de una ya aceptada.
-La codificación persistida tiene una prueba de valor conocido; cambiarla exige
+La dependencia `after` se compara aparte de la huella: repetir un ID con otro
+predecesor produce conflicto. La codificación persistida tiene una prueba de valor conocido; cambiarla exige
 un lector compatible o una migración explícita.
 
 | Solicitud dentro de la ventana | Resultado |

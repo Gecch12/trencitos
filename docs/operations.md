@@ -212,9 +212,14 @@ estos agregados no sustituyen una medición de clic a confirmación del cliente.
 `node tests/browser-draw-feedback.cjs` prueba el recorrido completo en Chrome
 con HTTP/WebSocket locales y el adaptador remoto conectado a un doble en memoria
 (`fixture.supabase.co` se intercepta; no se conecta a Supabase real). Retiene el
-guardado para comprobar incorporación provisional a la mano, dos robos, renovación,
-agotamiento, rechazo, fallo y reconexión. También retrasa solo el ACK para comprobar
-que un estado recibido antes no duplique cartas, y prueba revelación rápida.
-Escribe métricas y capturas en `.qa/draw-feedback/`: `handFrameMs` observa el primer
-frame con mano/contador actualizados; `confirmationMs` mide el ACK del transporte.
-La medición de frame usa `requestAnimationFrame`, no una captura física de pantalla.
+guardado para comprobar envío inmediato de ambas intenciones, revelación fuera
+de la mano, renovación, agotamiento, rechazo, fallo y reconexión. También retiene
+los ACK para comprobar que dos estados recibidos antes correlacionen sus colores
+sin duplicados; cubre espera prolongada y servidores sin la capacidad nueva.
+Escribe métricas y capturas en `.qa/draw-feedback/` (otro destino con `QA_OUT`).
+`frameMs` observa el primer frame del movimiento, `confirmationMs` mide el ACK,
+`colorRecognizableMs` el color decodificado con el giro prácticamente terminado,
+y `handArrivalMs` el frame de incorporación con imágenes cargadas. Las últimas
+dos mediciones sustituyen al antiguo criterio de reversos presentes en la mano.
+Se usa `requestAnimationFrame`, no una captura física de pantalla ni una medida
+de producción. La latencia retenida en la prueba no representa la de Render.

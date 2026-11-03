@@ -22,16 +22,27 @@ function room(code,refresh) {
  async function page(room,seat,options={}) {
   const context=await browser.newContext({viewport:{width:1440,height:900},...options});const p=await context.newPage();p.setDefaultTimeout(10000);
   if(seat>=0)await p.addInitScript(({code,token})=>localStorage.setItem('rr-room-'+code,token),{code:room.code,token:room.members[seat].token});
-  p.on('pageerror',e=>report.errors.push(e.message));p.on('console',e=>{if(e.type()==='error')report.errors.push(e.text());});
+  p.on('pageerror',e=>report.errors.push(e.message));p.on('console',e=>{if(e.type()==='error')report.errors.push({message:e.text().slice(0,240),location:e.location()});});
   await p.goto(base+'/?'+(seat<0?'watch=':'room=')+room.code);await p.waitForFunction(()=>!!game);
   return p;
  }
  const normal=room('QACARD',false);app.rooms.set(normal.code,normal);
  const actor=await page(normal,0),rival=await page(normal,1),spectator=await page(normal,-1);
+ for(const p of [rival,spectator])await p.evaluate(()=>{
+  window.observedDrawFlights=[];
+  new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes)
+   if(node.classList?.contains('draw-flight'))observedDrawFlights.push({color:node.querySelector('img').dataset.cardColor,
+    duration:node.getAnimations()[0].effect.getTiming().duration});
+  }).observe(document.body,{childList:true});
+ });
  await actor.locator('#drawblind').click();await actor.waitForFunction(()=>game.history.some(e=>e.draw));
  for(const p of [actor,rival,spectator])await p.waitForSelector('.history-draw img');
  assert.match(await actor.locator('.history-draw img').last().getAttribute('src'),/orange.svg/);
  for(const p of [rival,spectator])assert.match(await p.locator('.history-draw img').last().getAttribute('src'),/back.svg/);
+ for(const p of [rival,spectator]){
+  await p.waitForFunction(()=>observedDrawFlights.length);
+  assert.deepEqual(await p.evaluate(()=>observedDrawFlights[0]),{color:'back',duration:560});
+ }
  assert.equal(await actor.locator('.market-refresh-layer').count(),0);
  await actor.locator('[data-market-index="0"]').click();
  await Promise.all([actor,rival,spectator].map(p=>p.waitForFunction(()=>game.history.filter(e=>e.draw).length===2)));
@@ -62,7 +73,7 @@ function room(code,refresh) {
   await a.waitForFunction(()=>!marketRefresh);await b.waitForFunction(()=>!marketRefresh);
   assert.equal(await a.locator('.market-refresh-layer').count(),0);
   assert.equal(await a.locator('[data-market-index]').count(),5);
-  assert.deepEqual(await a.locator('[data-market-index] img').evaluateAll(imgs=>imgs.map(i=>i.getAttribute('src').split('/').at(-1).replace('.svg',''))),r.game.face);
+  assert.deepEqual(await a.locator('[data-market-index] img').evaluateAll(imgs=>imgs.map(i=>i.dataset.cardColor)),r.game.face);
   await a.reload();await a.waitForFunction(()=>!!game);assert.equal(await a.locator('.market-refresh-layer').count(),0);
   await Promise.all([a,b].map(p=>p.close()));
  }
@@ -79,7 +90,7 @@ function room(code,refresh) {
  assert.match(await p.locator('.payment-sum').innerText(),/^2/);
  await p.screenshot({path:path.join(out,'payment-desktop.png')});
  await p.locator('#wildMore').click();assert.equal(await p.locator('#paymentPreview .traincard').count(),1);
- assert.match(await p.locator('#paymentPreview img').getAttribute('src'),/wild.svg/);
+ assert.equal(await p.locator('#paymentPreview img').getAttribute('data-card-color'),'wild');
  await p.locator('#wildLess').click();
  for(const [w,h]of [[390,844],[844,390]]) {
   await p.setViewportSize({width:w,height:h});assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);

@@ -616,10 +616,10 @@ function onMessage(peer, msg) {
   }
   if (msg.type === "action") {
     const result = submitPlayerAction(r, peer.seat, {
-      commandId: msg.id, expectedRevision: msg.revision, action: msg.action,
+      commandId: msg.id, expectedRevision: msg.revision, action: msg.action, after: msg.after, chainDraws: msg.chainDraws,
     });
     // In remote mode peer.send stages the reply until the outer dispatch commits.
-    peer.send(actionReply(result));
+    peer.send({ ...actionReply(result), ...(result.status === 'rejected' && typeof msg.id === 'string' ? { id: msg.id } : {}) });
     return;
   }
   deny(peer, "Acción desconocida.");

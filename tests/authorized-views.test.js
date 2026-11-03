@@ -101,6 +101,24 @@ test("recovery projections retain their legacy envelope and invalid seats cannot
   }
 });
 
+test("live draw correlations include only the recipient's bounded IDs and never their private receipt context", () => {
+  const room = fixture(), views = createAuthorizedViews(ports);
+  room.members[0].actionReceipts = Array.from({length:20}, (_, i) => ({
+    id:`own-draw-${i}`, drawEventId:i + 1, fingerprint:'private-fingerprint',
+    after:'private-parent', drawContext:{face:['red'], revision:3, eventFloor:1},
+  }));
+  room.members[1].actionReceipts = [{id:'rival-draw', drawEventId:30}];
+  freeze(room);
+  const own = views.state(room, 0), rival = views.state(room, 1), spectator = views.state(room, -1);
+  assert.deepEqual(own.drawReceipts, Array.from({length:16}, (_, i) => ({id:`own-draw-${i+4}`, eventId:i+5})));
+  assert.deepEqual(rival.drawReceipts, [{id:'rival-draw', eventId:30}]);
+  assert.equal(Object.hasOwn(spectator, 'drawReceipts'), false);
+  assert.doesNotMatch(JSON.stringify(own), /private-fingerprint|private-parent|drawContext|rival-draw/);
+  assert.doesNotMatch(JSON.stringify(rival), /own-draw/);
+  assert.doesNotMatch(JSON.stringify(views.recording(room)), /own-draw|rival-draw|drawReceipts|drawContext/);
+  assert.equal(views.lobby(room, 0).drawPipelineVersion, 1);
+});
+
 test("authorized queries read frozen state with only injected dependencies and never normalize it", () => {
   const forbidden = () => { throw Error("ambient dependency"); }, module = { exports: {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, "../game/queries/authorized-views.js"), "utf8"), {

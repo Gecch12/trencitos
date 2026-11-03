@@ -52,7 +52,7 @@ const ASSETS = Object.freeze({
   "/hippie-hair.mjs": ["frontend/hippie-hair.mjs", "text/javascript; charset=utf-8"],
   "/wagon-people.mjs": ["frontend/wagon-people.mjs", "text/javascript; charset=utf-8"],
 });
-const CSP = "default-src 'self'; connect-src 'self' ws: wss:; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'";
+const CSP = "default-src 'self'; connect-src 'self' ws: wss: blob:; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'";
 function servePublicAsset(pathname, res) {
   let asset = Object.hasOwn(ASSETS, pathname) ? ASSETS[pathname] : null;
   if (!asset && /^\/assets\/(?:cards\/[a-z]+|favicon|ticket)\.svg$/.test(pathname)) {
