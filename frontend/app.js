@@ -121,9 +121,10 @@ async function initializeBoard3D() {
     console.warn("Tablero 3D no disponible:", error.message); boardUnavailable();
   } finally { board3DLoading = false; }
 }
-let wagonPreview = null, wagonPreviewLoading = false;
+let wagonPreview = null, wagonPreviewLoading = false, wagonCollection = null;
 function hideWagonPreview() {
   wagonPreview?.dispose(); wagonPreview = null; $("wagonPreview").hidden = true;
+  $("wagonCollectionDialog").close();
 }
 async function syncWagonPreview() {
   const inRoom = !!room && !lobbyStarted;
@@ -136,11 +137,17 @@ async function syncWagonPreview() {
   try {
     const { createWagonPreview } = await import("./wagon-preview.js");
     if (game || (!room && homeMode !== "practice")) return;
-    wagonPreview ||= createWagonPreview({ container: $("wagonPreviewStage"), train: true, translate: text => I18n.t(text), onFailure: () => {
+    wagonPreview ||= createWagonPreview({ container: $("wagonPreviewStage"), translate: text => I18n.t(text), onFailure: () => {
       wagonPreview?.dispose(); wagonPreview = null; $("wagonPreviewError").hidden = false;
     } });
     const color = previewColor(), description = wagonPreview.update(color);
     figure.dataset.model = description.model;
+    $("wagonPreviewName").textContent = I18n.t(description.label);
+    $("openWagonCollection").textContent = I18n.t(description.variantCount === 6 ? "Ver los 6 vagones" : "Ver detalle");
+    if (wagonCollection) {
+      wagonCollection.update(color);
+      $("wagonCollectionDescription").textContent = I18n.t(description.label);
+    }
     $("wagonPreviewStage").setAttribute("aria-label", I18n.t`${I18n.t(description.label)}, color ${I18n.t(LobbyUI.colorName(color))}`);
     $("wagonPreviewError").hidden = true;
   } catch (error) {
@@ -148,6 +155,23 @@ async function syncWagonPreview() {
     console.warn("Vista previa no disponible:", error.message);
   } finally { wagonPreviewLoading = false; }
 }
+
+$("wagonCollectionDialog").addEventListener('close', () => {
+  wagonCollection?.dispose(); wagonCollection = null;
+});
+$("openWagonCollection").onclick = async () => {
+  const dialog = $("wagonCollectionDialog");
+  dialog.showModal(); $("wagonCollectionError").hidden = true;
+  try {
+    const { createWagonPreview } = await import("./wagon-preview.js");
+    if (!dialog.open) return;
+    wagonCollection ||= createWagonPreview({container:$("wagonCollectionStage"),gallery:true,translate:text=>I18n.t(text),onFailure:()=>{
+      wagonCollection?.dispose(); wagonCollection=null; $("wagonCollectionError").hidden=false;
+    }});
+    const description=wagonCollection.update(previewColor());
+    $("wagonCollectionDescription").textContent=I18n.t(description.label);
+  } catch(error) { $("wagonCollectionError").hidden=false; }
+};
 
 let hoveredPlayer = null, focusedPlayer = null;
 let displayedLogs = null;

@@ -5,8 +5,9 @@ import { WAGON_STYLES, wagonAppearance, wagonStyle, wagonVariants } from './wago
 // The shared couplers reach +/-10.65: this spacing joins adjacent wagons.
 const WAGON_SPACING = 21.3;
 
-// Same meshes as the board: connected side elevation on desktop, one 3/4 wagon on mobile.
-export function createWagonPreview({ container, onFailure, train = false, translate = text => text }) {
+// Same meshes as the board: compact 3/4 preview, optional collection or connected train.
+export function createWagonPreview({ container, onFailure, train = false, gallery = false, translate = text => text }) {
+  train ||= gallery;
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); renderer.setClearColor(0, 0);
   renderer.domElement.setAttribute('aria-hidden', 'true');
@@ -18,13 +19,14 @@ export function createWagonPreview({ container, onFailure, train = false, transl
   const sun = new THREE.DirectionalLight(0xffffff, 2.5); sun.position.set(-40, 40, 90); scene.add(sun);
   const dummy = new THREE.Object3D(), paint = new THREE.Color(), pose = new THREE.Quaternion();
   const capacity = train ? Math.max(...WAGON_STYLES.map(style => wagonVariants(style.model).length)) : 1;
+  let galleryZ = 0;
   const wagons = createWagonRenderer({ renderer, capacity,
     instances(geometry, capacity, material) {
       const mesh = new THREE.InstancedMesh(geometry, material, capacity);
       mesh.count = 0; mesh.frustumCulled = false; meshes.push(mesh); scene.add(mesh); return mesh;
     },
     put(mesh, x, y, z, angle, sx, sy, sz, color, rotation) {
-      dummy.position.set(x, -y, z); dummy.rotation.set(0, 0, -angle * Math.PI / 180);
+      dummy.position.set(x, -y, z + galleryZ); dummy.rotation.set(0, 0, -angle * Math.PI / 180);
       if (rotation) dummy.quaternion.multiply(pose.set(-rotation[0],rotation[1],-rotation[2],rotation[3]));
       dummy.scale.set(sx, sy, sz); dummy.updateMatrix();
       const i = mesh.count++; mesh.setMatrixAt(i, dummy.matrix); mesh.setColorAt(i, paint.set(color));
@@ -33,13 +35,16 @@ export function createWagonPreview({ container, onFailure, train = false, transl
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ color: '#4c513d', transparent: true, opacity: .12, depthWrite: false }));
   shadow.scale.set(11, 4.7, 1); shadow.position.z = -.01; shadow.visible = !train; scene.add(shadow);
   let frame = 0, disposed = false, current = null, currentColor = null, currentVisualKey = null, rendered = null, items = [];
-  const mobile = train ? matchMedia('(max-width: 600px), (max-width: 950px) and (max-height: 500px)') : null;
+  const mobile = train && !gallery ? matchMedia('(max-width: 600px), (max-width: 950px) and (max-height: 500px)') : null;
   if (train) container.classList.add('wagon-preview-train');
-  function draw(color, appearances) {
+  function draw(color, appearances, columns = appearances.length) {
     for (const mesh of meshes) mesh.count = 0;
     appearances.forEach((appearance, index) => {
-      const x = (index - (appearances.length - 1) / 2) * WAGON_SPACING;
+      const x = gallery ? (index % columns - (columns - 1) / 2) * 27 : (index - (appearances.length - 1) / 2) * WAGON_SPACING;
+      const z = gallery ? (Math.ceil(appearances.length / columns) - 1 - 2 * Math.floor(index / columns)) * 12 : 0;
+      galleryZ = z;
       wagons.draw({ x, y: 0, angle: 0 }, { color }, false, appearance);
+      galleryZ = 0;
     });
     for (const mesh of meshes) {
       mesh.visible = mesh.count > 0; mesh.instanceMatrix.needsUpdate = true;
@@ -47,12 +52,14 @@ export function createWagonPreview({ container, onFailure, train = false, transl
     }
   }
   function frameCamera(w, h, count = 1) {
-    const sideView = train && !mobile.matches;
+    const sideView = train && !mobile?.matches;
     const crowded = wagonStyle(currentColor).model === 'hippie';
     if (sideView) { camera.position.set(0, -80, crowded?7.5:5.2); camera.lookAt(0, 0, crowded?7.5:5.2); }
     else { camera.position.set(24, -38, 29); camera.lookAt(0, 0, crowded?6.5:4); }
     shadow.visible = !sideView;
-    const halfHeight = sideView
+    const columns = Math.min(count, w < 600 ? 2 : 3);
+    const halfHeight = gallery ? Math.max(Math.ceil(count / columns) * 12 + 2, columns * 27 * h / w / 2)
+      : sideView
       ? Math.max(crowded?8.4:6.2, (count * WAGON_SPACING + 3) * h / w / 2)
       : Math.max(crowded?12:9.2, 15 * h / w);
     camera.top = halfHeight; camera.bottom = -halfHeight;
@@ -70,12 +77,13 @@ export function createWagonPreview({ container, onFailure, train = false, transl
       const detail = !train && h>=240 ? 'high' : 'low';
       wagons.setCrowdDetail(detail);
       if (train) {
-        count = mobile.matches ? Math.min(1, items.length) : items.length;
+        count = mobile?.matches ? Math.min(1, items.length) : items.length;
         if (!count) return;
         items.forEach(({ stage }, index) => { stage.hidden = index >= count; });
-        const key = `${current}:${count}:${detail}`;
+        const columns = gallery ? Math.min(count, w < 600 ? 2 : 3) : count;
+        const key = `${current}:${count}:${detail}:${columns}`;
         if (rendered !== key) {
-          draw(currentColor, items.slice(0, count).map(item => item.appearance));
+          draw(currentColor, items.slice(0, count).map(item => item.appearance), columns);
           rendered = key;
         }
       } else if (rendered !== `${current}:${detail}`) {
@@ -113,7 +121,7 @@ export function createWagonPreview({ container, onFailure, train = false, transl
       for (const item of items) {
         item.stage.setAttribute('aria-label', `${translate(description.label)}: ${translate(item.label)}`);
       }
-      render(); return description;
+      render(); return { ...description, variantCount: variants.length };
     },
     dispose() {
       if (disposed) return;

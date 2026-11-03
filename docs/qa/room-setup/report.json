@@ -1,0 +1,14 @@
+{
+  "at": "2026-11-03T14:20:41.852Z",
+  "checks": [
+    "Map cards replace select; host choice persists and reaches guest; guest cannot change it",
+    "Arrow/Home keyboard navigation and reconnect preserve authoritative choice",
+    "Compact preview opens all six variants; Escape disposes canvas and restores focus",
+    "Laptop/mobile fit, sticky start, scrolling maps and all six gallery models on mobile",
+    "Map titles, badges and controls translate into English",
+    "Selected South America starts for both clients; lobby preview resources are released"
+  ],
+  "errors": [],
+  "browser": "156.0.8078.80",
+  "passed": true
+}

@@ -16,7 +16,7 @@ async function boot(){delete require.cache[require.resolve('../backend/server')]
     const context=await browser.newContext({viewport:{width:1460,height:940},reducedMotion:'reduce'}),page=await context.newPage();page.setDefaultTimeout(20000);
     page.on('pageerror',e=>report.errors.push(e.stack));page.on('console',e=>{if(e.type()==='error')report.errors.push(e.text());});
     await page.goto(base);await page.locator('#create').click();await page.waitForFunction(()=>!!room);
-    await page.locator('#roomMapChoice').selectOption(String(index));await page.waitForFunction(id=>roomMapRef.id===id,id);
+    await page.locator(`[data-map-id="${id}"]`).click();await page.waitForFunction(id=>roomMapRef.id===id,id);
     const code=await page.locator('#roomcode').textContent(),peer=await connect(port);
     peer.send({type:'join',code,name:'Bot policy client',color:'#458ad4'});const lobby=await peer.next('lobby');
     assert.equal(lobby.mapRef.id,id);await page.waitForFunction(()=>members.length===2);

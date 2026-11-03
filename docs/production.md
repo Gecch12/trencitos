@@ -1,6 +1,29 @@
 # Producción
 
-## Versión actual · 2026-11-03, 02:26 (Lima)
+## Versión actual · 2026-11-03, 09:23 (Lima)
+
+- Código `8146ffafbffa0c3e26a48f8f9157216a82dea13c` en `origin/main`.
+  Lobby con tarjetas visuales de mapas, ajustes agrupados, vagón compacto y
+  colección de seis variantes bajo demanda. Alcance en [la ficha](work/room-map-cards.md).
+- [Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbkusdlg1s2s73dr7u50)
+  publicó el commit exacto, **Live** a las 09:23:30 Lima. Sin migraciones SQL,
+  cambios de variables, planes ni credenciales; no había salas antes de desplegar.
+- [633/633 pruebas](qa/room-setup/node-result.json), más Chrome con dos clientes:
+  selección autorizada, persistencia/recarga, teclado, inicio de Sudamérica, ES/EN
+  y móvil. Preview de 21 familias en ocho tamaños, sin recorte ni render continuo.
+- [Verificación HTTP](qa/room-setup/production-http.json): 45 recursos públicos
+  idénticos al código y siete rutas privadas con 404. Chrome en producción:
+  sala de QA privada, Sudamérica confirmada mediante tarjeta y seis variantes
+  de Midsommar visibles en el diálogo, sin errores de consola. La sala temporal
+  se cerró después de comprobar. [Captura](qa/room-setup/production-desktop.png) y
+  [colección](qa/room-setup/production-collection.png).
+- El checkout local de `main` tenía cambios concurrentes de otro trabajo.
+  Permanecen intactos: se publicó desde el worktree aislado a `origin/main`,
+  sin incorporar ni guardar cambios ajenos. Ese checkout local aún requiere
+  reconciliar sus ediciones antes de actualizarse. La revisión publicada es la
+  indicada arriba; los commits documentales posteriores no reinician el servicio.
+
+## Entrega anterior · 2026-11-03, 02:26 (Lima)
 
 - Código: `33b42802759255b285dc6b24c54a85ad4ad91eb8`, publicado en `main`.
   Arquitectura modular, mapas versionados, Sudamérica 3.3 beta, replay de análisis,

@@ -400,9 +400,6 @@ body .player-avatar.is-bot > svg,body .home-avatar.is-bot > svg { fill:none; str
 .capacity-setting #roomCapacity { font-size:32px; min-height:48px; }
 .room-visibility-hint { margin:8px 0 0; text-align:center; }
 .room-layout .room-timing > h2 { text-align:left; font-size:16px; }
-.setting-card.map-setting { padding: 6px; overflow: hidden; gap: 4px; }
-#roomMapPreview { width: 100%; height: 56px; border-radius: 4px; }
-#roomMapChoice { width:100%; height:32px; min-height:32px; flex-shrink:0; padding:4px 6px; line-height:1.3; border:1px solid #769fa8; border-radius:4px; color:var(--shell-ink); background:#f3f8f4; font:inherit; }
 .visibility-setting { border: 1px solid #769fa8; background: #d8e7e3; }
 .visibility-setting[data-visibility="private"] { background: #f1e1bd; border-color: #b18a42; }
 .visibility-setting [data-visibility-icon] { display: grid; place-items: center; height: 36px; }

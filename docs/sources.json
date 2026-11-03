@@ -72,7 +72,9 @@
     "backend/bot-worker.js",
     "backend/bot-planner.js",
     "backend/bot-runner.js",
-    "supabase/005_checkpoint_delta.sql"
+    "supabase/005_checkpoint_delta.sql",
+    "frontend/room-map-picker.js",
+    "frontend/room-setup.css"
   ],
   "domain.md": [
     "game/application/automatic-play.js",

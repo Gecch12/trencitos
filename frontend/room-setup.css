@@ -1,0 +1,67 @@
+/* Room setup: map choices first, compact configuration, optional wagon gallery. */
+.room-map-section { margin-top:20px; }
+.room-section-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+.room-layout .room-section-heading h2 { margin:0; font-size:16px; text-align:left; }
+.room-section-heading > .shell-muted { font-size:12px; text-align:right; }
+.map-card-list { display:flex; gap:10px; overflow-x:auto; padding:4px 4px 8px; margin:0 -4px; scroll-snap-type:x proximity; scrollbar-width:thin; scrollbar-color:#91b3b8 transparent; }
+.map-choice { flex:0 0 164px; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; min-height:144px; padding:10px; border:2px solid transparent; border-radius:10px; background:#cedfdd; color:var(--shell-ink); scroll-snap-align:start; gap:7px; }
+.map-choice:hover:not([aria-disabled="true"]) { background:#c2d8d5; border-color:#8bafaf; }
+.map-choice[aria-checked="true"] { background:#f7f9f0; border-color:#256b78; box-shadow:0 2px 6px #193b4912; }
+.map-choice[aria-disabled="true"] { cursor:default; }
+.map-choice-art { display:grid; place-items:center; width:100%; height:96px; border-radius:6px; background:#bcd4d6; overflow:hidden; }
+.map-choice-art svg { width:100%; height:100%; padding:5px; }
+.map-choice-name { font-size:14px; line-height:20px; font-weight:700; }
+.map-choice-badge { position:absolute; top:8px; left:8px; padding:3px 7px; border-radius:4px; background:#e8d6a9; color:#554323; font-size:10px; font-weight:700; }
+.map-choice[data-map-id="laboratory"] .map-choice-badge { background:#dee4e8; color:#445b68; }
+.map-choice-check { display:none; position:absolute; top:7px; right:7px; width:22px; height:22px; border-radius:50%; background:#256b78; color:white; place-items:center; font-size:14px; }
+.map-choice[aria-checked="true"] .map-choice-check { display:grid; }
+.map-scroll-hint { margin:0; font-size:12px; }
+.room-configuration { margin-top:20px; }
+.room-mode { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#466976; }
+.room-mode .shell-icon { width:20px; height:20px; }
+.room-game-options { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:0; }
+.room-game-options .room-setting-group { display:flex; align-items:center; gap:10px; border:1px solid #b8cecf; border-radius:7px; padding:5px 10px; background:#d7e5e2; }
+.room-game-options h3 { margin:0; font-size:13px; text-align:left; flex:1; }
+.room-game-options h3 label { margin:0; font:inherit; color:inherit; }
+.room-game-options .setting-card { width:auto; height:auto; min-height:46px; padding:5px 8px; margin:0; border:0; background:transparent; flex-direction:row; gap:6px; font-size:13px; }
+.room-game-options .capacity-setting .setting-card { width:125px; padding:0; }
+.capacity-setting #roomCapacity { min-height:42px; font-size:22px; }
+.visibility-setting [data-visibility-icon] { height:26px; }
+.visibility-setting .shell-icon { width:25px; height:25px; }
+.room-game-options .visibility-setting[data-visibility="private"] { background:#ecddba; }
+.room-visibility-hint { text-align:left; font-size:12px; }
+.room-timing { margin-top:18px; }
+.appearance-setting { margin-top:18px; grid-template-columns:minmax(0,1fr) 200px; column-gap:16px; align-items:center; }
+.appearance-setting .color-options { gap:3px; }
+.appearance-setting .color-options button { width:34px; height:34px; min-height:34px; }
+.wagon-preview:not([hidden]) { display:grid; grid-template-columns:150px minmax(0,1fr); align-items:center; gap:12px; }
+.wagon-preview-stage { height:100px; }
+.wagon-preview figcaption { display:flex; flex-direction:column; align-items:flex-start; gap:4px; font-size:13px; }
+.wagon-collection-link { padding:5px 0; min-height:32px; font-size:12px; color:#246574; background:transparent; text-decoration:underline; text-underline-offset:3px; }
+.appearance-setting .wagon-preview:not([hidden]) { display:flex; flex-direction:column; gap:0; }
+.appearance-setting .wagon-preview-stage { width:100%; height:88px; }
+.appearance-setting .wagon-preview figcaption { align-items:center; gap:0; text-align:center; }
+.wagon-preview #wagonPreviewError { grid-column:1 / -1; font-size:12px; }
+.wagon-collection-dialog { width:min(850px,calc(100vw - 24px)); }
+.wagon-collection-dialog h2 { margin-bottom:6px; }
+.wagon-collection-dialog > p { margin:0; text-align:center; font-size:14px; color:#58737d; }
+.wagon-collection-stage { width:100%; height:350px; margin-top:16px; border-radius:8px; background:#e2ebe6; }
+.wagon-collection-stage canvas { display:block; }
+@container (max-width:600px) {
+  .map-choice { flex-basis:142px; min-height:138px; }
+  .map-choice-art { height:88px; }
+  .room-game-options .room-setting-group { flex-direction:column; gap:0; padding:8px; }
+  .appearance-setting { grid-template-columns:minmax(0,1fr) 150px; gap:8px; }
+}
+@container (max-width:420px) {
+  .appearance-setting { grid-template-columns:1fr; }
+  .appearance-setting .color-options { justify-content:flex-start; }
+  .appearance-setting .color-choice legend { text-align:left; }
+  .appearance-setting .wagon-preview:not([hidden]) { display:grid; grid-template-columns:125px minmax(0,1fr); }
+  .appearance-setting .wagon-preview figcaption { align-items:flex-start; text-align:left; }
+  .room-section-heading > .shell-muted { max-width:160px; }
+}
+@media(max-width:600px) {
+  .wagon-collection-stage { height:420px; }
+  .wagon-collection-dialog { padding:24px 12px 12px; }
+}
