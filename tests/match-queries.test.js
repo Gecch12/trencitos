@@ -130,7 +130,8 @@ test("queries and legacy timing plans have no ambient clock, random source or ex
   }
   const turn = load("game/domain/turn.js"), legacy = load("game/compat/legacy-timing.js", { "../domain/turn": turn });
   const query = load("game/queries/match-view.js"), g = freeze(ready());
-  assert.equal(query.projectMatch(g, 0, { now: 42, tunnelCardMs: 3, destinationDetails: () => ({ progress: [], paths: [] }) }).serverNow, 42);
+  assert.equal(query.projectMatch(g, 0, { now: 42, tunnelCardMs: 3, destinationDetails: () => ({ progress: [], paths: [] }),
+    references: { mapRef: g.mapRef, rulesRef: g.rulesRef } }).serverNow, 42);
   const legacyGame = { ...g, phase: "tickets", pending: { tickets: g.shortDeck.slice(0,3) } }, before = structuredClone(legacyGame);
   const plan = legacy.planTiming(freeze(legacyGame), { now: 42, rules: timing, offerMs: 100 });
   assert.equal(plan.offer.value.deadline, 142);assert.equal(plan.changes.current, 1);

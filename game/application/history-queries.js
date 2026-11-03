@@ -1,5 +1,6 @@
 "use strict";
 const { projectSummary, projectReplay } = require("../queries/replay-view");
+const { hasDefinitionHeader } = require("../compat/replay-definition");
 
 function participantSeat(record, identity, claims) {
   return record.players.findIndex(p => !p.bot && (identity.accountId &&
@@ -36,6 +37,7 @@ function createHistoryQueries({ repository }) {
     if (record.status === "active") throw fail(409, "La repetición estará disponible cuando la partida se cierre.");
     if (record.schemaVersion !== 1) throw fail(409, "Esta versión de repetición no está disponible.");
     if (audit && !full) throw fail(403, "Solo los participantes pueden descargar la auditoría.");
+    hasDefinitionHeader(record);
     const frames = record.frames || await repository.frames(id, record.steps);
     return projectReplay({ ...record, frames }, { full, audit });
   }

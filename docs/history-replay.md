@@ -67,6 +67,10 @@ reclamaciones, visibilidad, cierre y versión antes de solicitar pasos remotos.
 con las perspectivas guardadas. También listado, acciones, eventos y auditoría
 se devuelven como copias, sin permitir cambios del archivo desde una consulta.
 El puente público `archive.list`/`archive.replay` y las rutas HTTP se conservan.
+El encabezado aditivo de definición se comprueba después de autorizar y antes
+de cargar pasos remotos. Una versión desconocida o referencia incompleta devuelve
+409; no se sustituye por Europa. La ausencia de los tres campos conserva el lector
+original de archivo v1.
 
 ## Grabación y almacenamiento
 
@@ -87,10 +91,30 @@ Las partidas vivas nuevas llevan `schemaVersion:1`, `mapRef` y `rulesRef`.
 `Engine.restoreState` valida y adapta partidas al cargar salas; nunca se aplica a
 frames históricos. Al continuar una grabación antigua, solo el estado completo
 o las diferencias del paso nuevo incorporan la cabecera dentro de `game`. El
-prefijo anterior y su cadena de hashes permanecen intactos. Las vistas grabadas
-y su protocolo siguen siendo los anteriores; la versión del archivo sigue en 1
-y la etiqueta histórica `rulesVersion: europe-classic-1` se conserva. Esto prepara
-la auditoría del estado, sin habilitar replay de otro mapa todavía.
+prefijo anterior y su cadena de hashes permanecen intactos.
+
+Las nuevas vistas añaden `definitionVersion:1`, `mapRef` y `rulesRef`. El snapshot
+guarda una sola `definition` pública junto a `game`, `views` y `members`; forma
+parte del hash. Su esquema y campos están en [arquitectura](architecture.md).
+Los metadatos guardan esa misma versión y referencias, sin copiar todo el catálogo
+en cada fila del listado. `map` es una etiqueta (`Europa` o el ID del otro mapa) y
+`rulesVersion` conserva el formato informativo anterior; las referencias exactas
+son la identidad normativa. El archivo y el formato de diferencias siguen en v1.
+
+El lector usa la definición grabada aunque ese mapa ya no esté en el catálogo
+del servidor. Comprueba versión de definición y coherencia entre referencias de
+metadatos, definición y vistas; no ejecuta reglas actuales ni reconstruye datos
+desde el estado privado. Público y participantes reciben la misma definición,
+pero mantienen sus respectivas vistas y filtros de secretos. La auditoría devuelve
+los frames originales completos, con hashes intactos. El verificador de auditoría
+comprueba la cadena, no certifica legalidad histórica ni balance.
+
+Una grabación reanudada puede empezar con pasos antiguos sin definición. Los
+pasos nuevos introducen el contrato mediante snapshot o diff; desde entonces no
+puede desaparecer. Metadatos con referencias nuevas exigen que haya una definición
+grabada. Un archivo completamente antiguo se devuelve con su formato anterior,
+sin añadir campos ni cambiar sus respuestas para adaptarlo al motor actual.
+No hay cambio SQL: metadatos y frames siguen siendo JSON en las mismas columnas.
 
 Archivo local: el manifiesto `version: 2` conserva salas, metadatos y reclamaciones;
 los pasos viven en `STATE_FILE.archive/<hash-del-id>.jsonl`, un archivo por partida.
@@ -131,10 +155,11 @@ ya completada. No hay borrado automático del historial. Vigilar el crecimiento 
 archivo no sustituye backups ni recuperación punto en el tiempo.
 
 Al arrancar, los archivos activos sin una sala recuperable se cierran como
-abandonados. Un archivo conserva `schemaVersion: 1`, `rulesVersion: europe-classic-1`
-y los estados ya proyectados: el replay no ejecuta las reglas nuevas sobre partidas
-antiguas. Europa es el único mapa actual. Cualquier mapa/modo futuro debe pasar por
-esta misma autoridad, privacidad y grabación, y declarar su versión de reglas.
+abandonados. Un archivo conserva `schemaVersion:1` y los estados ya proyectados:
+el replay no ejecuta reglas nuevas sobre partidas antiguas. Europa es el único
+mapa seleccionable y renderizable hoy. La API ya transporta definiciones de otros
+mapas; adaptar su visualización y selector sigue pendiente. Cualquier mapa/modo
+futuro debe pasar por esta misma autoridad, privacidad y grabación.
 
 API HTTP sin caché:
 

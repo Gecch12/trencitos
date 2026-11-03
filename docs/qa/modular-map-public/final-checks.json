@@ -1,0 +1,57 @@
+{
+  "checked_at": "2026-11-03T05:29:54.540259+00:00",
+  "base_commit": "15270758bae15065958e3d2109fa5cf4ec16f1da",
+  "results": {
+    "node-tests-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "c7d8800adbd86948ea65c57780167d7b1e7ff4b42d24d51d4d2dd36c39b7d8a1",
+      "log_hash_matches": true
+    },
+    "browser-tests-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "ddf01c32e0edda4653ed47be68f0def25b2a4a3818d9c34cb8b26e11f40235b3",
+      "log_hash_matches": true
+    },
+    "replay-tests-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "7bcf58e718edfc77e4446e41c54150eb50c11113d81c7a8fcb91844aee3fa555",
+      "log_hash_matches": true
+    },
+    "docker-result.json": {
+      "exit_code": 0,
+      "source_hashes_match": true,
+      "sha256": "42c030fa79f84fbc811a6899100030f2bf73e38339d5c1ed3dce9f35ebcfff68",
+      "log_hash_matches": true
+    }
+  },
+  "historical_qa_unchanged": true,
+  "frozen_europe_fixture_and_old_policies_unchanged": true,
+  "diff_check": "passed",
+  "docs_check": "OK: 49 documentos, 23 fichas. No se validan URLs externas ni anclas.",
+  "artifact_sha256": {
+    "backend/engine.js": "975341fa4cae32ae90695fd28effb0a01a152da5eba2323ebcdb682c88b9e066",
+    "backend/match-archive.js": "ca2d0b356ea11844d25ac6e5dba6a65fa5fc2b44bc6156e659ea091699f801e9",
+    "game/queries/match-definition.js": "b7fa20eac33698ca1c1f5e0527f521b7fdf5f3e683ff442024a9b6f264ec7e68",
+    "game/queries/match-view.js": "bbb9fd91455abbef9a586305846dc0b770ba3806fef16d2724ceea02c14c687a",
+    "game/queries/authorized-views.js": "22ab615bb8cec178364ea0625cdb65070b8caf83472d0106ad67c15c37349c1f",
+    "game/queries/replay-view.js": "b7a7d51cfa872dd2235e3334e0a7b064576ebdc2add52d9bbaf22b57e9a3a7f2",
+    "game/application/history-queries.js": "a23287485a7719e68eb72ef40e75ae7ca6710431e2383d722662e998dec33c61",
+    "game/compat/replay-definition.js": "8225977dd6039bc75d27ef457c13c62d8b353be9c653dae0305e59ecb406716e",
+    "game/compat/legacy-authorized-views.js": "3b62f6b6749acfe7986128933826489fe4233f26660340ccf00691b2ae2aaa4a",
+    "tests/match-definition.test.js": "ce5ce1326d555ae7adec9ccbd397419c2cc2c90ab40e1cf518837fff0ebd8b19",
+    "tests/match-definition-server.test.js": "5b2fd581cc19160e44e37c232f4bcfc76f44aca5fe38f6440b6fbf8ca58e32c7",
+    "tests/fixtures/replay-europe-v1.json": "abfc9200d17ab09c2b368186a508ca65c3d5133351e177e4a340674ee516cc4d",
+    "tests/helpers/map-recording.js": "4cb89306822bcdb2fba911a5dafac6137021a49ddcf4b3bf493e4472954d6e62",
+    "tests/browser-map-replay.cjs": "bb72de1ec74b529fa608f29722c9ca6e33fa3f5ba11721383f9fe0eb346cd431",
+    "tests/fixtures/bots-europe-v1.json": "e287069bd0c24c112e5770f5bbad672115e7d0cc7fcd26316af56cac2d874f91",
+    "tests/fixtures/europe-legacy-v1.json": "ff924b0cb2c0a33aabedd356fc5d90f02210118b88ab3f0d722b8f91a68d836c",
+    "tests/helpers/bots-baseline.js": "f14f40d63d757b8d19b0299982493f648bd3cfdbcb84bcec920aaa1e33203edd",
+    "tests/helpers/practice-bot-baseline.js": "143350e78f14d6cd4917ccc7cacb1f5739fc9ba3c39a5e25641a81bec8a6b94c",
+    "tests/helpers/bots-stage1.js": "ee78fb1ad901900a29cb013567c60b8a19bab990efc9ef25c45f848ab42edaf2",
+    "tests/helpers/practice-bot-stage1.js": "f96f43b569824026617d4b1272300d5985e211f49e7b70013f7768a9303e4eae",
+    "tests/helpers/practice-planner-stage1.js": "f19ea7a636aa5d7b9da1370adbc6cfa678a36279d2fc36481cc1527c2023c962"
+  }
+}

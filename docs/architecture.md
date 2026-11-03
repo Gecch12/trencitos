@@ -95,10 +95,40 @@ filas legadas con topología, dueños y billetes, usadas por scoring y consultas
 
 Los exports `ROUTES`, `TICKETS`, `CITIES`, `COLORS`, `SCORE`, duraciones y `pay`
 siguen siendo compatibilidad europea para consumidores pendientes de migrar.
-Los bots activos ya usan el contexto de partida; las vistas públicas aún no
-incluyen referencias de mapa. Sala, archivo, replay y frontend no están
-habilitados para un segundo mapa. Las pruebas intercalan partidas completas
-en motor/controlador automático, sin certificar todavía ese recorrido en el producto.
+Bots, vistas y grabaciones ya usan el contexto de partida. El contrato público
+incluye referencias y definiciones; selección de sala y frontend aún ofrecen
+Europa. Las pruebas intercalan partidas completas en motor/controlador y leen
+otro mapa por HTTP, sin certificar todavía su presentación en el producto.
+
+### Definición pública de la partida
+
+[match-definition.js](../game/queries/match-definition.js) proyecta mediante una
+lista explícita de campos el contexto inmutable. `engine.definition(game)` devuelve
+una copia independiente con `schemaVersion:1`, `mapRef`, `rulesRef`, `map` y `rules`.
+No lee manos, dueños, mazos reales, ofertas, sesiones ni geometría. Los billetes
+son el catálogo público completo, sin indicar cuáles tiene alguien ni el orden
+del mazo. Los módulos del backend permanecen fuera de los recursos HTTP públicos.
+
+| Parte del contrato | Contenido |
+| --- | --- |
+| `map` | Ciudades `{id,name}`, corredores `{id,cityIds}`, vías `{id,corridorId,a,b,n,color,tunnel,ferry}` y billetes `{id,a,b,p,long}`. |
+| `rules` | Colores, puntos por longitud, capacidades, umbral de dobles, recursos/reparto e inventario inicial, límites de mercado/destinos, costes de estación, umbral final y parámetros de puntuación. |
+| `game` público | Añade `definitionVersion:1`, `mapRef` y `rulesRef`; conserva `uiVersion:9` y el resto de la vista autorizada. |
+| Mensaje `state` | `{type:"state", definition, game}`. Toda entrega, incluida reconexión/recuperación, contiene la definición completa. |
+
+Esta proyección usa los mismos IDs y filas que las vistas: Europa conserva
+números y otros mapas cadenas opacas. No es el esquema canónico del catálogo,
+que usa `length`, `points` y `kind`. Los corredores europeos se resuelven por
+sus extremos, sin depender del orden del array. La referencia exacta identifica
+la definición; el nombre `map` del resumen histórico sigue siendo una etiqueta.
+
+La entrega completa evita una petición adicional o negociación de caché para
+reconectar. Repite la definición por mensaje de estado, no por perspectiva
+dentro del archivo. La grabación la conserva una vez en la raíz del snapshot y
+el diff omite datos estáticos. `createMatchArchive({engine,projections})` permite
+usar el mismo motor/contexto que la sala. Lectores y compatibilidad histórica en
+[historial](history-replay.md). El cliente aún usa los datos/layout europeos;
+consumir la definición para renderizar otro mapa corresponde al próximo corte.
 
 ### Estado versionado y restauración durable
 
@@ -107,7 +137,8 @@ del estado persistido sobre las filas legadas: cabecera explícita y validación
 contra el contexto, sin convertir aún la propiedad a una tabla separada.
 Es independiente de `version:2` del manifiesto local, `schema_version:1` del RPC,
 la revisión de checkpoint/sala, `schemaVersion:1` del archivo de replay y
-`uiVersion:9` de las vistas. No requiere cambios SQL ni de protocolo público.
+`uiVersion:9` y `definitionVersion:1` de las vistas. No requiere cambios SQL;
+la definición pública es una ampliación independiente del estado persistido.
 
 `Engine.restoreState(game)` devuelve una copia validada y con cabecera. Acepta
 estados actuales y dos formas sin versión: Europa sin referencias y el formato
@@ -135,8 +166,8 @@ Los envoltorios locales conocidos siguen siendo array, `{rooms,archive}` y
 manifiesto v2. Una versión de envoltorio desconocida falla explícitamente y no
 recurre a un respaldo anterior. La recuperación de corrupción física/JSON con
 `.bak` conserva su comportamiento. El replay no llama a `restoreState`: solo los
-pasos nuevos incorporan la cabecera dentro del estado de auditoría, manteniendo
-los frames/hashes previos y sus vistas. Contrato en [historial](history-replay.md).
+pasos nuevos incorporan la cabecera y definición pública en la auditoría,
+manteniendo los frames/hashes previos y sus vistas. Contrato en [historial](history-replay.md).
 
 ## Recorrido de una jugada
 

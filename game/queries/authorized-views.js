@@ -40,7 +40,7 @@ function createAuthorizedViews({ engine, now, isPublic, capacity, normalizeTimin
   }
   function state(room, seat, { storagePaused = false, includeEarlyFinish = seat !== -1 } = {}) {
     assertSeat(room, seat);
-    return { type: "state", game: { ...match(room.game, seat),
+    return { type: "state", definition: engine.definition(room.game), game: { ...match(room.game, seat),
       ...(includeEarlyFinish ? { earlyFinish: !!room.earlyFinish } : {}),
       revision: room.revision || 0, storagePaused } };
   }
@@ -50,7 +50,7 @@ function createAuthorizedViews({ engine, now, isPublic, capacity, normalizeTimin
       delete view.serverNow;
       return view;
     });
-    return structuredClone({ views, members: room.members.map(m => ({ name: m.name, color: m.color,
+    return structuredClone({ definition: engine.definition(room.game), views, members: room.members.map(m => ({ name: m.name, color: m.color,
       bot: !!m.bot, autopilot: !!m.autopilot, connected: connected(m) })) });
   }
   return { lobby, state, recording };

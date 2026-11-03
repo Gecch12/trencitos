@@ -18,14 +18,14 @@ function drawEvent(game, seat) {
 
 // Input is already normalized. Select authorized fields before copying; the
 // result owns all its objects and never repairs clocks or stored score details.
-function projectMatch(game, seat, { now, tunnelCardMs, destinationDetails }) {
+function projectMatch(game, seat, { now, tunnelCardMs, destinationDetails, references }) {
   if (!Number.isInteger(seat) || seat < -1 || seat >= game.players.length) throw new RangeError("Puesto inválido.");
   const spectator = seat === -1, own = seat === game.current;
   const player = spectator ? { hand: [], tickets: [], pending: [], offer: null } : game.players[seat];
   const details = spectator ? { progress: [], paths: [] } : destinationDetails(game, seat);
   const tunnel = game.pending;
   return structuredClone({
-    spectator, uiVersion: 9, timing: game.timing || null, serverNow: now,
+    spectator, uiVersion: 9, definitionVersion: 1, ...references, timing: game.timing || null, serverNow: now,
     turnDeadline: game.turnDeadline, turnSerial: game.turnSerial, turnWaiting: Boolean(game.turnWaiting),
     initialDeadline: game.initialDeadline, initialReadyCount: game.players.filter(p => !p.pending.length).length,
     waitingDeadline: game.turnWaiting ? game.players[game.current].offer?.deadline : null,

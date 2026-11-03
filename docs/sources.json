@@ -45,7 +45,14 @@
     "backend/maps.js",
     "shared/maps/",
     "backend/match-context.js",
-    "backend/rules/"
+    "backend/rules/",
+    "game/queries/match-definition.js",
+    "game/compat/replay-definition.js",
+    "tests/match-definition.test.js",
+    "tests/match-definition-server.test.js",
+    "tests/fixtures/replay-europe-v1.json",
+    "tests/helpers/map-recording.js",
+    "tests/browser-map-replay.cjs"
   ],
   "domain.md": [
     "game/application/automatic-play.js",
@@ -190,7 +197,14 @@
     "tests/match-state.test.js",
     "tests/match-state-server.test.js",
     "tests/legacy-load-server.test.js",
-    "tests/room-store.test.js"
+    "tests/room-store.test.js",
+    "game/queries/match-definition.js",
+    "game/compat/replay-definition.js",
+    "tests/match-definition.test.js",
+    "tests/match-definition-server.test.js",
+    "tests/fixtures/replay-europe-v1.json",
+    "tests/helpers/map-recording.js",
+    "tests/browser-map-replay.cjs"
   ],
   "work/table-controls.md": [
     "shared/game-timing.js",
@@ -257,7 +271,14 @@
     "backend/maps.js",
     "shared/maps/",
     "backend/match-context.js",
-    "backend/rules/"
+    "backend/rules/",
+    "game/queries/match-definition.js",
+    "game/compat/replay-definition.js",
+    "tests/match-definition.test.js",
+    "tests/match-definition-server.test.js",
+    "tests/fixtures/replay-europe-v1.json",
+    "tests/helpers/map-recording.js",
+    "tests/browser-map-replay.cjs"
   ],
   "work/modular-platform-domain.md": [
     "game/queries/",
@@ -387,6 +408,13 @@
     "tests/bot-map-context.test.js",
     "tests/helpers/bot-map.js",
     "tests/helpers/practice-tools.js",
-    "tests/fixtures/bots-europe-v1.json"
+    "tests/fixtures/bots-europe-v1.json",
+    "game/queries/match-definition.js",
+    "game/compat/replay-definition.js",
+    "tests/match-definition.test.js",
+    "tests/match-definition-server.test.js",
+    "tests/fixtures/replay-europe-v1.json",
+    "tests/helpers/map-recording.js",
+    "tests/browser-map-replay.cjs"
   ]
 }

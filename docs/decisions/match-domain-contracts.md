@@ -308,6 +308,18 @@ cantidades observables. No se añade otro reglamento ni un sistema de plugins.
 La aceptación con mapas alternados abarca motor y juego automático; selección,
 contrato público, archivo y presentación del segundo mapa siguen pendientes.
 
+El quinto corte añade el contrato público de definición a vistas, transporte y
+archivo. La definición acompaña a cada estado completo para que reconectar no
+dependa de una petición adicional; en la grabación se guarda una vez por snapshot,
+con diferencias para cambios posteriores. La proyección conserva los IDs numéricos
+europeos y filas del protocolo existente, separadas del esquema canónico del mapa.
+Es una ampliación de archivo v1 identificada por `definitionVersion:1`, sin cambio
+SQL ni conversión retroactiva de frames. El replay lee la definición almacenada
+y rechaza referencias incoherentes sin consultar el catálogo actual. La ausencia
+del encabezado completo mantiene el protocolo anterior. Selección y presentación
+de otros mapas siguen pendientes. Contrato canónico en [arquitectura](../architecture.md)
+y [historial](../history-replay.md).
+
 El tercer corte de fase 2 permite inyectar azar en reparto/mercado inicial y
 elecciones de cierre forzado. Conserva el parámetro legado del sorteo de primer
 puesto y añade opciones para el reparto. Firmas implementadas y límites actuales

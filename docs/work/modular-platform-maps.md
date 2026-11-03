@@ -22,7 +22,7 @@ la rama aislada; no se sincronizan automáticamente otros worktrees ni se public
 - [x] Resolver mapa/reglas por partida y sustituir accesos por posición en construcción y túneles del motor.
 - [x] Versionar referencias de estado/guardado y preservar compatibilidad de archivos y replay anteriores.
 - [x] Adaptar bots y simulaciones a la definición de cada partida, conservando estrategia y privacidad.
-- [ ] Adaptar consultas y transporte a la definición de cada partida, incluidos los demás supuestos sobre IDs.
+- [x] Adaptar consultas, transporte y archivo a la definición de cada partida, con compatibilidad histórica.
 - [ ] Separar composición visual por mapa, habilitar selección y conservar Three.js y cosméticos.
 - [ ] Aceptación conjunta: Europa y mapa pequeño jugables simultáneamente, con guardado/reconexión/replay.
 
@@ -287,9 +287,77 @@ Cuarto corte aceptado localmente. La prueba del segundo mapa abarca el motor y
 el controlador automático; el navegador sigue mostrando Europa. Supabase/SQL
 se verifican con simuladores y móvil por emulación. Sin push, merge ni despliegue.
 
+## Quinto corte: definición pública y archivo
+
+Base: `1527075`. El contrato público añade `definitionVersion`, `mapRef` y
+`rulesRef` a las vistas. El mensaje de estado lleva una definición separada y
+completa del mapa/reglamento, con IDs compatibles con cada vista y solo campos
+públicos. El archivo guarda esa definición una vez en la raíz de los snapshots,
+dentro del hash; las diferencias evitan repetirla. Los resúmenes conservan
+referencias exactas y dejan de etiquetar otros mapas como Europa.
+
+La API de replay lee la definición almacenada sin requerir el mapa en el motor
+actual. Rechaza versiones/referencias incompatibles después de autorizar y antes
+de leer pasos cuando el error está en metadatos. Admite prefijos antiguos al
+reanudar, sin reescribir frames, recalcular puntos ni cambiar hashes.
+Contratos en [arquitectura](../architecture.md) e [historial](../history-replay.md).
+
+[Definiciones y compatibilidad](../../tests/match-definition.test.js) comprueban
+IDs/corredores, copias, campos públicos, aislamiento de asignaciones privadas,
+versiones, metadatos y reanudación con snapshot o diff. Una
+[grabación congelada](../../tests/fixtures/replay-europe-v1.json), capturada sobre
+la base antes de cambiar el protocolo, conserva las huellas de las respuestas
+pública, de participante y de auditoría. Las grabaciones nuevas llevan su definición.
+
+[HTTP/WebSocket](../../tests/match-definition-server.test.js) verifica entrega y
+reconexión, listado/replay/auditoría, reinicio y privacidad, en archivo local y
+Supabase simulado. El catálogo vivo sigue teniendo solo Europa; aun así la API
+lee el mapa sintético grabado. El frontend conserva la presentación europea.
+No se habilita selección de otro mapa ni se integra Sudamérica en este corte.
+
+## Evidencia del quinto corte
+
+Validación local del 2026-11-03 (Lima), sobre `1527075` más los cambios de esta
+entrega. Estado temporal, sin servicios ni credenciales de producción:
+
+- Node `v25.6.1`: **588/588**, sin fallos ni omisiones. Incluye las trece pruebas
+  nuevas de definición pública, compatibilidad, HTTP, persistencia y WebSocket.
+  [Resultado y huellas](../qa/modular-map-public/node-tests-result.json),
+  [TAP](../qa/modular-map-public/node-tests.tap).
+- Replay en Chrome `156.0.8078.80`: **cuatro recorridos** sobre grabaciones
+  europeas anteriores y nuevas, participante en escritorio y público en móvil.
+  Cambio de perspectiva, navegación entre pasos y privacidad correctos; cero
+  errores. Capturas de participante antiguo y público nuevo revisadas.
+  [Resultado](../qa/modular-map-public/replay-tests-result.json),
+  [informe](../qa/modular-map-public/replay/replay-report.json).
+- `QA_PORT=0 npm run test:board3d`: ocho pruebas, nueve combinaciones de
+  viewport/zoom y partida terminada de cuatro jugadores con **255 acciones**,
+  reconexión y cero errores. Incluye pagos y rechazos de túnel, estaciones y
+  ofertas de destinos. Capturas final y móvil revisadas.
+  [Resultado](../qa/modular-map-public/browser-tests-result.json),
+  [informe](../qa/modular-map-public/browser/threejs-report.json).
+- Docker `linux/arm64`, Node `v22.23.4`: **41/41** sobre el código empaquetado.
+  Arranque, `healthz`, UID 1000 y escritura de estado correctos; raíz de solo
+  lectura, estado temporal y sin red externa ni dependencias de desarrollo.
+  [Construcción](../qa/modular-map-public/docker-build.txt),
+  [resultado](../qa/modular-map-public/docker-result.json),
+  [TAP](../qa/modular-map-public/docker-tests.tap).
+  El primer intento tuvo dos fallos al cargar pruebas porque faltaba montar su
+  verificador de auditoría; al montarlo de solo lectura pasó sin modificar el
+  código ni la imagen de producción.
+  [Intento inicial](../qa/modular-map-public/docker-initial-tests.tap).
+- Documentación, `git diff --check` y huellas de fuentes/logs correctos.
+  QA anteriores, fixtures europeas y políticas históricas intactos.
+  [Comprobación final](../qa/modular-map-public/final-checks.json).
+
+Quinto corte aceptado localmente. El segundo mapa se verifica en motor y API;
+el cliente aún muestra Europa. Supabase se prueba con un simulador y móvil por
+emulación. Sin push, merge ni despliegue.
+
 ## Siguiente corte
 
-Definir e implementar el contrato público de referencias/definiciones para
-consultas, transporte y archivo, preservando la lectura de replays antiguos.
-Después adaptar frontend/layout y habilitar selección de otro mapa. La fase
-requiere aún aceptación conjunta de dos mapas jugables en el producto.
+Adaptar el cliente para consumir definiciones por partida y distinguir el formato
+europeo legado en replay. Separar el layout por mapa y retirar accesos por posición
+en selección, pagos, destinos, etiquetas y Three.js. Después habilitar el mapa de
+prueba con su selector y completar la aceptación conjunta de dos mapas jugables,
+incluidos guardado, reconexión y replay.

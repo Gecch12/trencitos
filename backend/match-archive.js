@@ -7,7 +7,7 @@ const fail=(status,message)=>Object.assign(Error(message),{status});
 const { safePublic } = require('../game/queries/authorized-views');
 const { createLegacyAuthorizedViews } = require('../game/compat/legacy-authorized-views');
 const { createHistoryQueries, participant } = require('../game/application/history-queries');
-function createMatchArchive({saved={matches:{},claims:{}},remote=null,projections=createLegacyAuthorizedViews()}={}) {
+function createMatchArchive({saved={matches:{},claims:{}},remote=null,engine=Engine,projections=createLegacyAuthorizedViews({engine})}={}) {
   let state=saved, pending=new Map();
   function capture(room,endReason=null) {
     // Closure seals the recording. Later disconnects or room expiry must not
@@ -15,9 +15,9 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null,projection
     if(!room.game || room.archiveClosedAt) return;
     room.matchId ||= randomUUID();
     const g=room.game, previous=room._archiveState;
-    Engine.normalize(g);
-    const {members,views}=projections.recording(room);
-    const next=structuredClone({game:g,views,members});
+    engine.normalize(g);
+    const {members,views,definition}=projections.recording(room);
+    const next=structuredClone({game:g,views,members,definition});
     const changes=previous?Replay.diff(previous,next):[];
     const old=pending.get(room.matchId)||{frames:[]};
     const changed=!previous||changes.length||endReason;
@@ -43,7 +43,10 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null,projection
     const status=g.phase==='finished'&&!room.earlyFinish?'completed':endReason||room.earlyFinish?'abandoned':'active';
     room.archiveStartedAt ||= now;
     const players=room.members.map(m=>({name:m.name,color:m.color,bot:!!m.bot,accountId:m.accountId||null,guestId:m.guestId||null}));
-    old.match={id:room.matchId,code:room.code,schemaVersion:1,rulesVersion:'europe-classic-1',map:'Europa',mode:room.practice?'Práctica':'Clásico',visibility:room.visibility||'private',startedAt:room.archiveStartedAt,updatedAt:now,closedAt:status==='active'?null:room.archiveClosedAt||now,status,endReason:status==='abandoned'?endReason||'Práctica terminada anticipadamente.':null,complete:!!room.archiveFull,steps:seq+1,digest:room.archiveHash,players,
+    old.match={id:room.matchId,code:room.code,schemaVersion:1,definitionVersion:definition.schemaVersion,
+      mapRef:structuredClone(definition.mapRef),rulesRef:structuredClone(definition.rulesRef),
+      rulesVersion:`${definition.rulesRef.id}-${definition.rulesRef.version}`,map:definition.mapRef.id==='europe'?'Europa':definition.mapRef.id,
+      mode:room.practice?'Práctica':'Clásico',visibility:room.visibility||'private',startedAt:room.archiveStartedAt,updatedAt:now,closedAt:status==='active'?null:room.archiveClosedAt||now,status,endReason:status==='abandoned'?endReason||'Práctica terminada anticipadamente.':null,complete:!!room.archiveFull,steps:seq+1,digest:room.archiveHash,players,
       scores:g.players.map((p,seat)=>({seat,route:p.score,...(status==='completed'?structuredClone(g.result.find(r=>r.seat===seat)):{score:p.score,partial:true})}))};
     if(status!=='active') room.archiveClosedAt ||= now;
     pending.set(room.matchId,old);

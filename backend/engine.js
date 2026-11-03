@@ -15,6 +15,7 @@ const LegacyScoring=require('../game/compat/legacy-scoring');
 const TrainCards=require('../game/domain/train-cards');
 const LegacyTiming=require('../game/compat/legacy-timing');
 const MatchView=require('../game/queries/match-view');
+const {projectDefinition}=require('../game/queries/match-definition');
 const {historyEntries,historyEntryView}=MatchView;
 const {legacyError}=require('../game/compat/legacy-errors');
 const {COLORS,CITIES,ROUTES,TICKETS}=require('../shared/data');
@@ -293,8 +294,11 @@ function finish(g,force=false,{random=randomFor(g)}={}){
  note(g,'Partida finalizada. ¡Resultados calculados!')}
 function destinationDetails(g,seat,assignment){const {map,owners}=LegacyScoring.projectBoard(g);return Scoring.destinationDetails({...LegacyScoring.projectPlayer(g.players[seat]),seat,owners},{map},assignment)}
 function view(g,seat,{now=Date.now()}={}){
- return MatchView.projectMatch(g,seat,{now,tunnelCardMs:rulesFor(g).tunnel.cardMs,destinationDetails});
+ const context=contextFor(g);
+ return MatchView.projectMatch(g,seat,{now,tunnelCardMs:context.rules.tunnel.cardMs,destinationDetails,
+  references:{mapRef:context.mapRef,rulesRef:context.rulesRef}});
 }
-return {contextFor,restoreState,routeById,observe,newGame,newRandomGame,note,historyEntryView,action,view,connected,connectionPath,longest,stationAssignments,finish,pay,block,draw,refill,recycleDiscards,next,ensureTiming,normalize,expire,deadlines,tunnelBusy,TURN_MS,INITIAL_MS,OFFER_MS,TUNNEL_CARD_MS,TUNNEL_RESULT_MS,SCORE,ROUTES,TICKETS,CITIES,COLORS,possibleClaim,possibleStation};
+const definition=g=>projectDefinition(contextFor(g));
+return {contextFor,definition,restoreState,routeById,observe,newGame,newRandomGame,note,historyEntryView,action,view,connected,connectionPath,longest,stationAssignments,finish,pay,block,draw,refill,recycleDiscards,next,ensureTiming,normalize,expire,deadlines,tunnelBusy,TURN_MS,INITIAL_MS,OFFER_MS,TUNNEL_CARD_MS,TUNNEL_RESULT_MS,SCORE,ROUTES,TICKETS,CITIES,COLORS,possibleClaim,possibleStation};
 }
 module.exports={...createEngine(),createEngine};

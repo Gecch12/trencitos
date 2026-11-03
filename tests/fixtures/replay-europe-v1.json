@@ -1,0 +1,6899 @@
+{
+  "baseCommit": "1527075",
+  "description": "Unversioned Europe state and original recorded views captured before the public definition contract.",
+  "record": {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "code": "LEGACY",
+    "schemaVersion": 1,
+    "rulesVersion": "europe-classic-1",
+    "map": "Europa",
+    "mode": "Clásico",
+    "visibility": "public",
+    "startedAt": 1793682858808,
+    "updatedAt": 1793682858816,
+    "closedAt": 1793682858816,
+    "status": "completed",
+    "endReason": null,
+    "complete": true,
+    "steps": 3,
+    "digest": "405b2c1fd8706c2286178e7a58752c3fdb17b6853d2c8bcb34b708ad71f3c32f",
+    "players": [
+      {
+        "name": "Legacy A",
+        "bot": false,
+        "accountId": null,
+        "guestId": "legacy-a"
+      },
+      {
+        "name": "Legacy B",
+        "bot": false,
+        "accountId": null,
+        "guestId": "legacy-b"
+      }
+    ],
+    "scores": [
+      {
+        "seat": 0,
+        "route": 0,
+        "name": "Legacy A",
+        "destination": -27,
+        "completed": 0,
+        "stations": 12,
+        "express": 10,
+        "longest": 0,
+        "stationRoutes": [],
+        "individualTickets": [
+          false,
+          false
+        ],
+        "tickets": [
+          {
+            "id": 42,
+            "a": "LIS",
+            "b": "DAN",
+            "p": 20,
+            "long": true
+          },
+          {
+            "id": 22,
+            "a": "LON",
+            "b": "BER",
+            "p": 7,
+            "long": false
+          }
+        ],
+        "score": -5,
+        "winner": true,
+        "details": {
+          "routes": [],
+          "routeAdjustment": 0,
+          "destinations": [
+            {
+              "id": 42,
+              "a": "LIS",
+              "b": "DAN",
+              "p": 20,
+              "long": true,
+              "points": -20,
+              "completed": false,
+              "routes": [],
+              "stationRoutes": [],
+              "stations": []
+            },
+            {
+              "id": 22,
+              "a": "LON",
+              "b": "BER",
+              "p": 7,
+              "long": false,
+              "points": -7,
+              "completed": false,
+              "routes": [],
+              "stationRoutes": [],
+              "stations": []
+            }
+          ],
+          "stations": {
+            "unused": 3,
+            "points": 12,
+            "placed": []
+          },
+          "express": {
+            "length": 0,
+            "routes": [],
+            "cities": [],
+            "maximum": 0,
+            "tiedSeats": [
+              0,
+              1
+            ],
+            "points": 10
+          },
+          "totals": {
+            "routes": 0,
+            "destinations": -27,
+            "stations": 12,
+            "express": 10,
+            "total": -5
+          }
+        }
+      },
+      {
+        "seat": 1,
+        "route": 0,
+        "name": "Legacy B",
+        "destination": -27,
+        "completed": 0,
+        "stations": 12,
+        "express": 10,
+        "longest": 0,
+        "stationRoutes": [],
+        "individualTickets": [
+          false,
+          false
+        ],
+        "tickets": [
+          {
+            "id": 40,
+            "a": "PAL",
+            "b": "MOS",
+            "p": 20,
+            "long": true
+          },
+          {
+            "id": 23,
+            "a": "BRE",
+            "b": "MAR",
+            "p": 7,
+            "long": false
+          }
+        ],
+        "score": -5,
+        "winner": true,
+        "details": {
+          "routes": [],
+          "routeAdjustment": 0,
+          "destinations": [
+            {
+              "id": 40,
+              "a": "PAL",
+              "b": "MOS",
+              "p": 20,
+              "long": true,
+              "points": -20,
+              "completed": false,
+              "routes": [],
+              "stationRoutes": [],
+              "stations": []
+            },
+            {
+              "id": 23,
+              "a": "BRE",
+              "b": "MAR",
+              "p": 7,
+              "long": false,
+              "points": -7,
+              "completed": false,
+              "routes": [],
+              "stationRoutes": [],
+              "stations": []
+            }
+          ],
+          "stations": {
+            "unused": 3,
+            "points": 12,
+            "placed": []
+          },
+          "express": {
+            "length": 0,
+            "routes": [],
+            "cities": [],
+            "maximum": 0,
+            "tiedSeats": [
+              0,
+              1
+            ],
+            "points": 10
+          },
+          "totals": {
+            "routes": 0,
+            "destinations": -27,
+            "stations": 12,
+            "express": 10,
+            "total": -5
+          }
+        }
+      }
+    ],
+    "frames": [
+      {
+        "seq": 0,
+        "at": 1793682858808,
+        "action": null,
+        "events": [],
+        "previousHash": null,
+        "snapshot": {
+          "game": {
+            "phase": "initial",
+            "current": 0,
+            "first": 0,
+            "initialDone": 0,
+            "players": [
+              {
+                "name": "Legacy A",
+                "color": "#d45748",
+                "hand": [
+                  "yellow",
+                  "purple",
+                  "yellow",
+                  "orange"
+                ],
+                "tickets": [],
+                "pending": [
+                  {
+                    "id": 42,
+                    "a": "LIS",
+                    "b": "DAN",
+                    "p": 20,
+                    "long": true
+                  },
+                  {
+                    "id": 22,
+                    "a": "LON",
+                    "b": "BER",
+                    "p": 7,
+                    "long": false
+                  },
+                  {
+                    "id": 2,
+                    "a": "ANG",
+                    "b": "KHA",
+                    "p": 10,
+                    "long": false
+                  },
+                  {
+                    "id": 37,
+                    "a": "ZAG",
+                    "b": "BRI",
+                    "p": 6,
+                    "long": false
+                  }
+                ],
+                "trains": 45,
+                "stations": 3,
+                "placed": [],
+                "score": 0
+              },
+              {
+                "name": "Legacy B",
+                "color": "#458ad4",
+                "hand": [
+                  "wild",
+                  "green",
+                  "blue",
+                  "purple"
+                ],
+                "tickets": [],
+                "pending": [
+                  {
+                    "id": 40,
+                    "a": "PAL",
+                    "b": "MOS",
+                    "p": 20,
+                    "long": true
+                  },
+                  {
+                    "id": 23,
+                    "a": "BRE",
+                    "b": "MAR",
+                    "p": 7,
+                    "long": false
+                  },
+                  {
+                    "id": 31,
+                    "a": "SOF",
+                    "b": "SMY",
+                    "p": 5,
+                    "long": false
+                  },
+                  {
+                    "id": 28,
+                    "a": "SAR",
+                    "b": "SEV",
+                    "p": 8,
+                    "long": false
+                  }
+                ],
+                "trains": 45,
+                "stations": 3,
+                "placed": [],
+                "score": 0
+              }
+            ],
+            "deck": [
+              "white",
+              "white",
+              "yellow",
+              "blue",
+              "black",
+              "wild",
+              "purple",
+              "red",
+              "purple",
+              "yellow",
+              "yellow",
+              "blue",
+              "white",
+              "yellow",
+              "red",
+              "blue",
+              "white",
+              "red",
+              "white",
+              "black",
+              "black",
+              "black",
+              "red",
+              "purple",
+              "yellow",
+              "yellow",
+              "blue",
+              "blue",
+              "wild",
+              "wild",
+              "white",
+              "purple",
+              "black",
+              "yellow",
+              "yellow",
+              "red",
+              "blue",
+              "green",
+              "blue",
+              "orange",
+              "wild",
+              "green",
+              "orange",
+              "red",
+              "green",
+              "blue",
+              "green",
+              "orange",
+              "purple",
+              "black",
+              "white",
+              "white",
+              "green",
+              "black",
+              "red",
+              "black",
+              "white",
+              "orange",
+              "red",
+              "wild",
+              "green",
+              "red",
+              "wild",
+              "white",
+              "purple",
+              "black",
+              "yellow",
+              "wild",
+              "blue",
+              "wild",
+              "wild",
+              "green",
+              "white",
+              "orange",
+              "orange",
+              "black",
+              "black",
+              "orange",
+              "red",
+              "yellow",
+              "green",
+              "wild",
+              "purple",
+              "wild",
+              "purple",
+              "white",
+              "black",
+              "red",
+              "red",
+              "orange",
+              "purple",
+              "green",
+              "wild",
+              "blue",
+              "orange",
+              "purple",
+              "orange"
+            ],
+            "shortDeck": [
+              {
+                "id": 15,
+                "a": "MAD",
+                "b": "DIE",
+                "p": 8,
+                "long": false
+              },
+              {
+                "id": 21,
+                "a": "AMS",
+                "b": "PAM",
+                "p": 7,
+                "long": false
+              },
+              {
+                "id": 9,
+                "a": "FRA",
+                "b": "SMO",
+                "p": 13,
+                "long": false
+              },
+              {
+                "id": 35,
+                "a": "WAR",
+                "b": "SMO",
+                "p": 6,
+                "long": false
+              },
+              {
+                "id": 7,
+                "a": "AMS",
+                "b": "WIL",
+                "p": 12,
+                "long": false
+              },
+              {
+                "id": 24,
+                "a": "EDI",
+                "b": "PAR",
+                "p": 7,
+                "long": false
+              },
+              {
+                "id": 14,
+                "a": "PAL",
+                "b": "CON",
+                "p": 8,
+                "long": false
+              },
+              {
+                "id": 38,
+                "a": "KIE",
+                "b": "PET",
+                "p": 6,
+                "long": false
+              },
+              {
+                "id": 30,
+                "a": "ATH",
+                "b": "ANG",
+                "p": 5,
+                "long": false
+              },
+              {
+                "id": 34,
+                "a": "ROS",
+                "b": "ERZ",
+                "p": 5,
+                "long": false
+              },
+              {
+                "id": 27,
+                "a": "BAR",
+                "b": "MUN",
+                "p": 8,
+                "long": false
+              },
+              {
+                "id": 25,
+                "a": "MAR",
+                "b": "ESS",
+                "p": 8,
+                "long": false
+              },
+              {
+                "id": 11,
+                "a": "MAD",
+                "b": "ZUR",
+                "p": 8,
+                "long": false
+              },
+              {
+                "id": 18,
+                "a": "BER",
+                "b": "ROM",
+                "p": 9,
+                "long": false
+              },
+              {
+                "id": 8,
+                "a": "BER",
+                "b": "MOS",
+                "p": 12,
+                "long": false
+              },
+              {
+                "id": 20,
+                "a": "PAR",
+                "b": "ZAG",
+                "p": 7,
+                "long": false
+              },
+              {
+                "id": 29,
+                "a": "KIE",
+                "b": "SOC",
+                "p": 8,
+                "long": false
+              },
+              {
+                "id": 19,
+                "a": "BRU",
+                "b": "DAN",
+                "p": 9,
+                "long": false
+              },
+              {
+                "id": 10,
+                "a": "ROM",
+                "b": "SMY",
+                "p": 8,
+                "long": false
+              },
+              {
+                "id": 1,
+                "a": "LON",
+                "b": "VIE",
+                "p": 10,
+                "long": false
+              },
+              {
+                "id": 32,
+                "a": "FRA",
+                "b": "COP",
+                "p": 5,
+                "long": false
+              },
+              {
+                "id": 26,
+                "a": "SMO",
+                "b": "ROS",
+                "p": 8,
+                "long": false
+              },
+              {
+                "id": 6,
+                "a": "ATH",
+                "b": "WIL",
+                "p": 11,
+                "long": false
+              },
+              {
+                "id": 0,
+                "a": "VEN",
+                "b": "CON",
+                "p": 10,
+                "long": false
+              },
+              {
+                "id": 12,
+                "a": "PAR",
+                "b": "VIE",
+                "p": 8,
+                "long": false
+              },
+              {
+                "id": 4,
+                "a": "RIG",
+                "b": "BUC",
+                "p": 10,
+                "long": false
+              },
+              {
+                "id": 5,
+                "a": "STO",
+                "b": "VIE",
+                "p": 10,
+                "long": false
+              },
+              {
+                "id": 17,
+                "a": "BAR",
+                "b": "BRU",
+                "p": 8,
+                "long": false
+              },
+              {
+                "id": 39,
+                "a": "ZUR",
+                "b": "BUD",
+                "p": 6,
+                "long": false
+              },
+              {
+                "id": 3,
+                "a": "ESS",
+                "b": "KIE",
+                "p": 10,
+                "long": false
+              },
+              {
+                "id": 33,
+                "a": "BUD",
+                "b": "SOF",
+                "p": 5,
+                "long": false
+              },
+              {
+                "id": 36,
+                "a": "ZUR",
+                "b": "BRI",
+                "p": 6,
+                "long": false
+              },
+              {
+                "id": 13,
+                "a": "BRE",
+                "b": "VEN",
+                "p": 8,
+                "long": false
+              },
+              {
+                "id": 16,
+                "a": "BER",
+                "b": "BUC",
+                "p": 8,
+                "long": false
+              }
+            ],
+            "routes": [
+              {
+                "id": 0,
+                "a": "EDI",
+                "b": "LON",
+                "n": 4,
+                "color": "orange",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 1,
+                "a": "EDI",
+                "b": "LON",
+                "n": 4,
+                "color": "black",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 2,
+                "a": "LON",
+                "b": "AMS",
+                "n": 2,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 2,
+                "owner": null
+              },
+              {
+                "id": 3,
+                "a": "LON",
+                "b": "DIE",
+                "n": 2,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 1,
+                "owner": null
+              },
+              {
+                "id": 4,
+                "a": "LON",
+                "b": "DIE",
+                "n": 2,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 1,
+                "owner": null
+              },
+              {
+                "id": 5,
+                "a": "DIE",
+                "b": "BRE",
+                "n": 2,
+                "color": "orange",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 6,
+                "a": "DIE",
+                "b": "BRU",
+                "n": 2,
+                "color": "green",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 7,
+                "a": "DIE",
+                "b": "PAR",
+                "n": 1,
+                "color": "purple",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 8,
+                "a": "BRE",
+                "b": "PAR",
+                "n": 3,
+                "color": "black",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 9,
+                "a": "BRE",
+                "b": "PAM",
+                "n": 4,
+                "color": "purple",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 10,
+                "a": "PAR",
+                "b": "BRU",
+                "n": 2,
+                "color": "yellow",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 11,
+                "a": "PAR",
+                "b": "BRU",
+                "n": 2,
+                "color": "red",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 12,
+                "a": "PAR",
+                "b": "FRA",
+                "n": 3,
+                "color": "white",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 13,
+                "a": "PAR",
+                "b": "FRA",
+                "n": 3,
+                "color": "orange",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 14,
+                "a": "PAR",
+                "b": "ZUR",
+                "n": 3,
+                "color": "gray",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 15,
+                "a": "PAR",
+                "b": "MAR",
+                "n": 4,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 16,
+                "a": "PAR",
+                "b": "PAM",
+                "n": 4,
+                "color": "blue",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 17,
+                "a": "PAR",
+                "b": "PAM",
+                "n": 4,
+                "color": "green",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 18,
+                "a": "PAM",
+                "b": "MAR",
+                "n": 4,
+                "color": "red",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 19,
+                "a": "PAM",
+                "b": "BAR",
+                "n": 2,
+                "color": "gray",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 20,
+                "a": "PAM",
+                "b": "MAD",
+                "n": 3,
+                "color": "black",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 21,
+                "a": "PAM",
+                "b": "MAD",
+                "n": 3,
+                "color": "white",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 22,
+                "a": "MAD",
+                "b": "LIS",
+                "n": 3,
+                "color": "purple",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 23,
+                "a": "LIS",
+                "b": "CAD",
+                "n": 2,
+                "color": "blue",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 24,
+                "a": "CAD",
+                "b": "MAD",
+                "n": 3,
+                "color": "orange",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 25,
+                "a": "MAD",
+                "b": "BAR",
+                "n": 2,
+                "color": "yellow",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 26,
+                "a": "BAR",
+                "b": "MAR",
+                "n": 4,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 27,
+                "a": "AMS",
+                "b": "ESS",
+                "n": 3,
+                "color": "yellow",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 28,
+                "a": "AMS",
+                "b": "FRA",
+                "n": 2,
+                "color": "white",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 29,
+                "a": "AMS",
+                "b": "BRU",
+                "n": 1,
+                "color": "black",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 30,
+                "a": "BRU",
+                "b": "FRA",
+                "n": 2,
+                "color": "blue",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 31,
+                "a": "ESS",
+                "b": "COP",
+                "n": 3,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 1,
+                "owner": null
+              },
+              {
+                "id": 32,
+                "a": "ESS",
+                "b": "COP",
+                "n": 3,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 1,
+                "owner": null
+              },
+              {
+                "id": 33,
+                "a": "ESS",
+                "b": "BER",
+                "n": 2,
+                "color": "blue",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 34,
+                "a": "ESS",
+                "b": "FRA",
+                "n": 2,
+                "color": "green",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 35,
+                "a": "FRA",
+                "b": "BER",
+                "n": 3,
+                "color": "black",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 36,
+                "a": "FRA",
+                "b": "BER",
+                "n": 3,
+                "color": "red",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 37,
+                "a": "FRA",
+                "b": "MUN",
+                "n": 2,
+                "color": "purple",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 38,
+                "a": "MUN",
+                "b": "VIE",
+                "n": 3,
+                "color": "orange",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 39,
+                "a": "MUN",
+                "b": "VEN",
+                "n": 2,
+                "color": "blue",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 40,
+                "a": "MUN",
+                "b": "ZUR",
+                "n": 2,
+                "color": "yellow",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 41,
+                "a": "ZUR",
+                "b": "VEN",
+                "n": 2,
+                "color": "green",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 42,
+                "a": "ZUR",
+                "b": "MAR",
+                "n": 2,
+                "color": "purple",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 43,
+                "a": "MAR",
+                "b": "ROM",
+                "n": 4,
+                "color": "gray",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 44,
+                "a": "VEN",
+                "b": "ZAG",
+                "n": 2,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 45,
+                "a": "VEN",
+                "b": "ROM",
+                "n": 2,
+                "color": "black",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 46,
+                "a": "ROM",
+                "b": "BRI",
+                "n": 2,
+                "color": "white",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 47,
+                "a": "ROM",
+                "b": "PAL",
+                "n": 4,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 1,
+                "owner": null
+              },
+              {
+                "id": 48,
+                "a": "BRI",
+                "b": "ATH",
+                "n": 4,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 1,
+                "owner": null
+              },
+              {
+                "id": 49,
+                "a": "BRI",
+                "b": "PAL",
+                "n": 3,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 1,
+                "owner": null
+              },
+              {
+                "id": 50,
+                "a": "PAL",
+                "b": "SMY",
+                "n": 6,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 2,
+                "owner": null
+              },
+              {
+                "id": 51,
+                "a": "STO",
+                "b": "PET",
+                "n": 8,
+                "color": "gray",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 52,
+                "a": "STO",
+                "b": "COP",
+                "n": 3,
+                "color": "yellow",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 53,
+                "a": "STO",
+                "b": "COP",
+                "n": 3,
+                "color": "white",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 54,
+                "a": "BER",
+                "b": "DAN",
+                "n": 4,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 55,
+                "a": "BER",
+                "b": "WAR",
+                "n": 4,
+                "color": "purple",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 56,
+                "a": "BER",
+                "b": "WAR",
+                "n": 4,
+                "color": "yellow",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 57,
+                "a": "BER",
+                "b": "VIE",
+                "n": 3,
+                "color": "green",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 58,
+                "a": "VIE",
+                "b": "WAR",
+                "n": 4,
+                "color": "blue",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 59,
+                "a": "VIE",
+                "b": "BUD",
+                "n": 1,
+                "color": "red",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 60,
+                "a": "VIE",
+                "b": "BUD",
+                "n": 1,
+                "color": "white",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 61,
+                "a": "VIE",
+                "b": "ZAG",
+                "n": 2,
+                "color": "green",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 62,
+                "a": "BUD",
+                "b": "KIE",
+                "n": 6,
+                "color": "gray",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 63,
+                "a": "BUD",
+                "b": "BUC",
+                "n": 4,
+                "color": "gray",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 64,
+                "a": "BUD",
+                "b": "SAR",
+                "n": 3,
+                "color": "purple",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 65,
+                "a": "BUD",
+                "b": "ZAG",
+                "n": 2,
+                "color": "orange",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 66,
+                "a": "ZAG",
+                "b": "SAR",
+                "n": 3,
+                "color": "red",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 67,
+                "a": "SAR",
+                "b": "SOF",
+                "n": 2,
+                "color": "gray",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 68,
+                "a": "SAR",
+                "b": "ATH",
+                "n": 4,
+                "color": "green",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 69,
+                "a": "SOF",
+                "b": "BUC",
+                "n": 2,
+                "color": "gray",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 70,
+                "a": "SOF",
+                "b": "CON",
+                "n": 3,
+                "color": "blue",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 71,
+                "a": "SOF",
+                "b": "ATH",
+                "n": 3,
+                "color": "purple",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 72,
+                "a": "ATH",
+                "b": "SMY",
+                "n": 2,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 1,
+                "owner": null
+              },
+              {
+                "id": 73,
+                "a": "RIG",
+                "b": "PET",
+                "n": 4,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 74,
+                "a": "RIG",
+                "b": "WIL",
+                "n": 4,
+                "color": "green",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 75,
+                "a": "RIG",
+                "b": "DAN",
+                "n": 3,
+                "color": "black",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 76,
+                "a": "DAN",
+                "b": "WAR",
+                "n": 2,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 77,
+                "a": "WIL",
+                "b": "PET",
+                "n": 4,
+                "color": "blue",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 78,
+                "a": "WIL",
+                "b": "SMO",
+                "n": 3,
+                "color": "yellow",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 79,
+                "a": "WIL",
+                "b": "KIE",
+                "n": 2,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 80,
+                "a": "WIL",
+                "b": "WAR",
+                "n": 3,
+                "color": "red",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 81,
+                "a": "WAR",
+                "b": "KIE",
+                "n": 4,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 82,
+                "a": "BUC",
+                "b": "KIE",
+                "n": 4,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 83,
+                "a": "BUC",
+                "b": "SEV",
+                "n": 4,
+                "color": "white",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 84,
+                "a": "BUC",
+                "b": "CON",
+                "n": 3,
+                "color": "yellow",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 85,
+                "a": "CON",
+                "b": "SEV",
+                "n": 4,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 2,
+                "owner": null
+              },
+              {
+                "id": 86,
+                "a": "CON",
+                "b": "ANG",
+                "n": 2,
+                "color": "gray",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 87,
+                "a": "CON",
+                "b": "SMY",
+                "n": 2,
+                "color": "gray",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 88,
+                "a": "ANG",
+                "b": "ERZ",
+                "n": 3,
+                "color": "black",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 89,
+                "a": "ANG",
+                "b": "SMY",
+                "n": 3,
+                "color": "orange",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 90,
+                "a": "PET",
+                "b": "MOS",
+                "n": 4,
+                "color": "white",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 91,
+                "a": "MOS",
+                "b": "KHA",
+                "n": 4,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 92,
+                "a": "MOS",
+                "b": "SMO",
+                "n": 2,
+                "color": "orange",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 93,
+                "a": "SMO",
+                "b": "KIE",
+                "n": 3,
+                "color": "red",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 94,
+                "a": "KIE",
+                "b": "KHA",
+                "n": 4,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 95,
+                "a": "KHA",
+                "b": "ROS",
+                "n": 2,
+                "color": "green",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 96,
+                "a": "ROS",
+                "b": "SOC",
+                "n": 2,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 97,
+                "a": "ROS",
+                "b": "SEV",
+                "n": 4,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 0,
+                "owner": null
+              },
+              {
+                "id": 98,
+                "a": "SEV",
+                "b": "SOC",
+                "n": 2,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 1,
+                "owner": null
+              },
+              {
+                "id": 99,
+                "a": "SEV",
+                "b": "ERZ",
+                "n": 4,
+                "color": "gray",
+                "tunnel": false,
+                "ferry": 2,
+                "owner": null
+              },
+              {
+                "id": 100,
+                "a": "SOC",
+                "b": "ERZ",
+                "n": 3,
+                "color": "red",
+                "tunnel": true,
+                "ferry": 0,
+                "owner": null
+              }
+            ],
+            "discard": [],
+            "face": [
+              "wild",
+              "blue",
+              "orange",
+              "green",
+              "green"
+            ],
+            "finalRemaining": null,
+            "lastTrigger": null,
+            "drawCount": 0,
+            "pending": null,
+            "logs": [],
+            "result": null,
+            "turnSerial": 1,
+            "turnSeat": 0,
+            "turnClockPhase": "initial",
+            "turnWaiting": false,
+            "initialDeadline": 1793682918805,
+            "turnDeadline": 1793682918805
+          },
+          "views": [
+            {
+              "spectator": true,
+              "uiVersion": 9,
+              "timing": null,
+              "turnDeadline": 1793682918805,
+              "turnSerial": 1,
+              "turnWaiting": false,
+              "initialDeadline": 1793682918805,
+              "initialReadyCount": 0,
+              "waitingDeadline": null,
+              "closingDeadline": null,
+              "events": [],
+              "drawEvent": null,
+              "phase": "initial",
+              "current": 0,
+              "seat": -1,
+              "players": [
+                {
+                  "name": "Legacy A",
+                  "color": "#d45748",
+                  "trains": 45,
+                  "stations": 3,
+                  "score": 0,
+                  "placed": [],
+                  "handCount": 4,
+                  "ticketsCount": 0,
+                  "initialReady": false
+                },
+                {
+                  "name": "Legacy B",
+                  "color": "#458ad4",
+                  "trains": 45,
+                  "stations": 3,
+                  "score": 0,
+                  "placed": [],
+                  "handCount": 4,
+                  "ticketsCount": 0,
+                  "initialReady": false
+                }
+              ],
+              "routes": [
+                {
+                  "id": 0,
+                  "a": "EDI",
+                  "b": "LON",
+                  "n": 4,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 1,
+                  "a": "EDI",
+                  "b": "LON",
+                  "n": 4,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 2,
+                  "a": "LON",
+                  "b": "AMS",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 2,
+                  "owner": null
+                },
+                {
+                  "id": 3,
+                  "a": "LON",
+                  "b": "DIE",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 4,
+                  "a": "LON",
+                  "b": "DIE",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 5,
+                  "a": "DIE",
+                  "b": "BRE",
+                  "n": 2,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 6,
+                  "a": "DIE",
+                  "b": "BRU",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 7,
+                  "a": "DIE",
+                  "b": "PAR",
+                  "n": 1,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 8,
+                  "a": "BRE",
+                  "b": "PAR",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 9,
+                  "a": "BRE",
+                  "b": "PAM",
+                  "n": 4,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 10,
+                  "a": "PAR",
+                  "b": "BRU",
+                  "n": 2,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 11,
+                  "a": "PAR",
+                  "b": "BRU",
+                  "n": 2,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 12,
+                  "a": "PAR",
+                  "b": "FRA",
+                  "n": 3,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 13,
+                  "a": "PAR",
+                  "b": "FRA",
+                  "n": 3,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 14,
+                  "a": "PAR",
+                  "b": "ZUR",
+                  "n": 3,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 15,
+                  "a": "PAR",
+                  "b": "MAR",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 16,
+                  "a": "PAR",
+                  "b": "PAM",
+                  "n": 4,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 17,
+                  "a": "PAR",
+                  "b": "PAM",
+                  "n": 4,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 18,
+                  "a": "PAM",
+                  "b": "MAR",
+                  "n": 4,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 19,
+                  "a": "PAM",
+                  "b": "BAR",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 20,
+                  "a": "PAM",
+                  "b": "MAD",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 21,
+                  "a": "PAM",
+                  "b": "MAD",
+                  "n": 3,
+                  "color": "white",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 22,
+                  "a": "MAD",
+                  "b": "LIS",
+                  "n": 3,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 23,
+                  "a": "LIS",
+                  "b": "CAD",
+                  "n": 2,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 24,
+                  "a": "CAD",
+                  "b": "MAD",
+                  "n": 3,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 25,
+                  "a": "MAD",
+                  "b": "BAR",
+                  "n": 2,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 26,
+                  "a": "BAR",
+                  "b": "MAR",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 27,
+                  "a": "AMS",
+                  "b": "ESS",
+                  "n": 3,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 28,
+                  "a": "AMS",
+                  "b": "FRA",
+                  "n": 2,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 29,
+                  "a": "AMS",
+                  "b": "BRU",
+                  "n": 1,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 30,
+                  "a": "BRU",
+                  "b": "FRA",
+                  "n": 2,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 31,
+                  "a": "ESS",
+                  "b": "COP",
+                  "n": 3,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 32,
+                  "a": "ESS",
+                  "b": "COP",
+                  "n": 3,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 33,
+                  "a": "ESS",
+                  "b": "BER",
+                  "n": 2,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 34,
+                  "a": "ESS",
+                  "b": "FRA",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 35,
+                  "a": "FRA",
+                  "b": "BER",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 36,
+                  "a": "FRA",
+                  "b": "BER",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 37,
+                  "a": "FRA",
+                  "b": "MUN",
+                  "n": 2,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 38,
+                  "a": "MUN",
+                  "b": "VIE",
+                  "n": 3,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 39,
+                  "a": "MUN",
+                  "b": "VEN",
+                  "n": 2,
+                  "color": "blue",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 40,
+                  "a": "MUN",
+                  "b": "ZUR",
+                  "n": 2,
+                  "color": "yellow",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 41,
+                  "a": "ZUR",
+                  "b": "VEN",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 42,
+                  "a": "ZUR",
+                  "b": "MAR",
+                  "n": 2,
+                  "color": "purple",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 43,
+                  "a": "MAR",
+                  "b": "ROM",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 44,
+                  "a": "VEN",
+                  "b": "ZAG",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 45,
+                  "a": "VEN",
+                  "b": "ROM",
+                  "n": 2,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 46,
+                  "a": "ROM",
+                  "b": "BRI",
+                  "n": 2,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 47,
+                  "a": "ROM",
+                  "b": "PAL",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 48,
+                  "a": "BRI",
+                  "b": "ATH",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 49,
+                  "a": "BRI",
+                  "b": "PAL",
+                  "n": 3,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 50,
+                  "a": "PAL",
+                  "b": "SMY",
+                  "n": 6,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 2,
+                  "owner": null
+                },
+                {
+                  "id": 51,
+                  "a": "STO",
+                  "b": "PET",
+                  "n": 8,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 52,
+                  "a": "STO",
+                  "b": "COP",
+                  "n": 3,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 53,
+                  "a": "STO",
+                  "b": "COP",
+                  "n": 3,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 54,
+                  "a": "BER",
+                  "b": "DAN",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 55,
+                  "a": "BER",
+                  "b": "WAR",
+                  "n": 4,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 56,
+                  "a": "BER",
+                  "b": "WAR",
+                  "n": 4,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 57,
+                  "a": "BER",
+                  "b": "VIE",
+                  "n": 3,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 58,
+                  "a": "VIE",
+                  "b": "WAR",
+                  "n": 4,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 59,
+                  "a": "VIE",
+                  "b": "BUD",
+                  "n": 1,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 60,
+                  "a": "VIE",
+                  "b": "BUD",
+                  "n": 1,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 61,
+                  "a": "VIE",
+                  "b": "ZAG",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 62,
+                  "a": "BUD",
+                  "b": "KIE",
+                  "n": 6,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 63,
+                  "a": "BUD",
+                  "b": "BUC",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 64,
+                  "a": "BUD",
+                  "b": "SAR",
+                  "n": 3,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 65,
+                  "a": "BUD",
+                  "b": "ZAG",
+                  "n": 2,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 66,
+                  "a": "ZAG",
+                  "b": "SAR",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 67,
+                  "a": "SAR",
+                  "b": "SOF",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 68,
+                  "a": "SAR",
+                  "b": "ATH",
+                  "n": 4,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 69,
+                  "a": "SOF",
+                  "b": "BUC",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 70,
+                  "a": "SOF",
+                  "b": "CON",
+                  "n": 3,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 71,
+                  "a": "SOF",
+                  "b": "ATH",
+                  "n": 3,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 72,
+                  "a": "ATH",
+                  "b": "SMY",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 73,
+                  "a": "RIG",
+                  "b": "PET",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 74,
+                  "a": "RIG",
+                  "b": "WIL",
+                  "n": 4,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 75,
+                  "a": "RIG",
+                  "b": "DAN",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 76,
+                  "a": "DAN",
+                  "b": "WAR",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 77,
+                  "a": "WIL",
+                  "b": "PET",
+                  "n": 4,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 78,
+                  "a": "WIL",
+                  "b": "SMO",
+                  "n": 3,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 79,
+                  "a": "WIL",
+                  "b": "KIE",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 80,
+                  "a": "WIL",
+                  "b": "WAR",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 81,
+                  "a": "WAR",
+                  "b": "KIE",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 82,
+                  "a": "BUC",
+                  "b": "KIE",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 83,
+                  "a": "BUC",
+                  "b": "SEV",
+                  "n": 4,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 84,
+                  "a": "BUC",
+                  "b": "CON",
+                  "n": 3,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 85,
+                  "a": "CON",
+                  "b": "SEV",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 2,
+                  "owner": null
+                },
+                {
+                  "id": 86,
+                  "a": "CON",
+                  "b": "ANG",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 87,
+                  "a": "CON",
+                  "b": "SMY",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 88,
+                  "a": "ANG",
+                  "b": "ERZ",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 89,
+                  "a": "ANG",
+                  "b": "SMY",
+                  "n": 3,
+                  "color": "orange",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 90,
+                  "a": "PET",
+                  "b": "MOS",
+                  "n": 4,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 91,
+                  "a": "MOS",
+                  "b": "KHA",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 92,
+                  "a": "MOS",
+                  "b": "SMO",
+                  "n": 2,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 93,
+                  "a": "SMO",
+                  "b": "KIE",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 94,
+                  "a": "KIE",
+                  "b": "KHA",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 95,
+                  "a": "KHA",
+                  "b": "ROS",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 96,
+                  "a": "ROS",
+                  "b": "SOC",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 97,
+                  "a": "ROS",
+                  "b": "SEV",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 98,
+                  "a": "SEV",
+                  "b": "SOC",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 99,
+                  "a": "SEV",
+                  "b": "ERZ",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 2,
+                  "owner": null
+                },
+                {
+                  "id": 100,
+                  "a": "SOC",
+                  "b": "ERZ",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                }
+              ],
+              "face": [
+                "wild",
+                "blue",
+                "orange",
+                "green",
+                "green"
+              ],
+              "deckCount": 97,
+              "discardCount": 0,
+              "ticketDeckCount": 34,
+              "hand": [],
+              "tickets": [],
+              "ticketProgress": [],
+              "ticketPaths": [],
+              "drawCount": 0,
+              "initial": null,
+              "pending": null,
+              "ticketOffer": null,
+              "sharedTunnel": null,
+              "tunnel": null,
+              "finalRemaining": null,
+              "logs": [],
+              "history": [],
+              "result": null
+            },
+            {
+              "spectator": false,
+              "uiVersion": 9,
+              "timing": null,
+              "turnDeadline": 1793682918805,
+              "turnSerial": 1,
+              "turnWaiting": false,
+              "initialDeadline": 1793682918805,
+              "initialReadyCount": 0,
+              "waitingDeadline": null,
+              "closingDeadline": null,
+              "events": [],
+              "drawEvent": null,
+              "phase": "initial",
+              "current": 0,
+              "seat": 0,
+              "players": [
+                {
+                  "name": "Legacy A",
+                  "color": "#d45748",
+                  "trains": 45,
+                  "stations": 3,
+                  "score": 0,
+                  "placed": [],
+                  "handCount": 4,
+                  "ticketsCount": 0,
+                  "initialReady": false
+                },
+                {
+                  "name": "Legacy B",
+                  "color": "#458ad4",
+                  "trains": 45,
+                  "stations": 3,
+                  "score": 0,
+                  "placed": [],
+                  "handCount": 4,
+                  "ticketsCount": 0,
+                  "initialReady": false
+                }
+              ],
+              "routes": [
+                {
+                  "id": 0,
+                  "a": "EDI",
+                  "b": "LON",
+                  "n": 4,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 1,
+                  "a": "EDI",
+                  "b": "LON",
+                  "n": 4,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 2,
+                  "a": "LON",
+                  "b": "AMS",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 2,
+                  "owner": null
+                },
+                {
+                  "id": 3,
+                  "a": "LON",
+                  "b": "DIE",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 4,
+                  "a": "LON",
+                  "b": "DIE",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 5,
+                  "a": "DIE",
+                  "b": "BRE",
+                  "n": 2,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 6,
+                  "a": "DIE",
+                  "b": "BRU",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 7,
+                  "a": "DIE",
+                  "b": "PAR",
+                  "n": 1,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 8,
+                  "a": "BRE",
+                  "b": "PAR",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 9,
+                  "a": "BRE",
+                  "b": "PAM",
+                  "n": 4,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 10,
+                  "a": "PAR",
+                  "b": "BRU",
+                  "n": 2,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 11,
+                  "a": "PAR",
+                  "b": "BRU",
+                  "n": 2,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 12,
+                  "a": "PAR",
+                  "b": "FRA",
+                  "n": 3,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 13,
+                  "a": "PAR",
+                  "b": "FRA",
+                  "n": 3,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 14,
+                  "a": "PAR",
+                  "b": "ZUR",
+                  "n": 3,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 15,
+                  "a": "PAR",
+                  "b": "MAR",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 16,
+                  "a": "PAR",
+                  "b": "PAM",
+                  "n": 4,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 17,
+                  "a": "PAR",
+                  "b": "PAM",
+                  "n": 4,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 18,
+                  "a": "PAM",
+                  "b": "MAR",
+                  "n": 4,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 19,
+                  "a": "PAM",
+                  "b": "BAR",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 20,
+                  "a": "PAM",
+                  "b": "MAD",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 21,
+                  "a": "PAM",
+                  "b": "MAD",
+                  "n": 3,
+                  "color": "white",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 22,
+                  "a": "MAD",
+                  "b": "LIS",
+                  "n": 3,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 23,
+                  "a": "LIS",
+                  "b": "CAD",
+                  "n": 2,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 24,
+                  "a": "CAD",
+                  "b": "MAD",
+                  "n": 3,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 25,
+                  "a": "MAD",
+                  "b": "BAR",
+                  "n": 2,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 26,
+                  "a": "BAR",
+                  "b": "MAR",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 27,
+                  "a": "AMS",
+                  "b": "ESS",
+                  "n": 3,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 28,
+                  "a": "AMS",
+                  "b": "FRA",
+                  "n": 2,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 29,
+                  "a": "AMS",
+                  "b": "BRU",
+                  "n": 1,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 30,
+                  "a": "BRU",
+                  "b": "FRA",
+                  "n": 2,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 31,
+                  "a": "ESS",
+                  "b": "COP",
+                  "n": 3,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 32,
+                  "a": "ESS",
+                  "b": "COP",
+                  "n": 3,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 33,
+                  "a": "ESS",
+                  "b": "BER",
+                  "n": 2,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 34,
+                  "a": "ESS",
+                  "b": "FRA",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 35,
+                  "a": "FRA",
+                  "b": "BER",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 36,
+                  "a": "FRA",
+                  "b": "BER",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 37,
+                  "a": "FRA",
+                  "b": "MUN",
+                  "n": 2,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 38,
+                  "a": "MUN",
+                  "b": "VIE",
+                  "n": 3,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 39,
+                  "a": "MUN",
+                  "b": "VEN",
+                  "n": 2,
+                  "color": "blue",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 40,
+                  "a": "MUN",
+                  "b": "ZUR",
+                  "n": 2,
+                  "color": "yellow",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 41,
+                  "a": "ZUR",
+                  "b": "VEN",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 42,
+                  "a": "ZUR",
+                  "b": "MAR",
+                  "n": 2,
+                  "color": "purple",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 43,
+                  "a": "MAR",
+                  "b": "ROM",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 44,
+                  "a": "VEN",
+                  "b": "ZAG",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 45,
+                  "a": "VEN",
+                  "b": "ROM",
+                  "n": 2,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 46,
+                  "a": "ROM",
+                  "b": "BRI",
+                  "n": 2,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 47,
+                  "a": "ROM",
+                  "b": "PAL",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 48,
+                  "a": "BRI",
+                  "b": "ATH",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 49,
+                  "a": "BRI",
+                  "b": "PAL",
+                  "n": 3,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 50,
+                  "a": "PAL",
+                  "b": "SMY",
+                  "n": 6,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 2,
+                  "owner": null
+                },
+                {
+                  "id": 51,
+                  "a": "STO",
+                  "b": "PET",
+                  "n": 8,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 52,
+                  "a": "STO",
+                  "b": "COP",
+                  "n": 3,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 53,
+                  "a": "STO",
+                  "b": "COP",
+                  "n": 3,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 54,
+                  "a": "BER",
+                  "b": "DAN",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 55,
+                  "a": "BER",
+                  "b": "WAR",
+                  "n": 4,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 56,
+                  "a": "BER",
+                  "b": "WAR",
+                  "n": 4,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 57,
+                  "a": "BER",
+                  "b": "VIE",
+                  "n": 3,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 58,
+                  "a": "VIE",
+                  "b": "WAR",
+                  "n": 4,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 59,
+                  "a": "VIE",
+                  "b": "BUD",
+                  "n": 1,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 60,
+                  "a": "VIE",
+                  "b": "BUD",
+                  "n": 1,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 61,
+                  "a": "VIE",
+                  "b": "ZAG",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 62,
+                  "a": "BUD",
+                  "b": "KIE",
+                  "n": 6,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 63,
+                  "a": "BUD",
+                  "b": "BUC",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 64,
+                  "a": "BUD",
+                  "b": "SAR",
+                  "n": 3,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 65,
+                  "a": "BUD",
+                  "b": "ZAG",
+                  "n": 2,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 66,
+                  "a": "ZAG",
+                  "b": "SAR",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 67,
+                  "a": "SAR",
+                  "b": "SOF",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 68,
+                  "a": "SAR",
+                  "b": "ATH",
+                  "n": 4,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 69,
+                  "a": "SOF",
+                  "b": "BUC",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 70,
+                  "a": "SOF",
+                  "b": "CON",
+                  "n": 3,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 71,
+                  "a": "SOF",
+                  "b": "ATH",
+                  "n": 3,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 72,
+                  "a": "ATH",
+                  "b": "SMY",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 73,
+                  "a": "RIG",
+                  "b": "PET",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 74,
+                  "a": "RIG",
+                  "b": "WIL",
+                  "n": 4,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 75,
+                  "a": "RIG",
+                  "b": "DAN",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 76,
+                  "a": "DAN",
+                  "b": "WAR",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 77,
+                  "a": "WIL",
+                  "b": "PET",
+                  "n": 4,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 78,
+                  "a": "WIL",
+                  "b": "SMO",
+                  "n": 3,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 79,
+                  "a": "WIL",
+                  "b": "KIE",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 80,
+                  "a": "WIL",
+                  "b": "WAR",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 81,
+                  "a": "WAR",
+                  "b": "KIE",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 82,
+                  "a": "BUC",
+                  "b": "KIE",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 83,
+                  "a": "BUC",
+                  "b": "SEV",
+                  "n": 4,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 84,
+                  "a": "BUC",
+                  "b": "CON",
+                  "n": 3,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 85,
+                  "a": "CON",
+                  "b": "SEV",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 2,
+                  "owner": null
+                },
+                {
+                  "id": 86,
+                  "a": "CON",
+                  "b": "ANG",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 87,
+                  "a": "CON",
+                  "b": "SMY",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 88,
+                  "a": "ANG",
+                  "b": "ERZ",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 89,
+                  "a": "ANG",
+                  "b": "SMY",
+                  "n": 3,
+                  "color": "orange",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 90,
+                  "a": "PET",
+                  "b": "MOS",
+                  "n": 4,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 91,
+                  "a": "MOS",
+                  "b": "KHA",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 92,
+                  "a": "MOS",
+                  "b": "SMO",
+                  "n": 2,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 93,
+                  "a": "SMO",
+                  "b": "KIE",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 94,
+                  "a": "KIE",
+                  "b": "KHA",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 95,
+                  "a": "KHA",
+                  "b": "ROS",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 96,
+                  "a": "ROS",
+                  "b": "SOC",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 97,
+                  "a": "ROS",
+                  "b": "SEV",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 98,
+                  "a": "SEV",
+                  "b": "SOC",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 99,
+                  "a": "SEV",
+                  "b": "ERZ",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 2,
+                  "owner": null
+                },
+                {
+                  "id": 100,
+                  "a": "SOC",
+                  "b": "ERZ",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                }
+              ],
+              "face": [
+                "wild",
+                "blue",
+                "orange",
+                "green",
+                "green"
+              ],
+              "deckCount": 97,
+              "discardCount": 0,
+              "ticketDeckCount": 34,
+              "hand": [
+                "yellow",
+                "purple",
+                "yellow",
+                "orange"
+              ],
+              "tickets": [],
+              "ticketProgress": [],
+              "ticketPaths": [],
+              "drawCount": 0,
+              "initial": [
+                {
+                  "id": 42,
+                  "a": "LIS",
+                  "b": "DAN",
+                  "p": 20,
+                  "long": true
+                },
+                {
+                  "id": 22,
+                  "a": "LON",
+                  "b": "BER",
+                  "p": 7,
+                  "long": false
+                },
+                {
+                  "id": 2,
+                  "a": "ANG",
+                  "b": "KHA",
+                  "p": 10,
+                  "long": false
+                },
+                {
+                  "id": 37,
+                  "a": "ZAG",
+                  "b": "BRI",
+                  "p": 6,
+                  "long": false
+                }
+              ],
+              "pending": null,
+              "ticketOffer": null,
+              "sharedTunnel": null,
+              "tunnel": null,
+              "finalRemaining": null,
+              "logs": [],
+              "history": [],
+              "result": null
+            },
+            {
+              "spectator": false,
+              "uiVersion": 9,
+              "timing": null,
+              "turnDeadline": 1793682918805,
+              "turnSerial": 1,
+              "turnWaiting": false,
+              "initialDeadline": 1793682918805,
+              "initialReadyCount": 0,
+              "waitingDeadline": null,
+              "closingDeadline": null,
+              "events": [],
+              "drawEvent": null,
+              "phase": "initial",
+              "current": 0,
+              "seat": 1,
+              "players": [
+                {
+                  "name": "Legacy A",
+                  "color": "#d45748",
+                  "trains": 45,
+                  "stations": 3,
+                  "score": 0,
+                  "placed": [],
+                  "handCount": 4,
+                  "ticketsCount": 0,
+                  "initialReady": false
+                },
+                {
+                  "name": "Legacy B",
+                  "color": "#458ad4",
+                  "trains": 45,
+                  "stations": 3,
+                  "score": 0,
+                  "placed": [],
+                  "handCount": 4,
+                  "ticketsCount": 0,
+                  "initialReady": false
+                }
+              ],
+              "routes": [
+                {
+                  "id": 0,
+                  "a": "EDI",
+                  "b": "LON",
+                  "n": 4,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 1,
+                  "a": "EDI",
+                  "b": "LON",
+                  "n": 4,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 2,
+                  "a": "LON",
+                  "b": "AMS",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 2,
+                  "owner": null
+                },
+                {
+                  "id": 3,
+                  "a": "LON",
+                  "b": "DIE",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 4,
+                  "a": "LON",
+                  "b": "DIE",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 5,
+                  "a": "DIE",
+                  "b": "BRE",
+                  "n": 2,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 6,
+                  "a": "DIE",
+                  "b": "BRU",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 7,
+                  "a": "DIE",
+                  "b": "PAR",
+                  "n": 1,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 8,
+                  "a": "BRE",
+                  "b": "PAR",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 9,
+                  "a": "BRE",
+                  "b": "PAM",
+                  "n": 4,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 10,
+                  "a": "PAR",
+                  "b": "BRU",
+                  "n": 2,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 11,
+                  "a": "PAR",
+                  "b": "BRU",
+                  "n": 2,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 12,
+                  "a": "PAR",
+                  "b": "FRA",
+                  "n": 3,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 13,
+                  "a": "PAR",
+                  "b": "FRA",
+                  "n": 3,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 14,
+                  "a": "PAR",
+                  "b": "ZUR",
+                  "n": 3,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 15,
+                  "a": "PAR",
+                  "b": "MAR",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 16,
+                  "a": "PAR",
+                  "b": "PAM",
+                  "n": 4,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 17,
+                  "a": "PAR",
+                  "b": "PAM",
+                  "n": 4,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 18,
+                  "a": "PAM",
+                  "b": "MAR",
+                  "n": 4,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 19,
+                  "a": "PAM",
+                  "b": "BAR",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 20,
+                  "a": "PAM",
+                  "b": "MAD",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 21,
+                  "a": "PAM",
+                  "b": "MAD",
+                  "n": 3,
+                  "color": "white",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 22,
+                  "a": "MAD",
+                  "b": "LIS",
+                  "n": 3,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 23,
+                  "a": "LIS",
+                  "b": "CAD",
+                  "n": 2,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 24,
+                  "a": "CAD",
+                  "b": "MAD",
+                  "n": 3,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 25,
+                  "a": "MAD",
+                  "b": "BAR",
+                  "n": 2,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 26,
+                  "a": "BAR",
+                  "b": "MAR",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 27,
+                  "a": "AMS",
+                  "b": "ESS",
+                  "n": 3,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 28,
+                  "a": "AMS",
+                  "b": "FRA",
+                  "n": 2,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 29,
+                  "a": "AMS",
+                  "b": "BRU",
+                  "n": 1,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 30,
+                  "a": "BRU",
+                  "b": "FRA",
+                  "n": 2,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 31,
+                  "a": "ESS",
+                  "b": "COP",
+                  "n": 3,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 32,
+                  "a": "ESS",
+                  "b": "COP",
+                  "n": 3,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 33,
+                  "a": "ESS",
+                  "b": "BER",
+                  "n": 2,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 34,
+                  "a": "ESS",
+                  "b": "FRA",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 35,
+                  "a": "FRA",
+                  "b": "BER",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 36,
+                  "a": "FRA",
+                  "b": "BER",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 37,
+                  "a": "FRA",
+                  "b": "MUN",
+                  "n": 2,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 38,
+                  "a": "MUN",
+                  "b": "VIE",
+                  "n": 3,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 39,
+                  "a": "MUN",
+                  "b": "VEN",
+                  "n": 2,
+                  "color": "blue",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 40,
+                  "a": "MUN",
+                  "b": "ZUR",
+                  "n": 2,
+                  "color": "yellow",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 41,
+                  "a": "ZUR",
+                  "b": "VEN",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 42,
+                  "a": "ZUR",
+                  "b": "MAR",
+                  "n": 2,
+                  "color": "purple",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 43,
+                  "a": "MAR",
+                  "b": "ROM",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 44,
+                  "a": "VEN",
+                  "b": "ZAG",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 45,
+                  "a": "VEN",
+                  "b": "ROM",
+                  "n": 2,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 46,
+                  "a": "ROM",
+                  "b": "BRI",
+                  "n": 2,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 47,
+                  "a": "ROM",
+                  "b": "PAL",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 48,
+                  "a": "BRI",
+                  "b": "ATH",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 49,
+                  "a": "BRI",
+                  "b": "PAL",
+                  "n": 3,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 50,
+                  "a": "PAL",
+                  "b": "SMY",
+                  "n": 6,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 2,
+                  "owner": null
+                },
+                {
+                  "id": 51,
+                  "a": "STO",
+                  "b": "PET",
+                  "n": 8,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 52,
+                  "a": "STO",
+                  "b": "COP",
+                  "n": 3,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 53,
+                  "a": "STO",
+                  "b": "COP",
+                  "n": 3,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 54,
+                  "a": "BER",
+                  "b": "DAN",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 55,
+                  "a": "BER",
+                  "b": "WAR",
+                  "n": 4,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 56,
+                  "a": "BER",
+                  "b": "WAR",
+                  "n": 4,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 57,
+                  "a": "BER",
+                  "b": "VIE",
+                  "n": 3,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 58,
+                  "a": "VIE",
+                  "b": "WAR",
+                  "n": 4,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 59,
+                  "a": "VIE",
+                  "b": "BUD",
+                  "n": 1,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 60,
+                  "a": "VIE",
+                  "b": "BUD",
+                  "n": 1,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 61,
+                  "a": "VIE",
+                  "b": "ZAG",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 62,
+                  "a": "BUD",
+                  "b": "KIE",
+                  "n": 6,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 63,
+                  "a": "BUD",
+                  "b": "BUC",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 64,
+                  "a": "BUD",
+                  "b": "SAR",
+                  "n": 3,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 65,
+                  "a": "BUD",
+                  "b": "ZAG",
+                  "n": 2,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 66,
+                  "a": "ZAG",
+                  "b": "SAR",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 67,
+                  "a": "SAR",
+                  "b": "SOF",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 68,
+                  "a": "SAR",
+                  "b": "ATH",
+                  "n": 4,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 69,
+                  "a": "SOF",
+                  "b": "BUC",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 70,
+                  "a": "SOF",
+                  "b": "CON",
+                  "n": 3,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 71,
+                  "a": "SOF",
+                  "b": "ATH",
+                  "n": 3,
+                  "color": "purple",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 72,
+                  "a": "ATH",
+                  "b": "SMY",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 73,
+                  "a": "RIG",
+                  "b": "PET",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 74,
+                  "a": "RIG",
+                  "b": "WIL",
+                  "n": 4,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 75,
+                  "a": "RIG",
+                  "b": "DAN",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 76,
+                  "a": "DAN",
+                  "b": "WAR",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 77,
+                  "a": "WIL",
+                  "b": "PET",
+                  "n": 4,
+                  "color": "blue",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 78,
+                  "a": "WIL",
+                  "b": "SMO",
+                  "n": 3,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 79,
+                  "a": "WIL",
+                  "b": "KIE",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 80,
+                  "a": "WIL",
+                  "b": "WAR",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 81,
+                  "a": "WAR",
+                  "b": "KIE",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 82,
+                  "a": "BUC",
+                  "b": "KIE",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 83,
+                  "a": "BUC",
+                  "b": "SEV",
+                  "n": 4,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 84,
+                  "a": "BUC",
+                  "b": "CON",
+                  "n": 3,
+                  "color": "yellow",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 85,
+                  "a": "CON",
+                  "b": "SEV",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 2,
+                  "owner": null
+                },
+                {
+                  "id": 86,
+                  "a": "CON",
+                  "b": "ANG",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 87,
+                  "a": "CON",
+                  "b": "SMY",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 88,
+                  "a": "ANG",
+                  "b": "ERZ",
+                  "n": 3,
+                  "color": "black",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 89,
+                  "a": "ANG",
+                  "b": "SMY",
+                  "n": 3,
+                  "color": "orange",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 90,
+                  "a": "PET",
+                  "b": "MOS",
+                  "n": 4,
+                  "color": "white",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 91,
+                  "a": "MOS",
+                  "b": "KHA",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 92,
+                  "a": "MOS",
+                  "b": "SMO",
+                  "n": 2,
+                  "color": "orange",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 93,
+                  "a": "SMO",
+                  "b": "KIE",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 94,
+                  "a": "KIE",
+                  "b": "KHA",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 95,
+                  "a": "KHA",
+                  "b": "ROS",
+                  "n": 2,
+                  "color": "green",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 96,
+                  "a": "ROS",
+                  "b": "SOC",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 97,
+                  "a": "ROS",
+                  "b": "SEV",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 0,
+                  "owner": null
+                },
+                {
+                  "id": 98,
+                  "a": "SEV",
+                  "b": "SOC",
+                  "n": 2,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 1,
+                  "owner": null
+                },
+                {
+                  "id": 99,
+                  "a": "SEV",
+                  "b": "ERZ",
+                  "n": 4,
+                  "color": "gray",
+                  "tunnel": false,
+                  "ferry": 2,
+                  "owner": null
+                },
+                {
+                  "id": 100,
+                  "a": "SOC",
+                  "b": "ERZ",
+                  "n": 3,
+                  "color": "red",
+                  "tunnel": true,
+                  "ferry": 0,
+                  "owner": null
+                }
+              ],
+              "face": [
+                "wild",
+                "blue",
+                "orange",
+                "green",
+                "green"
+              ],
+              "deckCount": 97,
+              "discardCount": 0,
+              "ticketDeckCount": 34,
+              "hand": [
+                "wild",
+                "green",
+                "blue",
+                "purple"
+              ],
+              "tickets": [],
+              "ticketProgress": [],
+              "ticketPaths": [],
+              "drawCount": 0,
+              "initial": [
+                {
+                  "id": 40,
+                  "a": "PAL",
+                  "b": "MOS",
+                  "p": 20,
+                  "long": true
+                },
+                {
+                  "id": 23,
+                  "a": "BRE",
+                  "b": "MAR",
+                  "p": 7,
+                  "long": false
+                },
+                {
+                  "id": 31,
+                  "a": "SOF",
+                  "b": "SMY",
+                  "p": 5,
+                  "long": false
+                },
+                {
+                  "id": 28,
+                  "a": "SAR",
+                  "b": "SEV",
+                  "p": 8,
+                  "long": false
+                }
+              ],
+              "pending": null,
+              "ticketOffer": null,
+              "sharedTunnel": null,
+              "tunnel": null,
+              "finalRemaining": null,
+              "logs": [],
+              "history": [],
+              "result": null
+            }
+          ],
+          "members": [
+            {
+              "name": "Legacy A",
+              "bot": false,
+              "autopilot": false,
+              "connected": false
+            },
+            {
+              "name": "Legacy B",
+              "bot": false,
+              "autopilot": false,
+              "connected": false
+            }
+          ]
+        },
+        "hash": "0d632947a8ca2500de72465a2bf95b7f3916d9a6a569e15ecc2198e1ad9fdf3e"
+      },
+      {
+        "seq": 1,
+        "at": 1793682858813,
+        "action": null,
+        "events": [],
+        "previousHash": "0d632947a8ca2500de72465a2bf95b7f3916d9a6a569e15ecc2198e1ad9fdf3e",
+        "changes": [
+          {
+            "path": [
+              "game",
+              "phase"
+            ],
+            "value": "play"
+          },
+          {
+            "path": [
+              "game",
+              "initialDone"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "game",
+              "players",
+              "0",
+              "hand"
+            ],
+            "value": [
+              "yellow",
+              "purple",
+              "yellow",
+              "orange",
+              "orange"
+            ]
+          },
+          {
+            "path": [
+              "game",
+              "players",
+              "0",
+              "tickets"
+            ],
+            "value": [
+              {
+                "id": 42,
+                "a": "LIS",
+                "b": "DAN",
+                "p": 20,
+                "long": true
+              },
+              {
+                "id": 22,
+                "a": "LON",
+                "b": "BER",
+                "p": 7,
+                "long": false
+              }
+            ]
+          },
+          {
+            "path": [
+              "game",
+              "players",
+              "0",
+              "pending"
+            ],
+            "value": []
+          },
+          {
+            "path": [
+              "game",
+              "players",
+              "1",
+              "tickets"
+            ],
+            "value": [
+              {
+                "id": 40,
+                "a": "PAL",
+                "b": "MOS",
+                "p": 20,
+                "long": true
+              },
+              {
+                "id": 23,
+                "a": "BRE",
+                "b": "MAR",
+                "p": 7,
+                "long": false
+              }
+            ]
+          },
+          {
+            "path": [
+              "game",
+              "players",
+              "1",
+              "pending"
+            ],
+            "value": []
+          },
+          {
+            "path": [
+              "game",
+              "players",
+              "1",
+              "missedTurns"
+            ],
+            "value": 0
+          },
+          {
+            "path": [
+              "game",
+              "deck"
+            ],
+            "value": [
+              "white",
+              "white",
+              "yellow",
+              "blue",
+              "black",
+              "wild",
+              "purple",
+              "red",
+              "purple",
+              "yellow",
+              "yellow",
+              "blue",
+              "white",
+              "yellow",
+              "red",
+              "blue",
+              "white",
+              "red",
+              "white",
+              "black",
+              "black",
+              "black",
+              "red",
+              "purple",
+              "yellow",
+              "yellow",
+              "blue",
+              "blue",
+              "wild",
+              "wild",
+              "white",
+              "purple",
+              "black",
+              "yellow",
+              "yellow",
+              "red",
+              "blue",
+              "green",
+              "blue",
+              "orange",
+              "wild",
+              "green",
+              "orange",
+              "red",
+              "green",
+              "blue",
+              "green",
+              "orange",
+              "purple",
+              "black",
+              "white",
+              "white",
+              "green",
+              "black",
+              "red",
+              "black",
+              "white",
+              "orange",
+              "red",
+              "wild",
+              "green",
+              "red",
+              "wild",
+              "white",
+              "purple",
+              "black",
+              "yellow",
+              "wild",
+              "blue",
+              "wild",
+              "wild",
+              "green",
+              "white",
+              "orange",
+              "orange",
+              "black",
+              "black",
+              "orange",
+              "red",
+              "yellow",
+              "green",
+              "wild",
+              "purple",
+              "wild",
+              "purple",
+              "white",
+              "black",
+              "red",
+              "red",
+              "orange",
+              "purple",
+              "green",
+              "wild",
+              "blue",
+              "orange",
+              "purple"
+            ]
+          },
+          {
+            "path": [
+              "game",
+              "drawCount"
+            ],
+            "value": 1
+          },
+          {
+            "path": [
+              "game",
+              "logs"
+            ],
+            "value": [
+              "Legacy A robó una carta de tren.",
+              "¡Partida iniciada!"
+            ]
+          },
+          {
+            "path": [
+              "game",
+              "turnSerial"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "game",
+              "turnClockPhase"
+            ],
+            "value": "play"
+          },
+          {
+            "path": [
+              "game",
+              "turnDeadline"
+            ],
+            "value": 1793682918810
+          },
+          {
+            "path": [
+              "game",
+              "logSerial"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "game",
+              "history"
+            ],
+            "value": [
+              {
+                "id": 2,
+                "text": "Legacy A robó una carta de tren.",
+                "seat": 0,
+                "message": {
+                  "key": "{0} robó una carta de tren.",
+                  "values": [
+                    "Legacy A"
+                  ]
+                },
+                "draw": {
+                  "index": -1,
+                  "color": "orange"
+                }
+              },
+              {
+                "id": 1,
+                "text": "¡Partida iniciada!",
+                "seat": null
+              }
+            ]
+          },
+          {
+            "path": [
+              "game",
+              "eventSerial"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "game",
+              "events"
+            ],
+            "value": [
+              {
+                "id": 1,
+                "type": "turn",
+                "seat": 0
+              },
+              {
+                "id": 2,
+                "type": "draw",
+                "seat": 0,
+                "index": -1,
+                "color": "orange"
+              }
+            ]
+          },
+          {
+            "path": [
+              "game",
+              "drawSerial"
+            ],
+            "value": 1
+          },
+          {
+            "path": [
+              "game",
+              "lastDraw"
+            ],
+            "value": {
+              "id": 1,
+              "seat": 0,
+              "index": -1,
+              "color": "orange"
+            }
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "turnDeadline"
+            ],
+            "value": 1793682918810
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "turnSerial"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "initialReadyCount"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "events"
+            ],
+            "value": [
+              {
+                "id": 1,
+                "type": "turn",
+                "seat": 0
+              },
+              {
+                "id": 2,
+                "type": "draw",
+                "seat": 0,
+                "index": -1
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "drawEvent"
+            ],
+            "value": {
+              "id": 1,
+              "seat": 0,
+              "index": -1
+            }
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "phase"
+            ],
+            "value": "play"
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "players",
+              "0",
+              "handCount"
+            ],
+            "value": 5
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "players",
+              "0",
+              "ticketsCount"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "players",
+              "0",
+              "initialReady"
+            ],
+            "value": true
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "players",
+              "1",
+              "ticketsCount"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "players",
+              "1",
+              "initialReady"
+            ],
+            "value": true
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "deckCount"
+            ],
+            "value": 96
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "logs"
+            ],
+            "value": [
+              "Legacy A robó una carta de tren.",
+              "¡Partida iniciada!"
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "history"
+            ],
+            "value": [
+              {
+                "id": 2,
+                "text": "Legacy A robó una carta de tren.",
+                "seat": 0,
+                "message": {
+                  "key": "{0} robó una carta de tren.",
+                  "values": [
+                    "Legacy A"
+                  ]
+                },
+                "draw": {
+                  "index": -1
+                }
+              },
+              {
+                "id": 1,
+                "text": "¡Partida iniciada!",
+                "seat": null
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "turnDeadline"
+            ],
+            "value": 1793682918810
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "turnSerial"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "initialReadyCount"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "events"
+            ],
+            "value": [
+              {
+                "id": 1,
+                "type": "turn",
+                "seat": 0
+              },
+              {
+                "id": 2,
+                "type": "draw",
+                "seat": 0,
+                "index": -1,
+                "color": "orange"
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "drawEvent"
+            ],
+            "value": {
+              "id": 1,
+              "seat": 0,
+              "index": -1,
+              "color": "orange"
+            }
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "phase"
+            ],
+            "value": "play"
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "players",
+              "0",
+              "handCount"
+            ],
+            "value": 5
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "players",
+              "0",
+              "ticketsCount"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "players",
+              "0",
+              "initialReady"
+            ],
+            "value": true
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "players",
+              "1",
+              "ticketsCount"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "players",
+              "1",
+              "initialReady"
+            ],
+            "value": true
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "deckCount"
+            ],
+            "value": 96
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "hand"
+            ],
+            "value": [
+              "yellow",
+              "purple",
+              "yellow",
+              "orange",
+              "orange"
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "tickets"
+            ],
+            "value": [
+              {
+                "id": 42,
+                "a": "LIS",
+                "b": "DAN",
+                "p": 20,
+                "long": true
+              },
+              {
+                "id": 22,
+                "a": "LON",
+                "b": "BER",
+                "p": 7,
+                "long": false
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "ticketProgress"
+            ],
+            "value": [
+              {
+                "id": 42,
+                "completed": false,
+                "viaStation": false
+              },
+              {
+                "id": 22,
+                "completed": false,
+                "viaStation": false
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "ticketPaths"
+            ],
+            "value": [
+              {
+                "id": 42,
+                "routes": [],
+                "stationRoutes": [],
+                "stations": []
+              },
+              {
+                "id": 22,
+                "routes": [],
+                "stationRoutes": [],
+                "stations": []
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "drawCount"
+            ],
+            "value": 1
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "initial"
+            ],
+            "value": null
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "logs"
+            ],
+            "value": [
+              "Legacy A robó una carta de tren.",
+              "¡Partida iniciada!"
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "history"
+            ],
+            "value": [
+              {
+                "id": 2,
+                "text": "Legacy A robó una carta de tren.",
+                "seat": 0,
+                "message": {
+                  "key": "{0} robó una carta de tren.",
+                  "values": [
+                    "Legacy A"
+                  ]
+                },
+                "draw": {
+                  "index": -1,
+                  "color": "orange"
+                }
+              },
+              {
+                "id": 1,
+                "text": "¡Partida iniciada!",
+                "seat": null
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "turnDeadline"
+            ],
+            "value": 1793682918810
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "turnSerial"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "initialReadyCount"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "events"
+            ],
+            "value": [
+              {
+                "id": 1,
+                "type": "turn",
+                "seat": 0
+              },
+              {
+                "id": 2,
+                "type": "draw",
+                "seat": 0,
+                "index": -1
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "drawEvent"
+            ],
+            "value": {
+              "id": 1,
+              "seat": 0,
+              "index": -1
+            }
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "phase"
+            ],
+            "value": "play"
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "players",
+              "0",
+              "handCount"
+            ],
+            "value": 5
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "players",
+              "0",
+              "ticketsCount"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "players",
+              "0",
+              "initialReady"
+            ],
+            "value": true
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "players",
+              "1",
+              "ticketsCount"
+            ],
+            "value": 2
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "players",
+              "1",
+              "initialReady"
+            ],
+            "value": true
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "deckCount"
+            ],
+            "value": 96
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "tickets"
+            ],
+            "value": [
+              {
+                "id": 40,
+                "a": "PAL",
+                "b": "MOS",
+                "p": 20,
+                "long": true
+              },
+              {
+                "id": 23,
+                "a": "BRE",
+                "b": "MAR",
+                "p": 7,
+                "long": false
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "ticketProgress"
+            ],
+            "value": [
+              {
+                "id": 40,
+                "completed": false,
+                "viaStation": false
+              },
+              {
+                "id": 23,
+                "completed": false,
+                "viaStation": false
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "ticketPaths"
+            ],
+            "value": [
+              {
+                "id": 40,
+                "routes": [],
+                "stationRoutes": [],
+                "stations": []
+              },
+              {
+                "id": 23,
+                "routes": [],
+                "stationRoutes": [],
+                "stations": []
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "initial"
+            ],
+            "value": null
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "logs"
+            ],
+            "value": [
+              "Legacy A robó una carta de tren.",
+              "¡Partida iniciada!"
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "history"
+            ],
+            "value": [
+              {
+                "id": 2,
+                "text": "Legacy A robó una carta de tren.",
+                "seat": 0,
+                "message": {
+                  "key": "{0} robó una carta de tren.",
+                  "values": [
+                    "Legacy A"
+                  ]
+                },
+                "draw": {
+                  "index": -1
+                }
+              },
+              {
+                "id": 1,
+                "text": "¡Partida iniciada!",
+                "seat": null
+              }
+            ]
+          }
+        ],
+        "hash": "aa53498d50575590c3118eab8ebcf712f10fa0fa50804186d9e6533662050650"
+      },
+      {
+        "seq": 2,
+        "at": 1793682858816,
+        "action": null,
+        "events": [
+          {
+            "id": 3,
+            "text": "Partida finalizada. ¡Resultados calculados!",
+            "seat": null
+          }
+        ],
+        "previousHash": "aa53498d50575590c3118eab8ebcf712f10fa0fa50804186d9e6533662050650",
+        "changes": [
+          {
+            "path": [
+              "game",
+              "phase"
+            ],
+            "value": "finished"
+          },
+          {
+            "path": [
+              "game",
+              "logs"
+            ],
+            "value": [
+              "Partida finalizada. ¡Resultados calculados!",
+              "Legacy A robó una carta de tren.",
+              "¡Partida iniciada!"
+            ]
+          },
+          {
+            "path": [
+              "game",
+              "result"
+            ],
+            "value": [
+              {
+                "seat": 0,
+                "name": "Legacy A",
+                "route": 0,
+                "destination": -27,
+                "completed": 0,
+                "stations": 12,
+                "express": 10,
+                "longest": 0,
+                "stationRoutes": [],
+                "individualTickets": [
+                  false,
+                  false
+                ],
+                "tickets": [
+                  {
+                    "id": 42,
+                    "a": "LIS",
+                    "b": "DAN",
+                    "p": 20,
+                    "long": true
+                  },
+                  {
+                    "id": 22,
+                    "a": "LON",
+                    "b": "BER",
+                    "p": 7,
+                    "long": false
+                  }
+                ],
+                "score": -5,
+                "winner": true,
+                "details": {
+                  "routes": [],
+                  "routeAdjustment": 0,
+                  "destinations": [
+                    {
+                      "id": 42,
+                      "a": "LIS",
+                      "b": "DAN",
+                      "p": 20,
+                      "long": true,
+                      "points": -20,
+                      "completed": false,
+                      "routes": [],
+                      "stationRoutes": [],
+                      "stations": []
+                    },
+                    {
+                      "id": 22,
+                      "a": "LON",
+                      "b": "BER",
+                      "p": 7,
+                      "long": false,
+                      "points": -7,
+                      "completed": false,
+                      "routes": [],
+                      "stationRoutes": [],
+                      "stations": []
+                    }
+                  ],
+                  "stations": {
+                    "unused": 3,
+                    "points": 12,
+                    "placed": []
+                  },
+                  "express": {
+                    "length": 0,
+                    "routes": [],
+                    "cities": [],
+                    "maximum": 0,
+                    "tiedSeats": [
+                      0,
+                      1
+                    ],
+                    "points": 10
+                  },
+                  "totals": {
+                    "routes": 0,
+                    "destinations": -27,
+                    "stations": 12,
+                    "express": 10,
+                    "total": -5
+                  }
+                }
+              },
+              {
+                "seat": 1,
+                "name": "Legacy B",
+                "route": 0,
+                "destination": -27,
+                "completed": 0,
+                "stations": 12,
+                "express": 10,
+                "longest": 0,
+                "stationRoutes": [],
+                "individualTickets": [
+                  false,
+                  false
+                ],
+                "tickets": [
+                  {
+                    "id": 40,
+                    "a": "PAL",
+                    "b": "MOS",
+                    "p": 20,
+                    "long": true
+                  },
+                  {
+                    "id": 23,
+                    "a": "BRE",
+                    "b": "MAR",
+                    "p": 7,
+                    "long": false
+                  }
+                ],
+                "score": -5,
+                "winner": true,
+                "details": {
+                  "routes": [],
+                  "routeAdjustment": 0,
+                  "destinations": [
+                    {
+                      "id": 40,
+                      "a": "PAL",
+                      "b": "MOS",
+                      "p": 20,
+                      "long": true,
+                      "points": -20,
+                      "completed": false,
+                      "routes": [],
+                      "stationRoutes": [],
+                      "stations": []
+                    },
+                    {
+                      "id": 23,
+                      "a": "BRE",
+                      "b": "MAR",
+                      "p": 7,
+                      "long": false,
+                      "points": -7,
+                      "completed": false,
+                      "routes": [],
+                      "stationRoutes": [],
+                      "stations": []
+                    }
+                  ],
+                  "stations": {
+                    "unused": 3,
+                    "points": 12,
+                    "placed": []
+                  },
+                  "express": {
+                    "length": 0,
+                    "routes": [],
+                    "cities": [],
+                    "maximum": 0,
+                    "tiedSeats": [
+                      0,
+                      1
+                    ],
+                    "points": 10
+                  },
+                  "totals": {
+                    "routes": 0,
+                    "destinations": -27,
+                    "stations": 12,
+                    "express": 10,
+                    "total": -5
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "path": [
+              "game",
+              "turnDeadline"
+            ],
+            "value": null
+          },
+          {
+            "path": [
+              "game",
+              "logSerial"
+            ],
+            "value": 3
+          },
+          {
+            "path": [
+              "game",
+              "history"
+            ],
+            "value": [
+              {
+                "id": 3,
+                "text": "Partida finalizada. ¡Resultados calculados!",
+                "seat": null
+              },
+              {
+                "id": 2,
+                "text": "Legacy A robó una carta de tren.",
+                "seat": 0,
+                "message": {
+                  "key": "{0} robó una carta de tren.",
+                  "values": [
+                    "Legacy A"
+                  ]
+                },
+                "draw": {
+                  "index": -1,
+                  "color": "orange"
+                }
+              },
+              {
+                "id": 1,
+                "text": "¡Partida iniciada!",
+                "seat": null
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "turnDeadline"
+            ],
+            "value": null
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "phase"
+            ],
+            "value": "finished"
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "logs"
+            ],
+            "value": [
+              "Partida finalizada. ¡Resultados calculados!",
+              "Legacy A robó una carta de tren.",
+              "¡Partida iniciada!"
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "history"
+            ],
+            "value": [
+              {
+                "id": 3,
+                "text": "Partida finalizada. ¡Resultados calculados!",
+                "seat": null
+              },
+              {
+                "id": 2,
+                "text": "Legacy A robó una carta de tren.",
+                "seat": 0,
+                "message": {
+                  "key": "{0} robó una carta de tren.",
+                  "values": [
+                    "Legacy A"
+                  ]
+                },
+                "draw": {
+                  "index": -1
+                }
+              },
+              {
+                "id": 1,
+                "text": "¡Partida iniciada!",
+                "seat": null
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "0",
+              "result"
+            ],
+            "value": [
+              {
+                "seat": 0,
+                "name": "Legacy A",
+                "route": 0,
+                "destination": -27,
+                "completed": 0,
+                "stations": 12,
+                "express": 10,
+                "longest": 0,
+                "stationRoutes": [],
+                "individualTickets": [],
+                "tickets": [],
+                "score": -5,
+                "winner": true,
+                "details": {
+                  "routes": [],
+                  "routeAdjustment": 0,
+                  "destinations": [],
+                  "stations": {
+                    "unused": 3,
+                    "points": 12,
+                    "placed": []
+                  },
+                  "express": {
+                    "length": 0,
+                    "routes": [],
+                    "cities": [],
+                    "maximum": 0,
+                    "tiedSeats": [
+                      0,
+                      1
+                    ],
+                    "points": 10
+                  },
+                  "totals": {
+                    "routes": 0,
+                    "destinations": -27,
+                    "stations": 12,
+                    "express": 10,
+                    "total": -5
+                  }
+                }
+              },
+              {
+                "seat": 1,
+                "name": "Legacy B",
+                "route": 0,
+                "destination": -27,
+                "completed": 0,
+                "stations": 12,
+                "express": 10,
+                "longest": 0,
+                "stationRoutes": [],
+                "individualTickets": [],
+                "tickets": [],
+                "score": -5,
+                "winner": true,
+                "details": {
+                  "routes": [],
+                  "routeAdjustment": 0,
+                  "destinations": [],
+                  "stations": {
+                    "unused": 3,
+                    "points": 12,
+                    "placed": []
+                  },
+                  "express": {
+                    "length": 0,
+                    "routes": [],
+                    "cities": [],
+                    "maximum": 0,
+                    "tiedSeats": [
+                      0,
+                      1
+                    ],
+                    "points": 10
+                  },
+                  "totals": {
+                    "routes": 0,
+                    "destinations": -27,
+                    "stations": 12,
+                    "express": 10,
+                    "total": -5
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "turnDeadline"
+            ],
+            "value": null
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "phase"
+            ],
+            "value": "finished"
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "logs"
+            ],
+            "value": [
+              "Partida finalizada. ¡Resultados calculados!",
+              "Legacy A robó una carta de tren.",
+              "¡Partida iniciada!"
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "history"
+            ],
+            "value": [
+              {
+                "id": 3,
+                "text": "Partida finalizada. ¡Resultados calculados!",
+                "seat": null
+              },
+              {
+                "id": 2,
+                "text": "Legacy A robó una carta de tren.",
+                "seat": 0,
+                "message": {
+                  "key": "{0} robó una carta de tren.",
+                  "values": [
+                    "Legacy A"
+                  ]
+                },
+                "draw": {
+                  "index": -1,
+                  "color": "orange"
+                }
+              },
+              {
+                "id": 1,
+                "text": "¡Partida iniciada!",
+                "seat": null
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "1",
+              "result"
+            ],
+            "value": [
+              {
+                "seat": 0,
+                "name": "Legacy A",
+                "route": 0,
+                "destination": -27,
+                "completed": 0,
+                "stations": 12,
+                "express": 10,
+                "longest": 0,
+                "stationRoutes": [],
+                "individualTickets": [
+                  false,
+                  false
+                ],
+                "tickets": [
+                  {
+                    "id": 42,
+                    "a": "LIS",
+                    "b": "DAN",
+                    "p": 20,
+                    "long": true
+                  },
+                  {
+                    "id": 22,
+                    "a": "LON",
+                    "b": "BER",
+                    "p": 7,
+                    "long": false
+                  }
+                ],
+                "score": -5,
+                "winner": true,
+                "details": {
+                  "routes": [],
+                  "routeAdjustment": 0,
+                  "destinations": [
+                    {
+                      "id": 42,
+                      "a": "LIS",
+                      "b": "DAN",
+                      "p": 20,
+                      "long": true,
+                      "points": -20,
+                      "completed": false,
+                      "routes": [],
+                      "stationRoutes": [],
+                      "stations": []
+                    },
+                    {
+                      "id": 22,
+                      "a": "LON",
+                      "b": "BER",
+                      "p": 7,
+                      "long": false,
+                      "points": -7,
+                      "completed": false,
+                      "routes": [],
+                      "stationRoutes": [],
+                      "stations": []
+                    }
+                  ],
+                  "stations": {
+                    "unused": 3,
+                    "points": 12,
+                    "placed": []
+                  },
+                  "express": {
+                    "length": 0,
+                    "routes": [],
+                    "cities": [],
+                    "maximum": 0,
+                    "tiedSeats": [
+                      0,
+                      1
+                    ],
+                    "points": 10
+                  },
+                  "totals": {
+                    "routes": 0,
+                    "destinations": -27,
+                    "stations": 12,
+                    "express": 10,
+                    "total": -5
+                  }
+                }
+              },
+              {
+                "seat": 1,
+                "name": "Legacy B",
+                "route": 0,
+                "destination": -27,
+                "completed": 0,
+                "stations": 12,
+                "express": 10,
+                "longest": 0,
+                "stationRoutes": [],
+                "individualTickets": [
+                  false,
+                  false
+                ],
+                "tickets": [
+                  {
+                    "id": 40,
+                    "a": "PAL",
+                    "b": "MOS",
+                    "p": 20,
+                    "long": true
+                  },
+                  {
+                    "id": 23,
+                    "a": "BRE",
+                    "b": "MAR",
+                    "p": 7,
+                    "long": false
+                  }
+                ],
+                "score": -5,
+                "winner": true,
+                "details": {
+                  "routes": [],
+                  "routeAdjustment": 0,
+                  "destinations": [
+                    {
+                      "id": 40,
+                      "a": "PAL",
+                      "b": "MOS",
+                      "p": 20,
+                      "long": true,
+                      "points": -20,
+                      "completed": false,
+                      "routes": [],
+                      "stationRoutes": [],
+                      "stations": []
+                    },
+                    {
+                      "id": 23,
+                      "a": "BRE",
+                      "b": "MAR",
+                      "p": 7,
+                      "long": false,
+                      "points": -7,
+                      "completed": false,
+                      "routes": [],
+                      "stationRoutes": [],
+                      "stations": []
+                    }
+                  ],
+                  "stations": {
+                    "unused": 3,
+                    "points": 12,
+                    "placed": []
+                  },
+                  "express": {
+                    "length": 0,
+                    "routes": [],
+                    "cities": [],
+                    "maximum": 0,
+                    "tiedSeats": [
+                      0,
+                      1
+                    ],
+                    "points": 10
+                  },
+                  "totals": {
+                    "routes": 0,
+                    "destinations": -27,
+                    "stations": 12,
+                    "express": 10,
+                    "total": -5
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "turnDeadline"
+            ],
+            "value": null
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "phase"
+            ],
+            "value": "finished"
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "logs"
+            ],
+            "value": [
+              "Partida finalizada. ¡Resultados calculados!",
+              "Legacy A robó una carta de tren.",
+              "¡Partida iniciada!"
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "history"
+            ],
+            "value": [
+              {
+                "id": 3,
+                "text": "Partida finalizada. ¡Resultados calculados!",
+                "seat": null
+              },
+              {
+                "id": 2,
+                "text": "Legacy A robó una carta de tren.",
+                "seat": 0,
+                "message": {
+                  "key": "{0} robó una carta de tren.",
+                  "values": [
+                    "Legacy A"
+                  ]
+                },
+                "draw": {
+                  "index": -1
+                }
+              },
+              {
+                "id": 1,
+                "text": "¡Partida iniciada!",
+                "seat": null
+              }
+            ]
+          },
+          {
+            "path": [
+              "views",
+              "2",
+              "result"
+            ],
+            "value": [
+              {
+                "seat": 0,
+                "name": "Legacy A",
+                "route": 0,
+                "destination": -27,
+                "completed": 0,
+                "stations": 12,
+                "express": 10,
+                "longest": 0,
+                "stationRoutes": [],
+                "individualTickets": [
+                  false,
+                  false
+                ],
+                "tickets": [
+                  {
+                    "id": 42,
+                    "a": "LIS",
+                    "b": "DAN",
+                    "p": 20,
+                    "long": true
+                  },
+                  {
+                    "id": 22,
+                    "a": "LON",
+                    "b": "BER",
+                    "p": 7,
+                    "long": false
+                  }
+                ],
+                "score": -5,
+                "winner": true,
+                "details": {
+                  "routes": [],
+                  "routeAdjustment": 0,
+                  "destinations": [
+                    {
+                      "id": 42,
+                      "a": "LIS",
+                      "b": "DAN",
+                      "p": 20,
+                      "long": true,
+                      "points": -20,
+                      "completed": false,
+                      "routes": [],
+                      "stationRoutes": [],
+                      "stations": []
+                    },
+                    {
+                      "id": 22,
+                      "a": "LON",
+                      "b": "BER",
+                      "p": 7,
+                      "long": false,
+                      "points": -7,
+                      "completed": false,
+                      "routes": [],
+                      "stationRoutes": [],
+                      "stations": []
+                    }
+                  ],
+                  "stations": {
+                    "unused": 3,
+                    "points": 12,
+                    "placed": []
+                  },
+                  "express": {
+                    "length": 0,
+                    "routes": [],
+                    "cities": [],
+                    "maximum": 0,
+                    "tiedSeats": [
+                      0,
+                      1
+                    ],
+                    "points": 10
+                  },
+                  "totals": {
+                    "routes": 0,
+                    "destinations": -27,
+                    "stations": 12,
+                    "express": 10,
+                    "total": -5
+                  }
+                }
+              },
+              {
+                "seat": 1,
+                "name": "Legacy B",
+                "route": 0,
+                "destination": -27,
+                "completed": 0,
+                "stations": 12,
+                "express": 10,
+                "longest": 0,
+                "stationRoutes": [],
+                "individualTickets": [
+                  false,
+                  false
+                ],
+                "tickets": [
+                  {
+                    "id": 40,
+                    "a": "PAL",
+                    "b": "MOS",
+                    "p": 20,
+                    "long": true
+                  },
+                  {
+                    "id": 23,
+                    "a": "BRE",
+                    "b": "MAR",
+                    "p": 7,
+                    "long": false
+                  }
+                ],
+                "score": -5,
+                "winner": true,
+                "details": {
+                  "routes": [],
+                  "routeAdjustment": 0,
+                  "destinations": [
+                    {
+                      "id": 40,
+                      "a": "PAL",
+                      "b": "MOS",
+                      "p": 20,
+                      "long": true,
+                      "points": -20,
+                      "completed": false,
+                      "routes": [],
+                      "stationRoutes": [],
+                      "stations": []
+                    },
+                    {
+                      "id": 23,
+                      "a": "BRE",
+                      "b": "MAR",
+                      "p": 7,
+                      "long": false,
+                      "points": -7,
+                      "completed": false,
+                      "routes": [],
+                      "stationRoutes": [],
+                      "stations": []
+                    }
+                  ],
+                  "stations": {
+                    "unused": 3,
+                    "points": 12,
+                    "placed": []
+                  },
+                  "express": {
+                    "length": 0,
+                    "routes": [],
+                    "cities": [],
+                    "maximum": 0,
+                    "tiedSeats": [
+                      0,
+                      1
+                    ],
+                    "points": 10
+                  },
+                  "totals": {
+                    "routes": 0,
+                    "destinations": -27,
+                    "stations": 12,
+                    "express": 10,
+                    "total": -5
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "hash": "405b2c1fd8706c2286178e7a58752c3fdb17b6853d2c8bcb34b708ad71f3c32f"
+      }
+    ]
+  },
+  "responsesSha256": {
+    "public": "a3ac87ad225b39824d6b56ab373519f74873c3665cd8d6cc8ea621de71bf6b0d",
+    "participant": "59066e99b98bbb75ff8e1a5fcaa62b3a2beed31b9b0c9be2e702635d02007b9c",
+    "audit": "7e50d72b5ced6822dd2b317f18b7199c5eb99cf3081a997c87f87d1273d7938d"
+  }
+}
