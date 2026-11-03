@@ -226,7 +226,12 @@ historial conservan las proporciones del panel y el actor histórico.
 La presentación omite el número de turno y la etiqueta redundante «Bot»;
 conserva «Bot de reemplazo» y «Automático por tiempo». Los iconos de persona y
 robot quedan centrados en su círculo. Los robos muestran «Robó» y miniaturas de
-18 × 25 px; los robos consecutivos se agrupan si no hay hechos intermedios.
+18 × 25 px; los robos consecutivos se agrupan si no hay hechos visibles intermedios.
+El historial y el replay ocultan las reposiciones `market_refill` y los reciclados
+`recycled`, incluidos sus bloques y las filas que solo contengan esos eventos.
+El diario y las grabaciones los conservan íntegros; la renovación de mesa por
+tres comodines sigue visible en su posición cronológica. Los enlaces del replay
+se calculan con los eventos visibles de cada fila, manteniendo sus IDs originales.
 En vivo el mazo usa reverso incluso para quien robó; el servidor conserva su
 color en la vista propia y lo filtra para rivales/espectadores. En replay todos
 los POV muestran los colores reales guardados, incluidas las manos iniciales

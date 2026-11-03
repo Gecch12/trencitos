@@ -18,19 +18,32 @@ for(const after of [false,true])test(`renewal ${after?'after the last draw':'bet
   assert.deepEqual(types,after?['draw','draw','market_refill','recycled','market_refresh']:['draw','market_refill','recycled','market_refresh','draw']);
   const refill=row.events.find(e=>e.type==='market_refill');assert.equal(refill.data.color,'wild');
   assert.equal(refill.data.endsTurn,after);
-  const parts=History.content(row,{players:g.players,city:id=>id,revealAll:true});
+  const saved=JSON.stringify(row),journal=JSON.stringify(g.journal);
+  const visible=History.displayRows([row]);assert.equal(visible.length,1);
+  assert.deepEqual(visible[0].events.map(e=>e.type),after?['draw','draw','market_refresh']:['draw','market_refresh','draw']);
+  for(const revealAll of [false,true]){
+    const parts=History.content(row,{players:g.players,city:id=>id,revealAll});
+    assert.ok(parts.every(p=>!['El mazo repuso','Descarte barajado en el mazo'].includes(p.text)));
+  }
+  const hidden={...row,events:row.events.filter(e=>['market_refill','recycled'].includes(e.type))};
+  assert.deepEqual(History.displayRows([hidden]),[]);
+  assert.deepEqual(History.content(hidden,{players:g.players,city:id=>id}),[]);
+  const parts=History.content(visible[0],{players:g.players,city:id=>id,revealAll:true});
   const refresh=parts.findIndex(p=>p.className==='history-market-refresh');
   assert.equal(parts[refresh].phase,after?'after':'during');
   const drawn=parts.filter(p=>p.className==='history-drawn-cards').flatMap(p=>p.cards);
   assert.deepEqual(drawn,row.events.filter(e=>e.type==='draw').map(e=>e.data.color));
   if(!after)assert.ok(refresh<parts.findLastIndex(p=>p.className==='history-drawn-cards'));
+  assert.equal(JSON.stringify(row),saved);assert.equal(JSON.stringify(g.journal),journal);
 });
-test('recycling an empty blind deck precedes drawing; normal consecutive draws stay together',()=>{
-  const g=game();g.deck=[];g.discard=['blue','orange'];act(g,-1);act(g,-1);
+test('recycling remains recorded before or between draws without splitting visible cards',()=>{
+ for(const between of [false,true]){
+  const g=game();g.deck=between?['blue']:[];g.discard=between?['orange']:['blue','orange'];act(g,-1);act(g,-1);
   const row=J.project(g,0).find(row=>row.events.some(e=>e.type==='draw'));
-  assert.equal(row.events[0].type,'recycled');
+  assert.equal(row.events[between?1:0].type,'recycled');
   const draws=History.content(row,{players:g.players,city:id=>id}).filter(p=>p.className==='history-drawn-cards');
   assert.equal(draws.length,1);assert.deepEqual(draws[0].cards,['back','back']);
+ }
 });
 test('offered and discarded tickets remain private live and become visible in all replay POVs',async()=>{
   const g=game(),initial=g.journal.find(e=>e.type==='initial');

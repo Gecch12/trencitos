@@ -3,8 +3,12 @@
 const TurnHistory = (() => {
   const I18n=typeof module!=='undefined'&&module.exports?require('../shared/i18n'):globalThis.TrencitosI18n;
   const t=(...args)=>I18n.t(...args);
+  // Hide automatic pile maintenance only in presentation; keep the journal intact.
+  const visibleEvent=event=>!['market_refill','recycled'].includes(event.type);
   function displayRows(rows) {
-    return rows.flatMap(row=>{
+    return rows.flatMap(source=>{
+      const row={...source,events:source.events.filter(visibleEvent)};
+      if(!row.events.length)return [];
       const milestones=row.events.filter(e=>e.type==='longest');
       if(!milestones.length)return [row];
       const events=row.events.filter(e=>e.type!=='longest');
@@ -14,7 +18,8 @@ const TurnHistory = (() => {
     });
   }
   function content(row, {players,city,revealAll=false}) {
-    const parts=[],events=row.events,hasDraws=events.some(e=>e.type==='draw');
+    const parts=[],events=row.events.filter(visibleEvent),hasDraws=events.some(e=>e.type==='draw');
+    if(!events.length)return parts;
     let section='header',system=false,afterDraw=false,phase=null;
     const add=part=>parts.push({...part,section,system,phase});
     const text=value=>add({text:value}),cards=(label,values,className)=>add({text:label,cards:values,className});
@@ -22,7 +27,7 @@ const TurnHistory = (() => {
     const route=value=>`${city(value.a)} — ${city(value.b)}`;
     const name=seat=>players[seat]?.name||'—';
     const tickets=(label,items)=>{if(items)text(`${label}: ${items.map(item=>`${route(item)} (${item.p})`).join('; ')||'—'}`);};
-    const actors=[...new Set(events.filter(e=>!['recycled','market_refill','market_refresh','destinations','longest','deck_empty'].includes(e.type)).map(e=>e.actor))];
+    const actors=[...new Set(events.filter(e=>!['market_refresh','destinations','longest','deck_empty'].includes(e.type)).map(e=>e.actor))];
     if(row.turn===null&&row.at&&row.kind!=='longest')text(new Date(row.at).toLocaleTimeString(I18n.language==='en'?'en-GB':'es-PE',{hour:'2-digit',minute:'2-digit'}));
     if(row.seat!==null)text(name(row.seat));
     if(actors.includes('replacement'))text(t('Bot de reemplazo'));
@@ -30,7 +35,7 @@ const TurnHistory = (() => {
     let drawn=0,previousDraw=null;
     for(const [index,e] of events.entries()){
       const d=e.data;section=index;phase=null;
-      system=['market_refill','market_refresh','recycled','deck_empty'].includes(e.type);
+      system=['market_refresh','deck_empty'].includes(e.type);
       if(system&&hasDraws)phase=afterDraw?'after':drawn?'during':'before';
       switch(e.type){
         case 'draw': {
@@ -40,9 +45,7 @@ const TurnHistory = (() => {
           else {cards(t('Robó'),[color],'history-drawn-cards');previousDraw=parts.at(-1);}
           afterDraw=d.endsTurn??(drawn>=2||d.index>=0&&d.color==='wild');break;
         }
-        case 'market_refill':if(d.color)cards(t('El mazo repuso'),[d.color],'history-market-refill');else text(t('Sin carta para reponer'));break;
         case 'market_refresh':cards(t('Mesa retirada por 3 comodines'),d.before,'history-market-refresh');cards(t('Nueva mesa'),d.after,'history-market-new');break;
-        case 'recycled':text(t('Descarte barajado en el mazo'));break;
         case 'deck_empty':text(t('Mazo agotado'));break;
         case 'tunnel':text(t`Túnel ${route(d)}`);cards(t('Base'),payment(d.base));cards(t('Reveló'),d.revealed);text(t`Extra: ${d.surcharge}`);if(!events.some(e=>e.type==='tunnel_result'))text(t('En curso'));break;
         case 'tunnel_result':

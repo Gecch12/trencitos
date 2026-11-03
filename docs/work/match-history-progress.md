@@ -123,3 +123,28 @@ en vivo, el acceso a partidas privadas y la auditoría por identidad.
 
 Código integrado localmente, sin commit ni despliegue. Evidencia y alcance del
 reinicio solicitado en [Transparencia y reinicio](replay-transparency-reset.md).
+
+## Ocultar mantenimiento automático del mazo · 2026-11-03
+
+Ángel aprobó ocultar «El mazo repuso…» y «Descarte barajado en el mazo» en el
+historial y el replay. La presentación compartida filtra ambos eventos y omite
+las filas que queden vacías; los robos separados solo por esos hechos se agrupan.
+Se mantienen el diario interno, las grabaciones y la renovación por tres
+comodines. Contrato en [Historial](../history-replay.md).
+
+- [x] Aplicar el filtro de presentación sin mutar eventos guardados.
+- [x] Verificar secuencia, filas vacías, navegador y documentación.
+
+Validación local:
+
+- 36/36 pruebas de secuencia, progreso del historial, consultas y streaming del
+  replay: registro intacto, filas ocultas omitidas y agrupación de robos.
+- `browser-turn-sequence.cjs`: cuatro grupos correctos, sin errores de navegador;
+  historial en escritorio/móvil y replay en las tres perspectivas, con renovación
+  entre robos o posterior al último, miniaturas y navegación conservadas.
+- Capturas móvil y replay inspeccionadas; evidencia en
+  `.qa/history-maintenance-hidden-2026-11-03/`.
+- `node scripts/check-docs.js`, `node scripts/check-docs.js --base HEAD` y
+  `git diff --check`: correctos.
+
+Cambio local en main, sin publicar. Siguiente paso: publicar cuando se solicite.
