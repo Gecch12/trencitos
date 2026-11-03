@@ -1,0 +1,250 @@
+{
+  "at": "2026-11-03T16:08:50.605Z",
+  "commit": "55b2dd898eb13e714babe5a1f1b41bc6284b37c0",
+  "timings": [
+    {
+      "kind": "visible",
+      "handFrameMs": 12.799999952316284,
+      "confirmationMs": 365.89999997615814,
+      "displayedAtFrame": 5,
+      "confirmedAtFrame": 4,
+      "groups": [
+        {
+          "color": "red",
+          "count": 1,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "black",
+          "count": 1,
+          "pending": true,
+          "imageReady": true
+        },
+        {
+          "color": "orange",
+          "count": 1,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "wild",
+          "count": 2,
+          "pending": false,
+          "imageReady": true
+        }
+      ]
+    },
+    {
+      "kind": "blind",
+      "handFrameMs": 13.400000095367432,
+      "confirmationMs": 814.4000000953674,
+      "displayedAtFrame": 6,
+      "confirmedAtFrame": 4,
+      "groups": [
+        {
+          "color": "red",
+          "count": 1,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "black",
+          "count": 1,
+          "pending": true,
+          "imageReady": true
+        },
+        {
+          "color": "orange",
+          "count": 1,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "wild",
+          "count": 2,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "back",
+          "count": 1,
+          "pending": true,
+          "imageReady": true
+        }
+      ]
+    },
+    {
+      "kind": "blind",
+      "handFrameMs": 13.400000095367432,
+      "confirmationMs": 372.10000002384186,
+      "displayedAtFrame": 7,
+      "confirmedAtFrame": 6,
+      "groups": [
+        {
+          "color": "red",
+          "count": 1,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "black",
+          "count": 2,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "orange",
+          "count": 1,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "wild",
+          "count": 2,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "back",
+          "count": 1,
+          "pending": true,
+          "imageReady": true
+        }
+      ]
+    },
+    {
+      "kind": "blind",
+      "handFrameMs": 13.299999952316284,
+      "confirmationMs": 710.3999999761581,
+      "displayedAtFrame": 8,
+      "confirmedAtFrame": 6,
+      "groups": [
+        {
+          "color": "red",
+          "count": 1,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "black",
+          "count": 2,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "orange",
+          "count": 1,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "wild",
+          "count": 2,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "back",
+          "count": 2,
+          "pending": true,
+          "imageReady": true
+        }
+      ]
+    },
+    {
+      "kind": "visible",
+      "handFrameMs": 6.799999952316284,
+      "confirmationMs": 883.5,
+      "displayedAtFrame": 9,
+      "confirmedAtFrame": 8,
+      "groups": [
+        {
+          "color": "red",
+          "count": 2,
+          "pending": true,
+          "imageReady": true
+        },
+        {
+          "color": "green",
+          "count": 2,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "black",
+          "count": 2,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "orange",
+          "count": 1,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "wild",
+          "count": 2,
+          "pending": false,
+          "imageReady": true
+        }
+      ]
+    },
+    {
+      "kind": "blind",
+      "handFrameMs": 13.100000023841858,
+      "confirmationMs": 1871.6000000238419,
+      "displayedAtFrame": 10,
+      "confirmedAtFrame": 8,
+      "groups": [
+        {
+          "color": "red",
+          "count": 2,
+          "pending": true,
+          "imageReady": true
+        },
+        {
+          "color": "green",
+          "count": 2,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "black",
+          "count": 2,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "orange",
+          "count": 1,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "wild",
+          "count": 2,
+          "pending": false,
+          "imageReady": true
+        },
+        {
+          "color": "back",
+          "count": 1,
+          "pending": true,
+          "imageReady": true
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "checks": [
+    "Private room, bot, start and initial destinations on production",
+    "Six draws: provisional hand before server confirmation, no duplicate or pending card afterwards",
+    "All provisional card images were already loaded at the first sampled animation frame"
+  ],
+  "browser": "156.0.8078.80",
+  "passed": true,
+  "ownRoomLeft": true,
+  "measurement": "DOM and image readiness sampled at the first requestAnimationFrame after click; not physical display latency. Confirmation includes queue time for the second draw. Final hidden-color image paint was not separately timed."
+}

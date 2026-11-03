@@ -1,6 +1,36 @@
 # Producción
 
-## Versión actual · 2026-11-03, 10:11 (Lima)
+## Versión actual · 2026-11-03, 11:05 (Lima)
+
+- Código `55b2dd898eb13e714babe5a1f1b41bc6284b37c0`, en `origin/main`.
+  La mano incorpora inmediatamente cartas visibles y reversos provisionales;
+  el servidor conserva la validación y el guardado antes de revelar robos ocultos.
+  Se reutilizan consultas de destinos. Alcance en [cartas](work/card-interactions.md).
+- [Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbl0c7gae00c73c8m0k0):
+  **Live** a las 11:05:27 Lima, Node 26.13.0, despliegue manual de 40,7 s tras
+  CI aprobado. Sin SQL, variables, credenciales ni cambios de plan.
+  No había salas al comprobar antes de publicar. [Captura](qa/hand-release/render-live.jpg).
+- [GitHub CI](https://github.com/Gecch12/trencitos/actions/runs/41669335691):
+  **645/645 pruebas**, documentación, lobby con dos clientes y doce recorridos
+  Chrome de robos/recuperación aprobados. [Resultado](qa/hand-release/ci-result.json).
+- [Verificación HTTP/WebSocket](qa/hand-release/production-http.json): 46 recursos
+  públicos idénticos al checkout, ocho rutas privadas con 404, protocolo de robos
+  activo y salud 200 con `storage:supabase`. Se cerró la sala temporal sin iniciar.
+- [Chrome en producción](qa/hand-release/production-browser.json): sala privada,
+  bot, inicio, billetes y seis robos; mano provisional presente en el primer rAF
+  entre **6,8 y 13,4 ms**, con sus imágenes ya cargadas. Confirmaciones entre
+  **365,9 y 1871,6 ms**; las segundas cartas incluyen la espera en cola.
+  Cantidades finales correctas, sin duplicados ni errores de navegador.
+  [Captura tras confirmar](qa/hand-release/production-browser.png).
+  Se abandonaron únicamente las salas creadas para QA.
+- Son muestras pequeñas en Chrome de escritorio, sin retener artificialmente
+  la red ni el guardado. El rAF no mide la pantalla física; no se cronometró
+  aparte la pintura del color definitivo de los robos ocultos. No se promete
+  eliminar la latencia de confirmación ni se repitió aquí la matriz móvil local.
+- La publicación manual sigue siendo necesaria hasta autorizar la integración
+  Git de Render, como registra [entrega continua](work/continuous-delivery.md).
+
+## Entrega anterior · 2026-11-03, 10:11 (Lima)
 
 - Código `c5c7bf2d83e6c581d011ae26fbf65bf3b714c413`, en `origin/main`.
   Incluye lobby con tarjetas, Sudamérica y la respuesta inmediata de cartas con

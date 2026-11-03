@@ -1,5 +1,5 @@
 ---
-{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
+{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Cartas, pagos y limpieza de la interfaz
 
@@ -44,9 +44,10 @@ pendientes de resultados/avatar, además de las cinco propuestas sobre cartas.
 
 ## Siguiente paso
 
-Publicar la mano provisional y medir su respuesta real. Ángel autorizó subirla
-a producción. Esta ampliación está validada en `main`; falta CI y publicación en Render.
-La respuesta de vuelo anterior sí está publicada, como registra su entrega abajo.
+La mano provisional está publicada: `55b2dd8`, Live a las 11:05:27 Lima.
+Continuar observando la confirmación real y medir por separado la pintura del
+color definitivo en robos ocultos. La respuesta provisional y sus imágenes
+ya se comprobaron en producción; evidencia y límites en [Producción](../production.md).
 
 ## Incorporación inmediata a la mano · 2026-11-03
 
@@ -69,7 +70,10 @@ El criterio pasa de inicio del vuelo a carta/cantidad presentes en la mano.
 - [x] Regresión `browser-card-ui.cjs`: actor/rival/espectador, renovación,
   pagos, móvil y traducción; sin errores de navegador. La última comprobación
   de feedback retiene el ACK y verifica que el estado ya revele la carta.
-- [ ] Publicar esta ampliación y medir clic → mano/color en producción.
+- [x] Publicar esta ampliación y medir clic → mano en producción: seis robos,
+  primer rAF entre 6,8 y 13,4 ms, imágenes provisionales cargadas y sin duplicados.
+  CI 645/645 y doce recorridos Chrome aprobados antes de publicar.
+- [ ] Medir aparte la pintura del color definitivo tras confirmar robos ocultos.
 
 Evidencia local en `.qa/draw-feedback/report.json`, `pending-visible-desktop.png`,
 `pending-desktop.png` y `pending-mobile-reduced.png`. Comparación CPU en
@@ -79,7 +83,8 @@ tres estaciones por jugador, 60 muestras de seis vistas autorizadas, mediana
 Los 42 tests dirigidos de intención, caché, vistas, mapas e historial pasaron.
 Suite completa en `.qa/draw-feedback/node-tests.txt`; regresión visual en
 `card-ui-tests.txt` y recorrido final en `browser-tests.txt`, en la misma carpeta.
-El servidor habitual y las partidas de producción permanecen sin reiniciar.
+El servidor habitual permaneció sin reiniciar durante la validación local.
+La publicación posterior en Render y las salas privadas de QA están en [Producción](../production.md).
 
 ## Respuesta inmediata al clic · 2026-11-03
 
@@ -98,8 +103,9 @@ Ampliación aprobada con «implementa» tras el análisis Moti de la demora de c
 - [x] Publicar: `c5c7bf2`, Live en Render a las 10:11:46 Lima del 2026-11-03.
   CI completo 641/641, recursos iguales y `drawFeedbackVersion:1` verificados.
   Evidencia en [Producción](../production.md).
-- [ ] Medir clic y confirmación en navegador de producción, sin presentar
-  medidas locales o de CI como cifras de Render.
+- [x] Medir clic y confirmación en navegador de producción, sin presentar
+  medidas locales o de CI como cifras de Render: completado con la ampliación
+  de mano provisional; evidencia remota en [Producción](../production.md).
 
 Verificación final: `node tests/browser-draw-feedback.cjs`, diez recorridos Chrome
 con doble remoto y guardado retenido, sin errores del navegador. En 18 clics,
