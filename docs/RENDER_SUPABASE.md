@@ -32,11 +32,47 @@ El script es aditivo e idempotente: crea su propia tabla y funciones, sin borrar
 | `SUPABASE_SECRET_KEY` | La secret key `sb_secret_…`, **solo en Render** |
 
 5. Build: `npm install --omit=dev`. Start: `npm start`. Health check: `/healthz`.
-6. Desactiva auto-deploy para evitar reinicios inesperados al subir cambios. Despliega manualmente cuando no haya partidas.
+6. Configura **Auto-Deploy → After CI Checks Pass**, rama `main`. El Blueprint
+   declara `autoDeployTrigger: checksPass`. Verifica primero que el workflow
+   [CI](../.github/workflows/ci.yml) esté habilitado y termine correctamente en GitHub.
 
 En un servicio existente, añade las dos variables de Supabase manualmente: `sync: false` evita guardar secretos en Git, pero no los configura automáticamente. Completa primero el SQL y las variables; esta versión no arranca en Render sin Supabase. Un estado **Live** de una versión anterior no confirma que el guardado remoto esté conectado.
 
 No copies la clave en `app.js`, `render.yaml`, capturas o mensajes. `.env*` queda fuera de Git y Docker; `.env.example` solo documenta nombres. La aplicación Node no carga archivos `.env` automáticamente. En un entorno local aislado se puede usar `node --env-file=.env.local server.js`, **con un proyecto de pruebas distinto**.
+
+### Publicación continua
+
+El flujo acordado es `push a main → CI → Render`. CI instala con `npm ci`, ejecuta
+documentación y toda la suite Node, y comprueba en Chrome el lobby multijugador
+y la respuesta/recuperación de cartas. No accede a Supabase real. Si las pruebas
+fallan o no hay checks, Render no debe desplegar automáticamente ese commit.
+La instalación del servicio sigue usando únicamente dependencias de producción.
+
+Los filtros en [render.yaml](../render.yaml) ignoran cambios exclusivamente en
+`docs/**`, Markdown, `experiments/**` y el servidor/pruebas del estudio histórico
+de pasajeros. Un push que también cambie código del juego sí activa la entrega.
+GitHub continúa validando los cambios documentales aunque Render no los publique.
+`[skip render]` se reserva para omitir deliberadamente una publicación, por ejemplo
+si el código requiere una migración aún no aplicada; no se añade por rutina a
+commits funcionales. No usar `[skip ci]` para publicar saltándose las pruebas.
+
+Los filtros afectan autodeploys de código; los despliegues manuales y cambios de
+configuración/Blueprint tienen reglas distintas. Revisa modificaciones de
+`render.yaml` antes de subirlas: su sincronización no se omite por estos filtros.
+No uses un despliegue manual para sortear un CI fallido. Desplegar un commit
+específico puede desactivar Auto-Deploy en Render; tras una recuperación comprueba
+que vuelva a `After CI Checks Pass` cuando corresponda.
+
+La política automática se acepta para esta etapa de pruebas. Cada publicación
+reemplaza el proceso y requiere reconexión de WebSockets; CI no espera a que
+terminen las partidas. Cambios de SQL/credenciales se coordinan antes del código.
+El estado Live y la revisión publicada se registran en [Producción](production.md),
+y la evidencia de activación en [la ficha](work/continuous-delivery.md).
+
+Referencias: [CI y despliegues](https://render.com/docs/deploys),
+[filtros](https://render.com/docs/monorepo-support),
+[Blueprint](https://render.com/docs/blueprint-spec),
+[conexiones durante despliegues](https://render.com/docs/websocket).
 
 ## 3. Prueba de aceptación real
 

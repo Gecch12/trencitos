@@ -3,6 +3,15 @@ services:
     name: trencitos-swamp
     runtime: node
     plan: free
+    branch: main
+    autoDeployTrigger: checksPass
+    buildFilter:
+      ignoredPaths:
+        - docs/**
+        - '**/*.md'
+        - experiments/**
+        - scripts/preview-passenger-extreme.cjs
+        - tests/*passenger-extreme*
     buildCommand: npm install --omit=dev
     startCommand: npm start
     healthCheckPath: /healthz
