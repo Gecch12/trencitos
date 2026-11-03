@@ -87,3 +87,14 @@ La regresión de navegador incluye también `browser-card-ui.cjs` (renovación e
 historial público) y `browser-account-resume.cjs` (cuentas simuladas con protocolo
 real), junto al lobby y los dieciséis casos de `browser-draw-feedback.cjs`.
 Sus salidas de CI se conservan bajo `.qa/ci/` en el artefacto existente.
+
+## Publicación conjunta · 2026-11-03
+
+El primer intento sobre `0727c5d` pasó la suite Node y el lobby, pero falló
+la observación del giro de una carta: el callback de fin de Web Animations
+retiró el nodo antes del siguiente `requestAnimationFrame` en Chrome con
+renderizado por software. El auditor comprueba también el transform real y la
+imagen decodificada justo antes de retirarlo. Conserva la exigencia de revelar
+el color antes de llegar a la mano y no modifica la animación del producto.
+Se vuelve a ejecutar CI completo antes de desplegar. Evidencia local en
+`.qa/all-changes-release-2026-11-03/`.

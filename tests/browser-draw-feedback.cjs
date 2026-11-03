@@ -42,12 +42,20 @@ async function open(code,options={}){
   sock.addEventListener('message',event=>{const value=JSON.parse(event.data);for(const m of value.type==='batch'?value.messages:[value])
     if(m.type==='ack')drawAudit.acks.push({id:m.id,at:performance.now()});});
   const send=sock.send.bind(sock);sock.send=data=>{const m=JSON.parse(data);if(m.type==='action')drawAudit.sent.push({...m,at:performance.now()});send(data);};
-  const finish=finishDrawPresentation;finishDrawPresentation=draw=>{finish(draw);requestAnimationFrame(()=>drawAudit.landings.push({id:draw.id,at:performance.now(),color:draw.event?.color||draw.intent.color,imagesReady:[...document.querySelectorAll('#hand img')].every(i=>i.complete&&i.naturalWidth>0)}));};
-  const sampleReveals=()=>{for(const node of document.querySelectorAll('.draw-flight-pending')){
+  const sampleReveal=(node,sampledAt)=>{
    const color=node.dataset.revealedColor,front=node.querySelector('.draw-flight-front');
-   if(color&&!drawAudit.reveals.some(r=>r.id===node.dataset.drawId)&&(!front||(front.complete&&new DOMMatrixReadOnly(getComputedStyle(node.querySelector('.draw-flight-face')).transform).m11<-.9)))
-    drawAudit.reveals.push({id:node.dataset.drawId,at:performance.now(),color});
-  }requestAnimationFrame(sampleReveals);};requestAnimationFrame(sampleReveals);
+   if(color&&!drawAudit.reveals.some(r=>r.id===node.dataset.drawId)&&(!front||(front.complete&&front.naturalWidth>0&&new DOMMatrixReadOnly(getComputedStyle(node.querySelector('.draw-flight-face')).transform).m11<-.9)))
+    drawAudit.reveals.push({id:node.dataset.drawId,at:performance.now(),color,sampledAt});
+  };
+  // A finished WAAPI promise can remove the node before this frame's rAF runs
+  // on a busy software-rendered runner. Inspect the actual final transform and
+  // decoded image before removal too; never infer a reveal from an ACK/landing.
+  const finish=finishDrawPresentation;finishDrawPresentation=draw=>{
+   if(draw.flight?.node.isConnected)sampleReveal(draw.flight.node,'before-landing');
+   finish(draw);requestAnimationFrame(()=>drawAudit.landings.push({id:draw.id,at:performance.now(),color:draw.event?.color||draw.intent.color,imagesReady:[...document.querySelectorAll('#hand img')].every(i=>i.complete&&i.naturalWidth>0)}));
+  };
+  const sampleReveals=()=>{for(const node of document.querySelectorAll('.draw-flight-pending'))sampleReveal(node,'frame');
+   requestAnimationFrame(sampleReveals);};requestAnimationFrame(sampleReveals);
   const sound=playSound;playSound=kind=>{drawAudit.sounds.push(kind);sound(kind);};
   document.addEventListener('click',event=>{if(event.target.closest('#market button')){
    const index=drawAudit.clicks.push(performance.now())-1;
