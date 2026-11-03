@@ -1,0 +1,57 @@
+#1 [internal] load build definition from Dockerfile
+#1 sha256:f0c8648475f9bc224b62e49e0a6dc8c53ddec5a4db2d95634a2b5e0a6f7630db
+#1 transferring dockerfile: 74B done
+#1 DONE 0.0s
+
+#2 [internal] load .dockerignore
+#2 sha256:1d10f363d272eab9dcda22d7a75046d29702424eaf7d1c1bf4580b4d6fb75ad5
+#2 transferring context: 72B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:22-alpine
+#3 sha256:ea040a8ae8d48010beeae405e35e2010b014bb438d42def3e578fd4426535172
+#3 DONE 0.8s
+
+#4 [1/8] FROM docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914
+#4 sha256:76e893960c7e132a8e4d8391f236b95d5b4eb1e14793410b466179771adda06e
+#4 DONE 0.0s
+
+#6 [internal] load build context
+#6 sha256:430720d423ff98087d403c98ec0108a0bee158b8fc80e720087197de8beae1f5
+#6 transferring context: 12.09kB 0.0s done
+#6 DONE 0.0s
+
+#7 [3/8] COPY package.json package-lock.json ./
+#7 sha256:8e84d595eb0d2070b00173025eef1487dd4d3fbec64a8314b588b699ea33850b
+#7 CACHED
+
+#5 [2/8] WORKDIR /app
+#5 sha256:fd19c84f89e7a8fbaff4b9f028749d46a1a4c1d9b42eb3a401b0949cd6cbad19
+#5 CACHED
+
+#8 [4/8] RUN npm ci --omit=dev --ignore-scripts
+#8 sha256:9ae6131f1673e58004a554ace3d179483be19c42a92fd63312e1b1223f82c083
+#8 CACHED
+
+#9 [5/8] COPY --chown=node:node *.js *.mjs *.css *.html ./
+#9 sha256:2b2c7f2cb4c90f36031c6b8c1cc15f06f9469c70bda66600f1aed3c33d465ecd
+#9 DONE 0.0s
+
+#10 [6/8] COPY --chown=node:node game ./game
+#10 sha256:53fdec80b555745777b1405daa456d8668f1dac4e085106f6006f881ba9acbcc
+#10 DONE 0.0s
+
+#11 [7/8] COPY --chown=node:node assets ./assets
+#11 sha256:445e119f421e4a2de23783409a6a01d7b43761f03f8140f8cff4577017106314
+#11 DONE 0.0s
+
+#12 [8/8] RUN mkdir -p /data && chown node:node /data
+#12 sha256:7a814f6ebe3455af6bde36ced9b259a477fd659e8fe0c03e79dda397487a3dbd
+#12 DONE 0.4s
+
+#13 exporting to image
+#13 sha256:e8c613e07b0b7ff33893b694f7759a10d42e180f2b4dc349fb57dc6b71dcab00
+#13 exporting layers 0.1s done
+#13 writing image sha256:30c90291b1c878461051437490b26d25ee6072852151e79b5b5094c0efe89aa7 done
+#13 naming to docker.io/library/trencitos-application-checkpoints done
+#13 DONE 0.1s

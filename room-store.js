@@ -65,10 +65,12 @@ function validateRooms(data) {
     throw new Error("Formato de partidas inválido");
 }
 function saveRooms(file, rooms, archive) {
+  return saveCheckpoint(file, { rooms: [...rooms.values()].filter(r=>!r.practice).map(serializableRoom), archive });
+}
+function saveCheckpoint(file, { rooms: records, archive }) {
   file = path.resolve(file);
   if (!checkpoints.has(file)) loadState(file);
   const checkpoint = checkpoints.get(file);
-  const records=[...rooms.values()].filter(r=>!r.practice).map(serializableRoom);
   const manifests = {};
   if (archive) {
     fs.mkdirSync(file + ".archive", { recursive: true, mode: 0o700 });
@@ -103,4 +105,4 @@ function saveRooms(file, rooms, archive) {
   fs.renameSync(temp, file);
   checkpoints.set(file, { raw: data, manifests });
 }
-module.exports = { loadState, hashToken, loadRooms, saveRooms, serializableRoom, validateRooms };
+module.exports = { loadState, hashToken, loadRooms, saveRooms, saveCheckpoint, serializableRoom, validateRooms };

@@ -7,6 +7,9 @@ const Engine = require("./engine");
 const { createPlayerActionHandler } = require("./game/application/player-action");
 const { actionReply } = require("./game/compat/legacy-action-reply");
 const { createLegacyAutomaticPlay } = require("./game/compat/legacy-automatic-play");
+const { createCheckpointHandler } = require("./game/application/checkpoint");
+const { createRoomStager } = require("./game/application/room-stage");
+const { createFileCheckpointCommitter, createRemoteCheckpointCommitter } = require("./game/infrastructure/checkpoint-committer");
 const GameTiming = require("./game-timing");
 const {createMatchArchive,safePublic}=require("./match-archive");
 const {guestId,ensureGuest}=require("./guest-identity");
@@ -14,7 +17,7 @@ const LobbyUI = require("./lobby-ui");
 const { createPracticeController } = require("./practice");
 const { createGameClock } = require("./game-clock");
 const { createMultiplayerController, shiftDeadlines, GRACE_MS } = require("./multiplayer");
-const { hashToken, loadState, loadRooms, saveRooms } = require("./room-store");
+const { hashToken, loadState } = require("./room-store");
 const { createSupabaseStore } = require("./supabase-store");
 const { createDurableQueue } = require("./durable-queue");
 const { createAccountAuth } = require("./account-auth");
@@ -75,8 +78,15 @@ function restoreRuntime(saved) {
   for (const { peer, room, watching, seat, token } of saved.peers) Object.assign(peer, { room, watching, seat, token });
   storageFailureAt = saved.failureAt;
 }
+const checkpoint = createCheckpointHandler({ repository: rooms,
+  committer: remoteStore ? createRemoteCheckpointCommitter({ store: remoteStore, archive }) : createFileCheckpointCommitter({ file: STORE, archive }),
+  now: () => Date.now(), deferCommit: remoteStore ? () => durable.dirty() : null,
+  onLocalCommit: () => { for (const room of rooms.values()) committed.set(room, snapshot(room)); },
+  onLocalFailure: restoreLocalCheckpoint,
+});
+const persist = checkpoint.persist;
 const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, restore: restoreRuntime,
-  commit: async () => { await remoteStore.save(rooms,archive.pending); archive.commit(); },
+  commit: checkpoint.commit,
   onFailure: error => {
     console.error("Remote storage paused:", error.code || "INTERNAL");
     storageFailureAt ??= Date.now();
@@ -89,6 +99,16 @@ const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, rest
   },
 }) : null;
 const dispatch = job => stopping ? undefined : durable ? durable.run(() => { if (!stopping) job(); }) : job();
+const sendRoom = createRoomStager({ repository: rooms, engine: Engine, history: archive, checkpoint,
+  now: () => Date.now(), storagePaused: () => storageFailureAt !== null,
+  watchRoom: watchRecording, reconcileRoom: room => multiplayer.reconcile(room), queueViews: queueRoomViews,
+  scheduleRoom: room => {
+    if (room.practice) practice.sync(room);
+    else { multiplayer.sync(room); roomBots.sync(room); }
+    clocks.sync(room);
+  },
+  queueDirectory: sendDirectory,
+});
 const submitPlayerAction = createPlayerActionHandler({ engine: Engine, stageRoom: sendRoom,
   storagePaused: () => storageFailureAt !== null, now: () => Date.now(), random: max => crypto.randomInt(max) });
 const automaticPlay = createLegacyAutomaticPlay({ stageRoom: sendRoom });
@@ -102,50 +122,35 @@ function snapshot(r) {
     members: r.members.map(m => ({ member: m, data: { token: m.token || m.ws?.token, tokenHash: m.tokenHash,
       name: m.name, bot: m.bot, color: m.color, accountId: m.accountId, guestId:m.guestId, actionIds: [...(m.actionIds || [])], autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
 }
-function persist() {
-  if (remoteStore) {
-    for (const r of rooms.values()) if (!r.practice) r.savedAt = Date.now();
-    durable.dirty();
-    return true; // State and acknowledgements are still held by the queue.
-  }
-  try {
-    for (const r of rooms.values()) if (!r.practice) r.savedAt = Date.now();
-    const archived=archive.prepare();
-    saveRooms(STORE, rooms,archived);
-    archive.commit(archived);
-    for (const r of rooms.values()) committed.set(r, snapshot(r));
-    return true;
-  } catch (e) {
-    console.error("Could not persist rooms:", e.message);
-    storageFailureAt ??= Date.now();
-    for (const r of rooms.values()) {
-      const saved = committed.get(r);
-      if (saved) {
-        r.game = structuredClone(saved.game); r.revision = saved.revision;
-        for(const key of ["archiveHash","matchId","archiveSeq","archiveFull","archiveStartedAt","archiveClosedAt","_archiveState"])r[key]=saved[key];
-        watchRecording(r);
-        r.hostSeat = saved.hostSeat; r.visibility = saved.visibility; r.maxPlayers = saved.maxPlayers; r.timing = saved.timing;
-        for (const member of r.members) if (!saved.members.some(entry => entry.member === member) && member.ws) {
-          const peer = member.ws;
-          peer.room = null; peer.seat = -1; member.ws = null;
-          peer.send({ type: "room_closed", message: "No se pudo guardar tu entrada. Reinténtalo cuando se recupere el servicio." });
-        }
-        r.members = saved.members.map(({member}) => member);
-        for (const [seat, { member, data }] of saved.members.entries()) {
-          Object.assign(member, data);
-          // A removed peer may already have returned to the directory. Restore
-          // its reserved seat without silently attaching that connection again.
-          if (member.ws?.room !== r) member.ws = null;
-          if (member.ws) member.ws.seat = seat;
-          if (member.ws && data.token) member.ws.token = data.token;
-        }
+function restoreLocalCheckpoint(e) {
+  console.error("Could not persist rooms:", e.message);
+  storageFailureAt ??= Date.now();
+  for (const r of rooms.values()) {
+    const saved = committed.get(r);
+    if (saved) {
+      r.game = structuredClone(saved.game); r.revision = saved.revision;
+      for(const key of ["archiveHash","matchId","archiveSeq","archiveFull","archiveStartedAt","archiveClosedAt","_archiveState"])r[key]=saved[key];
+      watchRecording(r);
+      r.hostSeat = saved.hostSeat; r.visibility = saved.visibility; r.maxPlayers = saved.maxPlayers; r.timing = saved.timing;
+      for (const member of r.members) if (!saved.members.some(entry => entry.member === member) && member.ws) {
+        const peer = member.ws;
+        peer.room = null; peer.seat = -1; member.ws = null;
+        peer.send({ type: "room_closed", message: "No se pudo guardar tu entrada. Reinténtalo cuando se recupere el servicio." });
       }
-      clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r);
-      for (const member of r.members) member.ws?.send({ type: "storage", paused: true });
+      r.members = saved.members.map(({member}) => member);
+      for (const [seat, { member, data }] of saved.members.entries()) {
+        Object.assign(member, data);
+        // A removed peer may already have returned to the directory. Restore
+        // its reserved seat without silently attaching that connection again.
+        if (member.ws?.room !== r) member.ws = null;
+        if (member.ws) member.ws.seat = seat;
+        if (member.ws && data.token) member.ws.token = data.token;
+      }
     }
-    archive.rollback([]);
-    return false;
+    clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r);
+    for (const member of r.members) member.ws?.send({ type: "storage", paused: true });
   }
+  archive.rollback([]);
 }
 function removeRoom(r, message = "La sala ya no existe.") {
   archive.capture(r,message);
@@ -375,15 +380,7 @@ function detachPeer(peer, disconnectedAt = Date.now()) {
 function watchRecording(r) {
   if(r.game) Engine.observe(r.game,event=>{r.archiveAction={...event,actor:r.members[event.seat]?.bot?"bot":r.members[event.seat]?.autopilot?"replacement":event.automatic?"timer":"player"};archive.capture(r);});
 }
-function sendRoom(r, automatic = false) {
-  watchRecording(r);
-  if (rooms.get(r.code) !== r) return;
-  if (!automatic) r.updated = Date.now();
-  if (!r.practice && storageFailureAt === null) multiplayer.reconcile(r);
-  if (rooms.get(r.code) !== r) return;
-  if (r.game) Engine.normalize(r.game);
-  r.savedAt = Date.now();
-  if (storageFailureAt === null) { archive.capture(r); persist(); }
+function queueRoomViews(r) {
   r.members.forEach((m, i) => {
     if (!m.ws || m.ws.closed) return;
     m.ws.send({
@@ -414,11 +411,6 @@ function sendRoom(r, automatic = false) {
       revision: r.revision || 0, storagePaused: storageFailureAt !== null } });
   });
   for (const peer of peers) if (peer.watching === r) sendSpectator(peer, r);
-  if (r.practice) practice.sync(r);
-  else { multiplayer.sync(r); roomBots.sync(r); }
-  clocks.sync(r);
-  sendDirectory();
-  return storageFailureAt === null;
 }
 function sendDirectory() {
   const message = { type: "directory", rooms: storageFailureAt === null ? Directory.listRooms(rooms) : [], unavailable: storageFailureAt !== null };

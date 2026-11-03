@@ -137,8 +137,9 @@ El segundo corte añade `automatic-play.js` para vencimientos, bots permanentes,
 reemplazos y práctica, ensamblado por `legacy-automatic-play.js`. Los
 temporizadores delegan dentro del mismo `dispatch`; se mantienen las diferencias
 de revisión y preparación entre entradas, descritas en arquitectura. La gestión
-de conexiones permanece en los controladores y el commit conjunto sigue en el
-puente existente; los puertos objetivo de abajo todavía no están implementados.
+de conexiones permanece en los controladores. El tercer corte separa la
+preparación, confirmación y publicación mediante los puertos transitorios
+descritos abajo; aún se conserva el formato legado.
 
 Separar dos operaciones explícitas:
 
@@ -197,7 +198,7 @@ límites implementados en [arquitectura](../architecture.md).
 
 ## Repositorios y confirmación durable
 
-Puertos de aplicación mínimos al llegar a fase 3:
+Puertos objetivo para la plataforma modular:
 
 - `MatchRepository.get(matchId)`: carga la unidad de partida y revisión, no cartas
   o vías como entidades guardables de forma independiente.
@@ -212,6 +213,20 @@ El adaptador inicial del repositorio puede resolver la partida dentro de `rooms`
 global: conservar su serialización global y autoridad de escritor mientras esa
 sea la unidad durable. Tener un repositorio por partida no permite escrituras
 concurrentes de checkpoints ni varias instancias activas.
+
+Implementado en el tercer corte de fase 3: `createRoomStager` coordina preparación,
+solicitud de checkpoint y vistas encoladas; `createCheckpointHandler` usa
+`committer.prepare(repository)` / `committer.commit(batch)`. El repositorio
+transitorio es el `Map` existente mediante `get(code)` / `values()`, no la búsqueda
+objetivo por `matchId`. Los adaptadores de archivo/remoto confirman conjuntamente
+DTOs de sala e historial, manteniendo sus formatos físicos. Archivo confirma de
+forma síncrona; remoto confirma una vez al final del trabajo en la cola global.
+`stageRoom=true` sigue significando preparado, no confirmación remota. El outbox
+permanece en transporte/cola. Detalle en [arquitectura](../architecture.md).
+
+El registro de mapas versionados, la búsqueda por identidad de partida y la
+centralización de lecturas autorizadas continúan en sus cortes posteriores;
+este puerto mínimo no los da por implementados.
 
 Orden para una petición válida: autenticar y validar sobre → comprobar duplicado
 → resolver vencimientos → comprobar control/revisión → decidir jugada → preparar

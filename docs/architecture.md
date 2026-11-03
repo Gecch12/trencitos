@@ -47,6 +47,8 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | HTTP, WebSocket, salas, credenciales, despachar y confirmar acciones | [server.js](../server.js): `dispatch`, `persist`, `sendRoom` |
 | Coordinación de jugadas humanas y respuesta compatible | [player-action.js](../game/application/player-action.js): `createPlayerActionHandler`; [legacy-action-reply.js](../game/compat/legacy-action-reply.js): `actionReply` |
 | Vencimientos y jugadas automáticas | [automatic-play.js](../game/application/automatic-play.js): `createAutomaticPlay`; [composición legada](../game/compat/legacy-automatic-play.js): `createLegacyAutomaticPlay` |
+| Preparación de sala, solicitud de checkpoint y vistas encoladas | [room-stage.js](../game/application/room-stage.js): `createRoomStager`; [checkpoint.js](../game/application/checkpoint.js): `createCheckpointHandler` |
+| Confirmación conjunta en archivo o remoto | [checkpoint-committer.js](../game/infrastructure/checkpoint-committer.js): `createFileCheckpointCommitter`, `createRemoteCheckpointCommitter` |
 | Fachada de reglas, fases, efectos, cierre y privacidad | [engine.js](../engine.js): `newRandomGame`, `action`, `expire`, `finish`, `view` |
 | Políticas de pago y decisión de construcción | [payment.js](../game/domain/payment.js): `planPayment`, `reservePayment`; [route-claim.js](../game/domain/route-claim.js): `decideRouteClaim`, `blocksParallelRoute` |
 | Transiciones de túnel y comienzo/avance de turno | [tunnel.js](../game/domain/tunnel.js): `beginTunnel`, `decideTunnel`, `advanceTunnel`; [turn.js](../game/domain/turn.js): `planTurnStart`, `planNextTurn` |
@@ -90,8 +92,9 @@ motor. `actionReply` conserva el protocolo ACK/error, incluidos los mensajes
 legados de excepciones del motor. Las excepciones del puente de infraestructura
 se propagan al despachador.
 
-`stageRoom` es un puente síncrono hacia `sendRoom`: aún reúne archivo, guardado,
-proyecciones y programación. `false` indica rollback local; `true` puede ser solo
+`stageRoom` se implementa con `createRoomStager`, ensamblado como `sendRoom` en
+servidor. Coordina preparación, solicitud de checkpoint y vistas por puertos
+separados. `false` indica almacenamiento pausado; `true` puede ser solo
 preparación pendiente de commit remoto. El resultado se envía por `peer.send`
 dentro del `dispatch` existente: su outbox espera el commit global y descarta la
 respuesta si falla. La aceptación del caso de uso nunca sustituye esa confirmación.
@@ -126,8 +129,47 @@ la diferencia respecto al temporizador de sus bots. Práctica mantiene separado
 el reloj de ausencia del reloj de jugada; su azar de política también determina
 la demora de 800–1000 ms, sin sustituir el azar del motor. Permanentes/reemplazos
 mantienen 900 ms. El reemplazo conserva el reporte de excepciones de su acción
-y preparación; los otros casos las propagan al despachador. La cola durable y el
-puente actual siguen responsabilizándose de commit, rollback e historial.
+y preparación; los otros casos las propagan al despachador. La cola durable,
+los committers y los adaptadores de recuperación conservan confirmación e historial.
+
+## Preparación, confirmación y publicación
+
+`createRoomStager` comprueba que la sala siga en el repositorio, actualiza
+actividad si corresponde, reconcilia el ciclo de vida, normaliza el motor y
+captura historial. Luego solicita `checkpoint.persist()`, encola vistas, programa
+temporizadores y encola directorio. Si la reconciliación elimina la sala, termina
+sin otro checkpoint ni vistas. Si el almacenamiento ya está pausado, omite la
+captura/guardado y conserva las vistas de recuperación.
+
+`createCheckpointHandler` actualiza `savedAt` de las salas persistentes y usa
+un committer para preparar y confirmar el lote. En archivo es síncrono: tras
+confirmar se recuerda el estado para rollback; un fallo restaura ese estado y
+marca pausa antes de construir las vistas. En remoto, `persist()` solo marca la
+transacción como modificada. Al terminar el trabajo síncrono, la cola global
+invoca `checkpoint.commit()` una vez, con todos los cambios acumulados.
+
+| Puerto implementado | Contrato de transición |
+| --- | --- |
+| `repository.get(code)`, `repository.values()` | El `Map` de salas existente satisface el puerto; conserva identidad mutable y búsqueda por código. Todavía no es el repositorio objetivo por `matchId`. |
+| `committer.prepare(repository)` | Produce `{rooms, archive}` sin escribir ni aceptar historial. Copia los DTOs persistibles de sala, incluidos revisión y recibos; excluye sockets, tokens sin hash y salas de práctica. |
+| `committer.commit(batch)` | Guarda conjuntamente sala e historial y solo después acepta el historial pendiente. Es síncrono para archivo; devuelve promesa para remoto. |
+| `queueViews`, `queueDirectory` | El transporte construye y serializa mensajes autorizados. `peer.send` los entrega en archivo o los retiene en el outbox remoto hasta el commit. |
+
+El lote local contiene el archivo completo preparado, con frames ya confirmados
+compartidos como datos inmutables: no se copian ni serializan de nuevo. El lote
+remoto copia solo los registros/pasos nuevos. Las prácticas se excluyen de
+`rooms`, pero su historial participa en ambos lotes. Los formatos físicos siguen
+siendo el manifiesto/prefijo JSONL local y la RPC atómica remota. `saveRooms` y
+`store.save` siguen disponibles como entradas compatibles; el nuevo adaptador
+utiliza `saveCheckpoint` con DTOs preparados.
+
+La preparación y confirmación de un lote pertenecen a la misma operación
+serializada; no se intercalan nuevas mutaciones de aplicación. Supabase mantiene
+ID de commit, reintento del mismo cuerpo y exclusión de escritores. Un error
+remoto restaura runtime/historial y descarta el outbox; un error de entrega tras
+confirmar no revierte datos guardados. No se introducen escrituras por partida
+en paralelo. Los snapshots de rollback, sesiones, vistas y envío efectivo aún
+viven en servidor/cola; la centralización de proyecciones es el siguiente corte.
 
 ## Extracción gradual del dominio
 

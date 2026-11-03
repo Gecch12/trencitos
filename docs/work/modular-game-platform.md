@@ -96,9 +96,10 @@ y comprobó el empaquetado Docker local.
 La [fase 3](modular-platform-application.md) ya separa jugadas humanas, vencimientos
 y jugadas automáticas de bots permanentes, reemplazos y práctica
 de los adaptadores de entrada, conservando confirmación durable de partida e historial,
-deduplicación y rollback. El puente de guardado/publicación sigue en el servidor;
-su separación, consultas autorizadas y organización de frontend/backend requieren
-los siguientes cortes. Antes de mover archivos visuales, integrar
+deduplicación y rollback. Preparación, confirmación conjunta y vistas encoladas
+ya tienen puertos separados; los adaptadores conservan checkpoint global y
+formatos existentes. Consultas autorizadas y organización de frontend/backend
+requieren los siguientes cortes. Antes de mover archivos visuales, integrar
 un checkpoint revisado del trabajo de vagones. Las ediciones posteriores de
 otros worktrees no se sincronizan automáticamente con esta rama.
 

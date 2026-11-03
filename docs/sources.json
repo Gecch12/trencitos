@@ -1,5 +1,6 @@
 {
   "architecture.md": [
+    "game/infrastructure/",
     "game/application/",
     "game/queries/",
     "game/domain/",
@@ -192,6 +193,7 @@
     "tests/route-claim-contract.test.js"
   ],
   "decisions/match-domain-contracts.md": [
+    "game/infrastructure/",
     "game/application/",
     "game/queries/",
     "game/domain/",
@@ -250,6 +252,7 @@
     "translations.js"
   ],
   "work/modular-platform-application.md": [
+    "game/infrastructure/",
     "game/application/",
     "game/compat/legacy-action-reply.js",
     "server.js",
@@ -271,6 +274,11 @@
     "tests/room-bots.test.js",
     "tests/practice.test.js",
     "tests/multiplayer.test.js",
-    "tests/shared-tunnel.test.js"
+    "tests/shared-tunnel.test.js",
+    "room-store.js",
+    "supabase-store.js",
+    "tests/checkpoint-application.test.js",
+    "tests/room-store.test.js",
+    "tests/supabase-store.test.js"
   ]
 }

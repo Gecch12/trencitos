@@ -42,6 +42,22 @@ function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000 })
       }
     }
   }
+  async function saveCheckpoint({ rooms: data, archive }) {
+    if (fenced || version === null) throw failure("STORE_CONFLICT");
+    const commit = randomUUID();
+    try {
+      const result = await rpc(archive ? "ferrovia_save_checkpoint_v2" : "ferrovia_save_checkpoint", {
+        p_writer: writer, p_version: version, p_commit: commit, p_rooms: data, ...(archive ? {p_archive:archive} : {}),
+      });
+      if (result?.commit !== commit || result.version !== version + 1) throw failure("STORE_UNCERTAIN");
+      version = result.version;
+    } catch (error) {
+      // A timeout may mean SQL committed but its response was lost. Do not
+      // overwrite it with a rolled-back in-memory snapshot on "retry save".
+      fenced = true;
+      throw error;
+    }
+  }
   return {
     closeMissing(ids) { return rpc("trencitos_close_missing", {p_writer:writer,p_live:ids}); },
     readArchive(identity,id) { return rpc("trencitos_read_archive_summary", {p_guest:identity.guestId||null,p_account:identity.accountId||null,p_match:id||null}); },
@@ -71,22 +87,10 @@ function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000 })
       version = checkpoint.version;
       return checkpoint.rooms;
     },
+    saveCheckpoint,
     async save(rooms, archive) {
       if (fenced || version === null) throw failure("STORE_CONFLICT");
-      const data = [...rooms.values()].filter(r => !r.practice).map(serializableRoom);
-      const commit = randomUUID();
-      try {
-        const result = await rpc(archive ? "ferrovia_save_checkpoint_v2" : "ferrovia_save_checkpoint", {
-          p_writer: writer, p_version: version, p_commit: commit, p_rooms: data, ...(archive ? {p_archive:archive} : {}),
-        });
-        if (result?.commit !== commit || result.version !== version + 1) throw failure("STORE_UNCERTAIN");
-        version = result.version;
-      } catch (error) {
-        // A timeout may mean SQL committed but its response was lost. Do not
-        // overwrite it with a rolled-back in-memory snapshot on "retry save".
-        fenced = true;
-        throw error;
-      }
+      return saveCheckpoint({ rooms: [...rooms.values()].filter(r => !r.practice).map(serializableRoom), archive });
     },
   };
 }

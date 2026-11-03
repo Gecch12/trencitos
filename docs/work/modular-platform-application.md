@@ -20,7 +20,7 @@ otros worktrees ni se publica en Render.
 
 - [x] Extraer el caso de jugada humana, conservar protocolo y comprobar reintentos/rollback.
 - [x] Separar entradas automáticas y coordinar vencimientos, bots y práctica desde aplicación.
-- [ ] Separar preparación/confirmación/publicación y definir puertos de repositorio/commit conjuntos con historial.
+- [x] Separar preparación/confirmación/publicación y definir puertos de repositorio/commit conjuntos con historial.
 - [ ] Centralizar vistas autorizadas de jugador/espectador, conservando privacidad de replay.
 - [ ] Introducir recibos con huella de comando y compatibilidad de los 128 IDs legados.
 - [ ] Integrar un checkpoint revisado de vagones antes de mover archivos visuales.
@@ -179,9 +179,77 @@ comprueban con simuladores; Docker usa red externa deshabilitada y el navegador
 emulación móvil. No se acredita producción ni dispositivos físicos. Entrega
 aislada en esta rama, sin integrar otros worktrees, push ni despliegue.
 
+## Tercer corte: preparación, confirmación y publicación
+
+Base `adf6973` más los cambios de esta entrega. [room-stage.js](../../game/application/room-stage.js)
+coordina preparación, solicitud de checkpoint y vistas encoladas por puertos
+separados. [checkpoint.js](../../game/application/checkpoint.js) conserva el modo
+síncrono de archivo y la confirmación diferida dentro de la cola remota.
+Los [adaptadores](../../game/infrastructure/checkpoint-committer.js) preparan
+DTOs de sala independientes del runtime y confirman salas e historial juntos.
+El `Map` existente satisface el puerto mínimo `get(code)` / `values()`; no se
+añade una clase envolvente ni se promete aún búsqueda de partida por `matchId`.
+
+Se conservan el manifiesto y prefijo JSONL local, la RPC remota y sus reintentos,
+la exclusión de escritores, el checkpoint global y los puntos de rollback.
+Los pasos ya confirmados del replay local se comparten sin volver a copiarlos
+ni serializarlos. Las salas de práctica no se persisten, pero su historial sí.
+El servidor conserva los snapshots de recuperación y las proyecciones; la cola
+libera mensajes solo después de confirmar. El detalle de los puertos y sus
+diferencias está en [arquitectura](../architecture.md).
+
+## Evidencia del tercer corte
+
+- [Pruebas de checkpoint](../../tests/checkpoint-application.test.js): preparación
+  sin escrituras, DTOs y recibos separados del runtime, historial de práctica,
+  coste acotado de cambios de lobby, rollback local antes de vistas de
+  recuperación, error de entrega posterior al commit, reintento remoto con el
+  mismo cuerpo, varias preparaciones agrupadas, orden de trabajos en la cola
+  y errores asíncronos compatibles en la entrada antigua de guardado.
+- Pruebas existentes de archivo, Supabase simulado y cola: **20/20** aprobadas.
+  Integración de multijugador, directorio, carga antigua, historial y servidor
+  remoto: **28/28** aprobadas. Incluyen recuperación tras fallos, privacidad,
+  partidas/replay tras reinicio y lotes de bots sin publicación anticipada.
+
+Ejecución final del 2026-11-02 (Lima), sobre la base indicada y el diff de este corte:
+
+- Suite completa, Node `v25.6.1`: **508/508**, sin fallos ni omisiones,
+  `node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js`.
+  Incluye las ocho pruebas nuevas de checkpoint y compatibilidad.
+  [Resultado y huellas](../qa/modular-application-checkpoints/node-tests-result.json),
+  [TAP](../qa/modular-application-checkpoints/node-tests.tap).
+- Docker `linux/arm64`, Node `v22.23.4`: arranque, `healthz`, UID 1000 y estado
+  escribible correctos; **3/3** pruebas HTTP/WebSocket sobre código empaquetado.
+  La práctica con bots funciona y los nuevos módulos de aplicación e
+  infraestructura no son accesibles por HTTP.
+  [Construcción](../qa/modular-application-checkpoints/docker-build.txt),
+  [resultado](../qa/modular-application-checkpoints/docker-result.json),
+  [TAP](../qa/modular-application-checkpoints/docker-tests.tap).
+- `QA_PORT=0 npm run test:board3d`: **aprobado**, Chrome `156.0.8078.80`.
+  Ocho recorridos de interacción, nueve combinaciones de viewport/zoom y partida
+  completa de cuatro jugadores con **304 acciones**, reconexión y cero errores.
+  Incluye 74 intentos de construcción, pagos/desistimientos de túnel, cuatro
+  estaciones y diez ofertas/confirmaciones de destinos.
+  [Resultado](../qa/modular-application-checkpoints/browser-tests-result.json),
+  [reporte](../qa/modular-application-checkpoints/browser/threejs-report.json).
+  Se inspeccionaron [resultado final](../qa/modular-application-checkpoints/browser/threejs-finished.png)
+  y [móvil emulado](../qa/modular-application-checkpoints/browser/threejs-mobile.png).
+- `node scripts/check-docs.js --base HEAD` y `git diff --check`: correctos.
+  Revisados arquitectura, contratos, dominio, historial, operación y fichas
+  afectadas. Las reglas y los informes anteriores conservan su alcance histórico;
+  `docs/qa/threejs-*` quedó restaurado sin cambios. Las huellas de los resultados
+  corresponden a las fuentes finales, incluido el ajuste de compatibilidad.
+
+Tercer corte aceptado localmente; fase 3 continúa activa. No cambian reglas,
+estrategia, datos de Europa ni presentación. Los contratos remotos/SQL se prueban
+con simuladores, Docker usa red externa deshabilitada y el navegador emulación
+móvil; no se acredita producción ni dispositivos físicos. Entrega aislada en
+esta rama, sin integrar otros worktrees, push ni despliegue.
+
 ## Siguiente corte
 
-Separar preparación, commit y publicación del puente `stageRoom`. Definir un
-puerto de confirmación conjunta de sala e historial para archivo/remoto,
-conservando rollback, outbox y orden global. La reorganización de proyecciones,
-recibos y frontend/backend continúa después; aún no mover archivos visuales.
+Centralizar proyecciones autorizadas de jugador/espectador para sala, partida
+y replay, conservando el filtro público adicional y la privacidad de datos
+ajenos. Mantener transporte/outbox separados de esas consultas. Los recibos
+con huella y la organización de frontend/backend continúan después; antes de
+mover archivos visuales corresponde integrar un checkpoint revisado de vagones.
