@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import { createWagonRenderer } from './wagon-renderer.js';
+import { wagonRouteAppearances, wagonStyle } from './wagon-models.mjs';
 
 // A presentation adapter only. No transport, rule engine or hidden game state.
 export function createBoard3D({ container, map, network, onFailure }) {
@@ -54,10 +55,13 @@ export function createBoard3D({ container, map, network, onFailure }) {
   }
   const stations = instances(box, 15), stationRoofs = instances(roofGeometry, 15);
   const doors = instances(box, 15);
-  const dummy = new THREE.Object3D(), color = new THREE.Color();
-  function put(mesh, x, y, z, angle, sx, sy, sz, tint) {
+  const dummy = new THREE.Object3D(), color = new THREE.Color(), pose = new THREE.Quaternion();
+  function put(mesh, x, y, z, angle, sx, sy, sz, tint, rotation) {
     const i = mesh.count++;
-    dummy.position.set(x, -y, z); dummy.rotation.set(0, 0, -angle * Math.PI / 180); dummy.scale.set(sx, sy, sz); dummy.updateMatrix();
+    dummy.position.set(x, -y, z); dummy.rotation.set(0, 0, -angle * Math.PI / 180);
+    // Reflect the local pose into the board's inverted Y, then follow the track.
+    if (rotation) dummy.quaternion.multiply(pose.set(-rotation[0],rotation[1],-rotation[2],rotation[3]));
+    dummy.scale.set(sx, sy, sz); dummy.updateMatrix();
     mesh.setMatrixAt(i, dummy.matrix); mesh.setColorAt(i, color.set(tint));
   }
   const wagons = createWagonRenderer({ renderer, scene, instances, put });
@@ -144,12 +148,14 @@ export function createBoard3D({ container, map, network, onFailure }) {
     }
     animation.lastCell = Math.max(0,...animation.parts.map(p=>p.cell));
   }
-  function update({ routes, players, hiddenRoute = null, highlight = null, spotlight = null,
+  let passengerAppearances = [];
+  function update({ routes, players, visualSeed = '', hiddenRoute = null, highlight = null, spotlight = null,
     selectedRoute = null, selectedCity = null, routeColors = {} }) {
     // Only public board fields and the local client's authorized path selection.
-    const key = JSON.stringify({ routes, players, hiddenRoute, highlight, spotlight, selectedRoute, selectedCity, routeColors });
+    const key = JSON.stringify({ routes, players, visualSeed, hiddenRoute, highlight, spotlight, selectedRoute, selectedCity, routeColors });
     if (key === boardKey || disposed) return;
     boardKey = key; pieceCount = stationCount = bandCount = freeCells = 0; modelCounts = {};
+    passengerAppearances = [];
     selection = {route:selectedRoute,city:selectedCity};
     targets.clear(); ownership.clear(); connections.clear();
     for (const mesh of meshes) mesh.count = 0;
@@ -168,9 +174,11 @@ export function createBoard3D({ container, map, network, onFailure }) {
       const faded = spotlight ? (litRoutes.has(route.id) ? false : 'dim') : highlight !== null && owner !== highlight;
       if (player) {
         ownership.set(route.id, tint(player.color, faded), .32); bandCount++;
+        const appearances = wagonRouteAppearances(wagonStyle(player.color,player.wagon).model,`${visualSeed}:${owner}:${route.id}`,geometry.cells.length);
         for (const [index,cell] of geometry.cells.entries()) {
           target(`route:${route.id}`, index, () => {
-            const piece = wagons.draw(cell, player, faded);
+            const piece = wagons.draw(cell, player, faded, appearances[index]);
+            if (piece.model === 'passenger') passengerAppearances.push({route:route.id,index,variant:piece.variant,cast:piece.cast});
             modelCounts[piece.model] = (modelCounts[piece.model] || 0) + 1; pieceCount++;
           });
         }
@@ -279,7 +287,7 @@ export function createBoard3D({ container, map, network, onFailure }) {
       return { x: (p.x + 1) * container.clientWidth / 2, y: (1 - p.y) * container.clientHeight / 2 };
     },
     stats() { return { selection: {...selection}, freeCells, ownershipBands: bandCount, spotlightRoutes: [...spotlightRoutes], borrowedRoutes: [...borrowedRoutes],
-      animations: [...animations.values()].map(a=>({key:a.key,maxLift:a.maxLift})), revision: THREE.REVISION, draws, wagons: pieceCount, models: { ...modelCounts }, stations: stationCount, samples: [...samples], calls: renderer.info.render.calls,
+      animations: [...animations.values()].map(a=>({key:a.key,maxLift:a.maxLift})), revision: THREE.REVISION, draws, wagons: pieceCount, models: { ...modelCounts }, passengers: passengerAppearances.map(p=>({...p})), stations: stationCount, samples: [...samples], calls: renderer.info.render.calls,
       triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, pixelRatio: renderer.getPixelRatio() }; },
     dispose() {
       disposed = true; animations.clear(); cancelAnimationFrame(frame);

@@ -15,11 +15,13 @@ comercial: conserva las variantes del proyecto.
   La configuración se guarda en sala y partida, solo cambia antes del inicio y
   se conserva en la revancha. El directorio anuncia el turno real de la sala.
 - **Jugador:** puesto, nombre, color, mano privada, destinos y piezas. Empieza con
-  45 vagones, 3 estaciones y 4 cartas. Veintiún colores de jugador no equivalen a
+  45 vagones, 3 estaciones y 4 cartas. Veinte colores seleccionables de jugador no equivalen a
   los ocho colores de cartas/rutas. El lobby reserva colores únicos; iniciada la
   partida quedan fijos. Ver [lobby-ui.js](../lobby-ui.js) y [pruebas](../tests/lobby-server.test.js).
   La clave persistida de color es estable; cambiar su pintura visible no cambia
   el propietario, la reserva del lobby ni los colores de cartas/pagos.
+  Rosa (`#edadd0`) solo se conserva al restaurar puestos anteriores; no se acepta
+  para nuevos jugadores ni selecciones. Su presentación pasa a Pasajeros.
   Al añadir un bot, el servidor sortea uniformemente entre los colores libres,
   excluyendo también reservas de humanos desconectados. Guarda esa elección;
   retirarlo libera el color y reconectar/iniciar no vuelve a sortearlo.

@@ -145,16 +145,13 @@ body:not(.is-playing) .session-controls { display:none; }
 .room-setting-fields select { border:1px solid #a9c2c6; border-radius:5px; padding:9px 8px; background:#f3f8f4; color:var(--shell-ink); margin-top:7px; font-size:13px; min-height:38px; }
 .fixed-setting { display:flex; flex-direction:column; gap:9px; }
 .fixed-setting strong { font-size:14px; font-weight:600; color:var(--shell-ink); }
-.appearance-setting { display:grid; grid-template-columns:minmax(0,1fr) minmax(150px,.7fr); align-items:center; gap:10px 16px; }
+.appearance-setting { display:grid; grid-template-columns:minmax(0,1fr); align-items:start; gap:8px; }
 .appearance-setting .color-choice { padding:0; }
 .appearance-setting .color-choice legend { font-size:14px; text-align:left; width:100%; }
 .appearance-setting .color-options { justify-content:flex-start; gap:4px; }
 .appearance-setting .color-options button { width:38px; height:38px; min-height:38px; }
 .appearance-setting .color-options button::before { width:26px; height:26px; }
-.appearance-setting .wagon-preview { margin:0; background:#eaf0e7; }
-.appearance-setting .wagon-preview-stage { height:110px; }
-.appearance-setting .wagon-preview figcaption { flex-direction:column; align-items:center; gap:2px; padding:0 8px 10px; }
-.appearance-setting .wagon-preview figcaption strong { text-align:center; }
+.appearance-setting .wagon-preview { margin:0; }
 .appearance-setting #roomNote { grid-column:1 / -1; margin:0; }
 .room-start { display:flex; align-items:center; justify-content:center; min-height:56px; margin-top:8px; padding:8px; background:#ccdedb; border-radius:8px; flex-shrink:0; }
 .room-start button { min-width:150px; border-radius:6px; font-size:15px; }
@@ -432,10 +429,10 @@ body .player-avatar.is-bot > svg,body .home-avatar.is-bot > svg { fill:none; str
   .room-setting-fields .room-setting-field label { min-height:0; }
 }
 @container (max-width:420px) {
-  .appearance-setting { grid-template-columns:1fr; gap:14px; }
+  .appearance-setting { grid-template-columns:1fr; }
   .appearance-setting .color-options { justify-content:center; }
   .appearance-setting .color-choice legend { text-align:center; }
-  .appearance-setting .wagon-preview { width:100%; max-width:260px; justify-self:center; }
+  .appearance-setting .wagon-preview { width:100%; }
 }
 @media(max-width:480px) {
   .room-game-options { gap: 7px; }

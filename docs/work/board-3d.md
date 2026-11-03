@@ -12,9 +12,11 @@ M11 está publicada en `2308691`; evidencia remota en [producción](../productio
 M12 está publicada en `bf1c5c1` junto con la navegación; evidencia remota en
 [producción](../production.md).
 
-Ampliación local de 2026-11-02: hongos/jade, cristales/índigo y confitería/rosa
-llevan el catálogo del checkout a 21 familias. Implementación y evidencia en
-[Controles de mesa y sala](table-controls.md); esta ampliación aún no está publicada.
+Ampliación de 2026-11-02 integrada en `f41e033`: tres familias fantásticas,
+registradas en [Controles de mesa y sala](table-controls.md), sin despliegue.
+Revisión posterior aprobada: se retiran y el catálogo queda en 20 familias, con
+Circo, Vivienda y variantes de Pasajeros. Estado local y evidencia en
+[Variantes de vagones](wagon-variants.md).
 
 ## Hitos
 

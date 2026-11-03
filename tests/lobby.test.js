@@ -23,6 +23,15 @@ test("color preferences never duplicate reservations and restoration preserves l
   assert.deepEqual(Lobby.restoreColors([{ color: red }, { color: red }, {}]), [red, blue, green]);
   assert.deepEqual(Lobby.restoreColors([{}, {}, {}, {}], [yellow, purple, green, red].map(color => ({ color }))), [yellow, purple, green, red]);
 });
+test("retired pink is restored only for existing owners, never offered to new players", () => {
+  const pink='#edadd0';
+  assert.equal(Lobby.isColor(pink),false);
+  assert.equal(Lobby.colorName(pink),'Rosa');
+  assert.notEqual(Lobby.freeColor([],pink),pink);
+  assert.deepEqual(Lobby.restoreColors([{color:pink},{color:PLAYER_COLORS[0]}]),[pink,PLAYER_COLORS[0]]);
+  assert.deepEqual(Lobby.restoreColors([{},{}],[{color:pink},{color:PLAYER_COLORS[1]}]),[pink,PLAYER_COLORS[1]]);
+  assert.equal(new Set(Lobby.restoreColors([{color:pink},{color:pink},{}])).size,3);
+});
 test("home exposes room directory tabs, join dialog and a separate profile route", () => {
   const html = fs.readFileSync(require.resolve("../index.html"), "utf8");
   assert.match(html, /<title>Trencitos<\/title>/);

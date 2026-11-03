@@ -156,5 +156,21 @@
     "match-archive.js",
     "wagon-models.mjs",
     "wagon-renderer.js"
+  ],
+  "work/wagon-variants.md": [
+    "data.js",
+    "lobby-ui.js",
+    "app.js",
+    "board-3d.js",
+    "wagon-models.mjs",
+    "wagon-renderer.js",
+    "wagon-preview.js",
+    "tests/wagon-models.test.js",
+    "tests/browser-wagon-variants.cjs",
+    "tests/browser-wagon-gallery.cjs",
+    "index.html",
+    "lobby.css",
+    "shell.css",
+    "translations.js"
   ]
 }

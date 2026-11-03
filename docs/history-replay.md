@@ -120,6 +120,11 @@ vistas. El propietario conserva sus colores tras reconectar. Los registros
 anteriores sin metadatos siguen mostrando su texto, sin inventar cartas.
 Los avatares del historial comparten las proporciones del panel y resultados;
 la repetición no reproduce avisos de cuenta atrás de los plazos archivados.
+Las variaciones decorativas de Pasajeros se reconstruyen con el código de sala,
+puesto, ruta y celda. Cada ruta recorre tandas barajadas de seis sin repeticiones
+internas ni entre el final e inicio de tandas; no se guardan variantes ni
+personajes en los pasos. El
+catálogo visual puede evolucionar sin migrar la grabación.
 
 Perfil → Historial filtra todas/en curso/completadas/abandonadas y presenta filas
 compactas con fecha, puesto, jugadores, duración, estado y replay; dos líneas

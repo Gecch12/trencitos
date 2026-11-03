@@ -111,11 +111,32 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
   de la selección autorizada del cliente. Atenúa el contexto y conserva los mismos
   vagones y colores; `destinationSpotlight` solo contiene etiquetas e indicadores,
   sin clonar vagones/estaciones SVG. No entrega manos ni billetes al renderizador.
-- Cada uno de los 21 colores tiene un modelo propio. A la familia inspirada en
-  cartas se suman grúa, vino, tractores, cemento, fruta, flores, lancha y los
-  modelos fantásticos de hongos (jade), cristales (índigo) y confitería (rosa).
-  Sus cargas multicolores conservan base y laterales del color del propietario.
-  Las nuevas cúpulas y prismas comparten geometrías instanciadas. El modelo
+- Los 20 colores seleccionables tienen una familia propia; jade lleva Vivienda
+  e índigo Circo. Hongos, Cristales y Confitería se retiraron. Rosa conserva su
+  clave en partidas anteriores y usa Pasajeros; no se ofrece a nuevas selecciones.
+  Pasajeros tiene seis composiciones: clásico, una/dos/tres personas, apoyado y
+  saludo. Cabezas esféricas suaves sin rasgos faciales, cuatro peinados y cuatro
+  estilos de prendas; piel/pelo/ropa se eligen independientemente en 32 conjuntos
+  reproducibles. Los torsos tienen hombros suaves y cintura estrecha; sus poses
+  estáticas se inclinan desde dentro de la ventana. Las piezas admiten un
+  cuaternión local, reflejado al eje Y del mundo y compuesto con el giro de la
+  vía en preview y tablero. Brazos por segmentos redondeados doblan el codo;
+  cabeza y pelo contrarrestan la inclinación, sin animación continua ni físicas.
+  Las prendas siguen la superficie del torso. Cada composición tiene también
+  una decoración fija en `PASSENGER_CARRIAGES`, independiente del conjunto de
+  personajes: cortinas y persiana, aperturas de ventanas, franjas, tono del techo
+  y distribución de respiraderos. Las ventanas ocupadas quedan despejadas.
+  Puertas de extremos, herrajes y escalones son compartidos; marcos, franjas y
+  costuras repetidas se agrupan en geometrías para conservar el presupuesto.
+  `wagonRouteAppearances` baraja las seis variantes por ruta y
+  tanda con una semilla de código de sala/puesto/ruta; agota la tanda antes de
+  repetir y evita duplicar la última con la primera de la siguiente. La longitud
+  no altera el prefijo y el índice de celda determina el conjunto de personajes.
+  No usa `Math.random` al renderizar ni persiste campos decorativos. Las plantillas
+  de piezas se calculan una vez y se comparten entre preview y tablero. El aforo
+  de instancias contempla todas las variantes; cada una respeta 70 piezas.
+  El replay usa el código ya archivado; el suavizado se limita a los personajes.
+  El modelo
   depende del propietario, nunca de cartas pagadas ni color de la ruta. No hay
   reglas de carga. Modelo, pintura y acabado son dimensiones separadas, aún sin
   selector de cosméticos ni catálogo comercial. `wagonStyle` conserva el amarillo
@@ -135,14 +156,33 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
   se ignoran preferencias/enlaces antiguos de vista. Si falla WebGL, se oculta el
   mapa y se ofrece reintentar 3D, sin modificar sala ni estado del juego.
 - [wagon-preview.js](../wagon-preview.js) comparte `createWagonRenderer` con el
-  tablero, con capacidad de una pieza y cámara cercana. `syncWagonPreview` sigue
+  tablero. El selector usa una sola escena/cámara ortográfica, lateral en escritorio, con
+  capacidad para todas las variantes y centros separados 21,3 unidades: los
+  enganches existentes se tocan sin superponer las carrocerías. La cámara encuadra
+  el tren completo a la altura de sus laterales. `wagonVariants` aporta IDs y
+  etiquetas: las seis
+  composiciones de Pasajeros o un diseño clásico para familias aún sin variantes.
+  Los ejemplos conservan un aspecto estable al volver a un color; no representan
+  el orden ni los personajes exactos de una ruta. La paleta queda encima y los
+  vagones se muestran conectados en una franja de 78 px de alto, sin tarjetas,
+  bordes, fondos, títulos, nombres visibles, contador ni explicación. En móvil
+  se dibuja solo la primera variante estable en la vista 3/4 original, con cámara
+  en (24, −38, 29) mirando a (0, 0, 4), encuadre de exposición y sombra al suelo
+  (hasta 600 px de ancho, o hasta 950 px de ancho y 500 px de alto para paisaje).
+  `matchMedia` actualiza la cámara y el reparto visible al cambiar de tamaño;
+  las variantes ocultas no se dibujan
+  ni se anuncian al lector de pantalla. No hay desplazamiento horizontal.
+  Los nombres visibles al lector de pantalla se conservan en `aria-label`.
+  `syncWagonPreview` sigue
   el último color pulsado, también mientras la sala espera confirmación. El cliente
   envía una selección a la vez y conserva solo la última pendiente; perfil,
   almacenamiento local y miembros mantienen el color confirmado por el servidor.
   Rechazo, desconexión o fallo de guardado restauran la selección confirmada;
   no se permite iniciar mientras queda una selección pendiente. Solo existe un
   canvas de previsualización; se libera al salir del selector o jugar.
-  ResizeObserver actualiza el encuadre; no hay bucle de animación continuo.
+  ResizeObserver actualiza los encuadres y la distribución; no hay bucle de
+  animación continuo. El modo de una pieza con cámara de exposición sigue
+  disponible para catálogos QA.
 - El estado completo de la partida permanece en el servidor. `view` entrega
   mano/destinos propios y datos públicos; los destinos rivales se revelan al final solo a participantes.
   `sharedTunnel` entrega evidencia pública a jugadores y espectadores; el pago
