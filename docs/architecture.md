@@ -610,7 +610,7 @@ Alcance y pruebas en
   no altera el prefijo y el índice de celda determina el conjunto de personajes.
   No usa `Math.random` al renderizar ni persiste campos decorativos. Las plantillas
   de piezas se calculan una vez y se comparten entre preview y tablero. El aforo
-  de instancias contempla todas las variantes; cada una respeta 70 piezas.
+  de instancias contempla todas las variantes; cada variante de Pasajeros normales respeta 70 piezas.
   El replay usa el código ya archivado; el suavizado se limita a los personajes.
   El modelo
   depende del propietario, nunca de cartas pagadas ni color de la ruta. No hay
@@ -663,7 +663,8 @@ Alcance y pruebas en
   vagones se muestran conectados en una franja de 78 px de alto, sin tarjetas,
   bordes, fondos, títulos, nombres visibles, contador ni explicación. En móvil
   se dibuja solo la primera variante estable en la vista 3/4 original, con cámara
-  en (24, −38, 29) mirando a (0, 0, 4), encuadre de exposición y sombra al suelo
+  en (24, −38, 29), encuadre de exposición y sombra al suelo; Midsommar Express
+  eleva el foco y amplía el encuadre para incluir las personas del techo
   (hasta 600 px de ancho, o hasta 950 px de ancho y 500 px de alto para paisaje).
   `matchMedia` actualiza la cámara y el reparto visible al cambiar de tamaño;
   las variantes ocultas no se dibujan

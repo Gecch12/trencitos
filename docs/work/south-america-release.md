@@ -117,3 +117,8 @@ TCP_NODELAY, pero su desaparición solo podrá verificarse tras publicar.
   auditoría, privacidad, replay y apariencia conservados.
 
 Pendiente integrar main y verificar el despliegue exacto y la latencia pública.
+
+La fusión con `2ba28ac` conserva los módulos runtime exactamente como se probaron
+en `de2a5d2`. Se resolvieron rutas antiguas de imports, duplicados de raíz frente
+a `frontend/shared`, IDs opacos y la pausa visual. Se incorporaron dos precisiones
+documentales de main sobre el presupuesto de Pasajeros y el encuadre Midsommar.
