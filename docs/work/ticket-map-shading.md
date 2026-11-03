@@ -1,5 +1,5 @@
 ---
-{"id":"ticket-map-shading","status":"done","parent":null,"depends_on":["destination-map-tunnels"],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
+{"id":"ticket-map-shading","status":"done","parent":null,"depends_on":["destination-map-tunnels"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Sombreado y foco del mapa de billetes
 
@@ -130,3 +130,9 @@ Los túneles conservan el foco durante revelación, decisión y resultado. Se
 mantienen 500 ms de sombreado y 350 ms de restauración; la aparición y movimiento
 de vagones no cambian. El selector muestra la reserva real de vagones fuera de
 la lista desplazable. Evidencia en [Transparencia y reinicio](replay-transparency-reset.md).
+
+## Publicación conjunta · 2026-11-03
+
+La implementación de esta ficha quedó publicada en `ef65487`, Live en Render
+tras CI aprobado. El alcance publicado, las comprobaciones de producción y
+sus límites están en [Producción](../production.md).

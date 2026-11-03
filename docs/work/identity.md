@@ -1,5 +1,5 @@
 ---
-{"id":"identity","status":"active","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"worktree","updated":"2026-11-03"}
+{"id":"identity","status":"active","parent":null,"depends_on":["docs-system"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Identidad persistente
 
@@ -94,4 +94,10 @@ login conserva la sala, nueva sesión recupera sin almacenamiento local, el bot
 cede fuera de turno, la recarga reutiliza la credencial y retomar explícitamente
 desde la pestaña anterior no provoca alternancia automática. Invitados no adquieren
 el puesto ajeno. [Informe](../qa/card-experience/account.json).
-No se ha publicado esta ampliación ni repetido OAuth real de Google.
+Esta ampliación se publicó en la entrega conjunta siguiente; no se repitió OAuth real de Google.
+
+## Publicación conjunta · 2026-11-03
+
+La implementación de esta ficha quedó publicada en `ef65487`, Live en Render
+tras CI aprobado. El alcance publicado, las comprobaciones de producción y
+sus límites están en [Producción](../production.md).

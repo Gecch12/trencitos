@@ -1,5 +1,34 @@
 # Producción
 
+## Versión actual · 2026-11-03, 16:58 (Lima)
+
+- Código `ef654874c55aefca0a4fbcdb7bcc91aa91cc0c30`, publicado desde `main`.
+  Incluye todos los cambios locales pendientes: foco temporal de construcciones
+  y túneles, sombreado 500/350 ms, billetes y reserva de vagones, replay
+  transparente, historial por subsecciones, proporciones de Sudamérica,
+  interacción de cartas y recuperación automática de cuenta. El último ajuste
+  oculta reposiciones y barajados en la presentación, conservando el registro.
+- [Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbl5hhm7bikc73f2780g):
+  **Live** a las 16:58:15 Lima, Node 26.13.0, despliegue manual de 48,6 s tras
+  CI aprobado. Sin migraciones, cambios de credenciales ni otro reinicio de datos.
+- [CI](https://github.com/Gecch12/trencitos/actions/runs/41725335053): **681/681**
+  pruebas Node (127,7 s), documentos y 30 grupos de navegador correctos: lobby
+  (6), robos (16), interfaz de cartas (4) y recuperación de cuenta (4), sin
+  errores de navegador. [Resultado](qa/all-changes-release/ci-result.json).
+- [HTTP/WebSocket](qa/all-changes-release/production-http.json): 48 recursos
+  públicos coinciden por SHA-256 con la revisión y sus dependencias; once rutas
+  privadas o retiradas responden 404. Salud 200/Supabase; capacidades de robos y
+  sesión versión 1. La sala privada de comprobación se cerró sin iniciar partida;
+  quedaron cero salas activas.
+- Chrome local conectó al lobby publicado, con crear/unirse habilitados y sin
+  errores de consola. No se inició una partida de prueba en producción ni se
+  repitió OAuth real. Capturas e informe local en
+  `.qa/all-changes-release-2026-11-03/`. La evidencia de navegador completa está
+  también en el artefacto `browser-evidence` del CI enlazado.
+
+La integración Git de Render sigue pendiente del propietario; este despliegue
+manual no acredita la entrega automática. [Estado](work/continuous-delivery.md).
+
 ## Operación de datos · 2026-11-03, 15:52 (Lima)
 
 Se completó el reinicio de partidas autorizado: respaldo privado de 48 partidas
@@ -9,7 +38,7 @@ reanudó sobre el mismo commit publicado; salud posterior correcta con Supabase 
 cero salas. No se publicó código nuevo. Procedimiento, recuperación y evidencia
 en [la ficha del reinicio](work/replay-transparency-reset.md#reinicio-de-producción-completado).
 
-## Versión actual · 2026-11-03, 12:05 (Lima)
+## Entrega anterior · 2026-11-03, 12:05 (Lima)
 
 - Código `b8e7b3726f846db6aa7630a2bc4976b5a3156c5c`, en `origin/main`.
   La segunda intención de robo se envía sin esperar el primer ACK; los robos

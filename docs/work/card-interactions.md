@@ -1,5 +1,5 @@
 ---
-{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"worktree","updated":"2026-11-03"}
+{"id":"card-interactions","status":"validated","parent":null,"depends_on":["game-flow-ui"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Cartas, pagos y limpieza de la interfaz
 
@@ -210,3 +210,9 @@ Publicado en `main` y Render con el commit `f4584c9`; **Live** a las 06:38:26
 túneles y flujo. La verificación remota confirmó archivos idénticos, UI 8,
 práctica con bots, resultados, historial anterior y salud de Supabase.
 Evidencia y límites en [Producción](../production.md).
+
+## Publicación conjunta · 2026-11-03
+
+La implementación de esta ficha quedó publicada en `ef65487`, Live en Render
+tras CI aprobado. El alcance publicado, las comprobaciones de producción y
+sus límites están en [Producción](../production.md).

@@ -1,5 +1,5 @@
 ---
-{"id":"replay-transparency-reset","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
+{"id":"replay-transparency-reset","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Foco temporal, replay transparente y reinicio de partidas
 
@@ -69,6 +69,7 @@ Evidencia local en `production-reset/`: `before.json`, `report.json`,
 quedó guardada en el SQL Editor. `restore.sql` conserva la recuperación y rechaza
 sobrescribir partidas creadas después del reinicio; no se ejecutó en producción.
 
-Implementación y reinicios completados. La publicación conjunta está autorizada;
-se comprobarán CI, revisión publicada y salud del servicio antes de marcarla
-como entregada.
+Implementación, reinicios y publicación conjunta completados. La revisión
+`ef65487` quedó Live tras CI completo aprobado; 48 recursos contrastados,
+salud correcta y cero salas después de cerrar la comprobación temporal.
+Evidencia de entrega en [Producción](../production.md).

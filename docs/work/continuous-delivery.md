@@ -111,3 +111,11 @@ se realiza al insertar la capa: controles desactivados y cero envíos al intenta
 robar. Ambos clientes conservan la observación, incluso si la animación termina
 antes de la siguiente consulta de Playwright. Se mantienen las duraciones y
 las comprobaciones de estado final.
+
+La revisión final `ef65487` pasó el
+[CI completo](https://github.com/Gecch12/trencitos/actions/runs/41725335053):
+681/681 pruebas Node y los 30 grupos de navegador, incluidos los dos recorridos
+que antes quedaban pendientes. Se desplegó manualmente y quedó Live a las
+16:58:15 Lima. Recursos, backend y navegador de producción verificados;
+registro de entrega en [Producción](../production.md). La integración Git
+automática continúa pendiente del propietario, como se documenta arriba.

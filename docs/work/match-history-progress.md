@@ -1,5 +1,5 @@
 ---
-{"id":"match-history-progress","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
+{"id":"match-history-progress","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Historial completo, modo H y puntaje propio
 
@@ -148,3 +148,9 @@ Validación local:
   `git diff --check`: correctos.
 
 Cambio local en main, sin publicar. Siguiente paso: publicar cuando se solicite.
+
+## Publicación conjunta · 2026-11-03
+
+La implementación de esta ficha quedó publicada en `ef65487`, Live en Render
+tras CI aprobado. El alcance publicado, las comprobaciones de producción y
+sus límites están en [Producción](../production.md).

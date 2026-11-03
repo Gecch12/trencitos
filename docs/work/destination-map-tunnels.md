@@ -1,5 +1,5 @@
 ---
-{"id":"destination-map-tunnels","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
+{"id":"destination-map-tunnels","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Mapas de billetes en vivo y túneles sobre el tablero
 
@@ -96,3 +96,9 @@ y archivos temporales propios.
 
 Entrega integrada en el checkout `trains/trencitos`, rama `main`. La publicación
 y el reinicio de servidores con partidas activas quedan fuera de este alcance.
+
+## Publicación conjunta · 2026-11-03
+
+La implementación de esta ficha quedó publicada en `ef65487`, Live en Render
+tras CI aprobado. El alcance publicado, las comprobaciones de producción y
+sus límites están en [Producción](../production.md).

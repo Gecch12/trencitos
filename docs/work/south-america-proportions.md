@@ -1,5 +1,5 @@
 ---
-{"id":"south-america-proportions","status":"done","parent":null,"depends_on":["south-america-release"],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
+{"id":"south-america-proportions","status":"done","parent":null,"depends_on":["south-america-release"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Proporción y encuadre de Sudamérica
 
@@ -96,3 +96,9 @@ Validación del conjunto local el 2026-11-03:
 Integración terminada en el árbol de trabajo local de main, sin crear un commit
 ni incluir los demás trabajos pendientes. Se conserva el worktree de origen.
 La publicación remota y el despliegue no forman parte de esta integración.
+
+## Publicación conjunta · 2026-11-03
+
+La implementación de esta ficha quedó publicada en `ef65487`, Live en Render
+tras CI aprobado. El alcance publicado, las comprobaciones de producción y
+sus límites están en [Producción](../production.md).

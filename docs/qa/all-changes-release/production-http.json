@@ -1,0 +1,361 @@
+{
+  "at": "2026-11-03T21:59:10.720Z",
+  "commit": "ef654874c55aefca0a4fbcdb7bcc91aa91cc0c30",
+  "assets": [
+    {
+      "url": "/turn-history.js",
+      "status": 200,
+      "sha256": "c66a5f2045953078ebd47e8a61a70a7335118314f03d9fcf2f8b713e36da5083",
+      "matches": true
+    },
+    {
+      "url": "/",
+      "status": 200,
+      "sha256": "c59458a12bd7c806896a67b78820d4413c0cd08bb49c95efbe8f8b18e61bc959",
+      "matches": true
+    },
+    {
+      "url": "/index.html",
+      "status": 200,
+      "sha256": "c59458a12bd7c806896a67b78820d4413c0cd08bb49c95efbe8f8b18e61bc959",
+      "matches": true
+    },
+    {
+      "url": "/privacy.html",
+      "status": 200,
+      "sha256": "b5893ff3e726baa1d91ed9c949c728c8680b4e15fd1656b217c26bf9cf25b788",
+      "matches": true
+    },
+    {
+      "url": "/privacy.css",
+      "status": 200,
+      "sha256": "18ec0a1416f764be1826e29915ec5979ecf9d904e1b46abf5c6f18fd208c1829",
+      "matches": true
+    },
+    {
+      "url": "/board-3d.js",
+      "status": 200,
+      "sha256": "197736fed9cfdd680c0d4c6e5a5722c28588bbe8d4a97149e34a446a80e540fc",
+      "matches": true
+    },
+    {
+      "url": "/ticket-map.js",
+      "status": 200,
+      "sha256": "d7c5a616232d3960eac1dc37d4a4e35dae67fda42c537d95913b7677290daedb",
+      "matches": true
+    },
+    {
+      "url": "/tunnel-board.js",
+      "status": 200,
+      "sha256": "9d01b02172cf2da6f625ff9d85fe72e8f6e170bbd1a85a8a8c8ead97cc996f2b",
+      "matches": true
+    },
+    {
+      "url": "/destination-planner.js",
+      "status": 200,
+      "sha256": "b9463856245bfac7b2eafd426f80bd0bd8883817c5dca8ab124e6d9e6b908280",
+      "matches": true
+    },
+    {
+      "url": "/destination-map.css",
+      "status": 200,
+      "sha256": "8ed8b072fb46e8cb144749e35b1bbd9e7086320a70b99cdce517bc572678fc04",
+      "matches": true
+    },
+    {
+      "url": "/wagon-renderer.js",
+      "status": 200,
+      "sha256": "4c23125f0699fb919b6b667b1e34c0a7e7fa5ef7b2fa72cb22fb61ef65d3c701",
+      "matches": true
+    },
+    {
+      "url": "/wagon-preview.js",
+      "status": 200,
+      "sha256": "97f2a6d4d9f23aa79a08720d2acf0acd2f5e4d0d0709e1dc723abc454f7f716c",
+      "matches": true
+    },
+    {
+      "url": "/wagon-models.mjs",
+      "status": 200,
+      "sha256": "76933f1b087917849e9150e490a44c4804185b60a048bbb178888ea7afacdeca",
+      "matches": true
+    },
+    {
+      "url": "/board-camera.js",
+      "status": 200,
+      "sha256": "f97b8a79a1687529857b71d182dbe24c3dfac74ec24f8848c3b3c6cfa73ed583",
+      "matches": true
+    },
+    {
+      "url": "/board-3d.css",
+      "status": 200,
+      "sha256": "3eb8561981dbe1d2b93b2dff7f2f809518e53e9bf509b1903f831b9d1412ac36",
+      "matches": true
+    },
+    {
+      "url": "/vendor/three.module.js",
+      "status": 200,
+      "sha256": "104f56145899722094556490d787aae0617cc2fc3382f31df02d724ea1aee341",
+      "matches": true
+    },
+    {
+      "url": "/vendor/three.core.js",
+      "status": 200,
+      "sha256": "613e370f76638fdef83926642bf256dc9615684922de1ce1f63a8583e5d78578",
+      "matches": true
+    },
+    {
+      "url": "/app.js",
+      "status": 200,
+      "sha256": "61065497b8f8d799e32199b34aaad204c91153370b9cbaa6acc97499662e291d",
+      "matches": true
+    },
+    {
+      "url": "/style.css",
+      "status": 200,
+      "sha256": "f4bd49fb828041cb72fdafe7a4a463f5d71f0bb4c263d65d2f8a36d341b412b1",
+      "matches": true
+    },
+    {
+      "url": "/maps/europe-v1.js",
+      "status": 200,
+      "sha256": "e6a0157567de5aa336bf6f3f7211e2a5adb323dbb160a71f34841f5d6a9778df",
+      "matches": true
+    },
+    {
+      "url": "/maps/europe-legacy-v1.js",
+      "status": 200,
+      "sha256": "a98444a488518e1793cc411fc37e7a11e219eba800a740768b5b623063e11f89",
+      "matches": true
+    },
+    {
+      "url": "/data.js",
+      "status": 200,
+      "sha256": "64b9d729450313c6732927327297931c889a52bf4e8afa35caa03dfc746e8049",
+      "matches": true
+    },
+    {
+      "url": "/layouts/europe-v1.js",
+      "status": 200,
+      "sha256": "78651811510606cdafae1fea86996fe849f18bfc27c53c50f117f41ade71d997",
+      "matches": true
+    },
+    {
+      "url": "/layouts/laboratory-v1.js",
+      "status": 200,
+      "sha256": "0f56fcb9f7b4d6b3c55e20c356e7cf40c85e2a0a920c20fb4299440c3db01636",
+      "matches": true
+    },
+    {
+      "url": "/layouts/south-america-v3.3-beta.js",
+      "status": 200,
+      "sha256": "afcde2a060a2e27c3605d388e62530bc599e6ca1f5298232949d276799f4b3e6",
+      "matches": true
+    },
+    {
+      "url": "/map-options.js",
+      "status": 200,
+      "sha256": "966f36fdd24011396df367a592f8d35ff61de80809f17981d4652ab1d14ccb15",
+      "matches": true
+    },
+    {
+      "url": "/match-presentation.js",
+      "status": 200,
+      "sha256": "48ff60cab576c6956787538811a3a2a17f1433e595dbdd1990463c95034493ca",
+      "matches": true
+    },
+    {
+      "url": "/map-layout.js",
+      "status": 200,
+      "sha256": "94ee21cc52b8fdbeaf5fe1f0f3970671fdc6d164d2e1d7d50e189ef79bf35a48",
+      "matches": true
+    },
+    {
+      "url": "/game-timing.js",
+      "status": 200,
+      "sha256": "61997ba9c378dfa1eec5b353bb2e3a82dcbd649b81d461149ed4a56953b8d556",
+      "matches": true
+    },
+    {
+      "url": "/game-ui.js",
+      "status": 200,
+      "sha256": "227105d2e4b4df1f4447b513b9febd4a3c5005229db7f7fe52975d75f073a12e",
+      "matches": true
+    },
+    {
+      "url": "/draw-intent.js",
+      "status": 200,
+      "sha256": "12ac9e0f3e543e8a82727b2ba52fe8e8e55f2cd94df7c43befcc8707308f9353",
+      "matches": true
+    },
+    {
+      "url": "/game.css",
+      "status": 200,
+      "sha256": "15ade45c9ecab9d5c57825c67fc74a6b67cd10f2e51a2d1cfec2c8d6aa510f44",
+      "matches": true
+    },
+    {
+      "url": "/responsive.css",
+      "status": 200,
+      "sha256": "7d33d4a3d1fb27305997ef43f708e5790d40b27495433c78197dd640991aaad8",
+      "matches": true
+    },
+    {
+      "url": "/lobby.css",
+      "status": 200,
+      "sha256": "4b2797dc3e18e5e27600c35ea45c6a4a3b4cd674f8e0d1c81ba48cd415cdc463",
+      "matches": true
+    },
+    {
+      "url": "/lobby-ui.js",
+      "status": 200,
+      "sha256": "24566ab3662428fabfd11dda2b52eadb2bd22dcb6203f9085a2b5175c6e71135",
+      "matches": true
+    },
+    {
+      "url": "/account-ui.js",
+      "status": 200,
+      "sha256": "aef3de8ade84b2aed9249c981ded24f1682d87d86de52f49a2cad4213f2fab4d",
+      "matches": true
+    },
+    {
+      "url": "/translations.js",
+      "status": 200,
+      "sha256": "59becc9c6dde2c59b50d666d4e58a33b0139056aa10419750cfe6a3f2b0d29d6",
+      "matches": true
+    },
+    {
+      "url": "/replay-state.js",
+      "status": 200,
+      "sha256": "5473a048ac4c929a4dfc5ae1926d218fda8cf1fd17882aa47313392171f0b387",
+      "matches": true
+    },
+    {
+      "url": "/replay-ui.js",
+      "status": 200,
+      "sha256": "8ca2c45d8351da70c10b8c5bc66f10b32543fb297fc2568ec2f48569649b10a0",
+      "matches": true
+    },
+    {
+      "url": "/replay.css",
+      "status": 200,
+      "sha256": "b77a56e86edd6272947406a35ad3dd5edce4ba6dab3652c203f3b0b77a9c2404",
+      "matches": true
+    },
+    {
+      "url": "/history-ui.js",
+      "status": 200,
+      "sha256": "1082c8bc3699a40a1f3dc00cc006d7481aca1767c25a247b4d5d08e6288a4d4d",
+      "matches": true
+    },
+    {
+      "url": "/i18n.js",
+      "status": 200,
+      "sha256": "82e525ebb1bc1c477a9f74b6052432721cd0954c976a035f3e6c5a9023dc50f9",
+      "matches": true
+    },
+    {
+      "url": "/room-map-picker.js",
+      "status": 200,
+      "sha256": "ed53ffe4a72f0cce0d2af280d06ff2046696eba81763e93a808e1ca2f27354aa",
+      "matches": true
+    },
+    {
+      "url": "/room-setup.css",
+      "status": 200,
+      "sha256": "45dd9def3235e1d7339669d13488a04f9dd5a7f83119bad0e2395a1c45fb151c",
+      "matches": true
+    },
+    {
+      "url": "/shell.js",
+      "status": 200,
+      "sha256": "e9994a6a837643c38791109c921bb13c513d91747a7f44215e1a6c3ecedc1b21",
+      "matches": true
+    },
+    {
+      "url": "/shell.css",
+      "status": 200,
+      "sha256": "9a4ae3930ee09593c44a63f9b59da7777377f5e50db26aeb9b64e47286dc87f6",
+      "matches": true
+    },
+    {
+      "url": "/shell-icons.js",
+      "status": 200,
+      "sha256": "6714b34bfee82bf1dd81c7da3a09bbf47f363fb830914082c99fd5cc6f832f9e",
+      "matches": true
+    },
+    {
+      "url": "/wagon-people.mjs",
+      "status": 200,
+      "sha256": "24ea91ca163ec1fd5ae6af32379a117f2ee7e5dac6dab799f843e8cb006da189",
+      "matches": true
+    }
+  ],
+  "privateRoutes": [
+    {
+      "path": "/game/queries/destination-details.js",
+      "status": 404
+    },
+    {
+      "path": "/backend/match-journal.js",
+      "status": 404
+    },
+    {
+      "path": "/frontend/inactive/midsommar/model.mjs",
+      "status": 404
+    },
+    {
+      "path": "/hippie-model.mjs",
+      "status": 404
+    },
+    {
+      "path": "/backend/server.js",
+      "status": 404
+    },
+    {
+      "path": "/game/application/player-action.js",
+      "status": 404
+    },
+    {
+      "path": "/experiments/passenger-extreme/index.html",
+      "status": 404
+    },
+    {
+      "path": "/.env",
+      "status": 404
+    },
+    {
+      "path": "/room-state.json",
+      "status": 404
+    },
+    {
+      "path": "/render.yaml",
+      "status": 404
+    },
+    {
+      "path": "/package.json",
+      "status": 404
+    }
+  ],
+  "health": {
+    "status": 200,
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 0
+  },
+  "backend": {
+    "drawPipelineVersion": 1,
+    "drawFeedbackVersion": 1,
+    "sessionVersion": 1,
+    "visibility": "private",
+    "started": false,
+    "temporaryRoomClosed": true
+  },
+  "finalHealth": {
+    "status": 200,
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 0
+  },
+  "passed": true
+}
