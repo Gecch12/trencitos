@@ -1,0 +1,10 @@
+{
+  "command": "node --test --test-reporter=tap --test-concurrency=1 tests/*.test.js",
+  "base_commit": "7003904f264dac1e740cefc66fa7dd0c1c58617c",
+  "exit_code": 1,
+  "duration_seconds": 104.01,
+  "completed_at": "2026-11-03T00:16:23.414104+00:00",
+  "node": "v25.6.1",
+  "environment": "clean environment; isolated local file state; external auth disabled; loopback fixtures only",
+  "log_sha256": "ee1ed07ac3b255fd4869a9ebc01ac1272d917ee00d2a833a4cfe84e6bdbf0f1d"
+}

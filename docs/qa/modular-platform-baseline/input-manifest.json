@@ -1,0 +1,152 @@
+{
+  "source_directory": "/Users/angelaltarodri/Downloads/trencitos_sudamerica_v3_3_full_angel",
+  "local_copy": "/Users/angelaltarodri/Desktop/free/trains/worktrees/modular-game-platform/.qa/architecture-baseline/inputs/trencitos_sudamerica_v3_3_full_angel",
+  "file_count": 28,
+  "files": [
+    {
+      "path": "MENSAJE_WHATSAPP.txt",
+      "bytes": 994,
+      "sha256": "26585bf9c72761e1b886b71aa2395090f865a3ead5f41bf7bf40f95b6a88d901"
+    },
+    {
+      "path": "README_PARA_ANGEL.md",
+      "bytes": 3648,
+      "sha256": "e5c052c28039c502ace93e4ca656b635e1e81b1208233a9c9ae22d28947368fc"
+    },
+    {
+      "path": "artes_conceptuales/acuarela_sudamerica_referencia.png",
+      "bytes": 3696765,
+      "sha256": "b2c165b21e297e056a95225a368d84e7d94b61697df4f919ee344b24357b7882"
+    },
+    {
+      "path": "referencia_v2/README.md",
+      "bytes": 3400,
+      "sha256": "3afb535b269f29bdf15451ad48ec9b5155d6245a7982070a65c7695c351e335f"
+    },
+    {
+      "path": "referencia_v2/billetes.html",
+      "bytes": 29660,
+      "sha256": "10a46ac243a4dfdfa92ec912c2419e1ff499d9048c555c0b879c45a8c6c3ea6a"
+    },
+    {
+      "path": "referencia_v2/fuente/avoid_overlaps.py",
+      "bytes": 3762,
+      "sha256": "6c82ee219d523ac06305d2750dcfacddc11e19243ed7f3bc95e81a0d71d78d97"
+    },
+    {
+      "path": "referencia_v2/fuente/build.py",
+      "bytes": 7874,
+      "sha256": "55f4836c046c77972d88b8abd3b23fe7376b58fa7fcf9839e696d90de0ebf276"
+    },
+    {
+      "path": "referencia_v2/fuente/make_viewer.py",
+      "bytes": 17377,
+      "sha256": "3aa626ccd870bb936388e2b5ec65a0d97e4a2001ca23b806e9a4104996b8f251"
+    },
+    {
+      "path": "referencia_v2/fuente/qa.py",
+      "bytes": 3138,
+      "sha256": "b77a32d816e27b7b81c5bd75255ae05020362423324fa8315f121a9cc725de2d"
+    },
+    {
+      "path": "referencia_v2/fuente/refine.py",
+      "bytes": 4315,
+      "sha256": "63f615f73ff9d333d2791153116fa02d50983f29ff09bbf3e89eacc5cb26815f"
+    },
+    {
+      "path": "referencia_v2/fuente/render.py",
+      "bytes": 13414,
+      "sha256": "880dc7fa23b8ef9b148d67434a1ea218e93800b30eabed63a3a281b8902a32da"
+    },
+    {
+      "path": "referencia_v2/fuente/tickets.py",
+      "bytes": 5094,
+      "sha256": "82e83a5adc0da0c7628126eff2cd92b87f13d79720c1a021fa77e0b3dc364291"
+    },
+    {
+      "path": "referencia_v2/labels.json",
+      "bytes": 2192,
+      "sha256": "f1aa45e46c8f7d2e7f4bf70ee194c878f384935a517a03f525630b9721eaa892"
+    },
+    {
+      "path": "referencia_v2/network.json",
+      "bytes": 75715,
+      "sha256": "9f72439979be73dbc8dfc1e0b3924b4cb4938a8442600adf705cf15920cad45a"
+    },
+    {
+      "path": "referencia_v2/preview_tablero.png",
+      "bytes": 522288,
+      "sha256": "b3aa7053bd26cd4151df8ce57c9061d1ffd90e3560a578b4a7cfe57c13acc1fb"
+    },
+    {
+      "path": "referencia_v2/qa_report.json",
+      "bytes": 1270,
+      "sha256": "dd69b4e076507b44b0c6b4336dfe9ea182354d37c9c08cfee6557fa7ac2cd82b"
+    },
+    {
+      "path": "referencia_v2/tablero.svg",
+      "bytes": 356175,
+      "sha256": "13cfa2b23fb9ad77946671beab15a8ac437ad5865006053fe66ef7ae1d7bc717"
+    },
+    {
+      "path": "referencia_v2/visor.html",
+      "bytes": 415684,
+      "sha256": "f27d86e08c85e8fc2200d65ab772fba4a8431d8550ac6dba9b58ece077930d77"
+    },
+    {
+      "path": "sudamerica_v3_beta/billetes_v3_3_imprimibles.html",
+      "bytes": 29564,
+      "sha256": "b387bade938291d58a77c255138aa2845e95192044b6471559b7e5e54795d346"
+    },
+    {
+      "path": "sudamerica_v3_beta/ciudades_v3_3.csv",
+      "bytes": 1263,
+      "sha256": "dd0e0465a404caad3b85e61d17c7ae403f0dfa2b30e818dfb60bcd8ff7901d11"
+    },
+    {
+      "path": "sudamerica_v3_beta/destinos_v3_3.csv",
+      "bytes": 3020,
+      "sha256": "38c8ea58fa047bd3f609494d7a84324d50c554da113427b9a17fdb6e9afef733"
+    },
+    {
+      "path": "sudamerica_v3_beta/network_balanced_v3_3.json",
+      "bytes": 20452,
+      "sha256": "ad816718a0e7d2382887c8bfde37045534a93fc1b4ddf31191b61d87aa4c10b0"
+    },
+    {
+      "path": "sudamerica_v3_beta/preview_tablero_v3_3_borrador.png",
+      "bytes": 443197,
+      "sha256": "92bb1edb008a8ccf01e3dd79e8e79442c6c0ef9735a43654ee3548cf69d6614b"
+    },
+    {
+      "path": "sudamerica_v3_beta/qa_v3_3_assets.json",
+      "bytes": 1665,
+      "sha256": "c4c53ec1f8c87ea22fc11c8d5a4f58660c38d7aa7cf7b71ef0ce8a9b76272a44"
+    },
+    {
+      "path": "sudamerica_v3_beta/routes_v3_3.csv",
+      "bytes": 7982,
+      "sha256": "7a888072403d640db2d7aa8c439a9008637a3e8fcb8c95caca5a3a912eef89e1"
+    },
+    {
+      "path": "sudamerica_v3_beta/sudamerica-map.js",
+      "bytes": 39745,
+      "sha256": "92bbb8c22d6492450320808f5a2e51a57f7ba8cd4b18460c30edc4c772066a4f"
+    },
+    {
+      "path": "sudamerica_v3_beta/sudamerica-map.json",
+      "bytes": 39579,
+      "sha256": "0c91e466cfdd218386151bba13f9c1e54395755ba6a1d830ad21e3b4a44f9174"
+    },
+    {
+      "path": "sudamerica_v3_beta/tablero_v3_3_borrador.svg",
+      "bytes": 110831,
+      "sha256": "980465ab0f389856052c332a54bcdfe66ffbd9578305c0ce86691d41e5b1ce8e"
+    }
+  ],
+  "crossing_reference": {
+    "path": "docs/references/map-crossing-layout.png",
+    "sha256": "71fecd6881f66b134e869d75db610d59b7cfd56925fb5131d2ce4551ae6344cc",
+    "source": "User-designed Figma image attached in this chat"
+  }
+}

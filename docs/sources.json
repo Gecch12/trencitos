@@ -157,6 +157,20 @@
     "wagon-models.mjs",
     "wagon-renderer.js"
   ],
+  "work/modular-game-platform.md": [
+    "engine.js",
+    "data.js",
+    "map-layout.js",
+    "server.js",
+    "app.js",
+    "room-store.js",
+    "supabase-store.js",
+    "match-archive.js"
+  ],
+  "work/modular-platform-baseline.md": [
+    "tests/mobile-ui.test.js",
+    "tests/browser-threejs.cjs"
+  ],
   "work/wagon-variants.md": [
     "data.js",
     "lobby-ui.js",

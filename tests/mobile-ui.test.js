@@ -220,6 +220,7 @@ test("main-map preview ignores touch and restored focus; overview is local UI st
     uiDialog: null, hoveredDestination: null, allDestinationsVisible: false, resultMapSelection: {},
     game: { tickets: [{ id: 2 }] }, compactMedia: { matches: true }, compactPanel: "destinations",
     matchMedia: () => ({ matches: true }), updateDestinationSpotlight() { updated++; },
+    toast() {},
     $: id => id === "ticketList" ? { addEventListener: (type, fn) => handlers.set(type, fn) }
       : id === "toggleDestinations" ? toggle : { classList: { add: c => contextClasses.add(c) } },
   });

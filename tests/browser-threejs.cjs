@@ -8,6 +8,7 @@ const { chromium } = require('playwright');
 const { start } = require('./helpers/threejs-preview');
 const { connect } = require('./helpers/ws-client');
 const { chooseBotAction } = require('../bots');
+const { tunnelBusy } = require('../engine');
 const root = path.resolve(__dirname, '..'), out = path.join(root, 'docs/qa');
 const report = { date: new Date().toISOString(), platform: `${os.platform()} ${os.release()} ${os.arch()}`, cpu: os.cpus()[0].model, tests: [], errors: [] };
 const save = () => fs.writeFileSync(path.join(out, 'threejs-report.json'), JSON.stringify(report, null, 2) + '\n');
@@ -143,6 +144,12 @@ const save = () => fs.writeFileSync(path.join(out, 'threejs-report.json'), JSON.
     const r = rooms.get(matchCode); const counts = {}; let actions=0, reconnect=false;
     while(r.game.phase !== 'finished' && actions < 1000) {
       const g=r.game;
+      // Reveal/result are server-timed stages. Wait for the authorized view;
+      // bots correctly produce no action until a decision or next turn exists.
+      if (tunnelBusy(g)) {
+        await page.waitForFunction(() => game?.phase !== 'tunnel' || game.sharedTunnel?.stage === 'decision');
+        continue;
+      }
       let seat=g.phase==='initial'?g.players.findIndex(p=>p.pending.length):g.players.findIndex(p=>p.offer);
       if(seat<0)seat=g.current;
       const offer=g.players[seat].offer;

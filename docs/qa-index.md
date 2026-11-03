@@ -6,6 +6,7 @@ El resultado de una ejecución nueva se registra en su ficha de trabajo.
 
 | Área | Evidencia existente |
 | --- | --- |
+| Base para arquitectura modular y mapas | [Fase 0 y límites de la referencia](work/modular-platform-baseline.md) |
 | Beta inicial | [QC histórico](../QC.md) |
 | Navegación, perfil y salas públicas | [Ficha, comparación responsive y capturas](work/navigation-rooms.md) |
 | Historial, replay, invitados e idiomas | [Ficha y pruebas remotas](work/history-replay.md) |

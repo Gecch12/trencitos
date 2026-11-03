@@ -3,6 +3,12 @@
 El estado canónico está en cada ficha. `node scripts/check-docs.js --index`
 genera la lista de estados y relaciones; este índice no mantiene otra copia.
 
+Iniciativa acordada:
+
+- [Plataforma modular y mapas](modular-game-platform.md): fases de reorganización,
+  contratos y posterior integración de Sudamérica. Inicio en la
+  [base reproducible](modular-platform-baseline.md).
+
 Orden de trabajo acordado:
 
 1. [Centro documental y skill](docs-system.md): base compartida del trabajo.
