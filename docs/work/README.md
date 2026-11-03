@@ -9,7 +9,8 @@ Iniciativa acordada:
   contratos y posterior integración de Sudamérica. Inicio en la
   [base reproducible](modular-platform-baseline.md) y desarrollo del
   [modelo y contratos](modular-platform-contracts.md). Continuación:
-  [extracción del dominio](modular-platform-domain.md).
+  [extracción del dominio](modular-platform-domain.md) y
+  [aplicación e interfaz](modular-platform-application.md).
 
 Orden de trabajo acordado:
 

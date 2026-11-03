@@ -4,6 +4,8 @@ const http = require("node:http"),
   path = require("node:path"),
   crypto = require("node:crypto");
 const Engine = require("./engine");
+const { createPlayerActionHandler } = require("./game/application/player-action");
+const { actionReply } = require("./game/compat/legacy-action-reply");
 const GameTiming = require("./game-timing");
 const {createMatchArchive,safePublic}=require("./match-archive");
 const {guestId,ensureGuest}=require("./guest-identity");
@@ -86,6 +88,8 @@ const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, rest
   },
 }) : null;
 const dispatch = job => stopping ? undefined : durable ? durable.run(() => { if (!stopping) job(); }) : job();
+const submitPlayerAction = createPlayerActionHandler({ engine: Engine, stageRoom: sendRoom,
+  storagePaused: () => storageFailureAt !== null, now: () => Date.now(), random: max => crypto.randomInt(max) });
 const practice = createPracticeController({ rooms, sendRoom, dispatch, blocked:()=>storageFailureAt!==null, onRemove: room => { clocks.cancel(room); archive.capture(room,"Práctica cerrada."); return persist(); } });
 const clocks = createGameClock({ rooms, sendRoom, dispatch, canTick: r => storageFailureAt === null && (r.practice || r.emptySince == null),
   expireGame: r => { const changed = Engine.expire(r.game); if (changed) r.revision = (r.revision || 0) + 1; return changed; } });
@@ -652,32 +656,11 @@ function onMessage(peer, msg) {
     return sendRoom(r);
   }
   if (msg.type === "action") {
-    if (!r.game) return deny(peer, "La partida aún no empieza.");
-    const member = r.members[peer.seat];
-    if (msg.id !== undefined && (typeof msg.id !== "string" || !/^[\w-]{8,80}$/.test(msg.id))) return deny(peer, "Identificador de acción inválido.");
-    if (msg.id && member.actionIds?.includes(msg.id)) {
-      sendRoom(r); peer.send({ type: "ack", id: msg.id }); return;
-    }
-    if (!r.practice && Engine.expire(r.game)) { r.revision = (r.revision || 0) + 1; sendRoom(r, true); }
-    if (storageFailureAt !== null) return deny(peer, "No se pudo guardar.", "STORAGE_FAILED");
-    if (member.autopilot) return deny(peer, "El bot controla tu puesto. Pulsa Recuperar control.");
-    // Private choices are independent: simultaneous confirmations must not
-    // invalidate one another. Their pending/offer ID checks live in the engine.
-    const privateChoice = ["choose_initial", "keep_tickets"].includes(msg.action?.type);
-    if (!privateChoice && msg.revision !== undefined && msg.revision !== (r.revision || 0)) {
-      sendRoom(r); return deny(peer, "La mesa cambió. Revisa la jugada e inténtalo otra vez.", "STALE_ACTION");
-    }
-    try {
-      Engine.action(r.game, peer.seat, msg.action);
-
-      r.revision = (r.revision || 0) + 1;
-      if (msg.id) member.actionIds = [...(member.actionIds || []), msg.id].slice(-128);
-      if (sendRoom(r)) peer.send({ type: "ack", id: msg.id });
-      else deny(peer, "La acción no se guardó y no fue aplicada. Partida pausada.", "STORAGE_FAILED");
-    } catch (e) {
-      sendRoom(r); // Expiration may have resolved a deadline before rejecting a late action.
-      deny(peer, e.message);
-    }
+    const result = submitPlayerAction(r, peer.seat, {
+      commandId: msg.id, expectedRevision: msg.revision, action: msg.action,
+    });
+    // In remote mode peer.send stages the reply until the outer dispatch commits.
+    peer.send(actionReply(result));
     return;
   }
   deny(peer, "Acción desconocida.");

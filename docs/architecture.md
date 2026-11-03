@@ -7,7 +7,7 @@ Evidencia, integración y límites en [la ficha del tablero](work/board-3d.md).
 ## Recorrido de una jugada
 
 Navegador → mensaje WebSocket → sesión/puesto y validación del servidor →
-motor de reglas → persistencia atómica de sala y archivo → vista filtrada para cada jugador
+caso de uso de jugada humana → motor de reglas → persistencia atómica de sala y archivo → vista filtrada para cada jugador
 → renderizado. La animación representa una acción aceptada; no la confirma.
 Los túneles conservan en `pending` su etapa, vencimiento y tiempos congelados;
 `Engine.deadlines` alimenta la alarma de sala y excluye ofertas pausadas. Los
@@ -45,6 +45,7 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Responsabilidad | Código y puntos de entrada |
 | --- | --- |
 | HTTP, WebSocket, salas, credenciales, despachar y confirmar acciones | [server.js](../server.js): `dispatch`, `persist`, `sendRoom` |
+| Coordinación de jugadas humanas y respuesta compatible | [player-action.js](../game/application/player-action.js): `createPlayerActionHandler`; [legacy-action-reply.js](../game/compat/legacy-action-reply.js): `actionReply` |
 | Fachada de reglas, fases, efectos, cierre y privacidad | [engine.js](../engine.js): `newRandomGame`, `action`, `expire`, `finish`, `view` |
 | Políticas de pago y decisión de construcción | [payment.js](../game/domain/payment.js): `planPayment`, `reservePayment`; [route-claim.js](../game/domain/route-claim.js): `decideRouteClaim`, `blocksParallelRoute` |
 | Transiciones de túnel y comienzo/avance de turno | [tunnel.js](../game/domain/tunnel.js): `beginTunnel`, `decideTunnel`, `advanceTunnel`; [turn.js](../game/domain/turn.js): `planTurnStart`, `planNextTurn` |
@@ -71,6 +72,31 @@ espectadores y replay. No modifica plazos ni recupera sonidos omitidos.
 | Familias de vagones por color, geometrías y acabados | [wagon-models.mjs](../wagon-models.mjs): `wagonStyle`, `wagonParts`; [wagon-renderer.js](../wagon-renderer.js): `createWagonRenderer` |
 | Proyección ortográfica compartida con objetivos SVG | [board-camera.js](../board-camera.js): `view` |
 | Geometría visual, curvas y etiquetas | [map-layout.js](../map-layout.js): `createNetwork`, `pointAt`, `placeLabels` |
+
+## Primer caso de aplicación
+
+`createPlayerActionHandler` recibe motor, `now`, `random`, `storagePaused` y
+`stageRoom`. Opera sobre la sala legada y un puesto autenticado por el servidor;
+el sobre interno contiene `commandId`, `expectedRevision` y `action`. No recibe
+el socket ni toma contexto de ejecución del mensaje del cliente.
+
+Comprueba partida/ID, duplicados, vencimiento multijugador, control y revisión;
+ejecuta la jugada y prepara revisión/recibo antes de llamar a `stageRoom`.
+Las elecciones privadas conservan validación por estado/oferta y la ventana de
+deduplicación sigue siendo de 128 IDs por puesto, sin huella de payload todavía.
+Devuelve `accepted`, `duplicate` o `rejected`; no expone una vista ni estado del
+motor. `actionReply` conserva el protocolo ACK/error, incluidos los mensajes
+legados de excepciones del motor. Las excepciones del puente de infraestructura
+se propagan al despachador.
+
+`stageRoom` es un puente síncrono hacia `sendRoom`: aún reúne archivo, guardado,
+proyecciones y programación. `false` indica rollback local; `true` puede ser solo
+preparación pendiente de commit remoto. El resultado se envía por `peer.send`
+dentro del `dispatch` existente: su outbox espera el commit global y descarta la
+respuesta si falla. La aceptación del caso de uso nunca sustituye esa confirmación.
+Autenticación, límites de solicitudes y autorización de espectadores siguen en
+transporte; bots/relojes siguen con sus entradas anteriores. Detalle, diferencias
+de práctica y trabajo pendiente en [fase 3](work/modular-platform-application.md).
 
 ## Extracción gradual del dominio
 

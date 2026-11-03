@@ -125,6 +125,14 @@ Durante el puente, `{type:"action",id,revision,action:{type:"claim",...}}` y las
 acciones de bots siguen funcionando; el adaptador traduce sin exigir un cliente
 nuevo. El sobre interno no cambia el protocolo de red en fase 1/2.
 
+El primer corte de fase 3 extrae la coordinación humana a `player-action.js`,
+con sala/puesto resueltos y sobre `{commandId, expectedRevision, action}`.
+Todavía consume el formato legado y `Engine`; no implementa el sobre objetivo
+ni los repositorios/committer completos. `stageRoom` enlaza con el guardado y
+publicación actuales, y su aceptación remota solo se transmite después del
+commit de la cola global. Contrato implementado en [arquitectura](../architecture.md)
+y avance en [fase 3](../work/modular-platform-application.md).
+
 Separar dos operaciones explícitas:
 
 ```js

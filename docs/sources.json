@@ -1,5 +1,6 @@
 {
   "architecture.md": [
+    "game/application/",
     "game/queries/",
     "game/domain/",
     "game/compat/",
@@ -190,6 +191,7 @@
     "tests/route-claim-contract.test.js"
   ],
   "decisions/match-domain-contracts.md": [
+    "game/application/",
     "game/queries/",
     "game/domain/",
     "game/compat/",
@@ -245,5 +247,22 @@
     "lobby.css",
     "shell.css",
     "translations.js"
+  ],
+  "work/modular-platform-application.md": [
+    "game/application/",
+    "game/compat/legacy-action-reply.js",
+    "server.js",
+    "engine.js",
+    "durable-queue.js",
+    "game-clock.js",
+    "practice.js",
+    "room-bots.js",
+    "multiplayer.js",
+    "tests/player-action.test.js",
+    "tests/multiplayer-server.test.js",
+    "tests/supabase-server.test.js",
+    "tests/history-server.test.js",
+    "tests/durable-queue.test.js",
+    "tests/deployment.test.js"
   ]
 }

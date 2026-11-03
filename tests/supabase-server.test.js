@@ -101,3 +101,41 @@ test('custom codes and chosen colors commit atomically to Supabase and survive a
   await assert.rejects(recovered.next('lobby', m => m.members[0].color === colors[1], 60));
   api.fail = false;
 });
+
+test('a lost commit response retries storage, not the player action or its history', async () => {
+  await stop();await boot();
+  const f = await playing(), seat = f.room.game.current, peer = [f.a, f.b][seat];
+  const hand = f.room.game.players[seat].hand.length, revision = f.room.revision;
+  const command = { type: 'action', id: 'lost-response-draw', revision, action: { type: 'draw_train', index: -1 } };
+  const start = api.calls.length;
+  api.lostResponses = 1;
+  peer.send(command);await peer.next('ack', message => message.id === command.id);
+  const commits = api.calls.slice(start).filter(call => call.method === 'ferrovia_save_checkpoint_v2');
+  assert.equal(commits.length, 2);assert.equal(commits[0].body.p_commit, commits[1].body.p_commit);
+  assert.deepEqual(commits[0].body, commits[1].body);
+  assert.equal(f.room.game.players[seat].hand.length, hand + 1);assert.equal(f.room.revision, revision + 1);
+  const saved = api.state.rooms.find(room => room.code === f.la.code);
+  assert.equal(saved.members[seat].actionIds.filter(id => id === command.id).length, 1);
+  const frames = structuredClone(api.state.matches[f.room.matchId].frames);
+  peer.send(command);await peer.next('ack', message => message.id === command.id);
+  assert.deepEqual(api.state.matches[f.room.matchId].frames, frames);
+  assert.equal(f.room.game.players[seat].hand.length, hand + 1);
+});
+
+test('a failed player command commit restores game, receipt and archive without publishing success', async () => {
+  const f = await playing(), seat = f.room.game.current, peer = [f.a, f.b][seat];
+  const game = structuredClone(f.room.game), revision = f.room.revision;
+  const receipts = structuredClone(f.room.members[seat].actionIds || []);
+  const frames = structuredClone(api.state.matches[f.room.matchId].frames), hash = f.room.archiveHash, sequence = f.room.archiveSeq;
+  const command = { type: 'action', id: 'failed-action-commit', revision, action: { type: 'draw_train', index: -1 } };
+  api.fail = true;
+  try {
+    peer.send(command);await peer.next('error', message => message.code === 'STORAGE_FAILED');
+    await assert.rejects(peer.next('ack', message => message.id === command.id, 60));
+    await assert.rejects(peer.next('state', message => message.game.revision > revision, 60));
+    assert.deepEqual(f.room.game, game);assert.equal(f.room.revision, revision);
+    assert.deepEqual(f.room.members[seat].actionIds || [], receipts);
+    assert.equal(f.room.archiveHash, hash);assert.equal(f.room.archiveSeq, sequence);
+    assert.deepEqual(api.state.matches[f.room.matchId].frames, frames);
+  } finally { api.fail = false; }
+});

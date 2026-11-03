@@ -1,0 +1,213 @@
+TAP version 13
+# Client delivery failed after commit; reconnect to recover.
+# Subtest: serialized mutations wait for commit before state/ack, including queued timers
+ok 1 - serialized mutations wait for commit before state/ack, including queued timers
+  ---
+  duration_ms: 3.007083
+  type: 'test'
+  ...
+# Subtest: failed commit rolls back, discards outgoing state and acknowledgements, reports once
+ok 2 - failed commit rolls back, discards outgoing state and acknowledgements, reports once
+  ---
+  duration_ms: 0.366625
+  type: 'test'
+  ...
+# Subtest: a disconnected recipient cannot roll back a successful durable commit
+ok 3 - a disconnected recipient cannot roll back a successful durable commit
+  ---
+  duration_ms: 0.332375
+  type: 'test'
+  ...
+# Subtest: guest history and replay survive reload/restart, duplicate actions stay single, private audit stays private
+ok 4 - guest history and replay survive reload/restart, duplicate actions stay single, private audit stays private
+  ---
+  duration_ms: 250.596625
+  type: 'test'
+  ...
+# Subtest: explicit lobby exit frees a seat and transfers starting authority
+ok 5 - explicit lobby exit frees a seat and transfers starting authority
+  ---
+  duration_ms: 74.673709
+  type: 'test'
+  ...
+# Subtest: host removal works only in lobby and invalidates the removed identity
+ok 6 - host removal works only in lobby and invalidates the removed identity
+  ---
+  duration_ms: 44.799667
+  type: 'test'
+  ...
+# Subtest: same-token handoff explicitly stops the old session; stored recovery secrets are hashed
+ok 7 - same-token handoff explicitly stops the old session; stored recovery secrets are hashed
+  ---
+  duration_ms: 133.531792
+  type: 'test'
+  ...
+# Subtest: duplicate action retries cannot draw a second card and stale revisions reject safely
+ok 8 - duplicate action retries cannot draw a second card and stale revisions reject safely
+  ---
+  duration_ms: 135.13225
+  type: 'test'
+  ...
+# Subtest: simultaneous private selections do not conflict on a shared stale revision
+ok 9 - simultaneous private selections do not conflict on a shared stale revision
+  ---
+  duration_ms: 83.587958
+  type: 'test'
+  ...
+# Subtest: voluntary exit installs a bot without deleting pieces; private link reclaims the fixed seat
+ok 10 - voluntary exit installs a bot without deleting pieces; private link reclaims the fixed seat
+  ---
+  duration_ms: 135.607375
+  type: 'test'
+  ...
+# Subtest: expired all-offline room cannot be revived by racing its cleanup timer
+ok 11 - expired all-offline room cannot be revived by racing its cleanup timer
+  ---
+  duration_ms: 107.363666
+  type: 'test'
+  ...
+# Subtest: rematch opt-in creates one new lobby and preserves previous results
+ok 12 - rematch opt-in creates one new lobby and preserves previous results
+  ---
+  duration_ms: 156.986791
+  type: 'test'
+  ...
+# Could not persist rooms: EISDIR: illegal operation on a directory, open '/var/folders/3n/kzk6d8s93rz7x9m2l7_qzlsr0000gn/T/rail-multi-9WPUiD/rooms.json.tmp'
+# Subtest: failed save rolls back accepted game changes, pauses, then resumes after explicit retry
+ok 13 - failed save rolls back accepted game changes, pauses, then resumes after explicit retry
+  ---
+  duration_ms: 326.601417
+  type: 'test'
+  ...
+# Subtest: a player command stages game, revision and bounded per-seat receipt before returning an acceptance
+ok 14 - a player command stages game, revision and bounded per-seat receipt before returning an acceptance
+  ---
+  duration_ms: 3.914833
+  type: 'test'
+  ...
+# Subtest: unstarted games and malformed IDs reject before deadlines or state changes
+ok 15 - unstarted games and malformed IDs reject before deadlines or state changes
+  ---
+  duration_ms: 1.813666
+  type: 'test'
+  ...
+# Subtest: a legacy duplicate keeps its receipt semantics without expiring, checking revision or executing again
+ok 16 - a legacy duplicate keeps its receipt semantics without expiring, checking revision or executing again
+  ---
+  duration_ms: 1.016333
+  type: 'test'
+  ...
+# Subtest: private choices accept a shared old revision and the same ID belongs to each seat independently
+ok 17 - private choices accept a shared old revision and the same ID belongs to each seat independently
+  ---
+  duration_ms: 1.0615
+  type: 'test'
+  ...
+# Subtest: stale public actions and autopilot cannot change a player's hand or create a receipt
+ok 18 - stale public actions and autopilot cannot change a player's hand or create a receipt
+  ---
+  duration_ms: 0.575541
+  type: 'test'
+  ...
+# Subtest: a late command stages the expired turn before rejecting its obsolete revision
+ok 19 - a late command stages the expired turn before rejecting its obsolete revision
+  ---
+  duration_ms: 0.532375
+  type: 'test'
+  ...
+# Subtest: an engine rejection preserves a valid deadline advance but never records the rejected command
+ok 20 - an engine rejection preserves a valid deadline advance but never records the rejected command
+  ---
+  duration_ms: 0.507875
+  type: 'test'
+  ...
+# Subtest: practice keeps the legacy timing order: stale check first, engine deadline advance on execution
+ok 21 - practice keeps the legacy timing order: stale check first, engine deadline advance on execution
+  ---
+  duration_ms: 0.714959
+  type: 'test'
+  ...
+# Subtest: local rollback after an action returns a storage error and removes its receipt with the state
+ok 22 - local rollback after an action returns a storage error and removes its receipt with the state
+  ---
+  duration_ms: 0.560125
+  type: 'test'
+  ...
+# Subtest: failure to save the preliminary expiry prevents the player command
+ok 23 - failure to save the preliminary expiry prevents the player command
+  ---
+  duration_ms: 0.629417
+  type: 'test'
+  ...
+# Subtest: application execution has no transport, storage, clock or random globals and trusts only injected context
+ok 24 - application execution has no transport, storage, clock or random globals and trusts only injected context
+  ---
+  duration_ms: 1.25375
+  type: 'test'
+  ...
+# Subtest: legacy replies preserve wire messages/codes and never include the game or an internal reason
+ok 25 - legacy replies preserve wire messages/codes and never include the game or an internal reason
+  ---
+  duration_ms: 0.12025
+  type: 'test'
+  ...
+# Subtest: remote WebSocket actions are serialized across rooms and acknowledged only after the save
+ok 26 - remote WebSocket actions are serialized across rooms and acknowledged only after the save
+  ---
+  duration_ms: 143.376667
+  type: 'test'
+  ...
+# Subtest: server restart reloads remote rooms and restores the same private seat, hand and revision
+ok 27 - server restart reloads remote rooms and restores the same private seat, hand and revision
+  ---
+  duration_ms: 19.637625
+  type: 'test'
+  ...
+# Subtest: remote timeout commits automatic draws before broadcasting the next turn
+ok 28 - remote timeout commits automatic draws before broadcasting the next turn
+  ---
+  duration_ms: 67.451042
+  type: 'test'
+  ...
+# Subtest: server-only database modules, credentials and migration are not static assets
+ok 29 - server-only database modules, credentials and migration are not static assets
+  ---
+  duration_ms: 4.051583
+  type: 'test'
+  ...
+# Remote storage paused: STORE_UNCERTAIN
+# Subtest: remote failure restores room membership and tokens, emits no success, and pauses rather than silently using disk
+ok 30 - remote failure restores room membership and tokens, emits no success, and pauses rather than silently using disk
+  ---
+  duration_ms: 72.441833
+  type: 'test'
+  ...
+# Remote storage paused: STORE_UNCERTAIN
+# Subtest: custom codes and chosen colors commit atomically to Supabase and survive a restart
+ok 31 - custom codes and chosen colors commit atomically to Supabase and survive a restart
+  ---
+  duration_ms: 162.44475
+  type: 'test'
+  ...
+# Subtest: a lost commit response retries storage, not the player action or its history
+ok 32 - a lost commit response retries storage, not the player action or its history
+  ---
+  duration_ms: 53.586458
+  type: 'test'
+  ...
+# Remote storage paused: STORE_UNCERTAIN
+# Subtest: a failed player command commit restores game, receipt and archive without publishing success
+ok 33 - a failed player command commit restores game, receipt and archive without publishing success
+  ---
+  duration_ms: 153.408167
+  type: 'test'
+  ...
+1..33
+# tests 33
+# suites 0
+# pass 33
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2891.897292

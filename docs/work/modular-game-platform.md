@@ -80,7 +80,7 @@ por separado. El cierre de esta ficha no implica publicación.
 - Mantener Three.js, las familias de vagones, cartas y estaciones existentes.
   El SVG provisional y el visor de referencia no sustituyen el tablero principal.
 
-## Próximo hito: fase 3
+## Hito en curso: fase 3
 
 El [modelo de fase 1](../decisions/match-domain-contracts.md) define los contratos
 y el puente. La [ficha de dominio](modular-platform-domain.md) conserva la aceptación
@@ -93,10 +93,11 @@ una operación explícita en los puntos de carga/ejecución. Europa fue verifica
 con bots, privacidad, guardado/replay y errores de persistencia; también se corrigió
 y comprobó el empaquetado Docker local.
 
-Fase 3 empieza por separar un caso de uso del servidor, preservando confirmación
-durable de partida e historial, deduplicación, rollback y vistas autorizadas.
-La coordinación aún reside en `engine.js`/`server.js`; las políticas extraídas
-no implican haber completado esa separación. Antes de mover archivos visuales, integrar
+La [fase 3](modular-platform-application.md) ya separa el caso de jugada humana
+del servidor, conservando confirmación durable de partida e historial,
+deduplicación y rollback. El puente de guardado/publicación sigue en el servidor;
+bots/relojes, consultas autorizadas y organización de frontend/backend requieren
+los siguientes cortes. Antes de mover archivos visuales, integrar
 un checkpoint revisado del trabajo de vagones. Las ediciones posteriores de
 otros worktrees no se sincronizan automáticamente con esta rama.
 
@@ -111,4 +112,4 @@ pruebas de aceptación del primer recorrido. La
 [fase 2](modular-platform-domain.md) contiene las extracciones de pagos,
 construcción, transiciones de túnel/turno, reparto, destinos, estaciones,
 puntuación, cartas/mercado y consultas, más la aceptación conjunta. El siguiente
-paso de aplicación/interfaz y la validación de esta entrega están en esa ficha.
+paso de aplicación/interfaz y su evidencia están en la [fase 3](modular-platform-application.md).

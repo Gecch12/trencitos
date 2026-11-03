@@ -563,3 +563,4 @@ deduplicación y rollback. Mantener la fachada compatible mientras se cambia cad
 entrada. Antes de mover archivos visuales, integrar un checkpoint revisado del
 trabajo de vagones. La separación frontend/backend será en código dentro del
 mismo repositorio; no exige dividir ahora los despliegues.
+El avance posterior se registra en [aplicación e interfaz](modular-platform-application.md).

@@ -1,0 +1,29 @@
+TAP version 13
+# Subtest: runtime assets load through HTML, JavaScript imports and CSS references
+ok 1 - runtime assets load through HTML, JavaScript imports and CSS references
+  ---
+  duration_ms: 224.176541
+  type: 'test'
+  ...
+# Loaded 41 runtime resources: /, /privacy.html, /assets/cards/red.svg, /assets/cards/blue.svg, /assets/cards/green.svg, /assets/cards/yellow.svg, /assets/cards/black.svg, /assets/cards/white.svg, /assets/cards/orange.svg, /assets/cards/purple.svg, /assets/cards/wild.svg, /assets/cards/back.svg, /assets/ticket.svg, /style.css, /game.css, /responsive.css, /lobby.css, /assets/favicon.svg, /board-3d.css, /shell.css, /translations.js, /i18n.js, /data.js, /map-layout.js, /game-timing.js, /game-ui.js, /lobby-ui.js, /board-camera.js, /account-ui.js, /shell-icons.js, /replay-state.js, /history-ui.js, /shell.js, /app.js, /privacy.css, /board-3d.js, /wagon-preview.js, /vendor/three.module.js, /wagon-renderer.js, /wagon-models.mjs, /vendor/three.core.js
+# Subtest: static SVG is served safely with right MIME and traversal returns 404
+ok 2 - static SVG is served safely with right MIME and traversal returns 404
+  ---
+  duration_ms: 59.657583
+  type: 'test'
+  ...
+# Subtest: WebSocket practice flow: create, choose tickets, bots, finish, leave and create again
+ok 3 - WebSocket practice flow: create, choose tickets, bots, finish, leave and create again
+  ---
+  duration_ms: 7819.334128
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8330.114337

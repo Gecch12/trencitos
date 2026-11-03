@@ -1,0 +1,10 @@
+{
+  "command": "node --test --test-reporter=tap --test-concurrency=1 tests/player-action.test.js tests/multiplayer-server.test.js tests/supabase-server.test.js tests/history-server.test.js tests/durable-queue.test.js",
+  "base_commit": "24ad09dee89c7381c686408c3a0ca02dabddad12",
+  "exit_code": 0,
+  "passed": 33,
+  "node": "v25.6.1",
+  "recorded_at": "2026-11-03T02:40:01.434151+00:00",
+  "environment": "clean environment; isolated file state; remote storage simulated",
+  "log_sha256": "676db6cb1b99f6398aac1efaab59d101ba9ce795219dbe9fe7e921b77f55f08f"
+}
