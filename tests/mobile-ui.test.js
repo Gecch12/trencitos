@@ -177,7 +177,7 @@ test("destination overview includes only kept tickets and their completed privat
   assert.deepEqual(UI.destinationSpotlightSelection(game, null, true).endpoints, ["A", "B", "C", "H"]);
 });
 
-test("closing routes clears transient preview, selects Map on mobile and preserves explicit overview", () => {
+test("closing routes clears transient preview, restores the destination icon and preserves explicit overview at every width", () => {
   for (const mobile of [true, false]) {
     let focused = null, updated = 0, disposed = 0;
     const hidden = new Set();
@@ -186,7 +186,7 @@ test("closing routes clears transient preview, selects Map on mobile and preserv
       buildTarget: {}, buildSubmitting: false, pendingChoiceKey: "routes", hoveredDestination: 2,
       allDestinationsVisible: true, dialogReturnFocus: { isConnected: true, focus() { focused = "row"; } },
       $: () => ({ classList: { add: value => hidden.add(value) } }),
-      document: { querySelector: () => ({ focus() { focused = "map"; } }) },
+      document: { querySelector: selector => { assert.equal(selector,'[data-panel="destinations"]'); return { focus() { focused = "destinations"; } }; } },
       updateDestinationSpotlight() { updated++; },
       disposeTicketMap() { disposed++; },
     });
@@ -196,8 +196,8 @@ test("closing routes clears transient preview, selects Map on mobile and preserv
     assert.equal(context.uiDialog, null);
     assert.equal(context.hoveredDestination, null);
     assert.equal(context.allDestinationsVisible, true);
-    assert.equal(context.compactPanel, mobile ? "map" : "destinations");
-    assert.equal(focused, mobile ? "map" : "row");
+    assert.equal(context.compactPanel, "map");
+    assert.equal(focused, "destinations");
     assert.equal(context.dialogReturnFocus, null);
     assert.equal(hidden.has("hidden"), true);
     assert.equal(updated, 1);

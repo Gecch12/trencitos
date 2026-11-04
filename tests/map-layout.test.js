@@ -5,6 +5,23 @@ const Map = require("../frontend/map-layout");
 const { ROUTES, CITIES } = require("../shared/data");
 const network = Map.createNetwork(ROUTES);
 
+test('background is presentation-only, defaults to water and supports land or an opaque custom color', () => {
+  const source = require('../frontend/layouts/europe-v1');
+  const before = JSON.stringify(source);
+  const water = Map.createLayout(source);
+  const land = Map.createLayout({ ...source, background: { surface: 'land' } });
+  const custom = Map.createLayout({ ...source, background: { surface: 'land', color: '#c4ad83' } });
+  assert.deepEqual(water.background, { surface: 'water', color: '#bbd6d9' });
+  assert.deepEqual(land.background, { surface: 'land', color: '#eee6d2' });
+  assert.deepEqual(custom.background, { surface: 'land', color: '#c4ad83' });
+  assert.deepEqual(land.createNetwork(ROUTES), water.createNetwork(ROUTES));
+  land.background.color = '#123456';
+  assert.equal(water.background.color, '#bbd6d9');
+  assert.equal(JSON.stringify(source), before);
+  for (const background of [{ surface: 'ocean' }, { color: '#abc8' }, { color: 'transparent' }])
+    assert.throws(() => Map.createLayout({ ...source, background }), /background/);
+});
+
 function corners(cell) {
   const a = cell.angle * Math.PI / 180, cos = Math.cos(a), sin = Math.sin(a);
   return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([x, y]) => [

@@ -195,7 +195,7 @@ let hoveredPlayer = null, focusedPlayer = null;
 let displayedLogs = null;
 let displayedHistoryKey = null;
 let hoveredDestination = null, allDestinationsVisible = false;
-let historyFollowing = true, lastDrawId = null;
+let historyFollowing = true, lastDrawId = null, historyUnreadCount = 0;
 let marketRefresh = null;
 const pendingMarketRefreshes = [];
 let lastEffectId = null, serverOffset = 0, seenOfferId = null;
@@ -325,6 +325,8 @@ function resetToLobby(message = "", preserveIdentity = false) {
   cancelConstruction();
   updateDestinationSpotlight();
   historyFollowing = true;
+  historyUnreadCount = 0; updateHistoryUnread();
+  historyCamera = null; $("returnMapView").classList.add('hidden');
   lastDrawId = null;
   lastEffectId = seenOfferId = null;
   waitingForGameStart = false;
@@ -937,7 +939,8 @@ function render() {
   renderPracticeControls();
   $("serverWarning").classList.toggle("hidden", game.uiVersion >= 10 && sessionSupported);
   const active = amIUp();
-  const scoreOpen=$("scores").querySelector(".live-score-details")?.open;
+  // Keep the live clock node when rebuilding player summaries.
+  $("game").append(turnBanner);
   const previousFocus = document.activeElement.closest("[data-player]")?.dataset.player;
   const previousHover = $("scores").querySelector(".scorebadge:hover")?.dataset.player;
   $("scores").innerHTML = game.players
@@ -945,17 +948,12 @@ function render() {
       (x, i) =>
         I18n.t`<div class="scorebadge ${i === game.current && ["play", "tunnel"].includes(game.phase) ? "active" : ""}" data-player="${i}" tabindex="0" aria-label="${escapeHTML(x.name)}. ${playerScore(i)} puntos, ${x.handCount ?? "—"} cartas, ${x.trains} vagones, ${x.stations} estaciones. Enfoca para resaltar sus rutas.">
           <div class="player-heading">${playerAvatar(i)}<div class="player-details"><b title="${escapeHTML(x.name)}">${escapeHTML(x.name)}</b><div class="player-status"><span class="player-turn-tag">EN TURNO</span><span class="player-state">${[i === seat ? I18n.t("Tú") : "", game.phase === "initial" ? (x.initialReady ? I18n.t("✓ Listo") : I18n.t("Eligiendo billetes")) : ""].filter(Boolean).join(" · ")}</span></div></div></div>
-          <div class="player-metrics">${playerMetric("points", I18n.t(i===seat?"Puntos propios":"Puntos públicos"), playerScore(i))}${playerMetric("cards", I18n.t("Cartas en mano"), x.handCount ?? "—")}${playerMetric("trains", I18n.t("Vagones"), x.trains)}${playerMetric("stations", I18n.t("Estaciones"), x.stations)}</div>${scoreExtras(i)}
+          <div class="player-metrics">${playerMetric("points", I18n.t(game.result ? "Puntuación final" : "Puntos de construcción"), playerScore(i))}${playerMetric("cards", I18n.t("Cartas en mano"), x.handCount ?? "—")}${playerMetric("trains", I18n.t("Vagones"), x.trains)}${playerMetric("stations", I18n.t("Estaciones"), x.stations)}${playerMetric("tickets", I18n.t("Billetes conservados"), x.ticketsCount ?? "—")}</div>
+          <span class="player-longest" title="${I18n.t("Longitud del camino más largo")}">↝ ${game.scoreProgress?.players[i]?.longest ?? "—"}</span>${scoreBonus(i)}
+          ${members[i]?.connected === false || members[i]?.autopilot ? `<span class="player-connection" role="img" aria-label="${I18n.t(members[i]?.autopilot ? 'Bot de reemplazo' : 'Sin conexión')}"></span>` : ""}
         </div>`,
     )
     .join("");
-  const scoreDetails=$("scores").querySelector('.live-score-details');
-  if(scoreDetails)scoreDetails.addEventListener('toggle',()=>{
-    if(!scoreDetails.open||compactMedia.matches)return;
-    const anchor=scoreDetails.getBoundingClientRect(),panel=scoreDetails.querySelector('dl');
-    panel.style.top=`${Math.max(8,anchor.top-panel.getBoundingClientRect().height-8)}px`;
-  });
-  if(scoreOpen&&$("scores").querySelector(".live-score-details"))$("scores").querySelector(".live-score-details").open=true;
   hoveredPlayer = previousHover === undefined ? null : +previousHover;
   focusedPlayer = previousFocus === undefined ? null : +previousFocus;
   [...$("scores").children].forEach((badge, i) => {
@@ -969,8 +967,8 @@ function render() {
     badge.onclick = event => {
       if(event.target.closest(".live-score-details"))return;
       if(replayMode){ReplayUI.selectViewer(i);return;}
-      if (compactMedia.matches) { compactPlayer = i; updateCompactPlayer(); }
-      else { focusedPlayer = i; highlightPlayerRoutes(); }
+      setCompactPanel("map");
+      compactPlayer = i; updateCompactPlayer();
     };
     badge.addEventListener("keydown", event => {
       if(event.target.closest(".live-score-details"))return;
@@ -988,6 +986,9 @@ function render() {
           : I18n.t`Turno de ${game.players[game.current].name}`;
   $("roundStatus").dataset.phase = game.phase === "finished" ? "finished" : game.finalRemaining !== null ? "last" : "normal";
   $("roundStatus").textContent = game.phase === "finished" ? I18n.t("Final") : game.phase === "initial" ? I18n.t`${game.initialReadyCount}/${game.players.length} listos` : game.finalRemaining !== null ? I18n.t("Última ronda") : "";
+  const lastRound = Number.isInteger(game.finalRemaining) && game.finalRemaining > 0 && !["finished", "abandoned"].includes(game.phase);
+  $("finalRoundNotice").classList.toggle("hidden", !lastRound);
+  $("finalRoundNotice").textContent = lastRound ? I18n.t`Última ronda · ${game.finalRemaining} turno(s) restante(s)` : "";
   $("initialStatus").classList.toggle("hidden", game.phase !== "initial");
   $("initialStatusText").textContent = I18n.t`${game.initialReadyCount}/${game.players.length} listos · ${game.players[seat]?.initialReady ? I18n.t("Puedes explorar el mapa mientras esperas") : I18n.t("Todos eligen a la vez")}`;
   $("viewResults").classList.toggle("hidden", game.phase !== "finished");
@@ -1012,6 +1013,8 @@ function render() {
   applyZoom();
   updateCompactStatus();
   updateCompactPlayer();
+  if (compactPanel === "rules") renderTableRules();
+  if (compactPanel === "hand") renderTableHand();
   updateClocks();
 }
 function updateClocks() {
@@ -1077,9 +1080,16 @@ function renderTurnHistory() {
       node.insertAdjacentHTML('afterbegin',playerAvatar(row.seat,true,row.events[0]?.actor||'player'));
       applyPlayerAppearance(node,game.players[row.seat].color);node.dataset.actor=row.seat;
     }
+    const construction = [...row.events].reverse().find(event => event.type === 'build' || event.type === 'tunnel_result' && event.data.outcome === 'built');
+    if (construction?.data.routeId !== undefined) {
+      const focus = document.createElement('button'); focus.type = 'button'; focus.className = 'history-route-focus';
+      focus.textContent = I18n.t('Ver en el mapa'); focus.onclick = () => focusHistoryRoute(construction.data.routeId);
+      node.append(focus);
+    }
     node._signature=signature;return node;});
   entries.replaceChildren(...nodes);
   if(game.historyPartial){const partial=document.createElement('p');partial.className='history-empty';partial.textContent=I18n.t('Registro parcial: esta partida comenzó con una versión anterior.');entries.prepend(partial);}
+  noteNewHistoryRows(rows.map(row=>row.id));
   displayedLogs=rows.map(row=>row.id);
   if(following)list.scrollTop=list.scrollHeight;
   else {const node=nodes.find(n=>n.dataset.historyId===anchorId);if(node)list.scrollTop+=node.getBoundingClientRect().top-top-offset;$("historyLatest").classList.remove('hidden');}
@@ -1151,7 +1161,10 @@ function updateHistoryScroll() {
   if (!list.clientHeight) return; // Hidden panels must not change follow/reading state.
   const max = Math.max(0, list.scrollHeight - list.clientHeight);
   historyFollowing = max - list.scrollTop < 3;
-  if (historyFollowing) $("historyLatest").classList.add("hidden");
+  if (historyFollowing) {
+    $("historyLatest").classList.add("hidden");
+    historyUnreadCount = 0; updateHistoryUnread();
+  }
   bar.classList.toggle("hidden", max <= 1);
   const size = Math.min(list.clientHeight, Math.max(24, list.clientHeight ** 2 / Math.max(1, list.scrollHeight)));
   const fraction = max ? Math.max(0, Math.min(1, list.scrollTop / max)) : 1;
@@ -1716,7 +1729,7 @@ reducedMotion.addEventListener("change", () => { cancelCardFlights(true); cancel
 function layoutHand() {
   const cards = [...$("hand").querySelectorAll(".traincard")];
   if (!cards.length) return;
-  if (compactMedia.matches) { cards.forEach(card => { card.style.marginRight = "0"; }); return; }
+  if (compactHand.parentElement === $("compactHand")) { cards.forEach(card => { card.style.marginRight = "0"; }); return; }
   // Layout uses the untransformed width while the previous positions animate.
   const width = cards[0].offsetWidth;
   const available = $("hand").clientWidth - 12;
@@ -1742,12 +1755,16 @@ function renderDestinations() {
   }
 }
 function playerScore(index) {
-  return game.result?.find(r=>r.seat===index)?.score ?? (index===seat?game.scoreProgress?.own?.score:null) ?? game.scoreProgress?.players[index]?.visible ?? game.players[index].score;
+  return TableUI.publicScore(game, index);
+}
+function scoreBonus(index) {
+  const bonus = !game.result && game.scoreProgress?.players[index]?.bonus;
+  return bonus ? `<span class="live-bonus" title="${I18n.t('Camino más largo provisional')}" aria-label="${I18n.t`+${bonus} puntos provisionales, aparte del círculo`}">★ +${bonus}</span>` : '';
 }
 function scoreExtras(index) {
   if(game.result||!game.scoreProgress)return '';
-  const bonus=game.scoreProgress.players[index]?.bonus||0,own=index===seat?game.scoreProgress.own:null;
-  const badge=bonus?`<span class="live-bonus" title="${I18n.t('Camino más largo provisional')}">★ +${bonus}</span>`:'';
+  const own=index===seat?game.scoreProgress.own:null;
+  const badge=scoreBonus(index);
   if(!own)return badge;
   return `${badge}<details class="live-score-details"><summary>${I18n.t('Tu puntuación')}</summary><dl>
     <dt>${I18n.t('Construcción')}</dt><dd>${own.route}</dd><dt>${I18n.t('Destinos cumplidos · privados')}</dt><dd>+${own.completedPoints}</dd>
@@ -1760,8 +1777,9 @@ function playerMetric(type, label, value) {
     cards: '<rect x="8" y="5" width="12" height="16" rx="2"/><path d="M16 5V3H4v15h4m4-9h4m-4 4h4"/>',
     trains: '<rect x="3" y="4" width="18" height="11" rx="2"/><path d="M7 8h3m4 0h3M2 13h20"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
     stations: '<path d="m2 9 10-7 10 7M5 8v13h14V8M9 21v-7h6v7M10 8h4"/>',
+    tickets: '<path d="M3 5h18v5a2 2 0 0 0 0 4v5H3v-5a2 2 0 0 0 0-4ZM9 5v14"/>',
   };
-  return `<span class="player-metric" data-metric="${type}" title="${label}: ${value}" aria-label="${label}: ${value}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[type]}</svg><strong aria-hidden="true">${value}</strong></span>`;
+  return `<span class="player-metric${type === 'points' && String(value).length > 2 ? ' is-large-number' : ''}" data-metric="${type}" title="${label}: ${value}" aria-label="${label}: ${value}"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[type]}</svg><strong aria-hidden="true">${value}</strong></span>`;
 }
 function plural(n, word) {
   return n + " " + I18n.t(word === "comodín" && n !== 1 ? "comodines" : word + (n === 1 ? "" : "s"));
@@ -2110,7 +2128,7 @@ function showMapMenu(event, target) {
   menu.classList.remove("hidden");
   const stage = $("game").getBoundingClientRect(), source = event.currentTarget.getBoundingClientRect();
   const x = event.clientX || source.x + source.width / 2, y = event.clientY || source.y + source.height / 2;
-  const usable = compactMedia.matches ? mapSafeArea($("mapscroll").getBoundingClientRect()) : { x: 8, y: 8, width: stage.width - 20, height: stage.height - 20 };
+  const usable = mapSafeArea($("mapscroll").getBoundingClientRect());
   menu.style.left = Math.max(usable.x, Math.min(x - stage.x + 12, usable.x + usable.width - menu.offsetWidth)) + "px";
   menu.style.top = Math.max(usable.y, Math.min(y - stage.y + 8, usable.y + usable.height - menu.offsetHeight)) + "px";
   event.currentTarget.classList.add("is-selected");
@@ -2233,14 +2251,14 @@ function closeOptionalDialog() {
   const choosing = uiDialog === "tickets";
   const closingResults = uiDialog === "results";
   if (closingResults) { resultMapCleanup?.(); resultMapCleanup = null; }
-  const returningToMap = uiDialog === "routes" && compactMedia.matches;
+  const returningToMap = uiDialog === "routes";
   uiDialog = buildTarget = null;
   buildSubmitting = false;
   if (!choosing) pendingChoiceKey = null;
   $("overlay").classList.add("hidden");
   hoveredDestination = null;
   if (returningToMap) setCompactPanel("map");
-  const returnTarget = returningToMap ? document.querySelector('[data-panel="map"]')
+  const returnTarget = returningToMap ? document.querySelector('[data-panel="destinations"]')
     : dialogReturnFocus?.isConnected ? dialogReturnFocus : $(closingResults ? "viewResults" : "viewRoutes");
   returnTarget.focus({ preventScroll: true });
   dialogReturnFocus = null;
@@ -2282,7 +2300,7 @@ function toggleDestinationHighlight() {
     resultMapSelection = null;
     $("resultContext").classList.add("hidden");
   }
-  if (compactMedia.matches) setCompactPanel("map");
+  setCompactPanel("map");
   updateDestinationSpotlight();
   toast(I18n.t(allDestinationsVisible ? "Destinos resaltados" : "Resaltado desactivado"), 1800);
 }
@@ -3168,52 +3186,53 @@ function renderPracticeControls() {
 const compactMedia = matchMedia("(max-width: 1100px), (max-height: 600px)");
 let compactPanel = "map", compactPlayer = null, compactHistoryTop = 0;
 const compactSections = {
-  cards: [document.querySelector(".game .sidepanel")],
   destinations: [document.querySelector(".dockdestinations")],
   history: [document.querySelector(".history-panel")],
+  rules: [$("tableRulesContent")], chat: [$("tableChat")], hand: [$("tableHandDetail")],
 };
 const compactHand = document.querySelector(".dockmain"), compactPlayers = document.querySelector(".players-panel"), turnBanner = $("turnBanner");
-let announcedTurn = null;
-const compactHomes = [...Object.values(compactSections).flat(), compactHand, compactPlayers, turnBanner].map(node => {
-  const anchor = document.createComment("responsive panel home");
-  node.before(anchor);
-  return { node, anchor };
-});
+let announcedTurn = null, tablePanelTrigger = null, historyCamera = null;
+$("compactMarket").append(document.querySelector(".game .sidepanel"));
+$("compactHand").append(compactHand);
+$("compactPlayers").append(compactPlayers);
+document.querySelector('.destinations-heading').append($("drawtickets"));
+$("tableMapTools").prepend($("toggleDestinations"));
+document.querySelector('.game-menu').append($("expandboard"));
+try { $("compactPlayers").classList.toggle('is-expanded', localStorage.getItem('rr-table-player-details') === 'true'); } catch {}
 function syncCompactControls() {
-  // Native hidden also protects desktop if the responsive stylesheet is delayed
-  // or unavailable. Use the same breakpoint that reparents the actual panels.
-  $("compactHud").hidden = $("compactPlayers").hidden = !compactMedia.matches;
-  $("compactPractice").classList.toggle("hidden", !compactMedia.matches || !practiceMode);
+  // All viewports share the same controls and authoritative state.
+  $("compactHud").hidden = $("compactPlayers").hidden = false;
+  $("compactPractice").classList.toggle("hidden", !practiceMode);
 }
 function setCompactPanel(next = compactPanel) {
+  if (next === "cards") next = "map"; // The market is always on the table.
+  if (next !== "map" && !compactSections[next]) return;
   syncCompactControls();
   hoveredDestination = null;
   const followHistory = historyFollowing;
   if ($("history").clientHeight) compactHistoryTop = $("history").scrollTop;
   compactPanel = next;
-  for (const { node, anchor } of compactHomes) {
-    if (compactMedia.matches && (node === compactHand || node === compactPlayers || node === turnBanner)) continue;
-    if (node.previousSibling !== anchor) anchor.after(node);
-  }
-  if (compactMedia.matches) {
-    if (compactHand.parentElement !== $("compactHand")) $("compactHand").append(compactHand);
-    if (compactPlayers.parentElement !== $("compactPlayers")) $("compactPlayers").append(compactPlayers);
-    if (turnBanner.parentElement !== $("compactTurnHome")) $("compactTurnHome").append(turnBanner);
-  }
-  const open = compactMedia.matches && next !== "map";
-  if (open) $("compactPanel").append(...compactSections[next]);
+  for (const node of Object.values(compactSections).flat()) if (node.parentElement !== $("tablePanelHome")) $("tablePanelHome").append(node);
+  const open = next !== "map";
+  if (open) $("tablePanelContent").append(...compactSections[next]);
   $("compactPanel").classList.toggle("hidden", !open);
-  $("compactPanel").setAttribute("aria-label", { cards: I18n.t("Cartas para robar"), destinations: I18n.t("Tus destinos"), history: I18n.t("Historial") }[next] || I18n.t("Panel de juego"));
-  $("game").dataset.compactPanel = compactMedia.matches ? next : "map";
-  for (const button of document.querySelectorAll("[data-panel]")) button.setAttribute("aria-pressed", String(button.dataset.panel === next));
+  $("tablePanelTitle").textContent = { destinations: I18n.t("Tus destinos"), history: I18n.t("Historial"), rules: I18n.t("Puntos y final de partida"), chat: I18n.t("Chat próximamente"), hand: I18n.t("Tu mano") }[next] || "";
+  $("game").dataset.compactPanel = next;
+  for (const button of document.querySelectorAll("[data-panel]")) {
+    button.setAttribute("aria-pressed", String(button.dataset.panel === next));
+    button.setAttribute("aria-expanded", String(button.dataset.panel === next));
+  }
   $("practiceControls").classList.remove("is-open");
   $("compactPractice").setAttribute("aria-expanded", "false");
   compactPlayer = null;
   updateCompactPlayer();
   closeMapMenu();
   if (game) {
+    if (next === "rules") renderTableRules();
+    if (next === "hand") renderTableHand();
     updateCompactStatus();
-    layoutHand(); applyZoom();
+    // Panels overlay the stage. Do not reset or refit its camera.
+    updateDestinationSpotlight();
     if ($("history").clientHeight) $("history").scrollTop = followHistory ? $("history").scrollHeight : compactHistoryTop;
     updateHistoryScroll();
   }
@@ -3227,6 +3246,11 @@ function updateCompactStatus() {
   if ($("compactTurn").textContent !== state.title) $("compactTurn").textContent = state.title;
   if ($("turnHint").textContent !== state.hint) $("turnHint").textContent = state.hint;
   turnBanner.classList.toggle("is-mine", state.mine);
+  const activeBadge = $("scores").querySelector(`[data-player="${game.current}"]`);
+  const hasTurn = activeBadge && ["play", "tunnel"].includes(game.phase);
+  turnBanner.classList.toggle("is-global", !hasTurn);
+  (hasTurn ? activeBadge : $("compactPlayers")).append(turnBanner);
+  turnBanner.setAttribute('aria-label', [state.title, state.hint].filter(Boolean).join(' · '));
   $("compactClock").dataset.clock = state.clock || "";
   $("compactClock").classList.toggle("hidden", !state.clock);
   const key = `${room}-${seat}-${game.turnSerial}`;
@@ -3234,14 +3258,20 @@ function updateCompactStatus() {
     announcedTurn = key;
     if (!reducedMotion.matches) turnBanner.animate([{ filter: "brightness(1)" }, { filter: "brightness(1.25)", offset: .3 }, { filter: "brightness(1)" }], { duration: 1100 });
   }
-  const reminder = compactMedia.matches && GameUI.needsSecondDraw(game, seat, compactPanel, controlled);
-  document.querySelector('[data-panel="cards"]').classList.toggle("needs-draw", reminder);
+  const reminder = GameUI.needsSecondDraw(game, seat, 'map', controlled);
+  $("compactMarket").classList.toggle("needs-draw", reminder);
+  $("drawstats").textContent = reminder ? I18n.t('Roba una carta más') : amIUp() ? `${game.drawCount}/${gameRules.trainCards.drawsPerTurn}` : '';
   $("compactPlayers").style.setProperty("--player-count", game.players.length);
+  $("playerDetailsToggle").setAttribute('aria-expanded', String($("compactPlayers").classList.contains('is-expanded')));
+  for (const badge of $("scores").children) {
+    const player = game.players[Number(badge.dataset.player)];
+    badge.querySelector('[data-metric="trains"]')?.classList.toggle('is-low', !!player && player.trains <= (gameRules.finalTrainThreshold ?? 2));
+  }
 }
 function updateCompactPlayer() {
   const player = game?.players[compactPlayer], detail = $("compactPlayerDetail");
-  detail.classList.toggle("hidden", !player || !compactMedia.matches);
-  if (player) detail.querySelector("span").textContent = I18n.t`${player.name}${compactPlayer === seat ? I18n.t(" · Tú") : ""} — ${playerScore(compactPlayer)} puntos · ${displayedHandCount(compactPlayer) ?? "—"} cartas · ${player.trains} vagones · ${player.stations} estaciones${members[compactPlayer]?.autopilot ? I18n.t(" · Bot de reemplazo") : ""}`;
+  detail.classList.toggle("hidden", !player);
+  if (player) detail.querySelector("span").textContent = I18n.t`${player.name}${compactPlayer === seat ? I18n.t(" · Tú") : ""} — ${playerScore(compactPlayer)} puntos · ${displayedHandCount(compactPlayer) ?? "—"} cartas · ${player.trains} vagones · ${player.stations} estaciones${members[compactPlayer]?.autopilot ? I18n.t(" · Bot de reemplazo") : ""}` + I18n.t` · ${player.ticketsCount ?? '—'} billetes · Camino más largo: ${game.scoreProgress?.players[compactPlayer]?.longest ?? '—'}`;
   let scores=detail.querySelector('.compact-score-detail');
   if(!scores){scores=document.createElement('div');scores.className='compact-score-detail';detail.append(scores);}
   const open=scores.querySelector('details')?.open;
@@ -3249,7 +3279,46 @@ function updateCompactPlayer() {
   if(open&&scores.querySelector('details'))scores.querySelector('details').open=true;
 }
 $("compactPlayerDetail").querySelector("button").onclick = () => { compactPlayer = null; updateCompactPlayer(); };
-for (const button of document.querySelectorAll("[data-panel]")) button.onclick = () => setCompactPanel(compactPanel === button.dataset.panel ? "map" : button.dataset.panel);
+for (const button of document.querySelectorAll("[data-panel]")) button.onclick = () => {
+  tablePanelTrigger = button; setCompactPanel(compactPanel === button.dataset.panel ? "map" : button.dataset.panel);
+};
+$("closeTablePanel").onclick = () => { setCompactPanel("map"); tablePanelTrigger?.focus({preventScroll:true}); };
+$("playerDetailsToggle").onclick = () => {
+  const expanded = $("compactPlayers").classList.toggle('is-expanded');
+  $("playerDetailsToggle").setAttribute('aria-expanded', String(expanded));
+  try { localStorage.setItem('rr-table-player-details', String(expanded)); } catch {}
+};
+$("hand").setAttribute('role','button'); $("hand").tabIndex = 0;
+$("hand").setAttribute('aria-haspopup','true'); $("hand").setAttribute('aria-controls','compactPanel');
+$("hand").onclick = () => { tablePanelTrigger = $("hand"); setCompactPanel(compactPanel === 'hand' ? 'map' : 'hand'); };
+$("hand").addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); $("hand").click(); } });
+$("resetMapView").onclick = () => { historyCamera = null; $("returnMapView").classList.add('hidden'); zoom = 1; mapCenter = {...MAP_CENTER}; setCompactPanel('map'); applyZoom(); };
+$("returnMapView").onclick = () => { if (!historyCamera) return; zoom = historyCamera.zoom; mapCenter = {...historyCamera.center}; historyCamera = null; $("returnMapView").classList.add('hidden'); applyZoom(); };
+function focusHistoryRoute(id) {
+  const route = matchContext?.route(id), geometry = geometryFor(id); if (!route || !geometry) return;
+  historyCamera ||= {zoom, center:{...mapCenter}};
+  const xs = geometry.points.map(p=>p[0]), ys = geometry.points.map(p=>p[1]);
+  mapCenter = {x:(Math.min(...xs)+Math.max(...xs))/2, y:(Math.min(...ys)+Math.max(...ys))/2};
+  zoom = Math.max(zoom, 2); setCompactPanel('map'); applyZoom();
+  $("returnMapView").classList.remove('hidden');
+}
+function renderTableRules() {
+  const rules = TableUI.rulesSummary(gameRules), unavailable = I18n.t('No disponible');
+  const ending = rules.threshold === null ? unavailable : I18n.t`Cuando un jugador termina su turno con ${rules.threshold} vagones o menos, comienza la última ronda. Todos juegan un turno adicional, incluido quien la activó.`;
+  $("tableRulesContent").innerHTML = `<p class="rules-ending">${escapeHTML(ending)}</p><table><caption class="sr-only">${I18n.t('Puntos por longitud de ruta')}</caption><tbody><tr><th scope="row">${I18n.t('Vagones')}</th>${rules.routes.map(r=>`<td>${r.length}</td>`).join('')}</tr><tr><th scope="row">${I18n.t('Puntos')}</th>${rules.routes.map(r=>`<td><strong>${r.points}</strong></td>`).join('')}</tr></tbody></table><dl><dt>${I18n.t('Camino más largo')}</dt><dd>${rules.longest === null ? '—' : '+'+rules.longest}</dd><dt>${I18n.t('Estación sin construir')}</dt><dd>${rules.station === null ? '—' : '+'+rules.station}</dd><dt>${I18n.t('Destino completado')}</dt><dd>+${I18n.t('valor')}</dd><dt>${I18n.t('Destino pendiente')}</dt><dd>−${I18n.t('valor')}</dd></dl><p>${I18n.t('El bono del camino más largo es provisional durante la partida. Todos los empatados reciben el bono al finalizar.')}</p><p>${escapeHTML($("deckinfo").textContent)}</p>`;
+}
+function renderTableHand() {
+  $("tableHandDetail").replaceChildren(...[...$("hand").querySelectorAll('.traincard')].map(card=>card.cloneNode(true)));
+}
+function updateHistoryUnread() {
+  $("historyUnread").textContent = historyUnreadCount > 99 ? '99+' : String(historyUnreadCount);
+  $("historyUnread").classList.toggle('hidden', !historyUnreadCount);
+  $("historyLatest").textContent = historyUnreadCount ? I18n.t`${historyUnreadCount} jugada(s) nueva(s) ↓` : I18n.t('Nuevos ↓');
+}
+function noteNewHistoryRows(ids) {
+  if (!historyFollowing || !$("history").clientHeight) historyUnreadCount += TableUI.newHistoryRows(displayedLogs, ids);
+  updateHistoryUnread();
+}
 $("compactPractice").onclick = () => {
   const open = $("practiceControls").classList.toggle("is-open");
   $("compactPractice").setAttribute("aria-expanded", String(open));
@@ -3295,26 +3364,15 @@ window.addEventListener("resize", () => {
 });
 
 function mapSafeArea(rect, forCamera = false) {
-  if (compactMedia.matches) {
-    const panel = $("compactPanel").getBoundingClientRect(), hud = $("compactHud").getBoundingClientRect();
-    const open = !$("compactPanel").classList.contains("hidden"), beside = rect.width >= 700;
-    return GameUI.safeArea({ width: rect.width, height: rect.height }, {
-      top: Math.max($("boardStatusActions").getBoundingClientRect().bottom, $("compactPlayers").getBoundingClientRect().bottom) - rect.top + 8,
-      left: $("boardtools").getBoundingClientRect().right - rect.left + 8,
-      right: open && beside ? rect.right - panel.left + 8 : 8,
-      // Phone sheets overlay the board: opening one must not shrink Europe
-      // into a tiny thumbnail. Menus/spotlights still use the uncovered area.
-      bottom: rect.bottom - (open && !beside && !forCamera ? panel.top : hud.top) + 8,
-    });
-  }
-  const side = $("gameSidebar").getBoundingClientRect();
-  const bottom = $("turnBanner").getBoundingClientRect();
-  const top = $("boardStatusActions").getBoundingClientRect().bottom - rect.top + 12;
-  const left = $("boardtools").getBoundingClientRect().right - rect.left + 12;
-  return {
-    x: left, y: top, width: side.left - rect.left - left - 16,
-    height: bottom.top - rect.top - top - 12,
-  };
+  const panel = $("compactPanel").getBoundingClientRect(), hud = $("compactHud").getBoundingClientRect();
+  const players = $("compactPlayers").getBoundingClientRect();
+  return TableUI.cameraArea({width:rect.width,height:rect.height}, {
+    top: Math.max($("boardStatusActions").getBoundingClientRect().bottom, players.bottom) - rect.top + 8,
+    bottom: hud.top - rect.top - 8,
+    left: Math.max(8, document.querySelector('.table-tools-left').getBoundingClientRect().left - rect.left),
+    right: Math.max(8, rect.right - $("tableMapTools").getBoundingClientRect().right), forCamera,
+    panel: $("compactPanel").classList.contains('hidden') ? null : {top:panel.top-rect.top-8},
+  });
 }
 function mapViewSize() {
   const rect = $("mapscroll").getBoundingClientRect(), { width, height } = rect;
@@ -3359,7 +3417,7 @@ let mapDrag = null, mapPinch = null, suppressMapClick = false;
 const mapPointers = new Map();
 $("mapscroll").addEventListener("pointerdown", (event) => {
   if (event.button !== 0) return;
-  const dismissedPanel = compactMedia.matches && compactPanel !== "map";
+  const dismissedPanel = compactPanel !== "map";
   if (dismissedPanel) setCompactPanel("map");
   mapPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
   if (mapPointers.size >= 2) {
@@ -3432,7 +3490,7 @@ for (const type of ["pointerup", "pointercancel", "lostpointercapture", "pointer
       event.currentTarget.releasePointerCapture(event.pointerId);
   });
 $("mapscroll").addEventListener("click", (event) => {
-  if (compactMedia.matches && compactPanel !== "map") setCompactPanel("map");
+  if (compactPanel !== "map") setCompactPanel("map");
   if (!suppressMapClick || event.detail === 0) return;
   suppressMapClick = false;
   event.preventDefault();
@@ -3485,6 +3543,8 @@ window.addEventListener("keydown", (e) => {
     if ($("sessionControls").open) { e.preventDefault(); closeGameMenu(true); }
     else if (game?.sharedTunnel && !$("overlay").classList.contains("hidden") && $("dialog").classList.contains("tunnel-dialog")) { e.preventDefault(); }
     else if (uiDialog) { e.preventDefault(); closeOptionalDialog(); }
+    else if (compactPlayer !== null) { e.preventDefault(); compactPlayer = null; updateCompactPlayer(); }
+    else if (compactPanel !== 'map') { e.preventDefault(); $("closeTablePanel").click(); }
     else if (!$("mapMenu").classList.contains("hidden")) {
       e.preventDefault(); closeMapMenu();
       const selector = stationCity ? `[data-city="${CSS.escape(stationCity)}"]` : `[data-route-id="${CSS.escape(String(selected))}"]`;
@@ -3559,7 +3619,6 @@ if(replayMode){
     replayMotion=context.animate;replaySpeed=context.speed;
     if(!context.animate){cancelReplayEffects();lastEffectId=null;}
     useMatchDefinition(view, context.definition, {replay:true});
-    if(context.animate&&compactMedia.matches&&(view.events||[]).some(e=>e.id>lastEffectId&&['draw','market_refresh'].includes(e.type)))setCompactPanel('cards');
     const effects=prepareEffects(view);
     selected=null;stationCity=null;
     const replayColors = LobbyUI.restoreColors(recordedMembers,view.players);

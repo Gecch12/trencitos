@@ -182,6 +182,16 @@ separa la cartografía de Sudamérica de sus reglas. La textura base de Three.js
 limita su lado mayor a 2048 píxeles; los vagones y marcas siguen siendo geometría.
 [map-layout.js](../frontend/map-layout.js) genera geometría y coloca etiquetas
 con ese layout; conserva una fachada europea para consumidores de compatibilidad.
+El layout puede declarar `background: { surface: "water" | "land", color?: "#RRGGBB" }`.
+`createLayout` normaliza el fondo: agua `#bbd6d9` por defecto para los diseños
+existentes, tierra `#eee6d2` y un color opaco opcional. El entorno depende del
+encuadre visual, no del país ni de reglas o estado guardado. Por ejemplo,
+`background: { surface: "land" }` prepara un mapa interior sin imponer mar.
+Three.js usa ese color en la textura, el exterior y el respaldo CSS del contenedor,
+y deriva el exterior del mismo tinte del plano en espacio lineal durante todo
+el sombreado, incluidas transiciones interrumpidas. Se comparte entre tablero
+principal y mapa de destinos. El fondo es uniforme; prolongar bordes mixtos de
+costa y tierra requiere cartografía adicional.
 Los carriles dobles tienen orden estable por ID y la geometría europea conserva
 las huellas anteriores (tolerancia numérica de `1e-9` unidades al comparar
 entornos JavaScript distintos). El cliente y Three.js buscan geometría por identidad,
@@ -255,19 +265,24 @@ guardado restaura también estos ajustes. UI 9 expone `timing` y la duración
 de cada oferta para las barras. Los plazos los calcula solo el motor.
 
 El menú flotante y los steppers reutilizan el mismo estado en escritorio y
-móvil. La cámara reserva una franja izquierda para los iconos, sin descontar
-su altura completa al mapa. Los sonidos de pluma son locales y la firma
+móvil. La mesa compartida de `table.css` mantiene jugadores arriba y mercado/mano
+abajo; `TableUI.cameraArea` reserva sus límites y los márgenes seguros. Los iconos
+y paneles temporales se superponen sin cambiar el encuadre. Los controles se
+reubican en `app.js`, conservando sus listeners y el estado autorizado. Los sonidos de pluma son locales y la firma
 se reproduce una vez al confirmar el ACK del comando de selección.
 La sala separa opciones generales y tiempos; sus grupos responden al ancho del
 panel con container queries. El pie de inicio conserva su espacio mientras el
 contenido puede desplazarse en alturas pequeñas. Marcar/desmarcar billetes usa
 una envolvente continua; la firma conserva la secuencia de trazos original.
 
-Las cuatro métricas de cada jugador usan la vista pública del motor, incluido
-`handCount`; el contador propio sigue las cartas incorporadas visualmente a la mano.
+Las métricas de cada jugador usan la vista pública del motor, incluidos
+`handCount` y `ticketsCount`; el contador propio sigue las cartas incorporadas
+visualmente a la mano. El círculo muestra construcción pública y el bono
+provisional se presenta aparte; el desglose privado se abre desde el propio jugador.
 No se reciben manos rivales para contar cartas. `playerAvatar` y
 los estilos comunes de `.player-avatar` mantienen las proporciones del símbolo
-en panel, historial, resultados y clasificación, aunque cambie el círculo.
+en historial, resultados y clasificación, aunque cambie el círculo. La fila
+compacta identifica al jugador mediante el círculo de puntos, su color y nombre.
 
 `GameUI.urgentClock` selecciona el plazo propio activo bajo cinco segundos;
 `updateClockSound` lo consulta una vez por actualización, fuera del recorrido
@@ -637,8 +652,12 @@ Alcance y pruebas en
   afín mantiene alineados los objetivos SVG y el plano XY de Three. Gestos,
   foco, selección y pagos conservan sus manejadores existentes de `app.js`.
 - El plano usa `CanvasTexture` con cartografía y guías de `RailMap`. Casillas
-  libres, marcas de túnel/ferri, círculos de ciudad, vagones y estaciones son
+  de todas las rutas, marcas de túnel/ferri, círculos de ciudad, vagones y estaciones son
   mallas instanciadas con profundidad. SVG conserva objetivos transparentes y texto.
+  Las casillas, bordes y marcas permanecen en el suelo antes, durante y después
+  de construir; los vagones las ocultan físicamente donde se superponen. Solo las
+  piezas nuevas participan en la espera y descenso de la animación. La propiedad
+  no elimina el dibujo del tablero, también al recargar o consultar destinos.
   Las bandas de propiedad y conexión son dos lotes de geometría sobre el suelo,
   con color/opacidad por ruta y cortes en tramos prestados; quedan bajo las piezas.
 - Las etiquetas SVG se compensan en ambos ejes para mantenerse horizontales y

@@ -101,7 +101,7 @@ STATE_BACKEND=file STATE_FILE="$PWD/.qa/local-check.json" AUTH_ENABLED=false POR
 
 Abrir `http://localhost:3118/`. El tablero principal usa solo 3D.
 La cámara usa rueda, arrastre, pellizco y teclado (flechas, `+`/`−`, Inicio al
-enfocar el mapa), sin botones visibles de zoom o centrado.
+enfocar el mapa), además del botón **Ver mapa completo** para restaurar el encuadre.
 
 Verificación del inicio, perfil y salas:
 

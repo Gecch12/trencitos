@@ -279,8 +279,8 @@ perspectiva/acción, hitos, estadísticas adicionales ni enlaces de auditoría. 
 vista general conserva el tablero y el historial completo, sin asignar una mano
 propia al observador.
 
-El mercado usa el panel normal, sin acordeón; en móvil se abre el panel de robos
-existente al reproducir un robo o renovación. Las animaciones comparten
+El mercado y la mano usan la franja permanente compartida por móvil y escritorio.
+Reproducir un robo o renovación mantiene esa disposición. Las animaciones comparten
 `prepareEffects`, `playEffects`, `animateCardFlight`, `prepareMarketRefresh` y
 `animateConstruction` con el juego. Sus tiempos siguen la velocidad seleccionada;
 las cartas del puesto observado entran al contador cuando aterrizan. Pausar,
@@ -346,7 +346,8 @@ No se confunden bonificaciones provisionales con puntos concedidos en vivo.
 La interfaz muestra un modal de carga con tren y reintento, conserva la perspectiva
 seleccionada al avanzar y distingue el actor del paso. El historial acumula todos
 los eventos grabados: pasado, paso actual y futuro navegable. Los controles viven
-junto al historial en escritorio y en un panel plegable en móvil. Las filas del
+en una franja flotante bajo los jugadores; el historial se abre por su icono
+en todos los tamaños, sin cambiar el encuadre del tablero. Las filas del
 historial permiten saltar a una acción y conservan sus nodos mientras no cambie
 su contenido; avanzar no vuelve a crear toda la lista. La reproducción conserva
 la cámara y la perspectiva elegida.

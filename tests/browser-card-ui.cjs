@@ -24,6 +24,7 @@ function room(code,refresh) {
   if(seat>=0)await p.addInitScript(({code,token})=>localStorage.setItem('rr-room-'+code,token),{code:room.code,token:room.members[seat].token});
   p.on('pageerror',e=>report.errors.push(e.message));p.on('console',e=>{if(e.type()==='error')report.errors.push({message:e.text().slice(0,240),location:e.location()});});
   await p.goto(base+'/?'+(seat<0?'watch=':'room=')+room.code);await p.waitForFunction(()=>!!game);
+  if(room.game.phase!=='finished')await p.locator('[data-panel="history"]').click();
   return p;
  }
  const normal=room('QACARD',false);app.rooms.set(normal.code,normal);
@@ -50,7 +51,7 @@ function room(code,refresh) {
  await actor.locator('[data-market-index="0"]').click();
  await Promise.all([actor,rival,spectator].map(p=>p.waitForFunction(()=>game.history.filter(e=>e.draw).length===2)));
  for(const p of [actor,rival,spectator])assert.deepEqual(await p.locator(drawnCards).evaluateAll(imgs=>imgs.map(img=>img.getAttribute('src'))),['/assets/cards/back.svg','/assets/cards/red.svg']);
- await rival.reload();await rival.waitForSelector(drawnCards);
+ await rival.reload();await rival.waitForFunction(()=>!!game);await rival.locator('[data-panel="history"]').click();await rival.waitForSelector(drawnCards);
  assert.match(await rival.locator(drawnCards).first().getAttribute('src'),/back.svg/);
  await rival.locator('#history').screenshot({path:path.join(out,'history.png')});
  report.checks.push('Public/blind thumbnails for actor, rival and spectator; reload; ordinary draws stay immediate');

@@ -1,0 +1,88 @@
+---
+{"id":"board-first-mobile","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-04"}
+---
+# Mesa compacta con prioridad al mapa
+
+Ángel aprobó implementar la propuesta discutida con Moti a partir de sus capturas
+de Colonist: mapa protagonista, controles por iconos y detalles bajo demanda.
+Alcance: web adaptable compartida por móvil, tablet y escritorio. El chat se
+reserva como panel de próxima implementación, sin transporte ni envío.
+
+## Aceptación
+
+- [x] Sustituir navegación inferior y sidebar por mercado/mano permanentes,
+  jugadores compactos arriba y accesos flotantes a historial, chat y destinos.
+- [x] Círculos con puntos públicos; bono aparte, recursos ampliables, reloj
+  asociado al turno y detalle privado del propio jugador.
+- [x] Ayuda de puntos y final desde la definición de la partida; última ronda.
+- [x] Paneles superpuestos con cierre/Escape sin reencuadrar el mapa; historial
+  con scroll, nuevos movimientos, foco de construcción y regreso a cámara previa.
+- [x] Completar comprobaciones de navegador, regresión y revisión visual.
+
+## Implementación
+
+[table.css](../../frontend/table.css) define el diseño compartido y se carga
+después del CSS anterior. [table-ui.js](../../frontend/table-ui.js) conserva
+cálculos de presentación puros; [app.js](../../frontend/app.js) reutiliza los
+controles existentes mediante cambio de contenedor, sin duplicar listeners.
+Los nuevos recursos se incluyen en la lista pública y, por ella, en el paquete
+móvil. El tablero sigue siendo Three.js. El servidor conserva reglas y secretos.
+
+El contrato visible está en [README](../../README.md), los puntos en
+[dominio](../domain.md) y la repetición en [historial](../history-replay.md).
+Se preservan los cambios previos de otro trabajo. Ocho archivos, incluidos
+`board-3d.js` y `map-layout.js`, mantienen su SHA-256; arquitectura recibe solo
+tres sustituciones documentadas sobre la mesa y las métricas, conservando el
+contenido previo al revertir esas sustituciones. Evidencia en
+`.qa/board-first/preexisting.json` y `architecture-edits.json`.
+
+## Evidencia y siguiente paso
+
+Validación local del 2026-11-04, con Chrome y HTTP/WebSocket real. Servidores
+aislados y archivos temporales; la prueba de latencia usa un doble local de
+Supabase, sin conectar con producción. Evidencia en `.qa/board-first/`:
+
+- `browser-table-ui.cjs`: cinco grupos correctos y cero errores. Siete tamaños
+  (320×568, 390×844, 430×932, 700×900, 768×1024, 1440×900, 844×390), cinco
+  jugadores, nueve colores, puntos de tres cifras y áreas táctiles de 44 px.
+  Paneles y detalles no alteran la cámara; robos reales, privacidad, historial,
+  destinos, regreso de foco y construcción que dispara última ronda con dos
+  vagones. Ayuda en inglés y chat deshabilitado comprobados.
+- `browser-card-ui.cjs`: cuatro grupos correctos, cero errores; cartas públicas
+  y ocultas, renovación, pagos, tamaños e idiomas, resultados finales.
+- `browser-draw-feedback.cjs`: dieciséis grupos correctos, cero errores;
+  robos rápidos, persistencia simulada lenta/fallida, reconexión y animaciones.
+- `browser-map-replay.cjs`: cuatro combinaciones de protocolo legado/actual y
+  participante/público móvil, correctas y sin errores.
+- Suite Node aislada: 697 pruebas; 696 correctas y una expectativa antigua sobre
+  volver a destinos en escritorio. Se actualizó al flujo compartido y la
+  comprobación focal posterior pasó 22/22 (`mobile-ui`, `table-ui`,
+  `presentation-controls`). El primer intento sin `STATE_FILE` propio encontró
+  un estado local previo inválido; no se alteraron esos archivos.
+- Capturas de móvil, tablet, horizontal, escritorio, ayuda, historial y chat
+  inspeccionadas. Corregidos recorte del reloj, cruce de controles en horizontal
+  y devolución del foco a una pestaña retirada.
+- Comprobador documental normal y `--base HEAD`, sintaxis y `git diff --check`
+  correctos. Preservación de cambios anteriores verificada en `preservation.json`.
+
+La prueba de mesa se añade a CI; las pruebas existentes de cartas, robos y replay
+se adaptan a la navegación por iconos. La verificación es de navegador, no una
+certificación de APK/iOS instalada. Entrega local en main, sin commit ni despliegue.
+
+Siguiente paso: Ángel revisa la vista previa local y decide ajustes visuales.
+
+## Entrega conjunta a main · 2026-11-04
+
+Ángel autorizó subir todos los cambios locales a `main`, incluida la
+[continuidad del fondo y las casillas permanentes](ticket-map-shading.md).
+La referencia remota estaba al día con la base local `48e5503`.
+
+Comprobación completa previa al commit: **697/697 pruebas Node correctas**,
+sin fallos ni omitidas, en 157,2 s. Servidor/estado de pruebas aislados con
+`STATE_BACKEND=file` y `STATE_FILE` temporal. Evidencia en
+`.qa/board-first/pre-push-tests.log`. La comprobación documental y
+`git diff --cached --check` también pasan. Esta ejecución cierra la expectativa
+antigua corregida durante la implementación.
+
+Siguiente paso de entrega: comprobar el commit en `origin/main` y el inicio de
+CI. La subida a Git no acredita un despliegue Live en Render.

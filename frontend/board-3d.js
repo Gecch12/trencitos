@@ -8,7 +8,11 @@ export function createBoard3D({ container, map, network, onFailure }) {
   const geometryById = new Map(network.map(route => [route.id, route]));
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
-  renderer.setClearColor('#bbd6d9');
+  const backgroundColor = map.background?.color ?? '#bbd6d9';
+  const baseBackground = new THREE.Color(backgroundColor), shadedBackground = new THREE.Color();
+  const previousBackground = container.style.backgroundColor;
+  renderer.setClearColor(baseBackground);
+  container.style.backgroundColor = backgroundColor;
   renderer.domElement.className = 'board-3d-canvas';
   renderer.domElement.setAttribute('aria-hidden', 'true');
   renderer.domElement.addEventListener('webglcontextlost', lost);
@@ -19,8 +23,9 @@ export function createBoard3D({ container, map, network, onFailure }) {
   const textureScale = Math.min(2, 2048 / Math.max(map.bounds.width, map.bounds.height));
   textureCanvas.width = Math.ceil(map.bounds.width * textureScale); textureCanvas.height = Math.ceil(map.bounds.height * textureScale);
   const ctx = textureCanvas.getContext('2d');
+  // Fill every texel before transforming, including rounded-up edge pixels.
+  ctx.fillStyle = backgroundColor; ctx.fillRect(0, 0, textureCanvas.width, textureCanvas.height);
   ctx.scale(textureScale, textureScale); ctx.translate(-map.bounds.x, -map.bounds.y);
-  ctx.fillStyle = '#bbd6d9'; ctx.fillRect(map.bounds.x, map.bounds.y, map.bounds.width, map.bounds.height);
   for (const d of map.land) {
     const p = new Path2D(d);
     ctx.fillStyle = '#eee6d2'; ctx.strokeStyle = '#a5b3a7'; ctx.lineWidth = 1.1;
@@ -41,6 +46,13 @@ export function createBoard3D({ container, map, network, onFailure }) {
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(map.bounds.width, map.bounds.height), new THREE.MeshBasicMaterial({ map: texture }));
   plane.position.set(map.bounds.x + map.bounds.width / 2, -map.bounds.y - map.bounds.height / 2, -.1);
   scene.add(plane);
+  function syncBackground() {
+    // MeshBasicMaterial multiplies the sRGB texture and tint in linear space.
+    // Derive the clear color from that same tint, including intermediate frames.
+    shadedBackground.copy(baseBackground).multiply(plane.material.color);
+    renderer.setClearColor(shadedBackground);
+    container.style.backgroundColor = shadedBackground.getStyle();
+  }
   const sky = new THREE.HemisphereLight(0xfff9e8, 0x365466, 2.2);
   sky.position.set(0, 0, 1); scene.add(sky); // The board uses Z as its vertical axis.
   const sun = new THREE.DirectionalLight(0xffffff, 2.5);
@@ -183,7 +195,7 @@ export function createBoard3D({ container, map, network, onFailure }) {
       const attribute = layer.mesh.geometry.getAttribute('color');
       attributes.set(attribute, attribute.array.slice());
     }
-    return { attributes, plane: plane.material.color.clone(), background: renderer.getClearColor(new THREE.Color()), strength: shadingStrength };
+    return { attributes, plane: plane.material.color.clone(), strength: shadingStrength };
   }
   function advanceShading(now) {
     if (!shadingTransition) return false;
@@ -197,7 +209,7 @@ export function createBoard3D({ container, map, network, onFailure }) {
       attribute.needsUpdate = true;
     }
     plane.material.color.lerpColors(before.plane, after.plane, blend);
-    renderer.setClearColor(color.lerpColors(before.background, after.background, blend));
+    syncBackground();
     shadingStrength = before.strength + (after.strength - before.strength) * blend;
     if (progress === 1) shadingTransition = null;
     return !!shadingTransition;
@@ -226,14 +238,26 @@ export function createBoard3D({ container, map, network, onFailure }) {
     for (const route of routes) if (litRoutes.has(route.id)) { litCities.add(route.a); litCities.add(route.b); }
     for (const station of spotlight?.stations || []) litCities.add(station.city);
     const tint = (hex, faded) => typeof faded === 'number' ? new THREE.Color(hex).multiplyScalar(1 - .72 * faded)
-      : faded ? new THREE.Color(hex).lerp(new THREE.Color('#bbd6d9'), .72) : hex;
+      : faded ? new THREE.Color(hex).lerp(baseBackground, .72) : hex;
     plane.material.color.set('#ffffff').lerp(new THREE.Color('#73868d'), spotlightStrength);
-    renderer.setClearColor(new THREE.Color('#bbd6d9').lerp(new THREE.Color('#536c77'), spotlightStrength));
+    syncBackground();
     for (const route of routes) {
       const geometry = geometryById.get(route.id); if (!geometry) continue;
       const owner = route.id === hiddenRoute ? null : route.owner;
       const player = owner === null ? null : players[owner];
       const faded = spotlight ? (litRoutes.has(route.id) ? false : spotlightStrength) : highlight !== null && owner !== highlight;
+      // Printed board cells stay on the ground, independent of ownership or
+      // construction animation. Only the wagon parts belong to animation targets.
+      for (const [index,cell] of geometry.cells.entries()) {
+        const width = cell.width || 22, height = cell.height || 8.5;
+        put(slotEdges,cell.x,cell.y,.13,cell.angle,width/22,height/8.5,1,tint('#405351',faded));
+        put(slotFaces,cell.x,cell.y,.16,cell.angle,(width-1.8)/22,(height-1.8)/8.5,1,tint(routeColors[route.color] || '#929da5',faded));
+        const angle = cell.angle * Math.PI / 180, cos = Math.cos(angle), sin = Math.sin(angle);
+        if (route.tunnel) for (const x of [-8,-3,2,7]) for (const y of [-5.5,5.5]) {
+          put(tunnelMarks,cell.x+x*cos-y*sin,cell.y+x*sin+y*cos,.18,cell.angle,2,1.4,.12,tint('#384b4f',faded));
+        }
+        if (index < (route.ferry || 0)) put(ferryMarks,cell.x,cell.y,.22,cell.angle,1,1,1,tint('#405351',faded));
+      }
       if (player) {
         ownership.set(route.id, tint(player.color, faded), .32); bandCount++;
         const appearances = wagonRouteAppearances(wagonStyle(player.color,player.wagon).model,`${visualSeed}:${owner}:${route.id}`,geometry.cells.length);
@@ -245,17 +269,7 @@ export function createBoard3D({ container, map, network, onFailure }) {
           });
         }
       } else {
-        for (const [index,cell] of geometry.cells.entries()) {
-          const width = cell.width || 22, height = cell.height || 8.5;
-          put(slotEdges,cell.x,cell.y,.13,cell.angle,width/22,height/8.5,1,tint('#405351',faded));
-          put(slotFaces,cell.x,cell.y,.16,cell.angle,(width-1.8)/22,(height-1.8)/8.5,1,tint(routeColors[route.color] || '#929da5',faded));
-          const angle = cell.angle * Math.PI / 180, cos = Math.cos(angle), sin = Math.sin(angle);
-          if (route.tunnel) for (const x of [-8,-3,2,7]) for (const y of [-5.5,5.5]) {
-            put(tunnelMarks,cell.x+x*cos-y*sin,cell.y+x*sin+y*cos,.18,cell.angle,2,1.4,.12,tint('#384b4f',faded));
-          }
-          if (index < (route.ferry || 0)) put(ferryMarks,cell.x,cell.y,.22,cell.angle,1,1,1,tint('#405351',faded));
-          freeCells++;
-        }
+        freeCells += geometry.cells.length;
         if (projected.has(route.id) && preview.player) {
           const ghost = ghostRenderer(), player = preview.player;
           const appearances = wagonRouteAppearances(wagonStyle(player.color, player.wagon).model, `${visualSeed}:preview:${route.id}`, geometry.cells.length);
@@ -364,6 +378,7 @@ export function createBoard3D({ container, map, network, onFailure }) {
       return { x: (p.x + 1) * container.clientWidth / 2, y: (1 - p.y) * container.clientHeight / 2 };
     },
     stats() { return { selection: {...selection}, freeCells, previewWagons: previewCount, tunnelCards: tunnelBoard.stats(), ownershipBands: bandCount, spotlightRoutes: [...spotlightRoutes], completedRoutes:[...completedRoutes], goldOpacity:gold.mesh.material.opacity, borrowedRoutes: [...borrowedRoutes],
+      ground: { cells: slotFaces.count, edges: slotEdges.count, tunnelMarks: tunnelMarks.count, ferryMarks: ferryMarks.count },
       spotlightStrength, shadingStrength, shadingAnimating: !!shadingTransition,
       animations: [...animations.values()].map(a=>({key:a.key,maxLift:a.maxLift,visible:a.visible})), revision: THREE.REVISION, draws, wagons: pieceCount, models: { ...modelCounts }, passengers: passengerAppearances.map(p=>({...p})), stations: stationCount, samples: [...samples], calls: renderer.info.render.calls,
       triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, pixelRatio: renderer.getPixelRatio() }; },
@@ -376,6 +391,7 @@ export function createBoard3D({ container, map, network, onFailure }) {
       scene.traverse(node => { if (node.geometry) geometries.add(node.geometry); if (node.material) materials.add(node.material); if (node.isInstancedMesh) node.dispose(); });
       geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose());
       wagons.dispose(); previewWagons?.dispose(); texture.dispose(); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove();
+      container.style.backgroundColor = previousBackground;
     },
   };
 }

@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="shell.css" />
     <link rel="stylesheet" href="room-setup.css" />
       <link rel="stylesheet" href="destination-map.css">
+    <link rel="stylesheet" href="table.css" />
   </head>
   <body>
     <a href="#lobby" class="skip-link">Saltar al contenido</a>
@@ -191,6 +192,7 @@
                   <button id="leaveWatch" class="menu-leave" type="button" hidden data-icon="exit">Dejar de observar</button>
                 </div>
               </details>
+              <button id="tableRules" type="button" data-panel="rules" data-icon="info" aria-label="Puntos y final de partida" title="Puntos y final de partida" aria-controls="compactPanel" aria-expanded="false"></button>
               <button
                 class="boardexpand hidden"
                 id="expandboard"
@@ -203,6 +205,7 @@
               </button>
           </div>
           <div id="boardStatusActions" class="board-status-actions">
+              <span id="finalRoundNotice" class="final-round-notice hidden" role="status"></span>
               <button id="pendingTickets" class="pending-tickets hidden" type="button" aria-haspopup="dialog">Elegir billetes <span data-clock="offer"></span></button>
               <span id="initialStatus" class="initial-status hidden" role="status"><span id="initialStatusText"></span> · <strong data-clock="initial"></strong></span>
               <button id="viewResults" class="pending-tickets hidden" type="button" aria-haspopup="dialog">Ver resultados</button>
@@ -252,19 +255,34 @@
         </section>
         <span id="turntitle" class="sr-only" role="status"></span>
       </aside>
+      <button id="playerDetailsToggle" class="table-details-toggle" type="button" data-icon="friends" aria-label="Detalles de jugadores" title="Detalles de jugadores" aria-controls="compactPlayers" aria-expanded="false"><span aria-hidden="true">⌄</span></button>
       <section id="compactPlayers" class="compact-players" aria-label="Resumen de jugadores" hidden></section>
       <div id="compactPlayerDetail" class="compact-player-detail hidden" role="region" aria-label="Detalle del jugador"><span></span><button type="button" aria-label="Cerrar detalle del jugador">×</button></div>
-      <section id="compactPanel" class="compact-panel hidden" aria-label="Panel de juego"></section>
-      <div id="compactHud" class="compact-hud" hidden>
-        <div id="compactTurnHome"></div>
-        <section id="compactHand" aria-label="Tu mano, siempre visible"></section>
-        <nav class="compact-nav" aria-label="Paneles de la partida">
-          <button type="button" data-panel="map" aria-pressed="true" aria-controls="mapscroll"><span aria-hidden="true">⌖</span>Mapa</button>
-          <button type="button" data-panel="cards" aria-pressed="false" aria-controls="compactPanel"><span aria-hidden="true">▤</span>Robar<small class="draw-reminder">1 pendiente</small></button>
-          <button type="button" data-panel="destinations" aria-pressed="false" aria-controls="compactPanel"><span aria-hidden="true">⚑</span>Destinos</button>
-          <button type="button" data-panel="history" aria-pressed="false" aria-controls="compactPanel"><span aria-hidden="true">≡</span>Historial</button>
-        </nav>
+      <section id="compactPanel" class="compact-panel hidden" aria-labelledby="tablePanelTitle">
+        <header class="table-panel-heading"><h2 id="tablePanelTitle"></h2><button id="closeTablePanel" type="button" data-icon="close" aria-label="Cerrar panel"></button></header>
+        <div id="tablePanelContent" class="table-panel-content"></div>
+      </section>
+      <div id="tablePanelHome" hidden>
+        <section id="tableRulesContent" class="table-rules"></section>
+        <section id="tableChat" class="table-chat" aria-label="Chat próximamente">
+          <div class="chat-placeholder"><span data-icon="chat" aria-hidden="true"></span><strong>Chat próximamente</strong><p>Este espacio estará disponible para conversar con la mesa.</p></div>
+          <div class="chat-composer"><input type="text" aria-label="Escribir mensaje; próximamente" placeholder="Enviar un mensaje" disabled /><button type="button" data-icon="send" aria-label="Enviar mensaje" disabled></button></div>
+        </section>
+        <section id="tableHandDetail" class="table-hand-detail" aria-label="Tu mano"></section>
       </div>
+      <div id="compactHud" class="compact-hud" hidden>
+        <section id="compactMarket" aria-label="Cartas para robar"></section>
+        <section id="compactHand" aria-label="Tu mano, siempre visible"></section>
+      </div>
+      <nav class="table-tools table-tools-left" aria-label="Historial y chat">
+        <button type="button" data-panel="history" data-icon="history" aria-label="Historial" title="Historial" aria-controls="compactPanel" aria-expanded="false"><span id="historyUnread" class="table-unread hidden"></span></button>
+        <button type="button" data-panel="chat" data-icon="chat" aria-label="Chat próximamente" title="Chat próximamente" aria-controls="compactPanel" aria-expanded="false"></button>
+      </nav>
+      <nav id="tableMapTools" class="table-tools table-tools-right" aria-label="Mapa y destinos">
+        <button type="button" data-panel="destinations" data-icon="flag" aria-label="Tus destinos" title="Tus destinos" aria-controls="compactPanel" aria-expanded="false"></button>
+        <button id="resetMapView" type="button" data-icon="fullscreen" aria-label="Ver mapa completo" title="Ver mapa completo"></button>
+        <button id="returnMapView" class="hidden" type="button" data-icon="back" aria-label="Volver a mi encuadre" title="Volver a mi encuadre"></button>
+      </nav>
       <section id="turnBanner" class="turn-banner" aria-label="Turno actual">
         <div class="turn-copy" role="status"><strong id="compactTurn"></strong><span id="turnHint"></span></div>
         <strong id="compactClock" class="turn-clock" data-clock="turn" data-clock-format="timer"></strong>
@@ -299,6 +317,7 @@
     <script src="match-presentation.js"></script>
     <script src="game-timing.js"></script>
     <script src="game-ui.js"></script>
+    <script src="table-ui.js"></script>
     <script src="turn-history.js"></script>
     <script src="draw-intent.js"></script>
     <script src="lobby-ui.js"></script>

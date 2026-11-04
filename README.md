@@ -115,13 +115,13 @@ que conectan destinos cumplidos tienen un halo dorado suave; los préstamos de
 estación se distinguen con trazo discontinuo. El efecto es personal y respeta la
 preferencia de reducir movimiento.
 
-Tu marcador incluye los puntos privados de destinos cumplidos. «Tu puntuación»
-desglosa construcción, destinos, camino largo provisional, destinos pendientes y
+El círculo muestra puntos públicos de construcción. Al tocar tu jugador,
+«Tu puntuación» desglosa construcción, destinos privados, camino largo provisional, destinos pendientes y
 estaciones sin usar, con una estimación «Si terminara ahora». El `+10` del camino
 largo es público, se comparte en empate y cambia al construir. El historial nuevo
 agrupa cada turno en una fila, incluidos ambos robos o el túnel completo; permite
 consultar toda la partida después de reconectar. Conexiones y cambios de control
-aparecen como eventos separados. En móvil, toca tu jugador para abrir el desglose.
+aparecen como eventos separados.
 
 ## Sala de pruebas con bots
 
@@ -148,31 +148,46 @@ diseños disponibles de esa familia: las seis composiciones de Pasajeros, o un s
 diseño en las demás. Son ejemplos con los mismos modelos del tablero; las
 variaciones se combinan automáticamente al construir rutas, sin elegir una fija.
 
-El mapa se mueve arrastrando y se acerca con rueda o pellizco, sin botones de
-menos, más o centrado. Con el mapa enfocado, las flechas desplazan, `+`/`−`
-cambian el zoom e **Inicio** restaura el encuadre.
+El mapa se mueve arrastrando y se acerca con rueda o pellizco. **Ver mapa completo**
+restaura el encuadre; con el mapa enfocado, las flechas desplazan, `+`/`−`
+cambian el zoom e **Inicio** centra. El zoom permite de 25 % a 600 %.
 
-Cada tarjeta de jugador muestra puntos, cartas en mano (incluidas comodines),
-vagones y estaciones. El recuento de cartas es público; sus colores permanecen
-privados. En móvil y tablet, los cuatro indicadores forman una cuadrícula 2×2
-con el puntaje más grande y en negrita, también con cinco jugadores y tres cifras.
-Se conservan avatar y nombre, sin la etiqueta duplicada «En turno». La barra
-inferior muestra el turno y un reloj más pequeño en una sola línea, con los
-colores y la banda de tiempo habituales. Se ocultan el subtítulo de ayuda y
-«Solo tú la ves». La mano permite deslizar las cartas horizontalmente sin
-recortar sus contadores; las esquinas redondeadas pertenecen al propio dibujo.
+La mesa comparte controles en móvil, tablet y escritorio, sin scroll de página.
+Los jugadores forman una fila superior compacta: puntos públicos de construcción
+encerrados en un círculo, nombre, cartas en mano y vagones disponibles. El reloj
+se adjunta al jugador activo. **Detalles de jugadores** despliega estaciones,
+billetes conservados y longitud del camino más largo sin cambiar el encuadre.
+El bono provisional aparece separado del círculo. Tocar tu jugador abre el
+desglose privado; al finalizar, los círculos muestran la puntuación final.
 
-La mesa ocupa la pantalla sin scroll de página: el mapa y el mar forman un fondo continuo, visible entre los paneles flotantes. La mano permanece abajo. La cabecera crema de **Jugadores** mantiene el contraste con el mapa atenuado; **Última ronda** usa una etiqueta ámbar y **Final** una azul petróleo. La columna derecha contiene **Historial**, siempre abierto con scroll interno; **Robos**, en dos filas de tres posiciones (cinco cartas y el mazo); y **Jugadores**, anclados abajo con altura reservada para cinco, sin tarjetas vacías. El historial muestra toda la partida en orden cronológico, con una fila por turno y filas propias para conexiones y cambios de control: los nuevos aparecen abajo y, si hay pocos, se apoyan en el borde inferior. Sigue los nuevos eventos solo si estás al final; al leer movimientos anteriores conserva la posición y ofrece **Nuevos ↓**. Su barra permanece visible cuando hay desbordamiento, independientemente de la configuración de macOS, y admite arrastre, rueda y teclado. **Encajar** centra la cartografía al 100% en el espacio libre hasta la mano. El zoom permite alejar hasta **25%** y acercar hasta **600%**: con el puntero sobre el mapa, la rueda cambia la escala alrededor del cursor. Arrastra con el botón izquierdo a cualquier escala, incluso al 25% y al 100%; un clic sin arrastre sigue seleccionando una ruta o ciudad. El botón ⛶ activa pantalla completa sin ocultar la mano ni las acciones. El sidebar tiene scroll propio solo cuando falta altura; su rueda no altera el mapa. El icono **i** junto a ROBOS muestra las cantidades restantes de ambos mazos al pasar el ratón o enfocarlo con teclado.
+El mercado y la mano permanecen abajo. El mercado tiene una fila de cinco cartas
+y el mazo, con áreas táctiles de al menos 44 px; tras el primer robo indica
+**Roba una carta más**. La mano agrupa los nueve colores con contadores y se
+amplía al tocarla. Los accesos por iconos sustituyen la barra de navegación:
+historial y futuro chat a la izquierda; resaltar destinos, tus destinos y
+restaurar encuadre a la derecha. Los paneles temporales se superponen al mapa,
+con cierre y Escape, sin reencuadrarlo. **Tus destinos** contiene el mazo para
+pedir billetes. El chat muestra «Próximamente» con escritura/envío deshabilitados.
 
-El historial acompaña cada robo nuevo con una miniatura: las cartas tomadas de la mesa son públicas; las del mazo muestran el reverso a los demás y la cara solo a quien roba. Los registros antiguos sin ese dato conservan su texto.
+El icono **i** abre puntos por longitud, bonificaciones, regla de última ronda y
+cantidades de los mazos, según la definición de la partida. El engranaje agrupa
+los ajustes, incluida pantalla completa. **Última ronda** muestra una etiqueta
+ámbar cuando se activa la condición del reglamento.
 
-El mercado ocupa **dos filas y tres columnas**: cinco cartas visibles y un mazo apilado en la sexta posición para robar a ciegas. El pequeño mazo beige junto a ROBOS permite pedir nuevos destinos. Ambos tienen descripción al pasar el ratón y nombre accesible para teclado. Los huecos vacíos se conservan si se agotan las cartas. El amarillo es luminoso y mate; el comodín muestra un tren lateral grabado sobre seis franjas arcoíris, sin acabado dorado. El reverso del mazo conserva solo su emblema, sin textos.
+El historial se abre en un panel con scroll interno y barra visible cuando hay
+desbordamiento. Sigue los eventos al estar al final; al leer movimientos antiguos
+conserva la posición y ofrece **Nuevos ↓**, con contador. **Ver en el mapa** en una
+construcción enfoca su ruta y permite volver al encuadre anterior. Las miniaturas
+y privacidad del registro se describen en [historial](docs/history-replay.md).
+
+Las cartas conservan sus dibujos y huecos al agotarse. El amarillo es luminoso y
+mate; el comodín muestra un tren lateral grabado sobre seis franjas arcoíris,
+sin acabado dorado. El reverso del mazo conserva su emblema, sin textos.
 
 Al aparecer tres comodines, un brillo señala la renovación: las cinco cartas se reúnen en abanico, vuelven al mazo y salen las nuevas escalonadas. El efecto dura 1.200 ms después del robo que lo provoca y bloquea los robos locales mientras se muestra; con movimiento reducido se usa un fundido de 120 ms. Una jugada más reciente actualiza el estado sin cortar la renovación visible. El historial registra la renovación y las cinco cartas retiradas. Los robos normales responden sin esperar su animación.
 
 Cada renovación nueva suena como una recogida, barajado y reparto de papel en
-940 ms. El sonido también funciona con el mercado móvil cerrado, respetando
-silencio y pestaña oculta; abrir el panel o reconectar no vuelve a reproducirlo.
+940 ms. El sonido respeta silencio y pestaña oculta; reconectar no vuelve a reproducirlo.
 
 Las ocho cartas de color tienen vagones SVG diferentes: rojo/pasajeros, azul/cisterna de combustible, verde/alfalfa, amarillo/tolva de grano, negro/carbón, blanco/piedra, naranja/troncos y morado/mercancías cerrado. Comparten ruedas de radios y marco ornamental, sin nombres de color impresos. Conservan esos nombres en su descripción accesible y tooltip. El fondo mate coincide con la tonalidad de las rutas del mapa; rojo y naranja ya no tienen degradado oscuro y el negro es profundo. Fuera de turno, las cartas y ambos mazos mantienen el 80 % de opacidad, sin desaturación; los controles habilitados siguen al 100 %. Las cargas son decorativas: no modifican ninguna regla.
 
@@ -196,7 +211,7 @@ en repeticiones. Varias vistas del mismo reloj no duplican el sonido.
 
 Cada jugador se identifica por su nombre, color y familia de vagones, sin símbolos geométricos por puesto. El avatar conserva el color como fondo. El robot usa relleno marfil y contorno oscuro como la persona, con antena dorada. Pasar el cursor o enfocar al jugador resalta sus rutas. La nueva paleta amarillo/ámbar también se aplica a partidas existentes, sin modificar sus claves de color guardadas. Las rutas neutras son gris medio; las blancas y sus cartas son marfil claro. Esta distinción visual no cambia el reglamento.
 
-Jugadores, historial, resultados y clasificación del camino más largo comparten
+Historial, resultados y clasificación del camino más largo comparten
 las proporciones del avatar: el robot ocupa el 80 % del interior del círculo,
 con un pequeño margen uniforme alrededor.
 
@@ -223,7 +238,7 @@ El constructor conserva su decisión obligatoria. El resultado dura tres segundo
 se cierra automáticamente y conserva sus plazos al reconectar; movimiento reducido
 muestra el mismo resumen sin desplazamientos.
 
-**Tus destinos** muestra cuatro billetes junto a la mano, con scroll interno a partir del quinto. Los pendientes son beige; los conectados, dorados con **✓ verde**, también en el modal. El servidor calcula el progreso de forma privada y emplea una asignación compatible de estaciones para todos los billetes; los destinos cumplidos ya se reflejan en tu marcador privado y se liquidan en el resultado final. **Ver rutas** abre tus billetes conservados, incluso durante turnos ajenos. Pulsar un billete concreto lo abre resaltado. Las casillas del modal solo resaltan conexiones: no descartan billetes ni consumen acciones. Un destino completado resalta un recorrido real de vías construidas; los tramos prestados mediante estación son discontinuos. Se cierra con X o Escape. **Historial** permanece abierto arriba a la derecha, sin desplazar el tablero ni la mano; su rueda recorre únicamente los movimientos.
+**Tus destinos** abre los billetes conservados en un panel con scroll interno. Los pendientes son beige; los conectados, dorados con **✓ verde**, también en el modal. El servidor calcula el progreso de forma privada y emplea una asignación compatible de estaciones para todos los billetes; los destinos cumplidos se reflejan en tu desglose privado y se liquidan en el resultado final. **Ver rutas** abre tus billetes conservados, incluso durante turnos ajenos. Pulsar un billete concreto lo abre resaltado. Las casillas del modal solo resaltan conexiones: no descartan billetes ni consumen acciones. Un destino completado resalta un recorrido real de vías construidas; los tramos prestados mediante estación son discontinuos. Se cierra con X o Escape. **Historial** se abre con su icono sin desplazar el tablero ni la mano; su rueda recorre únicamente los movimientos.
 
 Si aparece **Servidor anterior**, el proceso Node todavía ejecuta código anterior al protocolo actual (`uiVersion: 10`: historial completo por turno y puntuación propia, además de desglose público y animaciones de pago/devolución del túnel, renovación animada de la mesa, elección inicial simultánea y desglose final). Los billetes sin datos muestran **?**, no un falso estado pendiente. Termina primero las partidas de pruebas (son temporales), reinicia el backend con `npm start` y recarga la página. Recargar únicamente el navegador no actualiza el motor. La suite cubre específicamente Madrid → Pamplona → Paris → Bruxelles → Dieppe, incluso si Dieppe–Paris pertenece a un rival.
 
@@ -409,8 +424,8 @@ Si falla el guardado remoto, no hay fallback al disco efímero: se pausa y no se
 
 - Mapa continuo de fondo, zoom 25%–300%, arrastre a cualquier escala y pantalla completa conservando los controles.
 - Etiquetas de ciudades reforzadas, rutas coloreadas con mayor contraste y selección visible.
-- Jugadores en el lateral, con iconos y contadores de puntos, cartas, vagones y estaciones.
-- Mano de cartas SVG siempre visible, con contadores grandes; cuatro destinos visibles y consulta en **Ver rutas**, construcción contextual e historial abierto con scroll independiente.
+- Jugadores compactos arriba, con puntos públicos en círculos y recursos ampliables.
+- Mano y mercado siempre visibles; destinos e historial por iconos, con scroll independiente y construcción contextual.
 - Botón **Invitar** durante partidas multijugador; las salas con bots siguen siendo privadas para su creador.
 - Descripción explícita del coste de cada ruta, incluidos los requisitos de comodines de los ferris.
 - Botón para pasar cuando se agotan cartas y destinos; el servidor comprueba que no quede otra acción legal.

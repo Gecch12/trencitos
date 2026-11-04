@@ -36,7 +36,6 @@ async function open(code,options={}){
  await page.addInitScript(({code,token})=>localStorage.setItem('rr-room-'+code,token),{code,token:room.members[0].token});
  await page.goto(`http://127.0.0.1:${app.server.address().port}/rooms?room=${code}`);
  await page.waitForFunction(()=>game?.phase==='play'&&!!board3D);await page.evaluate(()=>document.fonts.ready);await page.evaluate(()=>cardArtworkReady);await app.drain();
- if(options.mobile)await page.locator('[data-panel="cards"]').click();
  await page.evaluate(()=>{
   window.drawAudit={sent:[],clicks:[],flights:[],sounds:[],acks:[],handFrames:[],states:[],reveals:[],landings:[]};
   sock.addEventListener('message',event=>{const value=JSON.parse(event.data);for(const m of value.type==='batch'?value.messages:[value])

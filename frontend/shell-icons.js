@@ -31,6 +31,8 @@ const ShellIcons = (() => {
     plus: '<path d="M16 5v22M5 16h22"/>',
     map: '<path d="m3 8 9-4 9 4 8-4v21l-8 4-9-4-9 4ZM12 4v21m9-17v21"/>',
     send: '<path d="m3 4 26 12-26 12 5-12ZM8 16h21"/>',
+    chat: '<path d="M5 4h22v18H14l-9 6v-6H3V6a2 2 0 0 1 2-2ZM9 10h14M9 16h10"/>',
+    flag: '<path d="M6 29V4m0 1c6-5 14 5 21 0v14c-7 5-15-5-21 0"/>',
     discord: '<path d="M10 7c-2 0-5 2-6 3L2 24c4 3 6 4 9 4l1-3m8 0 1 3c3 0 5-1 9-4l-2-14c-1-1-4-3-6-3l-1 3a25 25 0 0 0-10 0ZM9 23c5 3 9 3 14 0"/><ellipse cx="11" cy="18" rx="2" ry="3"/><ellipse cx="21" cy="18" rx="2" ry="3"/>',
     youtube: '<rect x="2" y="6" width="28" height="20" rx="6"/><path d="m13 11 8 5-8 5Z"/>',
     reddit: '<ellipse cx="16" cy="20" rx="12" ry="8"/><path d="m16 12 3-8 7 2M5 15a3 3 0 1 0-2 5m24-5a3 3 0 1 1 2 5M11 23c3 2 7 2 10 0"/><circle cx="28" cy="6" r="2"/><circle cx="11" cy="18" r="1"/><circle cx="21" cy="18" r="1"/>',

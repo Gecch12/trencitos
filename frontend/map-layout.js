@@ -3,7 +3,13 @@
 // Geometry and label placement work with a separately versioned map layout.
 const RailMap = (() => {
   function createLayout(layout) {
-  const { bounds, tile, cities, bends = {}, labels = {}, land = [], details = [], seaLabels = [] } = structuredClone(layout);
+  const { bounds, tile, cities, bends = {}, labels = {}, land = [], details = [], seaLabels = [], background: backdrop = {} } = structuredClone(layout);
+  // The surrounding surface belongs to the framing of this layout, not its rules.
+  const surface = backdrop.surface ?? 'water';
+  if (surface !== 'water' && surface !== 'land') throw new Error(`Unknown map background surface: ${surface}`);
+  const background = { surface, color: backdrop.color ?? (surface === 'land' ? '#eee6d2' : '#bbd6d9') };
+  if (typeof background.color !== 'string' || !/^#[0-9a-f]{6}$/i.test(background.color))
+    throw new Error('Map background color must be an opaque #RRGGBB color');
   const distance = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
   const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
   function spline(points) {
@@ -118,7 +124,7 @@ const RailMap = (() => {
     }
     return placed;
   }
-  return { bounds, tile, cities, bends, labels, land, details, seaLabels, createNetwork, pointAt, placeLabels };
+  return { bounds, tile, cities, bends, labels, land, details, seaLabels, background, createNetwork, pointAt, placeLabels };
   }
   // Compatibility facade for existing geometry consumers and legacy Europe tests.
   const europe = typeof module !== "undefined" ? require("./layouts/europe-v1") : EuropeLayoutV1;

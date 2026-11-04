@@ -52,6 +52,10 @@ jobs:
         env:
           QA_OUT: .qa/ci/card-ui
         run: node tests/browser-card-ui.cjs
+      - name: Check compact table and map space
+        env:
+          QA_OUT: .qa/ci/table-ui
+        run: node tests/browser-table-ui.cjs
       - name: Check automatic account seat recovery
         env:
           QA_OUT: .qa/ci/account-resume

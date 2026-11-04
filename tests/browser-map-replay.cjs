@@ -33,7 +33,7 @@ let app, browser;
       assert.equal(await page.locator('#replayViewer,#replaySecretsOpen').count(), 0);
       assert.equal(await page.locator('#scores [data-player]').count(),record.players.length);
       assert.ok((await page.evaluate(() => game.hand)).length > 0);
-      if(!own)await page.locator('#replayDock > summary').click();
+      await page.locator('#replayDock > summary').click();
       await page.locator('#replayGeneral').click();
       assert.deepEqual(await page.evaluate(() => [game.hand, game.tickets]), [[], []]);
       await page.locator('#replayLast').click(); await page.waitForFunction(() => game.phase === 'finished');

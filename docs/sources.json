@@ -1,4 +1,13 @@
 {
+  "work/board-first-mobile.md": [
+    "frontend/table.css",
+    "frontend/table-ui.js",
+    "frontend/app.js",
+    "frontend/index.html",
+    "frontend/replay-ui.js",
+    "tests/table-ui.test.js",
+    "tests/browser-table-ui.cjs"
+  ],
   "mobile-development.md": [
     "capacitor.config.js",
     "scripts/mobile-config.js",

@@ -18,7 +18,7 @@ const ReplayUI = (() => {
     loader.oncancel=e=>e.preventDefault();if(!loader.open)loader.showModal();
     function stop(){playing=false;clearTimeout(timer);timer=null;cancelEffects();if($('replayPlay')){$('replayPlay').textContent='▶';$('replayPlay').setAttribute('aria-label',t('Reproducir'));}}
     const visibility=()=>{if(document.hidden)stop();};
-    const place=()=>{if(!ready)return;if(compact.matches){document.body.append(controls);$('replayDock').open=false;}else{$('gameSidebar').prepend(controls);$('replayDock').open=true;}};
+    const place=()=>{if(!ready)return;document.body.append(controls);$('replayDock').open=false;};
     dispose=()=>{stop();controller.abort();compact.removeEventListener('change',place);document.removeEventListener('visibilitychange',visibility);};
     function updateControls(){
       $('replaySeek').max=data.frames.length-1;$('replaySeek').value=step;

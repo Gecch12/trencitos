@@ -179,9 +179,11 @@ anterior entra en decisión compartida sin reiniciar su reloj.
   Express. Puede haber varios ganadores si persiste el empate.
 
 Durante la partida, `scoreProgress` separa puntos públicos de información propia.
-El marcador personal suma construcción, destinos cumplidos y Express provisional;
-los demás solo ven construcción más Express provisional. Un desglose propio
-muestra penalizaciones pendientes y estaciones sin usar para «Si terminara ahora».
+Los círculos de todos los jugadores muestran construcción, con la misma cifra
+para dueño, rivales y espectadores. Express provisional aparece como insignia
+separada; no se suma al círculo. Un desglose propio muestra destinos cumplidos,
+penalizaciones pendientes y estaciones sin usar para «Si terminara ahora».
+Al finalizar, el círculo pasa a la puntuación final del resultado.
 El bono provisional se actualiza con la red y se comparte en empate; no hay líder
 provisional con longitud cero; el desglose de cierre sí incluye el bono que
 correspondería en ese caso. Esto no cambia la regla histórica del resultado

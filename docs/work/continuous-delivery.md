@@ -86,6 +86,8 @@ también que un push exclusivamente documental no genere otro despliegue.
 La regresión de navegador incluye también `browser-card-ui.cjs` (renovación e
 historial público) y `browser-account-resume.cjs` (cuentas simuladas con protocolo
 real), junto al lobby y los dieciséis casos de `browser-draw-feedback.cjs`.
+Desde la revisión de mesa compacta incluye `browser-table-ui.cjs`: siete tamaños,
+paneles sin reencuadre, puntos públicos/privados, robos y última ronda.
 Sus salidas de CI se conservan bajo `.qa/ci/` en el artefacto existente.
 
 ## Publicación conjunta · 2026-11-03

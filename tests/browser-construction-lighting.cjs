@@ -16,6 +16,16 @@ let browser, page;
   page = await context.newPage(); page.setDefaultTimeout(12000);
   page.on('pageerror', e => report.errors.push(e.message));
   page.on('console', e => { if (e.type() === 'error') report.errors.push(e.text()); });
+  async function checkGround() {
+    const { actual, expected } = await page.evaluate(() => {
+      const cells = game.routes.reduce((sum, route) => sum + route.n, 0);
+      return { actual: board3D.stats().ground, expected: { cells, edges: cells,
+        tunnelMarks: game.routes.reduce((sum, route) => sum + (route.tunnel ? route.n * 8 : 0), 0),
+        ferryMarks: game.routes.reduce((sum, route) => sum + (route.ferry || 0), 0) } };
+    });
+    assert.deepEqual(actual, expected, 'all board cells and marks remain, including occupied routes');
+    return expected;
+  }
   async function open(code, reduced = false, actorSeat = 0) {
     const room = ownershipRoom(code); room.practice = false; room.visibility = 'private'; room.maxPlayers = 5;
     room.members[0].token = 'a'.repeat(48);
@@ -27,6 +37,7 @@ let browser, page;
     await page.goto(`http://127.0.0.1:${app.server.address().port}/?room=${code}#recover=${room.members[0].token}`);
     await page.waitForFunction(actorSeat => !!game && !!board3D && game.current === actorSeat, actorSeat);
     await page.mouse.move(10, 10);
+    await checkGround();
     return room;
   }
   async function prepare(station = false, acting = page) {
@@ -41,7 +52,7 @@ let browser, page;
       window.lightingSamples = []; recordLighting = true;
       function sample(t) {
         const s = board3D.stats();
-        lightingSamples.push({ t, shade: s.shadingStrength, moving: s.shadingAnimating, animations: s.animations, focus: !!constructionFocus, routes: s.spotlightRoutes });
+        lightingSamples.push({ t, shade: s.shadingStrength, moving: s.shadingAnimating, animations: s.animations, ground: s.ground, focus: !!constructionFocus, routes: s.spotlightRoutes });
         if (recordLighting) requestAnimationFrame(sample);
       }
       requestAnimationFrame(sample);
@@ -53,6 +64,7 @@ let browser, page;
   }
   async function construction(name, { station = false, highlight = false, opponent = false } = {}) {
     const room=await open(name, false, opponent?1:0);
+    const ground = await checkGround();
     let acting=page;
     if(opponent){acting=await context.newPage();await acting.goto(`http://127.0.0.1:${app.server.address().port}/?room=${name}#recover=${room.members[1].token}`);await acting.waitForFunction(()=>!!game&&seat===1&&!!board3D);}
     if (highlight) await page.locator('#toggleDestinations').click();
@@ -64,6 +76,7 @@ let browser, page;
       await page.screenshot({ path: path.join(out, `${name}-shading.png`) });
     }
     const samples = await finished(), active = samples.filter(s => s.animations.length);
+    for (const sample of samples) assert.deepEqual(sample.ground, ground, 'ground persists throughout preparation, landing and restoration');
     const hidden = active.filter(s => !s.animations[0].visible), shown = active.filter(s => s.animations[0].visible);
     assert.ok(hidden.length > 2, 'pieces stay hidden during the preparation');
     assert.ok(shown.length > 2, 'existing placement animation remains visible');
@@ -90,6 +103,7 @@ let browser, page;
     report.checks.push({ name, target, frames: samples.length, appearanceAfterMs: Math.round(shown[0].t - hidden[0].t), flightMs: Math.round(shown.at(-1).t - shown[0].t), highlight });
     await page.reload(); await page.waitForFunction(() => !!board3D && !!game);
     assert.deepEqual(await page.evaluate(() => board3D.stats().animations), [], 'reconnect does not repeat construction');
+    await checkGround();
   }
   await construction('QALIT1');
   await construction('QALIT2', { station: true });
@@ -102,6 +116,7 @@ let browser, page;
   assert.deepEqual(await page.evaluate(() => board3D.stats().animations), []);
   assert.equal(await page.evaluate(() => board3D.stats().shadingAnimating), false);
   assert.equal(await page.evaluate(() => board3D.stats().shadingStrength), 0);
+  await checkGround();
   report.checks.push({ name: 'Reduced motion presents the final state immediately' });
 
   await open('QALIT5'); await prepare(); await page.locator('#confirmBuild').click();
@@ -111,6 +126,7 @@ let browser, page;
   assert.equal(await page.evaluate(() => board3D.stats().shadingStrength), 0);
   await page.waitForTimeout(1600);
   assert.equal(await page.evaluate(() => board3D.stats().shadingStrength), 0);
+  await checkGround();
   report.checks.push({ name: 'Resize cancels pending appearance and lighting without leaving a stale timer' });
   assert.deepEqual(report.errors, []); report.passed = true;
 })().catch(async error => {

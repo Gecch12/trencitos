@@ -1,5 +1,5 @@
 ---
-{"id":"ticket-map-shading","status":"done","parent":null,"depends_on":["destination-map-tunnels"],"branch":"main","delivery":"released","updated":"2026-11-03"}
+{"id":"ticket-map-shading","status":"done","parent":null,"depends_on":["destination-map-tunnels"],"branch":"main","delivery":"integrated","updated":"2026-11-04"}
 ---
 # Sombreado y foco del mapa de billetes
 
@@ -196,3 +196,99 @@ La revisión se validó primero en `main`, exclusivamente en local.
 con CI completo aprobado y Render Live a las 19:11:25 Lima. La evidencia de
 entrega y la comprobación remota de lectura están en
 [Producción](../production.md). No queda publicación pendiente de este alcance.
+
+## Continuidad del fondo y mapas interiores · 2026-11-04
+
+Corrección aprobada tras Moti: hacer coincidir el exterior con el fondo del mapa
+durante todo el highlight y preparar fondos de agua o tierra para futuros diseños.
+El color exterior anterior se interpolaba hacia un azul independiente del tinte
+de la textura; por eso se distinguía el rectángulo del plano al sombrear.
+
+- [x] Derivar el exterior del color base multiplicado por el tinte actual del
+  plano, en el mismo espacio de color, en cada fotograma.
+- [x] Normalizar un fondo configurable en el layout, conservar agua por defecto
+  y admitir tierra o un color opaco propio. Contrato en
+  [arquitectura](../architecture.md#contexto-y-layout-del-cliente).
+- [x] Cubrir completamente los píxeles de la textura, incluidas dimensiones
+  fraccionarias, y sincronizar/restaurar el respaldo CSS del contenedor.
+- [x] Comparar píxeles a ambos lados de los cuatro bordes con fondos de agua,
+  tierra y color personalizado, transiciones completas/interrumpidas y móvil.
+- [x] Terminar regresión de destinos/construcción y validación documental.
+
+Evidencia: 15/15 pruebas Node de geometría, contexto de presentación y
+tablero; `node tests/browser-map-background.cjs`, 23 comprobaciones correctas,
+cero errores de navegador. Diferencia máxima de un nivel por canal de 8 bits
+entre fondo interior y exterior en todos los fotogramas muestreados. Informe y
+capturas en `.qa/map-background/`; inspeccionada la captura del tablero principal
+con highlight. Chrome real, móvil emulado, servidor loopback y estado temporal
+aislados. El sandbox requirió permiso para abrir el servidor local.
+
+Regresiones: `node tests/browser-destination-map.cjs`, siete grupos correctos,
+incluida recuperación WebGL, selección, zoom y Sudamérica;
+`node tests/browser-construction-lighting.cjs`, seis grupos correctos, incluida
+construcción propia/rival, estaciones, restauración, movimiento reducido y resize.
+Cero errores en ambas; informes en `.qa/destination-map/` y
+`.qa/construction-lighting/`. Sintaxis, `git diff --check`,
+`node scripts/check-docs.js` y revisión de impacto documental correctos.
+El impacto global incluye trabajo móvil de otro chat; se conservaron sus cambios.
+Servidores y navegadores de prueba cerrados al terminar.
+
+Cambio local validado en `main`, sin commit ni publicación. Siguiente paso:
+incluir esta corrección en la próxima publicación autorizada.
+
+## Casillas permanentes bajo los vagones · 2026-11-04
+
+Ángel aclaró en Moti que las casillas no deben desaparecer en ningún momento,
+ni siquiera al terminar la colocación, y aprobó implementarlo. Se consideran
+parte impresa del tablero, con los vagones encima, en todas las rutas.
+
+- [x] Dibujar casillas, bordes y marcas de túnel/ferri independientemente de la
+  propiedad. Mantener su profundidad y excluirlas de los objetivos animados.
+- [x] Conservar el sombreado, las cintas y los tiempos de construcción existentes.
+- [x] Verificar píxeles durante preparación y al aterrizar, y geometría persistente
+  en cada fotograma de construcciones normales, propias/rivales y estaciones.
+- [x] Completar regresión de túneles, vista de destinos y documentación.
+
+El renderer compartido aplica el criterio al tablero principal y a los mapas
+de destinos. `stats().ground` expone cantidades reales de las mallas de suelo;
+`freeCells` conserva el significado de casillas todavía libres. Contrato en
+[arquitectura](../architecture.md#límites-que-deben-conservarse).
+
+Evidencia: 32/32 pruebas Node de tablero, vagones y GameUI. Navegador:
+
+- `node tests/browser-ground-cells.cjs`: dos grupos correctos. Comparación de
+  píxeles en 61 fotogramas, incluidos 30 de espera y 19 de descenso, con rutas
+  normales, túneles y ferris. Las casillas no se mueven ni se ocultan durante la
+  espera; al aterrizar, los vagones cubren el centro y las marcas exteriores
+  siguen visibles. Zoom reversible sin duplicación. DPR 2, modelo de toneles.
+- `node tests/browser-construction-lighting.cjs`: seis grupos correctos; todas
+  las casillas y marcas persisten en cada fotograma y tras recarga, construcción
+  propia/rival, estación, movimiento reducido y cancelación por resize.
+- `node tests/browser-tunnel-outcomes.cjs`: seis desenlaces correctos, con
+  construcción sin suplemento, pagos, desistimiento, insuficiencia y timeout.
+  Se comprueba el suelo durante la secuencia y al terminar para actor, rival
+  con movimiento reducido y espectador. El primer intento detectó que el nuevo
+  muestreo arrancaba antes del renderer tras recargar; se añadió la espera de
+  inicialización y la suite completa pasó al repetirla.
+- `node tests/browser-destination-map.cjs`: siete grupos correctos, incluida
+  selección, zoom, recuperación WebGL, dispositivos emulados y Sudamérica.
+
+Cero errores de navegador en las ejecuciones finales. Informes en
+`.qa/ground-cells/`, `.qa/construction-lighting/`, `.qa/tunnel-outcomes/` y
+`.qa/destination-map/`. Inspeccionadas la muestra de toneles sobre las tres
+clases de ruta y la partida con highlight tras construir. Sintaxis,
+`git diff --check`, validación documental y revisión de impacto correctos.
+Servidores loopback y datos temporales aislados; navegadores y servidores
+cerrados al terminar. No se verificó hardware móvil.
+
+Cambio local validado en `main`, sin commit ni publicación. Siguiente paso:
+incluirlo junto con la continuidad del fondo en la próxima publicación autorizada.
+
+## Entrega Git autorizada · 2026-11-04
+
+Ángel autorizó subir todos los cambios pendientes a `main`. La continuidad del
+fondo y las casillas permanentes se incluyen en la entrega conjunta con la
+[mesa compacta](board-first-mobile.md#entrega-conjunta-a-main--2026-11-04), cuya
+comprobación previa pasa 697/697 pruebas. La evidencia de navegador de ambas
+correcciones se conserva arriba. El despliegue en Render requiere verificación
+independiente de la subida a Git.

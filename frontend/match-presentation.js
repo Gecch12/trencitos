@@ -10,7 +10,8 @@ const MatchPresentation = (() => {
   const legacyData = () => commonJS ? require("../shared/data") : { CITIES, ROUTES, TICKETS, COLORS };
   const legacyRules = Object.freeze({ colors: Object.freeze([...legacyData().COLORS]),
     routePoints: Object.freeze({1:1,2:2,3:4,4:7,6:15,8:21}), doubleRoutesMinPlayers:4,
-    stationCosts:Object.freeze([1,2,3]), setup:Object.freeze({stations:3}),
+    stationCosts:Object.freeze([1,2,3]), setup:Object.freeze({stations:3}), finalTrainThreshold:2,
+    scoring:Object.freeze({expressPoints:10,unusedStationPoints:4}),
     trainCards:Object.freeze({marketSize:5,drawsPerTurn:2}), destinations:Object.freeze({initialMinimum:2,offerMinimum:1}) });
   const fail = message => { throw Error(message || "La definición de esta partida no es compatible."); };
   const ref = r => r && typeof r.id === "string" && r.id && typeof r.version === "string" && r.version;
