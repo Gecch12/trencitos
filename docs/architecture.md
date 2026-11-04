@@ -266,7 +266,7 @@ de cada oferta para las barras. Los plazos los calcula solo el motor.
 
 El menú flotante y los steppers reutilizan el mismo estado en escritorio y
 móvil. La mesa compartida de `table.css` mantiene jugadores arriba y mercado/mano
-abajo; `TableUI.cameraArea` reserva sus límites y los márgenes seguros. Los iconos
+abajo; `TableUI.cameraArea` reserva sus límites y los márgenes seguros. `tableFocus` coordina la consulta visual del historial y del camino más largo, restaura cámara y cancela su animación ante construcciones reales. `confirmDestinationDraw` revalida la acción al confirmar; abrir/cancelar no envía comandos. Los iconos
 y paneles temporales se superponen sin cambiar el encuadre. Los controles se
 reubican en `app.js`, conservando sus listeners y el estado autorizado. Los sonidos de pluma son locales y la firma
 se reproduce una vez al confirmar el ACK del comando de selección.
@@ -277,12 +277,12 @@ una envolvente continua; la firma conserva la secuencia de trazos original.
 
 Las métricas de cada jugador usan la vista pública del motor, incluidos
 `handCount` y `ticketsCount`; el contador propio sigue las cartas incorporadas
-visualmente a la mano. El círculo muestra construcción pública y el bono
+visualmente a la mano. La columna de puntos muestra construcción pública y el bono
 provisional se presenta aparte; el desglose privado se abre desde el propio jugador.
 No se reciben manos rivales para contar cartas. `playerAvatar` y
 los estilos comunes de `.player-avatar` mantienen las proporciones del símbolo
 en historial, resultados y clasificación, aunque cambie el círculo. La fila
-compacta identifica al jugador mediante el círculo de puntos, su color y nombre.
+compacta identifica al jugador mediante avatar, color y nombre; debajo ordena puntos, cartas y vagones. El reloj comparte el contorno de la tarjeta activa.
 
 `GameUI.urgentClock` selecciona el plazo propio activo bajo cinco segundos;
 `updateClockSound` lo consulta una vez por actualización, fuera del recorrido
@@ -706,7 +706,7 @@ Alcance y pruebas en
 - `ticket-map.js` monta `createBoard3D` en el modal con cámara, gestos y ciclo de
   vida propios. Three dibuja la red y vagones proyectados translúcidos; SVG añade
   solo blancos de inspección, números y etiquetas de extremos. Las construcciones
-  confirmadas invalidan los cálculos sin recrear el diálogo ni sus selecciones.
+  confirmadas invalidan los cálculos sin recrear el diálogo ni sus selecciones. Los nodos SVG y las medidas de texto se conservan durante los gestos; solo se actualizan posiciones. La distribución de etiquetas se resuelve al soltar y `resize(view, true)` dibuja Three y SVG en el mismo frame.
   La vista conjunta muestra solo los billetes marcados, además de los destinos
   actuales activados para comparar. Cada nueva oferta inicializa `retainedVisible`
   con todos los billetes propios, incluidos los completados; la misma oferta
@@ -1043,7 +1043,7 @@ marcan en un `WeakSet` para omitir el diario y sus cálculos; esa exclusión no 
 un campo de red ni una opción del jugador, y no afecta partidas reales.
 
 [live-score.js](../game/queries/live-score.js) calcula las longitudes en servidor,
-con caché por contenido de cada red propia: una construcción no recalcula los
+y sus recorridos exactos (`scoreProgress.players[].longestRoutes`), con caché por contenido de cada red propia: una construcción no recalcula los
 caminos de rivales cuya red sigue igual. La búsqueda exacta del dominio reutiliza
 estados ciudad/vías usadas y limita por la longitud alcanzable y por los extremos
 impares. Cada vía omitida puede corregir como máximo dos extremos impares;

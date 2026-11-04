@@ -98,7 +98,7 @@ let browser,host;
  // Request destinations from the actual active seat and inspect the independent offer clock.
  const active=app.rooms.get(code).game.current===0?host:guest,other=active===host?guest:host;
  const oldDeadline=app.rooms.get(code).game.turnDeadline;
- await active.locator('#drawtickets').click();await active.waitForSelector('#keep');
+ await active.locator('#drawtickets').click(); await active.locator('#confirmDestinationDraw').click();await active.waitForSelector('#keep');
  assert.equal(app.rooms.get(code).game.players[app.rooms.get(code).game.current===0?1:0].offer.deadline,oldDeadline+15000);
  assert.ok(await active.locator('[data-countdown]').evaluate(el=>parseFloat(el.style.getPropertyValue('--time-left'))>.95));
  await active.locator('.keep').first().check();await active.locator('#minimizeTickets').click();

@@ -34,3 +34,48 @@
 }
 .ticket-train-reserve { flex:none; margin:0 0 12px; padding:10px 14px; border:1px solid #c99c45; border-radius:10px; background:#f8e5ad; color:#294c59; font-size:15px; font-weight:650; line-height:1.5; }
 .ticket-train-reserve strong { font-size:26px; font-weight:850; padding:0 3px; }
+/* Shared destination planner: the map stays visible while only the tickets scroll. */
+.dialog.ticket-dialog { padding: 16px; height: min(900px,calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+.ticket-dialog h2 { font-size: 24px; line-height: 1.2; margin: 0 32px 6px 0; }
+.ticket-dialog .ticket-intro { margin: 0 0 6px; font-size: 12px; }
+.ticket-train-reserve { align-self: flex-start; margin: 0 0 10px; padding: 3px 9px; border: 1px solid #dcc690; border-radius: 6px; font-size: 12px; line-height: 20px; background: #f5e9c8; }
+.ticket-train-reserve strong { font: 800 15px/20px system-ui,sans-serif; padding: 0 3px 0 0; }
+.dialog.ticket-dialog .ticket-layout { height: auto; flex: 1; min-height: 0; gap: 14px; grid-template-columns: minmax(0,1fr) minmax(260px,320px); }
+.ticket-map-footer:has(#ticketMapNotice:empty):has(#ticketMapRetry[hidden]) { display: none; }
+.dialog .ticket-options-title { margin: 0 0 5px; font-size: 14px; }
+.dialog .ticket-options-hint { margin: 0 0 6px; font-size: 12px; }
+.dialog .ticket-choice, .dialog .retained-choice { min-height: 54px; padding: 6px 8px; margin: 0 0 6px; gap: 7px; border-radius: 8px; }
+.ticket-choice-text { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: baseline; column-gap: 7px; row-gap: 2px; flex: 1; }
+.ticket-choice-text b { grid-column: 1; font-size: 13px; line-height: 1.3; }
+.ticket-choice-text small { margin: 0; font-size: 11px; line-height: 1.3; }
+.ticket-choice-text .ticket-points { grid-column: 2; grid-row: 1; white-space: nowrap; font-size: 13px; font-weight: 750; color: #775d25; }
+.ticket-choice-text .ticket-plan, .ticket-choice-text .ticket-complete { grid-column: 1 / -1; }
+.is-complete .ticket-choice-text .ticket-plan { display: none; }
+.dialog .ticket-choice input.visibility-eye, .dialog .retained-choice input.visibility-eye { appearance: none; -webkit-appearance: none; flex: 0 0 24px; width: 24px; height: 24px; margin: 0; border: 1px solid #b6c5c0; border-radius: 6px; background: #e9eeea url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23395762' stroke-width='1.6'%3E%3Cpath d='M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12Z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center / 19px no-repeat; opacity: .45; }
+.dialog input.visibility-eye:checked { opacity: 1; border-color: var(--ticket-color); box-shadow: 0 0 0 1px var(--ticket-color); }
+.dialog input.visibility-eye:focus-visible { outline: 2px solid #244e5e; outline-offset: 3px; }
+.ticket-confirm { padding-top: 6px; }
+.ticket-confirm button { min-height: 44px; padding: 8px 12px; margin-top: 5px; }
+.ticket-confirm #ticketCount { font-size: 11px; }
+@media (max-width:699px) {
+  .dialog.ticket-dialog { padding: 12px; }
+  .ticket-dialog h2 { font-size: 21px; }
+  .dialog.ticket-dialog .ticket-layout { display: flex; flex-direction: column; gap: 8px; }
+  .dialog.ticket-dialog .ticket-map-panel { flex: 0 0 46%; min-height: 150px; }
+  .dialog.ticket-dialog .ticket-options { flex: 1; min-height: 0; }
+  .dialog .ticket-map-controls button { min-width: 36px; min-height: 36px; }
+  .ticket-train-reserve { margin-bottom: 6px; }
+  .ticket-choice-text b { font-size: 12px; }
+  .ticket-deadline { margin: 0 0 6px; padding: 3px 9px 5px; }
+  .ticket-deadline > strong { font-size: 16px; }
+}
+@media (max-height:600px) and (min-width:700px) {
+  .dialog.ticket-dialog { padding: 10px; }
+  .ticket-dialog h2 { font-size: 20px; }
+  .ticket-dialog .ticket-intro { display: none; }
+}
+@media (min-width:700px) and (max-width:900px) and (orientation:portrait) {
+  .dialog.ticket-dialog .ticket-layout { display: flex; flex-direction: column; gap: 12px; }
+  .dialog.ticket-dialog .ticket-map-panel { flex: 0 0 50%; min-height: 240px; }
+  .dialog.ticket-dialog .ticket-options { flex: 1; min-height: 0; }
+}

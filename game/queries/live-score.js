@@ -9,12 +9,12 @@ function createLiveScore() {
     entry.lengths=game.players.map((_,seat)=>{
       const routes=game.routes.filter(r=>r.owner===seat),key=JSON.stringify(routes.map(r=>[r.id,r.a,r.b,r.n]));
       let network=entry.networks[seat];
-      if(!network||network.key!==key)entry.networks[seat]=network={key,length:longestTrail(routes.map(r=>({...r,length:r.n}))).length};
+      if(!network||network.key!==key)entry.networks[seat]=network={key,...longestTrail(routes.map(r=>({...r,length:r.n})))};
       return network.length;
     });
     const maximum=Math.max(...entry.lengths);
     entry.leaders=maximum>0?entry.lengths.flatMap((n,i)=>n===maximum?[i]:[]):[];
-    const players=game.players.map((p,i)=>({longest:entry.lengths[i],bonus:entry.leaders.includes(i)?rules.expressPoints:0,
+    const players=game.players.map((p,i)=>({longest:entry.lengths[i],longestRoutes:[...entry.networks[i].routes],bonus:entry.leaders.includes(i)?rules.expressPoints:0,
       visible:p.score+(entry.leaders.includes(i)?rules.expressPoints:0)}));
     let own=null;
     if (seat>=0) {

@@ -186,3 +186,20 @@ test('optimized longest trail matches exhaustive search on weighted branching, p
  const weightedStart=performance.now();assert.equal(longestTrail(weighted).length,weighted.reduce((n,r)=>n+r.length,0)-3);
  assert.ok(performance.now()-weightedStart<1000,'dense network with eight odd vertices must finish promptly');
 });
+
+test('public longest path identifies exact owned lanes, including ties, without exposing tickets or mutable cache',()=>{
+ const g=game();smallBoard(g);g.routes[0].owner=0;g.routes[1].owner=0;g.routes[2].owner=1;
+ for(const seat of [0,1,-1]){
+  const scores=E.view(g,seat).scoreProgress.players;
+  assert.deepEqual(new Set(scores[0].longestRoutes),new Set([0,1]));
+  for(const [index,score] of scores.entries()){
+   assert.equal(score.longestRoutes.reduce((n,id)=>n+g.routes.find(r=>r.id===id).n,0),score.longest);
+   assert.ok(score.longestRoutes.every(id=>g.routes.find(r=>r.id===id).owner===index));
+   assert.equal(score.tickets,undefined);
+  }
+ }
+ E.view(g,0).scoreProgress.players[0].longestRoutes.length=0;
+ assert.equal(E.view(g,-1).scoreProgress.players[0].longestRoutes.length,2);
+ g.routes[1].owner=1;
+ assert.deepEqual(E.view(g,0).scoreProgress.players[0].longestRoutes,[0]);
+});

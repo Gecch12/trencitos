@@ -86,3 +86,51 @@ antigua corregida durante la implementación.
 
 Siguiente paso de entrega: comprobar el commit en `origin/main` y el inicio de
 CI. La subida a Git no acredita un despliegue Live en Render.
+
+## Refinamiento tras uso en iPhone · 2026-11-04
+
+Ángel aprobó implementar los seis ajustes discutidos con Moti en móvil, tablet y
+escritorio. Después de la validación autorizó subir todos los cambios a `main`;
+la instalación de una nueva app queda para una solicitud posterior.
+
+- [x] Mercado agrupado, mazo horizontal sin recuadro y separación de la mano.
+- [x] Avatar/nombre prioritarios, puntos/cartas/vagones y reloj continuo; solo
+  estaciones en expansión general, detalle con etiquetas y camino exacto desde +10.
+- [x] Historial «Ocupó» / «Ver», elevación y caída escalonada sin mutar partida.
+- [x] Robo de destinos por icono con confirmación previa y revalidación de turno.
+- [x] Ayuda más breve, mapa de destinos mayor, tarjetas/reserva compactas y ojo
+  para visibilidad; gestos con etiquetas persistentes y dibujo sincronizado.
+- [x] Completar comprobaciones de flujo, regresión y revisión de capturas.
+
+Evidencia local en `.qa/table-refinement/`, sin publicación ni instalación nueva:
+
+- Suite Node aislada: **698/698**, sin fallos ni omitidas, 158,8 s
+  (`node-suite.log`). La primera comprobación focal necesitó adaptar el stub de
+  un test a la nueva limpieza de foco; la suite final incluye esa corrección.
+- `browser-table-refinement.cjs`: cinco grupos, cero errores. Móvil/tablet/escritorio,
+  glow del recorrido exacto, elevación y retorno sin cambios de estado, movimiento
+  reducido, confirmación/cancelación con servidor real, bloqueo fuera de turno y
+  tras robar una carta. Capturas con cuatro jugadores.
+- Pellizco mediante eventos táctiles de Chrome: 18 actualizaciones progresivas,
+  cero reconstrucciones de nodos o medidas de texto, selección intacta y zoom
+  conservado al continuar con un dedo. Se corrigió la simulación de `touchEnd`
+  para retirar el dedo correcto; no se confunde ese ajuste con un bug de producto.
+- `browser-table-ui.cjs`: cinco grupos, siete tamaños de 320×568 a 1440×900,
+  cinco jugadores y nueve colores, cero errores. Ajustados números de tres cifras
+  y controles en pantallas bajas. Tablet vertical usa mapa sobre lista para evitar
+  una columna estrecha; tablet horizontal/escritorio mantienen dos columnas.
+- `browser-destination-map.cjs`: siete grupos, cero errores; selección, sombra,
+  gestos, mapas alternativos, actualización concurrente, recuperación WebGL y
+  túneles. Adaptada la navegación al panel compartido actual.
+- `browser-card-ui.cjs`: cuatro grupos, cero errores; `browser-draw-feedback.cjs`:
+  dieciséis grupos, cero errores. La latencia y el fallo remoto son un doble local,
+  sin conectar con datos de producción.
+- Sintaxis, `git diff --check` y comprobador documental normales. La prueba nueva
+  se incorpora a CI; las pruebas anteriores de robo pasan por la confirmación.
+
+La verificación táctil es de navegador, no una medición del rendimiento en el
+hardware del iPhone. Ángel autorizó la entrega conjunta a `main` después de
+esta validación. La entrega incluye código, pruebas, traducciones, documentación
+y el nuevo recorrido de CI. Siguiente paso: comprobar el commit en `origin/main`
+y el inicio de CI. Esta entrega Git no acredita un despliegue Live ni actualiza
+la app ya instalada en el iPhone.

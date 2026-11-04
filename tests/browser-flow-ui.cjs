@@ -75,7 +75,7 @@ let browser;
   assert.equal(room.game.routes[route.id].owner,kind==='decline'?null:0);
   if(kind==='zero') {
    // Destination offers use the same presentation with a separate private clock.
-   await rival.locator('#drawtickets').click();await rival.waitForSelector('#ticketMap');
+   await rival.locator('#drawtickets').click(); await rival.locator('#confirmDestinationDraw').click();await rival.waitForSelector('#ticketMap');
    assert.equal(await rival.locator('.ticket-intro,#ticketMapCaption').count(),0);
    assert.doesNotMatch(await rival.locator('#dialog').innerText(),/Primero elige|Tus destinos permanecerán|La partida continúa/);
    await rival.screenshot({path:path.join(out,'new-tickets.png')});

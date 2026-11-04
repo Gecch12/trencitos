@@ -374,3 +374,11 @@ y atender otras solicitudes. Sin ese encabezado se conserva el contrato JSON
 anterior y la auditoría completa. Cancelar cierra el iterador; los hashes,
 snapshots, permisos y archivos persistidos no cambian. No hay migración ni
 ejecución de jugadas para reconstruir estados históricos.
+
+### Consulta visual de una ocupación
+
+La fila usa «Ocupó» y un botón «Ver». La consulta temporal enfoca el tramo,
+atenúa el entorno y eleva/asienta los vagones en secuencia. No emite comandos,
+sonidos de jugada nueva ni puntos. Recupera el encuadre al terminar o salir;
+una construcción real tiene prioridad. Movimiento reducido conserva solo el foco.
+El historial conserva su posición de lectura al reabrirse.

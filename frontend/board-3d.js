@@ -307,10 +307,10 @@ export function createBoard3D({ container, map, network, onFailure }) {
     }
     invalidate();
   }
-  function animateConstruction(event, onComplete, {delay=0,duration=500,hideDuringDelay=false}={}) {
+  function animateConstruction(event, onComplete, {delay=0,duration=500,hideDuringDelay=false,liftFirst=false}={}) {
     const key = event.routeId !== undefined ? `route:${event.routeId}` : `city:${event.city}`;
     if (disposed || !targets.has(key)) return false;
-    const animation = {key,started:performance.now(),onComplete,maxLift:0,delay,duration,hideDuringDelay,visible:!hideDuringDelay};
+    const animation = {key,started:performance.now(),onComplete,maxLift:0,delay,duration,hideDuringDelay,liftFirst,visible:!hideDuringDelay};
     bindAnimation(animation); animations.set(key,animation); invalidate(); return true;
   }
   const animatedMatrix = new THREE.Matrix4(), hiddenScale = new THREE.Vector3(0, 0, 0);
@@ -322,8 +322,10 @@ export function createBoard3D({ container, map, network, onFailure }) {
       animation.visible = !animation.hideDuringDelay || elapsed >= 0;
       for (const part of animation.parts) {
         const delay = animation.lastCell ? stagger * part.cell / animation.lastCell : 0;
-        const progress = THREE.MathUtils.clamp((elapsed-delay)/(animation.duration-stagger),0,1);
-        const lift = 18 * (1-progress) ** 3;
+        const rise = animation.liftFirst ? animation.duration * .22 : 0;
+        const progress = THREE.MathUtils.clamp((elapsed-rise-delay)/(animation.duration-rise-stagger),0,1);
+        const ascent = rise ? THREE.MathUtils.smoothstep(elapsed,0,rise) : 1;
+        const lift = (animation.liftFirst ? 11 : 18) * ascent * (1-progress) ** 3;
         animation.maxLift = Math.max(animation.maxLift,lift);
         animatedMatrix.copy(part.base); animatedMatrix.elements[14] += lift;
         if (!animation.visible) animatedMatrix.scale(hiddenScale);
@@ -339,25 +341,34 @@ export function createBoard3D({ container, map, network, onFailure }) {
     }
     animations.clear(); invalidate();
   }
+  function cancelConstruction(routeId) {
+    const key = `route:${routeId}`, animation = animations.get(key);
+    if (!animation) return;
+    for (const part of animation.parts) {
+      part.mesh.setMatrixAt(part.index,part.base); part.mesh.instanceMatrix.needsUpdate = true;
+    }
+    animations.delete(key); invalidate();
+  }
   function lost(event) { event.preventDefault(); onFailure(new Error('Se perdió el contexto WebGL.')); }
   function invalidate() {
     if (frame || disposed) return;
-    frame = requestAnimationFrame(now => {
-      frame = 0;
-      if (disposed || document.hidden) return;
-      const callbacks = advanceAnimations(now), cardsMoving = tunnelBoard.advance(now), shadingMoving = advanceShading(now), start = performance.now();
-      const pulse=reducedMotion.matches?1:.78+.22*Math.sin(now/650);
-      gold.mesh.material.opacity=pulse;halo.mesh.material.opacity=pulse*.8;
-      renderer.render(scene, camera); draws++;
-      samples.push(performance.now() - start); if (samples.length > 240) samples.shift();
-      callbacks.forEach(callback => callback());
-      if (animations.size || cardsMoving || shadingMoving || completedRoutes.length&&!reducedMotion.matches) invalidate();
-    });
+    frame = requestAnimationFrame(renderFrame);
+  }
+  function renderFrame(now) {
+    frame = 0;
+    if (disposed || document.hidden) return;
+    const callbacks = advanceAnimations(now), cardsMoving = tunnelBoard.advance(now), shadingMoving = advanceShading(now), start = performance.now();
+    const pulse=reducedMotion.matches?1:.78+.22*Math.sin(now/650);
+    gold.mesh.material.opacity=pulse;halo.mesh.material.opacity=pulse*.8;
+    renderer.render(scene, camera); draws++;
+    samples.push(performance.now() - start); if (samples.length > 240) samples.shift();
+    callbacks.forEach(callback => callback());
+    if (animations.size || cardsMoving || shadingMoving || completedRoutes.length&&!reducedMotion.matches) invalidate();
   }
   function visibility() { if (document.hidden) cancelAnimations(); else invalidate(); }
   document.addEventListener('visibilitychange', visibility);
   reducedMotion.addEventListener('change',invalidate);
-  function resize(view) {
+  function resize(view, immediate = false) {
     if (disposed) return;
     const w = container.clientWidth, h = container.clientHeight;
     if (!w || !h) return;
@@ -369,10 +380,12 @@ export function createBoard3D({ container, map, network, onFailure }) {
     camera.top = h * view.scale / 2; camera.bottom = -h * view.scale / 2;
     camera.position.set(cx, -cy - Math.sin(tilt) * 1500, Math.cos(tilt) * 1500);
     camera.up.set(0, 1, 0); camera.lookAt(cx, -cy, 0);
-    camera.updateProjectionMatrix(); camera.updateMatrixWorld(); invalidate();
+    camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    if (immediate) { cancelAnimationFrame(frame); renderFrame(performance.now()); }
+    else invalidate();
   }
   return {
-    resize, update, animateConstruction, cancelAnimations, setTunnelCards: tunnelBoard.update,
+    resize, update, animateConstruction, cancelAnimations, cancelConstruction, setTunnelCards: tunnelBoard.update,
     project(x, y, z = 0) {
       const p = new THREE.Vector3(x, -y, z).project(camera);
       return { x: (p.x + 1) * container.clientWidth / 2, y: (1 - p.y) * container.clientHeight / 2 };

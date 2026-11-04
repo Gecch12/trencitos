@@ -56,6 +56,10 @@ jobs:
         env:
           QA_OUT: .qa/ci/table-ui
         run: node tests/browser-table-ui.cjs
+      - name: Check route consultation, touch gestures and destination confirmation
+        env:
+          QA_OUT: .qa/ci/table-refinement
+        run: node tests/browser-table-refinement.cjs
       - name: Check automatic account seat recovery
         env:
           QA_OUT: .qa/ci/account-resume

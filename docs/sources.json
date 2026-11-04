@@ -6,7 +6,12 @@
     "frontend/index.html",
     "frontend/replay-ui.js",
     "tests/table-ui.test.js",
-    "tests/browser-table-ui.cjs"
+    "tests/browser-table-ui.cjs",
+    "frontend/destination-map.css",
+    "frontend/ticket-map.js",
+    "frontend/board-3d.js",
+    "game/queries/live-score.js",
+    "tests/browser-table-refinement.cjs"
   ],
   "mobile-development.md": [
     "capacitor.config.js",

@@ -88,7 +88,10 @@ historial público) y `browser-account-resume.cjs` (cuentas simuladas con protoc
 real), junto al lobby y los dieciséis casos de `browser-draw-feedback.cjs`.
 Desde la revisión de mesa compacta incluye `browser-table-ui.cjs`: siete tamaños,
 paneles sin reencuadre, puntos públicos/privados, robos y última ronda.
-Sus salidas de CI se conservan bajo `.qa/ci/` en el artefacto existente.
+El refinamiento de mesa incorpora `browser-table-refinement.cjs`: consulta visual
+de rutas sin mutación, camino más largo exacto, gestos táctiles y confirmación
+de nuevos destinos en los tres formatos. Sus salidas de CI se conservan bajo
+`.qa/ci/` en el artefacto existente.
 
 ## Publicación conjunta · 2026-11-03
 

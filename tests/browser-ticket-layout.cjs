@@ -66,7 +66,7 @@ async function measure(p, label) {
     p.on('console', e => { if (e.type() === 'error') report.errors.push(e.text()); });
     await p.goto(`http://127.0.0.1:${app.server.address().port}/?room=${code}`);
     await p.waitForFunction(() => !!game && !!board3D);
-    await p.locator('#drawtickets').click();
+    await p.locator('#drawtickets').click(); await p.locator('#confirmDestinationDraw').click();
     await p.waitForFunction(() => !!game.ticketOffer && !!ticketMapView);
     assert.equal(await p.locator('.ticket-eye:checked').count(), 10);
     assert.equal(await p.locator('.retained-choice.is-highlighted').count(), 10);

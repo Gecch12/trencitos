@@ -153,32 +153,39 @@ restaura el encuadre; con el mapa enfocado, las flechas desplazan, `+`/`−`
 cambian el zoom e **Inicio** centra. El zoom permite de 25 % a 600 %.
 
 La mesa comparte controles en móvil, tablet y escritorio, sin scroll de página.
-Los jugadores forman una fila superior compacta: puntos públicos de construcción
-encerrados en un círculo, nombre, cartas en mano y vagones disponibles. El reloj
-se adjunta al jugador activo. **Detalles de jugadores** despliega estaciones,
-billetes conservados y longitud del camino más largo sin cambiar el encuadre.
-El bono provisional aparece separado del círculo. Tocar tu jugador abre el
-desglose privado; al finalizar, los círculos muestran la puntuación final.
+Los jugadores muestran avatar y nombre arriba, y tres columnas de puntos públicos,
+cartas en mano y vagones disponibles debajo. El reloj forma un pie continuo en
+la tarjeta activa. **Detalles de jugadores** amplía solo las estaciones; el detalle
+individual identifica también destinos conservados y longitud del camino más largo.
+El bono provisional **+10** permanece separado; tocarlo resalta su recorrido exacto.
+Tocar tu jugador permite consultar el desglose privado. Al finalizar se muestran
+los puntos finales.
 
-El mercado y la mano permanecen abajo. El mercado tiene una fila de cinco cartas
-y el mazo, con áreas táctiles de al menos 44 px; tras el primer robo indica
-**Roba una carta más**. La mano agrupa los nueve colores con contadores y se
-amplía al tocarla. Los accesos por iconos sustituyen la barra de navegación:
-historial y futuro chat a la izquierda; resaltar destinos, tus destinos y
-restaurar encuadre a la derecha. Los paneles temporales se superponen al mapa,
-con cierre y Escape, sin reencuadrarlo. **Tus destinos** contiene el mazo para
-pedir billetes. El chat muestra «Próximamente» con escritura/envío deshabilitados.
+El mercado reúne cinco cartas con separación constante y el mazo al extremo
+derecho, con dorsos apilados horizontalmente. La mano queda separada por un pequeño
+espacio y agrupa colores con contadores. Las áreas de robo siguen midiendo al menos
+44 px; tras el primero aparece **Roba una carta más**. Los iconos del mapa permiten
+consultar destinos o **robar nuevos destinos**: este último pide confirmación y solo
+está disponible cuando la acción es legal. Abrir/cancelar no revela billetes ni
+gasta el turno; confirmar envía el comando y obliga a conservar el mínimo indicado.
+El chat muestra «Próximamente», con escritura/envío deshabilitados.
 
-El icono **i** abre puntos por longitud, bonificaciones, regla de última ronda y
-cantidades de los mazos, según la definición de la partida. El engranaje agrupa
-los ajustes, incluida pantalla completa. **Última ronda** muestra una etiqueta
-ámbar cuando se activa la condición del reglamento.
+Los paneles temporales se superponen sin reencuadrar el mapa. El icono **i** abre
+una ficha de puntos y última ronda según la definición de la partida. Las existencias
+de los mazos se consultan en el mercado y en los controles respectivos. El engranaje
+agrupa ajustes, incluida pantalla completa. **Última ronda** conserva el aviso ámbar.
 
-El historial se abre en un panel con scroll interno y barra visible cuando hay
-desbordamiento. Sigue los eventos al estar al final; al leer movimientos antiguos
-conserva la posición y ofrece **Nuevos ↓**, con contador. **Ver en el mapa** en una
-construcción enfoca su ruta y permite volver al encuadre anterior. Las miniaturas
-y privacidad del registro se describen en [historial](docs/history-replay.md).
+El historial conserva scroll, barra y aviso **Nuevos ↓**. Una ocupación se presenta
+como **Ocupó** y su botón **Ver** enfoca el tramo, oscurece el entorno y eleva los
+vagones para asentarlos de nuevo en secuencia. Es una consulta visual: no modifica
+recursos ni puntuación y cede ante una construcción real. Al terminar recupera
+el encuadre anterior; **Volver a mi encuadre** permite salir antes. Con movimiento
+reducido solo se resalta. Privacidad del registro en [historial](docs/history-replay.md).
+
+El modal de destinos mantiene el mapa visible y desplaza solo la lista. En móvil y tablet vertical el mapa va encima; en horizontal y escritorio, al lado. La reserva
+de vagones ocupa una línea y cada destino agrupa ciudades/puntos y coste/estado en
+dos líneas. El ojo indica qué destinos propios se resaltan; el check al robar indica
+cuáles se conservarán. Los gestos no reconstruyen las etiquetas ni cambian billetes.
 
 Las cartas conservan sus dibujos y huecos al agotarse. El amarillo es luminoso y
 mate; el comodín muestra un tren lateral grabado sobre seis franjas arcoíris,
@@ -424,7 +431,7 @@ Si falla el guardado remoto, no hay fallback al disco efímero: se pausa y no se
 
 - Mapa continuo de fondo, zoom 25%–300%, arrastre a cualquier escala y pantalla completa conservando los controles.
 - Etiquetas de ciudades reforzadas, rutas coloreadas con mayor contraste y selección visible.
-- Jugadores compactos arriba, con puntos públicos en círculos y recursos ampliables.
+- Jugadores compactos arriba, con avatar, puntos públicos, recursos y estaciones ampliables.
 - Mano y mercado siempre visibles; destinos e historial por iconos, con scroll independiente y construcción contextual.
 - Botón **Invitar** durante partidas multijugador; las salas con bots siguen siendo privadas para su creador.
 - Descripción explícita del coste de cada ruta, incluidos los requisitos de comodines de los ferris.

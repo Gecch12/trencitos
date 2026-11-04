@@ -57,7 +57,7 @@ const TurnHistory = (() => {
         case 'tunnel_result':
           if(d.outcome==='built'){cards(t('Pagó extra'),payment(d.extra));text(t`Construido (+${d.points})`);}
           else text(t(d.reason==='timeout'?'Desistió por tiempo; conserva sus cartas':'Desistió; conserva sus cartas'));break;
-        case 'build':text(t`Construyó ${route(d)} (+${d.points})`);cards(t('Pagó'),payment(d.payment));break;
+        case 'build':text(t`Ocupó ${route(d)} (+${d.points})`);cards(t('Pagó'),payment(d.payment));break;
         case 'station':text(t`Estación en ${city(d.city)}`);cards(t('Pagó'),payment(d.payment));break;
         case 'initial':case 'tickets_kept':
           if(e.type==='initial'&&d.handCount)cards(t('Mano inicial'),d.hand||Array(d.handCount).fill('back'),'history-initial-cards');

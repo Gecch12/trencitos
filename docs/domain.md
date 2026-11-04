@@ -231,3 +231,8 @@ modos; un mapa futuro no puede omitir validación, filtrado ni grabación.
 El replay de una partida cerrada revela toda la información de juego registrada
 a cualquiera que tenga acceso a esa grabación. La propiedad sigue protegiendo
 partidas privadas y auditorías; véase [historial/replay](history-replay.md).
+
+La proyección pública `scoreProgress.players[].longestRoutes` incluye los tramos
+del camino más largo exacto calculado por el servidor. Solo usa vías ocupadas
+públicas del jugador, sin destinos privados; no añade puntos ni cambia desempates.
+El cliente lo usa para explicar visualmente el bono provisional.
