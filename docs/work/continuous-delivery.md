@@ -119,3 +119,14 @@ que antes quedaban pendientes. Se desplegó manualmente y quedó Live a las
 16:58:15 Lima. Recursos, backend y navegador de producción verificados;
 registro de entrega en [Producción](../production.md). La integración Git
 automática continúa pendiente del propietario, como se documenta arriba.
+
+## Publicación de replay y diálogos · 2026-11-03
+
+El CI de `2cf14a8` pasó 685/686 pruebas Node y se detuvo antes del navegador.
+La prueba de persistencia del programador de bots recibía una mano aleatoria;
+si el bot iniciaba un túnel, al restaurar la sala esperaba erróneamente un
+temporizador inmediato. Durante la revelación corresponde esperar al reloj del
+juego. El escenario ahora devuelve la mano del bot al mazo antes de esa acción,
+para comprobar un robo ordinario y conservar las aserciones de pausa, restauración
+y reanudación. No cambia el código de producción ni se omite ninguna prueba.
+La publicación espera otro CI completo aprobado.

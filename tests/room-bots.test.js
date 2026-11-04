@@ -9,7 +9,11 @@ test('permanent bots choose, play, pause without humans and resume from a persis
  const tick=()=>{const fn=[...timers][0];assert.ok(fn,'scheduled action');timers.delete(fn);fn();};
  bot.sync(room);tick();assert.equal(room.game.players[1].pending.length,0);assert.equal(commits,1);
  Engine.action(room.game,0,{type:'choose_initial',indexes:[0,1]});room.game.current=1;
+ // Exercise scheduler persistence with an ordinary draw. A random affordable
+ // tunnel correctly waits for the game clock and has no immediate bot timer.
+ room.game.deck.push(...room.game.players[1].hand.splice(0));
  bot.sync(room);tick();assert.equal(room.revision,2);
+ assert.equal(room.game.phase,'play');
  room.members[0].ws=null;bot.sync(room);assert.equal(timers.size,0);
  const restored=serializableRoom(room);restored.members[0].ws={closed:false};rooms.set(room.code,restored);restored.game.current=1;
  bot.sync(restored);assert.equal(timers.size,1);
