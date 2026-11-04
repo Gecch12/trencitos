@@ -183,6 +183,7 @@ function removeRoom(r, message = "La sala ya no existe.") {
   sendDirectory();
 }
 const APP_ROUTES = new Set(["/rooms", "/play", "/more", "/profile", "/replay"]);
+const nativeClient = require("./native-client");
 async function linkGuest(req,res,accountId) {
   const id=guestId(req); if(!id)return;
   try {
@@ -203,6 +204,7 @@ const accountAuth = createAccountAuth({linkGuest, logoutGuest:(req,res)=>ensureG
   unavailable:()=>!storageReady || stopping || storageFailureAt!==null})});
 const server = http.createServer(async (req, res) => {
   let url = new URL(req.url, "http://localhost");
+  if (nativeClient.handleNativeHttp(req, res, url)) return;
   if (req.method === "GET" && (APP_ROUTES.has(url.pathname)||url.pathname === "/")) ensureGuest(req,res);
   if (await accountAuth.handle(req,res,url)) return;
   if (url.pathname.startsWith("/api/history")) {
@@ -237,7 +239,7 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === "/healthz") {
     const ok = storageReady && storageFailureAt === null && !stopping;
     res.writeHead(ok ? 200 : 503, { "Content-Type": "application/json" });
-    return res.end(JSON.stringify({ ok, storage: backend, rooms: rooms.size, ...(url.searchParams.get("timings")==="1"?{timingsMs:metrics.summary()}:{}) }));
+    return res.end(JSON.stringify({ ok, storage: backend, rooms: rooms.size, mobileProtocolVersion: 1, ...(url.searchParams.get("timings")==="1"?{timingsMs:metrics.summary()}:{}) }));
   }
   servePublicAsset(url.pathname, res);
 });
@@ -672,7 +674,8 @@ server.on("upgrade", (req, socket) => {
   } catch {
     originHost = "invalid";
   }
-  if (originHost && originHost !== expectedHost) {
+  const native = nativeClient.isNativeRequest(req);
+  if (native ? !nativeClient.nativeToken(req) : originHost && originHost !== expectedHost) {
     socket.destroy();
     return;
   }
@@ -692,7 +695,7 @@ server.on("upgrade", (req, socket) => {
   socket.write(
     "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: " +
       accept +
-      "\r\n\r\n",
+      "\r\n" + (native ? `Sec-WebSocket-Protocol: ${nativeClient.PROTOCOL}\r\n` : "") + "\r\n",
   );
   createPeer(socket).guestId=guestId(req);
 });

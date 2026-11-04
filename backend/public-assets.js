@@ -23,6 +23,18 @@ const ASSETS = Object.freeze({
   "/vendor/three.module.js": ["node_modules/three/build/three.module.js", "text/javascript; charset=utf-8"],
   "/vendor/three.core.js": ["node_modules/three/build/three.core.js", "text/javascript; charset=utf-8"],
   "/app.js": ["frontend/app.js", "text/javascript; charset=utf-8"],
+  "/connection.js": ["frontend/connection.js", "text/javascript; charset=utf-8"],
+  "/mobile-runtime.js": ["frontend/mobile-runtime.js", "text/javascript; charset=utf-8"],
+  "/manifest.webmanifest": ["frontend/manifest.webmanifest", "application/manifest+json; charset=utf-8"],
+  "/pwa.js": ["frontend/pwa.js", "text/javascript; charset=utf-8"],
+  "/service-worker.js": ["frontend/service-worker.js", "text/javascript; charset=utf-8"],
+  "/offline.html": ["frontend/offline.html", "text/html; charset=utf-8"],
+  "/offline.css": ["frontend/offline.css", "text/css; charset=utf-8"],
+  "/offline.js": ["frontend/offline.js", "text/javascript; charset=utf-8"],
+  "/assets/icons/app-180.png": ["frontend/assets/icons/app-180.png", "image/png"],
+  "/assets/icons/app-192.png": ["frontend/assets/icons/app-192.png", "image/png"],
+  "/assets/icons/app-512.png": ["frontend/assets/icons/app-512.png", "image/png"],
+  "/mobile-bridge.js": ["frontend/mobile-bridge.js", "text/javascript; charset=utf-8"],
   "/style.css": ["frontend/style.css", "text/css; charset=utf-8"],
   "/maps/europe-v1.js": ["shared/maps/europe-v1.js", "text/javascript; charset=utf-8"],
   "/maps/europe-legacy-v1.js": ["shared/maps/europe-legacy-v1.js", "text/javascript; charset=utf-8"],
@@ -75,4 +87,4 @@ function servePublicAsset(pathname, res) {
   stream.on("error", () => res.destroy());
   stream.pipe(res);
 }
-module.exports = { servePublicAsset };
+module.exports = { servePublicAsset, ASSETS };

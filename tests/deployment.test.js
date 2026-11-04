@@ -75,7 +75,7 @@ test('runtime assets load through HTML, JavaScript imports and CSS references',a
   assert.equal(url.origin,base,'runtime resources must stay local');
   const response=await fetch(url);assert.equal(response.status,200,url.pathname);
   const body=await response.text(),type=response.headers.get('content-type');assert.ok(body.length>0,url.pathname);
-  const extension=path.extname(url.pathname),mime={'.js':'javascript','.mjs':'javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml'}[extension]||'text/html';
+  const extension=path.extname(url.pathname),mime={'.js':'javascript','.mjs':'javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml','.png':'image/png','.webmanifest':'application/manifest+json'}[extension]||'text/html';
   assert.ok(type.includes(mime),`${url.pathname}: ${type}`);
   assert.equal(response.headers.get('cache-control'),'no-store');
   assert.equal(response.headers.get('x-content-type-options'),'nosniff');

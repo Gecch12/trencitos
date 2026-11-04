@@ -46,7 +46,7 @@ test('remote WebSocket actions are serialized across rooms and acknowledged only
   assert.equal(f.room.game.players[seat].hand.length, old + 1);
   recovery.hand = [...f.room.game.players[0].hand]; recovery.revision = f.room.revision;
   const health = await fetch(`http://127.0.0.1:${port}/healthz`);
-  assert.deepEqual(await health.json(), { ok: true, storage: 'supabase', rooms: 2 });
+  assert.deepEqual(await health.json(), { ok: true, storage: 'supabase', rooms: 2, mobileProtocolVersion: 1 });
 });
 test('server restart reloads remote rooms and restores the same private seat, hand and revision', async () => {
   await stop(); await boot();

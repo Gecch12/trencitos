@@ -12,6 +12,12 @@ tests
 
 node_modules
 .qa
+.private
+dist
+android
+ios
+mobile
+capacitor.config.js
 docs
 scripts
 worktrees

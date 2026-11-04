@@ -6,7 +6,7 @@ const AccountUI = (() => {
     let editing=0, loading=true, stopped=false, accountKnown=false;
     const initial = selection();
     async function api(path,data) {
-      const response = await fetch('/api/account'+path,{credentials:'same-origin',cache:'no-store',
+      const response = await TrencitosConnection.request('/api/account'+path,{credentials:'same-origin',cache:'no-store',
         ...(data ? {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)} : {})});
       const value = await response.json();
       if (!response.ok) {

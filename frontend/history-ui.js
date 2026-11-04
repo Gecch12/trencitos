@@ -5,7 +5,7 @@ const HistoryUI = (() => {
   const date=value=>new Intl.DateTimeFormat(I18n.language,{dateStyle:'short',timeStyle:'short'}).format(value);
   const status={active:'En curso',completed:'Completada',abandoned:'Abandonada'};
   async function api(id='') {
-    const response=await fetch('/api/history'+(id?'/'+encodeURIComponent(id):''),{credentials:'same-origin',cache:'no-store'}),data=await response.json();
+    const response=await TrencitosConnection.request('/api/history'+(id?'/'+encodeURIComponent(id):''),{credentials:'same-origin',cache:'no-store'}),data=await response.json();
     if(!response.ok)throw Error(t(data.message));return data;
   }
   function duration(match) {
@@ -73,7 +73,7 @@ const HistoryUI = (() => {
     } catch(error){if(request!==profileRequest)return;root.innerHTML=`<p role="alert">${escape(error.message)}</p><button id="retryHistory">${t('Reintentar')}</button>`;$('retryHistory').onclick=()=>profile(tab);}
   }
   async function loadReplay(id,onUpdate,signal){
-    const response=await fetch('/api/history/'+encodeURIComponent(id),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/x-ndjson'},signal});
+    const response=await TrencitosConnection.request('/api/history/'+encodeURIComponent(id),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/x-ndjson'},signal});
     if(!response.ok){const error=await response.json();throw Error(t(error.message));}
     if(!response.headers.get('content-type')?.includes('application/x-ndjson')){
       const data=await response.json();data.complete=true;onUpdate(data);return data;

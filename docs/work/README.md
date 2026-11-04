@@ -5,6 +5,10 @@ genera la lista de estados y relaciones; este índice no mantiene otra copia.
 
 Iniciativa acordada:
 
+- [Beta gratuita en teléfonos](mobile-beta.md): APK compartible, iPhone desde
+  Xcode y web instalada, conectados al servidor por Internet.
+- [Android e iOS con Capacitor](mobile-capacitor.md): apps de desarrollo para
+  probar el juego en los dispositivos virtuales de la Mac.
 - [Pruebas y despliegue automático](continuous-delivery.md): CI en GitHub y
   publicación de main en Render cuando pasen las comprobaciones.
 - [Consolidación de carpeta y main](workspace-consolidation.md): ubicación de

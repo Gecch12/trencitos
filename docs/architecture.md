@@ -6,6 +6,20 @@ Evidencia, integración y límites en [la ficha del tablero](work/board-3d.md).
 
 ## Organización del monorepo
 
+La integración de desarrollo móvil usa [capacitor.config.js](../capacitor.config.js),
+los proyectos `android/` e `ios/` y los lanzadores `scripts/mobile*.js`.
+Las WebViews cargan el servidor local aislado; `mobile/web/` contiene ayuda y
+pantalla de desconexión. [mobile-bridge.js](../frontend/mobile-bridge.js) conecta
+eventos nativos de retorno/Atrás con el cliente existente y no actúa en navegador.
+No distribuye el motor ni introduce otro escritor de producción.
+El modo beta empaqueta recursos públicos con `scripts/mobile-bundle.js` y conecta
+al backend remoto mediante `frontend/connection.js`. `backend/native-client.js`
+limita CORS a los orígenes de Capacitor y a lecturas del invitado; la identidad
+nativa y la de cookies se mantienen separadas. El servidor sigue autorizando
+historial y puestos. La web tiene manifest e iconos; su service worker almacena
+solo la pantalla de desconexión, nunca API ni partidas.
+Configuración, distribución gratuita y límites en [pruebas móviles](mobile-development.md).
+
 | Carpeta | Responsabilidad |
 | --- | --- |
 | `frontend/` | HTML, estilos, navegador, Three.js y assets originales. |

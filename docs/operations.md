@@ -1,5 +1,7 @@
 # Operación local y verificación
 
+Para Android Emulator e iOS Simulator, consultar [pruebas móviles con Capacitor](mobile-development.md).
+
 ## Entorno
 
 Node >=20; comandos en la raíz Git (la carpeta que contiene `package.json`).

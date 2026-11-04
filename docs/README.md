@@ -9,6 +9,7 @@ No cargues todos los documentos ni todos los informes de QA al iniciar un chat.
 | Historial, replay, invitados e idiomas | [Contrato de historial](history-replay.md) |
 | Conceptos, reglas, privacidad y variantes | [Dominio](domain.md) |
 | Ejecutar, probar y aislar entornos | [Operación](operations.md) |
+| Ejecutar Android e iOS con Capacitor | [Pruebas móviles](mobile-development.md) |
 | Prioridades, avance y próximo paso | [Trabajo](work/README.md) |
 | Por qué se eligió una solución | [Decisiones](decisions/README.md) |
 | Mantener docs o reconciliar ramas | [Método](maintenance.md) |

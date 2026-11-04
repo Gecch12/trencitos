@@ -147,7 +147,7 @@ const AppShell = (() => {
       const s = state();
       $('mobileRoomCode').textContent = s.room;
       $('roomCount').textContent = `${s.members.length}/${s.maxPlayers}`;
-      $('roomInviteLink').value = location.origin+'/?room='+s.room;
+      $('roomInviteLink').value = TrencitosConnection.publicUrl('/?room='+s.room);
       $('roomVisibility').value = s.visibility;
       const locked = !s.host || s.busy || s.started;
       mapPicker.render(s.mapRef,locked);

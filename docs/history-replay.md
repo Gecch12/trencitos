@@ -59,6 +59,13 @@ verificado. La unión es idempotente, conserva el historial previo de la cuenta 
 rechaza apropiación por otra. Una identidad ya reclamada no da acceso anónimo;
 logout rota la cookie. Los enlaces privados de puesto siguen siendo independientes.
 
+En la beta nativa, `connection.js` conserva una credencial aleatoria propia por
+instalación/servidor. `native-client.js` la recibe por cabecera o subprotocolo WS
+solo desde los orígenes de Capacitor, y `guest-identity.js` aplica el mismo SHA-256
+antes de asociarla al historial. No se aceptan cookies de cuenta en esa frontera.
+Safari, Chrome y la app conservan identidades distintas; la beta nativa no inicia
+OAuth. [Distribución y límites](mobile-development.md).
+
 La composición de vistas de lobby, partida y grabación vive en
 [authorized-views.js](../game/queries/authorized-views.js), compartida por servidor
 y archivo. El transporte verifica sesión y permiso de observar la sala; la

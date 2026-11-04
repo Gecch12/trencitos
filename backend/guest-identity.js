@@ -1,8 +1,9 @@
 "use strict";
 const {randomBytes,createHash}=require('node:crypto');
+const {isNativeRequest,nativeToken}=require('./native-client');
 const cookieName='trencitos_guest';
 function guestId(req) {
-  const token=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith(cookieName+'='))?.slice(cookieName.length+1);
+  const token=isNativeRequest(req)?nativeToken(req):(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith(cookieName+'='))?.slice(cookieName.length+1);
   return /^[a-f0-9]{64}$/.test(token||'')?createHash('sha256').update(token).digest('hex'):null;
 }
 function ensureGuest(req,res,rotate=false) {

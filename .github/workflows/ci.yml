@@ -38,6 +38,8 @@ jobs:
         run: npm run test:ci
       - name: Install Chrome for browser checks
         run: npx playwright install --with-deps chrome
+      - name: Check installable web and offline privacy
+        run: node tests/browser-pwa.cjs
       - name: Check two-client lobby
         env:
           QA_OUT: .qa/ci/lobby

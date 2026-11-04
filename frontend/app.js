@@ -378,8 +378,7 @@ async function joinDesiredRoom(automatic = false) {
 }
 function connect() {
   if (sessionReplaced) return;
-  const proto = location.protocol === "https:" ? "wss:" : "ws:";
-  sock = new WebSocket(proto + "//" + location.host + "/socket");
+  sock = TrencitosConnection.socket();
   status(I18n.t("Conectando…"));
   sock.onopen = async () => {
     resendPending = true;
@@ -725,7 +724,7 @@ $("homeJoin").onsubmit = event => {
 $("start").onclick = () =>
   send({ type: "start" });
 async function copyInvitation() {
-  const url = location.origin + "/?room=" + room;
+  const url = TrencitosConnection.publicUrl("/?room=" + room);
   try {
     await navigator.clipboard.writeText(url);
     $("copyLink").textContent = I18n.t("✓ Copiado");
@@ -752,7 +751,7 @@ $("takeOver").onclick = () => {
 };
 $("retrySave").onclick = () => send({ type: "retry_save" });
 $("copyRecovery").onclick = async () => {
-  const url = location.origin + "/?room=" + room + "#recover=" + encodeURIComponent(token);
+  const url = TrencitosConnection.publicUrl("/?room=" + room + "#recover=" + encodeURIComponent(token));
   try { await navigator.clipboard.writeText(url); toast(I18n.t("Enlace privado copiado. Guárdalo solo para ti.")); }
   catch { prompt(I18n.t("Tu enlace privado de recuperación (no lo compartas)"), url); }
 };
@@ -3503,6 +3502,28 @@ window.addEventListener("keydown", (e) => {
     }
   }
 });
+globalThis.TrencitosMobile?.attach({
+  resume() {
+    if (sessionReplaced) return;
+    // Reopen even an apparently live socket: the OS may have suspended it.
+    // onclose already restores the room and resends pending commands safely.
+    if (sock && sock.readyState < WebSocket.CLOSING) sock.close();
+    else if (!sock || sock.readyState === WebSocket.CLOSED) connect();
+  },
+  back() {
+    const dialog = document.querySelector("dialog[open]");
+    if (dialog) {
+      if (typeof dialog.requestClose === "function") dialog.requestClose();
+      else if (dialog.dispatchEvent(new Event("cancel", { cancelable: true }))) dialog.close();
+      return true;
+    }
+    const escape = new KeyboardEvent("keydown", { key: "Escape", cancelable: true, bubbles: true });
+    window.dispatchEvent(escape);
+    // Mandatory game choices stay open; Back never abandons a player's seat.
+    return escape.defaultPrevented || !$("overlay").classList.contains("hidden");
+  },
+}).catch(error => console.error("No se pudo conectar con el ciclo móvil:", error));
+
 setInterval(() => {
   if (sock?.readyState === WebSocket.OPEN && room) send({ type: "ping" });
 }, 180000);

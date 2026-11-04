@@ -10,13 +10,33 @@
     "start": "node server.js",
     "test": "node --test tests/*.test.js",
     "test:ci": "node --test --test-concurrency=1 tests/*.test.js",
-    "test:board3d": "node tests/browser-threejs.cjs"
+    "test:board3d": "node tests/browser-threejs.cjs",
+    "mobile:server": "node scripts/mobile-server.js",
+    "mobile:ios": "node scripts/mobile.js run ios",
+    "mobile:android": "node scripts/mobile.js run android",
+    "mobile:emulator": "node scripts/mobile-emulator.js",
+    "mobile:sync:ios": "node scripts/mobile.js sync ios",
+    "mobile:sync:android": "node scripts/mobile.js sync android",
+    "mobile:open:ios": "node scripts/mobile.js open ios",
+    "mobile:open:android": "node scripts/mobile.js open android",
+    "mobile:beta:ios": "node scripts/mobile.js run ios --beta",
+    "mobile:beta:android": "node scripts/mobile.js run android --beta",
+    "mobile:beta:open:ios": "node scripts/mobile.js open ios --beta",
+    "mobile:beta:open:android": "node scripts/mobile.js open android --beta",
+    "mobile:apk": "node scripts/mobile-apk.js",
+    "mobile:icons": "node scripts/mobile-icons.js",
+    "test:mobile:android": "node tests/native-android.cjs"
   },
   "license": "UNLICENSED",
   "dependencies": {
     "three": "0.187.0"
   },
   "devDependencies": {
+    "@capacitor/android": "8.6.0",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/cli": "8.6.0",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/ios": "8.6.0",
     "@electric-sql/pglite": "^0.5.14",
     "playwright": "1.64.1"
   }

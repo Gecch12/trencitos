@@ -1,4 +1,42 @@
 {
+  "mobile-development.md": [
+    "capacitor.config.js",
+    "scripts/mobile-config.js",
+    "scripts/mobile-server.js",
+    "scripts/mobile.js",
+    "scripts/mobile-emulator.js",
+    "mobile/",
+    "android/",
+    "ios/",
+    "frontend/mobile-bridge.js",
+    "tests/mobile-development.test.js",
+    "tests/native-android.cjs",
+    "scripts/mobile-apk.js",
+    "scripts/mobile-bundle.js",
+    "scripts/mobile-icons.js",
+    "backend/native-client.js",
+    "frontend/connection.js",
+    "frontend/mobile-runtime.js",
+    "frontend/manifest.webmanifest",
+    "frontend/pwa.js",
+    "frontend/service-worker.js",
+    "frontend/offline.html",
+    "frontend/offline.css",
+    "frontend/offline.js",
+    "frontend/assets/icons/",
+    "tests/mobile-beta.test.js",
+    "tests/browser-pwa.cjs"
+  ],
+  "work/mobile-capacitor.md": [
+    "capacitor.config.js",
+    "scripts/mobile-config.js",
+    "scripts/mobile-server.js",
+    "scripts/mobile.js",
+    "scripts/mobile-emulator.js",
+    "frontend/mobile-bridge.js",
+    "tests/mobile-development.test.js",
+    "tests/native-android.cjs"
+  ],
   "architecture.md": [
     "game/infrastructure/",
     "game/application/",
@@ -78,7 +116,10 @@
     "frontend/destination-planner.js",
     "frontend/ticket-map.js",
     "frontend/tunnel-board.js",
-    "frontend/destination-map.css"
+    "frontend/destination-map.css",
+    "backend/native-client.js",
+    "frontend/connection.js",
+    "frontend/service-worker.js"
   ],
   "domain.md": [
     "game/application/automatic-play.js",
@@ -250,7 +291,9 @@
     "game/queries/replay-analysis.js",
     "tests/replay-analysis.test.js",
     "tests/browser-replay-analysis.cjs",
-    "tests/replay-stream.test.js"
+    "tests/replay-stream.test.js",
+    "backend/native-client.js",
+    "frontend/connection.js"
   ],
   "work/table-controls.md": [
     "shared/game-timing.js",
@@ -514,5 +557,27 @@
     "frontend/board-3d.js",
     "tests/destination-planner.test.js",
     "tests/browser-destination-map.cjs"
+  ],
+  "work/mobile-beta.md": [
+    "scripts/mobile-apk.js",
+    "scripts/mobile-bundle.js",
+    "scripts/mobile-icons.js",
+    "backend/native-client.js",
+    "frontend/connection.js",
+    "frontend/mobile-runtime.js",
+    "frontend/manifest.webmanifest",
+    "frontend/pwa.js",
+    "frontend/service-worker.js",
+    "frontend/offline.html",
+    "frontend/offline.css",
+    "frontend/offline.js",
+    "frontend/assets/icons/",
+    "tests/mobile-beta.test.js",
+    "tests/browser-pwa.cjs",
+    "scripts/mobile-config.js",
+    "scripts/mobile.js",
+    "backend/guest-identity.js",
+    "backend/server.js",
+    "tests/native-android.cjs"
   ]
 }

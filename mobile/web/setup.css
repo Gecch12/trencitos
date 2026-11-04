@@ -1,0 +1,5 @@
+:root { font: 18px/1.5 system-ui, sans-serif; color: #102638; background: #fffcf5; }
+body { margin: 0; padding: max(28px, env(safe-area-inset-top)) 24px; }
+main { max-width: 32rem; margin: 12vh auto 0; }
+h1 { line-height: 1.15; }
+code { font-size: .85em; overflow-wrap: anywhere; }
