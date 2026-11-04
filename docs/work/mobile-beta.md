@@ -85,8 +85,14 @@ interfaz corresponde a `c40d80f`, ya publicada en el servidor; conserva nombre
 - [Informe del APK](../qa/table-refinement-release/android-package.json), con
   tamaño, hash y certificado público. Logs locales en `.qa/android-build2/`.
 
-Entrega como archivo local listo para compartir. No se sustituyó el asset de
-GitHub de la primera beta ni se instaló o probó este APK en un teléfono Android.
+Ángel autorizó después publicarlo en GitHub. La
+[beta build 2](https://github.com/Gecch12/trencitos/releases/tag/v0.6.1-mobile-beta-build2)
+incluye el APK y su checksum; conserva la primera beta en su release original.
+La revisión `a7727c7` del paquete tiene
+[CI completo aprobado](https://github.com/Gecch12/trencitos/actions/runs/41936549724).
+La descarga pública sin autenticar coincide byte a byte y por SHA-256 con el
+APK firmado local. El informe enlazado incluye los enlaces de entrega.
+No se instaló ni probó este APK en un teléfono Android.
 
 ## Siguiente paso
 

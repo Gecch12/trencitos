@@ -23,8 +23,9 @@
   existente en el iPhone 17 Pro Max a las 18:26 Lima; el dispositivo confirmó
   versión `0.6.1`, build `3`. [Registro](qa/table-refinement-release/ios-install.json).
   No se abrió el juego; Ángel realizará la prueba de uso.
-- Android: APK actualizado build `2` generado y firmado con la clave anterior,
-  listo para compartir como archivo local. [Entrega y verificación](work/mobile-beta.md#apk-actualizado-con-la-mesa-compacta--2026-11-04).
+- Android: [APK build 2 publicado](https://github.com/Gecch12/trencitos/releases/tag/v0.6.1-mobile-beta-build2)
+  con la firma anterior y descarga anónima verificada por hash.
+  [Entrega y verificación](work/mobile-beta.md#apk-actualizado-con-la-mesa-compacta--2026-11-04).
 
 La integración Git automática de Render conserva el pendiente de
 [entrega continua](work/continuous-delivery.md); este despliegue manual no lo resuelve.

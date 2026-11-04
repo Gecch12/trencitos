@@ -159,4 +159,9 @@ sorteo real del servidor. No cambia el motor ni el código de las apps.
 La misma reproducción falla con la aserción anterior (`null` frente al puesto
 del jugador). Después de la corrección pasan 24/24 pruebas de servidor y contrato
 de reparto en 32,9 s. Logs antes/después en `.qa/ci-start-history-fix/`.
-El ajuste se valida en GitHub con el workflow completo antes de publicar el APK.
+La validación completa del ajuste se realiza en el
+[workflow de main](https://github.com/Gecch12/trencitos/actions/workflows/ci.yml?query=branch%3Amain).
+El APK no cambia por esta corrección: su revisión `a7727c7` ya tiene
+[CI aprobado](https://github.com/Gecch12/trencitos/actions/runs/41936549724) y se
+publicó con descarga verificada en la
+[beta build 2](https://github.com/Gecch12/trencitos/releases/tag/v0.6.1-mobile-beta-build2).

@@ -21,5 +21,14 @@
     "passed": 15,
     "failed": 0
   },
-  "physicalDeviceTested": false
+  "physicalDeviceTested": false,
+  "release": "https://github.com/Gecch12/trencitos/releases/tag/v0.6.1-mobile-beta-build2",
+  "releaseTarget": "a7727c7d87cc62263ada8bff7bfcd9355f69ef96",
+  "downloadURL": "https://github.com/Gecch12/trencitos/releases/download/v0.6.1-mobile-beta-build2/trencitos-0.6.1-beta-build2.apk",
+  "anonymousDownloadMatches": true,
+  "packageCI": {
+    "url": "https://github.com/Gecch12/trencitos/actions/runs/41936549724",
+    "status": "completed",
+    "conclusion": "success"
+  }
 }
