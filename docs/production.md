@@ -1,6 +1,37 @@
 # Producción
 
-## Versión actual · 2026-11-03, 16:58 (Lima)
+## Versión actual · 2026-11-03, 19:11 (Lima)
+
+- Código `fff022571d8fda2912b019e4538b55c9e14f8685`, publicado desde `main`.
+  Incluye el replay progresivo con interfaz y animaciones de partida, historial
+  de destinos sin duplicación, destinos actuales premarcados, modales sin espacio
+  vacío, túnel reservado al constructor, sombreado manual y colección compacta
+  de seis vagones. Alcance y pruebas específicas en las fichas de
+  [replay](work/replay-experience.md), [destinos](work/destination-map-tunnels.md),
+  [sombreado](work/ticket-map-shading.md) y [colección](work/room-map-cards.md).
+- [Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbl7g07b9u1s73dpgkb0):
+  **Live** a las 19:11:25 Lima, Node 26.13.0, despliegue manual de 44,8 s tras
+  CI aprobado. Sin migraciones ni cambios de configuración o credenciales.
+- [CI](https://github.com/Gecch12/trencitos/actions/runs/41743704099): **686/686**
+  pruebas Node (173,9 s), documentos y 30 grupos de navegador correctos: lobby
+  (6), robos (16), interfaz de cartas (4) y recuperación de cuenta (4).
+  [Resultado](qa/modal-replay-release/ci-result.json). La suite completa local
+  también pasó; el ajuste final estabilizó únicamente un escenario aleatorio
+  del test del programador de bots, sin modificar el producto.
+- [HTTP](qa/modal-replay-release/production-http.json): 48 recursos públicos
+  coinciden por SHA-256 con la revisión y sus dependencias; once rutas privadas
+  o retiradas responden 404. Salud 200/Supabase y cero salas antes y después.
+- [Chrome](qa/modal-replay-release/production-browser.json): lobby conectado,
+  crear/unirse habilitados y cero errores de consola. Verificación remota de
+  lectura: no se crearon salas ni se abrió el historial privado. Los recorridos
+  de bots construyendo con el modal abierto y las mediciones de replay se
+  verificaron en local, como se documenta en las fichas. Capturas en
+  `.qa/modal-replay-release/`.
+
+La integración Git de Render sigue pendiente del propietario; esta entrega fue
+manual después del CI aprobado. [Estado](work/continuous-delivery.md).
+
+## Entrega anterior · 2026-11-03, 16:58 (Lima)
 
 - Código `ef654874c55aefca0a4fbcdb7bcc91aa91cc0c30`, publicado desde `main`.
   Incluye todos los cambios locales pendientes: foco temporal de construcciones

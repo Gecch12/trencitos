@@ -1,5 +1,5 @@
 ---
-{"id":"destination-map-tunnels","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
+{"id":"destination-map-tunnels","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Mapas de billetes en vivo y túneles sobre el tablero
 
@@ -183,6 +183,12 @@ Validación local con Chrome y backend HTTP/WebSocket de archivo temporal:
 Informe y capturas en `.qa/ticket-layout/`; reproducción previa en
 `.qa/ticket-modal/`. Se revisaron visualmente ambos mapas en escritorio y el
 modal horizontal. Dispositivos emulados, sin validación en hardware móvil.
-Procesos de prueba cerrados y servidores del usuario intactos; sin acceso a
-producción, commit, push ni despliegue. Siguiente paso: incluir estos cambios
-en la próxima publicación autorizada.
+Procesos de prueba cerrados y servidores del usuario intactos; esta validación
+se realizó exclusivamente en local antes de la publicación posterior.
+
+## Publicación conjunta · 2026-11-03
+
+Ángel autorizó publicar todos los cambios pendientes. Incluidos en `fff0225`,
+con CI completo aprobado y Render Live a las 19:11:25 Lima. La evidencia de
+entrega y la comprobación remota de lectura están en
+[Producción](../production.md). No queda publicación pendiente de este alcance.

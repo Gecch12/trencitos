@@ -1,5 +1,5 @@
 ---
-{"id":"room-map-cards","status":"validated","parent":null,"depends_on":["south-america-release"],"branch":"main","delivery":"worktree","updated":"2026-11-03"}
+{"id":"room-map-cards","status":"done","parent":null,"depends_on":["south-america-release"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Lobby: mapas visuales y vagón compacto
 
@@ -91,3 +91,10 @@ La comprobación remota confirmó 45 recursos idénticos y siete rutas privadas
 con 404. En Chrome se creó una sala privada de QA, se eligió Sudamérica por
 tarjeta y su colección de variantes; cierre normal y sin
 errores de consola. [Captura publicada](../qa/room-setup/production-desktop.png).
+
+## Publicación conjunta · 2026-11-03
+
+Ángel autorizó publicar todos los cambios pendientes. Incluidos en `fff0225`,
+con CI completo aprobado y Render Live a las 19:11:25 Lima. La evidencia de
+entrega y la comprobación remota de lectura están en
+[Producción](../production.md). No queda publicación pendiente de este alcance.

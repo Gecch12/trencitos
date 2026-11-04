@@ -1,5 +1,5 @@
 ---
-{"id":"ticket-map-shading","status":"done","parent":null,"depends_on":["destination-map-tunnels"],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
+{"id":"ticket-map-shading","status":"done","parent":null,"depends_on":["destination-map-tunnels"],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Sombreado y foco del mapa de billetes
 
@@ -188,5 +188,11 @@ de impacto y `git diff --check` correctos. Informe y capturas en
 `.qa/destination-map/`; se inspeccionaron `initial-dark-overview.png`,
 `initial-unshaded.png` e `initial-unshaded-mobile-focus.png`.
 
-Cambio local validado en `main`, sin commit ni publicación. Siguiente paso:
-incluir estas revisiones en la próxima publicación autorizada.
+La revisión se validó primero en `main`, exclusivamente en local.
+
+## Publicación conjunta · 2026-11-03
+
+Ángel autorizó publicar todos los cambios pendientes. Incluidos en `fff0225`,
+con CI completo aprobado y Render Live a las 19:11:25 Lima. La evidencia de
+entrega y la comprobación remota de lectura están en
+[Producción](../production.md). No queda publicación pendiente de este alcance.

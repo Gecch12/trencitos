@@ -129,4 +129,9 @@ temporizador inmediato. Durante la revelación corresponde esperar al reloj del
 juego. El escenario ahora devuelve la mano del bot al mazo antes de esa acción,
 para comprobar un robo ordinario y conservar las aserciones de pausa, restauración
 y reanudación. No cambia el código de producción ni se omite ninguna prueba.
-La publicación espera otro CI completo aprobado.
+La revisión `fff0225` superó el
+[CI completo](https://github.com/Gecch12/trencitos/actions/runs/41743704099):
+686/686 pruebas Node y 30 grupos de navegador. Se publicó manualmente en Render
+tras ese resultado y quedó Live a las 19:11:25 Lima. La comprobación posterior
+confirmó salud, archivos públicos y lobby. Evidencia en
+[Producción](../production.md); la integración Git automática sigue pendiente.

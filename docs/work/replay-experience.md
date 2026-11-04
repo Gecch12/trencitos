@@ -1,12 +1,13 @@
 ---
-{"id":"replay-experience","status":"done","parent":"history-replay","depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
+{"id":"replay-experience","status":"done","parent":"history-replay","depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-03"}
 ---
 # Replay ligero y presentación de partida
 
 Ángel autorizó implementar la simplificación revisada con Moti, reutilizar los
 paneles y las animaciones del juego y verificar exclusivamente en local. Los
-destinos deben usar ✓/✕ sin repetir etiquetas. No se ha publicado ni accedido a
-producción. Cambios locales preexistentes de otros chats conservados.
+destinos deben usar ✓/✕ sin repetir etiquetas. Esa implementación se verificó
+solo en local, conservando los cambios preexistentes de otros chats. Después
+autorizó publicar todos los cambios pendientes.
 
 ## Aceptación
 
@@ -55,12 +56,19 @@ Son mediciones locales puntuales, no una garantía de producción. En Chrome
   privacidad, robos, renovación, reconexión y pagos; sin errores de navegador.
 - Validación documental y `git diff --check` correctos.
 
-## Entrega y siguiente paso
+## Validación local original
 
-Implementación local en `main`, sin commit ni publicación. La instancia existente
-en localhost:3000 tiene una partida activa: no se reinició durante la validación.
+La implementación se verificó en `main` antes de publicar. La instancia existente
+en localhost:3000 tenía una partida activa: no se reinició durante la validación.
 Para adoptar la nueva descarga en esa instancia habrá que reiniciarla al terminar
 la partida. Se dejó una vista revisable en localhost:3179 con una copia separada
 de esa grabación cerrada en `.qa/replay-experience/preview/`. Las pruebas usaron
 puertos y guardados temporales independientes.
 Contrato canónico en [historial/replay](../history-replay.md).
+
+## Publicación conjunta · 2026-11-03
+
+Ángel autorizó publicar todos los cambios pendientes. Incluidos en `fff0225`,
+con CI completo aprobado y Render Live a las 19:11:25 Lima. La evidencia de
+entrega y la comprobación remota de lectura están en
+[Producción](../production.md). No queda publicación pendiente de este alcance.
