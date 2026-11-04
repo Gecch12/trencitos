@@ -277,18 +277,23 @@ test("WebSocket turn return waits for the private offer; confirmation and timeou
     a.send({ type: "action", action: { type: "draw_tickets" } });
     const offer = (await a.next("state", m => m.game.ticketOffer?.id === offerId)).game.ticketOffer;
     assert.ok(offer.deadline - Date.now() > 59000);
-    if (automatic) g.players[0].offer.deadline = Date.now() + 200;
+    const expiry = automatic ? Date.now() + 200 : null;
+    if (automatic) g.players[0].offer.deadline = expiry;
     b.send({ type: "action", action: { type: "draw_train", index: -1 } });
     await b.next("state", m => m.game.drawCount === 1);
     b.send({ type: "action", action: { type: "draw_train", index: -1 } });
     const waiting = (await a.next("state", m => m.game.turnWaiting && m.game.ticketOffer?.id === offerId)).game;
     assert.equal(waiting.current, 0); assert.equal(waiting.turnDeadline, null);
     const before = g.players[0].hand.length;
+    const earliestResume = automatic ? expiry : Date.now();
     if (!automatic) a.send({ type: "action", action: { type: "keep_tickets", offerId: offer.id, indexes: [0, 1] } });
     const ready = (await a.next("state", m => !m.game.ticketOffer && !m.game.turnWaiting && m.game.current === 0 && m.game.phase === "play")).game;
     assert.equal(ready.hand.length, before);
     assert.equal(ready.drawCount, 0);
-    assert.ok(ready.turnDeadline - ready.serverNow >= 59900);
+    // A full minute starts when the offer resolves, before serialization and
+    // delivery. CI load can legitimately put more than 100 ms between those.
+    assert.ok(ready.turnDeadline >= earliestResume + E.TURN_MS);
+    assert.ok(ready.turnDeadline <= Date.now() + E.TURN_MS);
   }
   a.close(); b.close();
 });

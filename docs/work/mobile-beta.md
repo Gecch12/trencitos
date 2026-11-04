@@ -44,6 +44,10 @@ servidor y los datos existentes.
   2026-11-11 10:30 Lima. No se contrató membresía Apple.
 - Evidencia local bajo `.qa/mobile-beta/`. El paquete físico aún requiere publicar
   el backend compatible para poder iniciar una partida por Internet.
+- El primer CI detectó una expectativa de entrega menor a 100 ms en un test
+  previo de retorno del turno. Se cambió por límites del plazo respecto a la
+  resolución de la oferta, manteniendo el minuto completo; 33 pruebas de servidor
+  y reloj pasaron. Sin cambios en el motor. El CI completo se vuelve a ejecutar.
 
 ## Siguiente paso
 
