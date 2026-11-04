@@ -1,6 +1,31 @@
 # Producción
 
-## Versión actual · 2026-11-04, 11:00 (Lima)
+## Versión actual · 2026-11-04, 18:10 (Lima)
+
+- Código `c40d80f6c0f4d8a6e427a8eae385bee1697c0e9f`, publicado desde `main`.
+  Incluye mesa compacta y sus refinamientos en móvil, tablet y escritorio:
+  mercado/mazo, jugadores con avatar, consulta animada de rutas, confirmación
+  de destinos y gestos del mapa. [Alcance y pruebas](work/board-first-mobile.md).
+- [Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dblrmgafngtc73c520p0):
+  **Live** a las 18:10:37 Lima, Node 26.13.0, despliegue manual de 44,1 s.
+  Al revisar el panel ya estaba publicado; no se disparó otro despliegue.
+  Sin migraciones ni cambios de configuración o credenciales.
+- [CI](https://github.com/Gecch12/trencitos/actions/runs/41920796679):
+  `completed/success`; todos los pasos de Node, documentación, PWA y navegador
+  correctos, incluidos los nuevos recorridos de mesa, rutas y gestos.
+  [Resultado](qa/table-refinement-release/ci-result.json).
+- [HTTP](qa/table-refinement-release/production-http.json): salud 200/Supabase,
+  cero salas y ocho recursos clave idénticos por SHA-256 a la revisión.
+  Comprobación de lectura, sin iniciar partidas ni modificar datos de producción.
+- iOS Release `0.6.1`, build `3`: compilación y firma válidas; interfaz de esta
+  revisión incluida, backend HTTPS de producción y depuración web desactivada.
+  [Paquete](qa/table-refinement-release/ios-package.json). Instalación pendiente
+  de desbloquear el iPhone conectado.
+
+La integración Git automática de Render conserva el pendiente de
+[entrega continua](work/continuous-delivery.md); este despliegue manual no lo resuelve.
+
+## Entrega anterior · 2026-11-04, 11:00 (Lima)
 
 - Código `d2a943863fbaa544f13c413b2f14d86c9dd3d35d`, publicado desde `main`.
   Incluye Capacitor, invitados nativos persistentes por HTTPS/WSS, PWA e interfaz

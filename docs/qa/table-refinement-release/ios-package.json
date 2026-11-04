@@ -1,0 +1,17 @@
+{
+  "CFBundleIdentifier": "com.trencitos.beta",
+  "CFBundleDisplayName": "Trencitos",
+  "CFBundleShortVersionString": "0.6.1",
+  "CFBundleVersion": "3",
+  "bundledServer": true,
+  "remoteWebview": false,
+  "webDebugging": false,
+  "bundledAssets": {
+    "app.js": true,
+    "table.css": true,
+    "ticket-map.js": true,
+    "board-3d.js": true,
+    "destination-map.css": true,
+    "turn-history.js": true
+  }
+}

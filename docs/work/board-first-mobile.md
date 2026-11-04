@@ -1,5 +1,5 @@
 ---
-{"id":"board-first-mobile","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-04"}
+{"id":"board-first-mobile","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-04"}
 ---
 # Mesa compacta con prioridad al mapa
 
@@ -134,3 +134,14 @@ esta validación. La entrega incluye código, pruebas, traducciones, documentaci
 y el nuevo recorrido de CI. Siguiente paso: comprobar el commit en `origin/main`
 y el inicio de CI. Esta entrega Git no acredita un despliegue Live ni actualiza
 la app ya instalada en el iPhone.
+
+## Publicación y paquete iPhone · 2026-11-04
+
+Ángel autorizó publicar en producción e instalar la actualización en su iPhone.
+La revisión `c40d80f` pasó el CI completo y el panel de Render confirmó su estado
+Live. Salud y recursos clave verificados en lectura; registro canónico y enlaces
+de evidencia en [Producción](../production.md).
+
+El paquete iOS Release build 3 está compilado y firmado con los recursos de esa
+misma revisión. La primera instalación encontró el iPhone bloqueado; está pendiente
+de desbloqueo. Las pruebas de juego en el dispositivo quedan a cargo de Ángel.

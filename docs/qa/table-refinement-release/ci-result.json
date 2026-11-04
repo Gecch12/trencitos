@@ -1,0 +1,90 @@
+{
+  "commit": "c40d80f6c0f4d8a6e427a8eae385bee1697c0e9f",
+  "url": "https://github.com/Gecch12/trencitos/actions/runs/41920796679",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 126892445054,
+      "name": "Tests, docs and browser",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-04T21:57:01Z",
+      "completed_at": "2026-11-04T22:06:50Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install locked dependencies",
+          "conclusion": "success"
+        },
+        {
+          "name": "Validate documentation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run full Node suite",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install Chrome for browser checks",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check installable web and offline privacy",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check two-client lobby",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check immediate draw feedback and recovery",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check public card motions and market history",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check compact table and map space",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check route consultation, touch gestures and destination confirmation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check automatic account seat recovery",
+          "conclusion": "success"
+        },
+        {
+          "name": "Keep browser evidence",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

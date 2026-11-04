@@ -1,0 +1,72 @@
+{
+  "checkedAt": "2026-11-04T23:15:57.616Z",
+  "commit": "c40d80f6c0f4d8a6e427a8eae385bee1697c0e9f",
+  "deploy": "dep-dblrmgafngtc73c520p0",
+  "health": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "storage": "supabase",
+      "rooms": 0,
+      "mobileProtocolVersion": 1
+    }
+  },
+  "assets": [
+    {
+      "url": "/",
+      "status": 200,
+      "source": "frontend/index.html",
+      "sha256": "a7fe09ab34c1b0f38fd183925a4c391194a5b3bb8ab6cee46b37cb7c4c19097f",
+      "matches": true
+    },
+    {
+      "url": "/app.js",
+      "status": 200,
+      "source": "frontend/app.js",
+      "sha256": "b0c7b61a66f0528fce159a9f603d7f027ec6bf6f319f70c610ca05c4132c6298",
+      "matches": true
+    },
+    {
+      "url": "/table.css",
+      "status": 200,
+      "source": "frontend/table.css",
+      "sha256": "2da90da65d50fe67268d005526633bdd1c707900a9eb138ce9255c16bed6cfa8",
+      "matches": true
+    },
+    {
+      "url": "/ticket-map.js",
+      "status": 200,
+      "source": "frontend/ticket-map.js",
+      "sha256": "72ca5defa0415d09e478729eb59836850f6000f709d37cf247f87289f01d8e40",
+      "matches": true
+    },
+    {
+      "url": "/board-3d.js",
+      "status": 200,
+      "source": "frontend/board-3d.js",
+      "sha256": "3daded76fa3c390d4de0d34571627d08b14e88ffb235da5e8f46892e5bffbf8b",
+      "matches": true
+    },
+    {
+      "url": "/destination-map.css",
+      "status": 200,
+      "source": "frontend/destination-map.css",
+      "sha256": "f414d65f1011834d3b70f0bb56ae7768024983a2c59938bdb958132c33616769",
+      "matches": true
+    },
+    {
+      "url": "/turn-history.js",
+      "status": 200,
+      "source": "frontend/turn-history.js",
+      "sha256": "4054a86cccccaa2634ab02db3bbc15f4b46cb9c792fa24a575d23ffd4c287d77",
+      "matches": true
+    },
+    {
+      "url": "/translations.js",
+      "status": 200,
+      "source": "shared/translations.js",
+      "sha256": "ca990287a9ae4ca5a0ff8f4c79d1a2f16eb0c030425fcbd187e433dbbd059526",
+      "matches": true
+    }
+  ]
+}
