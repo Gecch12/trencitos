@@ -472,7 +472,16 @@ test("WebSocket shared initial deadline settles all pending players without clie
   peers.forEach(p => p.close());
 });
 
-test("five-player room rejects a sixth player and ignores client starting-seat overrides", async () => {
+test("five-player room rejects a sixth player and ignores client starting-seat overrides", async (t) => {
+  const Engine = require("../backend/engine"), newRandomGame = Engine.newRandomGame;
+  // Reproduce the initial three-wild renewal without replacing the server's
+  // starting-seat draw or changing randomness outside this test.
+  let seed = 40;
+  t.mock.method(Engine, "newRandomGame", (names, now, random, timing, options) =>
+    newRandomGame(names, now, random, timing, { ...options, random: max => {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      return Math.floor(seed / 4294967296 * max);
+    } }));
   const host = await client();
   host.send({ type: "create", name: "1" });
   const lobby = await host.next("lobby");
@@ -487,8 +496,10 @@ test("five-player room rejects a sixth player and ignores client starting-seat o
   host.send({ type: "start", firstSeat: 999 });
   const state = (await host.next("state")).game;
   assert.ok(state.current >= 0 && state.current < 5);
-  assert.equal(state.history.at(-1).seat, state.current);
-  assert.match(state.history.at(-1).text, /sorteo/);
+  assert.ok(state.history.some(entry => entry.marketRefresh), "fixture must renew the initial market");
+  const starts = state.history.filter(entry => /sorteo/.test(entry.text));
+  assert.equal(starts.length, 1);
+  assert.equal(starts[0].seat, state.current);
   assert.equal(state.phase, "initial");
   assert.equal(state.players.length, 5);
 });

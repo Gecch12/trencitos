@@ -1,5 +1,5 @@
 ---
-{"id":"continuous-delivery","status":"blocked","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-03"}
+{"id":"continuous-delivery","status":"blocked","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-04"}
 ---
 # Pruebas en GitHub y publicación automática
 
@@ -140,3 +140,23 @@ La revisión `fff0225` superó el
 tras ese resultado y quedó Live a las 19:11:25 Lima. La comprobación posterior
 confirmó salud, archivos públicos y lobby. Evidencia en
 [Producción](../production.md); la integración Git automática sigue pendiente.
+
+## Regresión de sorteo inicial · 2026-11-04
+
+El [CI de 2257a26](https://github.com/Gecch12/trencitos/actions/runs/41933909898)
+pasó 697/698 pruebas Node y se detuvo antes del navegador. El commit cambiaba
+solo documentación, pero la prueba de una sala de cinco jugadores suponía que
+el sorteo era la última entrada del historial. Una renovación inicial por tres
+comodines ocupa esa posición con `seat:null`; el anuncio del primer jugador
+está presente en otra entrada.
+
+La prueba ahora localiza el anuncio por su contenido, exige que sea único y
+comprueba su puesto contra el turno público. Mantiene el rechazo del sexto
+jugador y del puesto inicial enviado por el cliente. El reparto usa una semilla
+local que fuerza la renovación y la comprueba explícitamente, conservando el
+sorteo real del servidor. No cambia el motor ni el código de las apps.
+
+La misma reproducción falla con la aserción anterior (`null` frente al puesto
+del jugador). Después de la corrección pasan 24/24 pruebas de servidor y contrato
+de reparto en 32,9 s. Logs antes/después en `.qa/ci-start-history-fix/`.
+El ajuste se valida en GitHub con el workflow completo antes de publicar el APK.
