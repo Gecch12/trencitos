@@ -19,8 +19,10 @@
   Comprobación de lectura, sin iniciar partidas ni modificar datos de producción.
 - iOS Release `0.6.1`, build `3`: compilación y firma válidas; interfaz de esta
   revisión incluida, backend HTTPS de producción y depuración web desactivada.
-  [Paquete](qa/table-refinement-release/ios-package.json). Instalación pendiente
-  de desbloquear el iPhone conectado.
+  [Paquete](qa/table-refinement-release/ios-package.json). Instalado sobre la app
+  existente en el iPhone 17 Pro Max a las 18:26 Lima; el dispositivo confirmó
+  versión `0.6.1`, build `3`. [Registro](qa/table-refinement-release/ios-install.json).
+  No se abrió el juego; Ángel realizará la prueba de uso.
 
 La integración Git automática de Render conserva el pendiente de
 [entrega continua](work/continuous-delivery.md); este despliegue manual no lo resuelve.

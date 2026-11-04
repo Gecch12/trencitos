@@ -142,6 +142,9 @@ La revisión `c40d80f` pasó el CI completo y el panel de Render confirmó su es
 Live. Salud y recursos clave verificados en lectura; registro canónico y enlaces
 de evidencia en [Producción](../production.md).
 
-El paquete iOS Release build 3 está compilado y firmado con los recursos de esa
-misma revisión. La primera instalación encontró el iPhone bloqueado; está pendiente
-de desbloqueo. Las pruebas de juego en el dispositivo quedan a cargo de Ángel.
+El paquete iOS Release build 3 se compiló y firmó con los recursos de esa misma
+revisión. Tras desbloquear Ángel el iPhone, la actualización se instaló sobre
+la app existente y el dispositivo confirmó la versión y el build. Evidencia en
+[Producción](../production.md). No se abrió el juego ni se ejecutaron partidas.
+
+Siguiente paso: recoger la prueba de juego de Ángel en el iPhone.

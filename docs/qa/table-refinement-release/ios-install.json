@@ -1,0 +1,15 @@
+{
+  "commit": "c40d80f6c0f4d8a6e427a8eae385bee1697c0e9f",
+  "deviceModel": "iPhone 17 Pro Max",
+  "installedAt": "2026-11-04T18:26:29-05:00",
+  "verifiedAt": "2026-11-04T18:27:01-05:00",
+  "installation": "success",
+  "verifiedApp": {
+    "name": "Trencitos",
+    "bundleIdentifier": "com.trencitos.beta",
+    "version": "0.6.1",
+    "bundleVersion": "3"
+  },
+  "launched": false,
+  "gameplayTested": false
+}
