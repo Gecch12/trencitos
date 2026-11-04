@@ -1,6 +1,34 @@
 # Producción
 
-## Versión actual · 2026-11-03, 19:11 (Lima)
+## Versión actual · 2026-11-04, 11:00 (Lima)
+
+- Código `d2a943863fbaa544f13c413b2f14d86c9dd3d35d`, publicado desde `main`.
+  Incluye Capacitor, invitados nativos persistentes por HTTPS/WSS, PWA e interfaz
+  empaquetada. [Alcance de la beta](work/mobile-beta.md).
+- [Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbllcron74is73c1if3g):
+  **Live** a las 11:00:21 Lima, Node 26.13.0, despliegue manual del usuario de
+  37,3 s. Sin migraciones, cambios de credenciales ni servicios de pago.
+- [CI](https://github.com/Gecch12/trencitos/actions/runs/41861164488): 692/692
+  pruebas Node y todos los pasos de documentos, navegador y PWA correctos.
+  GitHub aún mostraba `in_progress`, sin conclusión global, pese a haber terminado
+  todos los pasos a las 10:51:07 Lima. El usuario publicó manualmente el último
+  commit; no se afirma cierre exitoso del run ni funcionamiento de autodeploy.
+- [HTTP/WebSocket](qa/mobile-beta-release/production-report.json): 60 recursos
+  públicos coinciden con la revisión; protocolo móvil versión 1, CORS nativo
+  estricto e historial del invitado comprobados. Cliente nativo de protocolo y
+  navegador compartieron una sala privada por Internet; se cerró sin iniciar
+  partida. Salud correcta con Supabase y cero salas antes y después.
+- [Beta Android](https://github.com/Gecch12/trencitos/releases/tag/v0.6.1-mobile-beta):
+  APK release firmado, descarga pública verificada por hash.
+  [Informe del paquete](qa/mobile-beta-release/package-report.json).
+  Android Emulator e iOS Simulator mostraron el lobby de producción conectado;
+  iPhone físico instalado con firma personal gratuita y apertura verificada.
+  Una partida completa en teléfonos reales queda como prueba de uso de la beta.
+- Comandos, renovación de la firma gratuita y alternativa web instalada en
+  [la guía móvil](mobile-development.md). La integración Git de Render conserva
+  el pendiente registrado en [entrega continua](work/continuous-delivery.md).
+
+## Entrega anterior · 2026-11-03, 19:11 (Lima)
 
 - Código `fff022571d8fda2912b019e4538b55c9e14f8685`, publicado desde `main`.
   Incluye el replay progresivo con interfaz y animaciones de partida, historial

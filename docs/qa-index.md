@@ -6,6 +6,7 @@ El resultado de una ejecución nueva se registra en su ficha de trabajo.
 
 | Área | Evidencia existente |
 | --- | --- |
+| Capacitor y beta gratuita en teléfonos | [Pruebas nativas y límites](work/mobile-beta.md), [servidor publicado](qa/mobile-beta-release/production-report.json) y [APK firmado](qa/mobile-beta-release/package-report.json) |
 | CI en GitHub y enlace con Render | [Pruebas, configuración y bloqueo de acceso Git](work/continuous-delivery.md) |
 | Consolidación en main, lobby y cartas | [Validación y respaldo de worktrees](work/workspace-consolidation.md) |
 | Base para arquitectura modular y mapas | [Fase 0 y límites de la referencia](work/modular-platform-baseline.md) |

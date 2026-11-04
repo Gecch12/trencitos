@@ -1,0 +1,29 @@
+{
+  "checks": [
+    "Published mobile protocol, strict native CORS, guest account and empty private history",
+    "All listed public assets match the published revision",
+    "Native and browser WebSocket clients share a private lobby over Internet",
+    "Verification lobby closed without starting a production match"
+  ],
+  "errors": [],
+  "healthBefore": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 0,
+    "mobileProtocolVersion": 1
+  },
+  "assets": 60,
+  "room": "03671258",
+  "healthAfter": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 0,
+    "mobileProtocolVersion": 1
+  },
+  "passed": true,
+  "revision": "d2a943863fbaa544f13c413b2f14d86c9dd3d35d",
+  "server": "https://trencitos-swamp.onrender.com",
+  "verifiedDate": "2026-11-04",
+  "deployment": "dep-dbllcron74is73c1if3g",
+  "liveAt": "2026-11-04T11:00:21-05:00"
+}

@@ -1,5 +1,5 @@
 ---
-{"id":"mobile-capacitor","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"none","updated":"2026-11-04"}
+{"id":"mobile-capacitor","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-04"}
 ---
 
 # Trencitos en Android e iOS con Capacitor
@@ -52,9 +52,11 @@ La operación y sus límites se describen en [pruebas móviles](../mobile-develo
   ambos resultados para la validación visual. `mobile:emulator` reproduce el
   arranque del nuevo AVD con GPU del anfitrión, Vulkan desactivado y 3 GB de RAM.
 - Logs y capturas de la ejecución local en `.qa/mobile/` (no versionados).
+- Integrado en `main` mediante `fc41133`; la distribución por Internet y los
+  paquetes entregados se verificaron en [la beta gratuita](mobile-beta.md).
 
 ## Siguiente paso
 
-Probar la experiencia de juego desde ambas apps. El alcance local está terminado;
-los cambios permanecen sin commit en `main`. Una distribución fuera de la Mac
-requiere definir servidor, autenticación y empaquetado para ese nuevo alcance.
+Probar la experiencia de juego desde ambas apps. El alcance local está terminado
+e integrado; instalación en teléfonos y distribución se describen en
+[la beta gratuita](mobile-beta.md).
