@@ -68,6 +68,26 @@ servidor y los datos existentes.
 - Logs y capturas completos bajo `.qa/mobile-beta/` (no versionados); evidencia
   durable de publicación en [producción](../production.md).
 
+## APK actualizado con la mesa compacta · 2026-11-04
+
+Ángel solicitó generar el APK Android después de publicar e instalar la nueva
+interfaz en iPhone. Se generó `dist/trencitos-0.6.1-beta-build2.apk` y su archivo
+`.sha256`, desde `2257a26` más el incremento de `versionCode` de 1 a 2. La
+interfaz corresponde a `c40d80f`, ya publicada en el servidor; conserva nombre
+`Trencitos`, versión visible `0.6.1` y aplicación `com.trencitos.beta`.
+
+- `npm run mobile:apk`: Release compilado y firmado con la clave existente.
+  Certificado idéntico al APK anterior, firma y alineación comprobadas.
+- 61 entradas de recursos públicos coinciden con el checkout, incluyendo la
+  adaptación de CSP para el paquete; backend HTTPS de producción, sin
+  `server.url`, depuración web ni tráfico mixto.
+- 15/15 pruebas existentes de beta, desarrollo móvil y despliegue correctas.
+- [Informe del APK](../qa/table-refinement-release/android-package.json), con
+  tamaño, hash y certificado público. Logs locales en `.qa/android-build2/`.
+
+Entrega como archivo local listo para compartir. No se sustituyó el asset de
+GitHub de la primera beta ni se instaló o probó este APK en un teléfono Android.
+
 ## Siguiente paso
 
 Recoger la prueba de juego de Ángel y sus amigos: partida completa, controles,
