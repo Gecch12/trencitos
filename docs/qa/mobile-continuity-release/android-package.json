@@ -1,0 +1,16 @@
+{
+  "applicationId": "com.trencitos.beta",
+  "versionName": "0.6.1",
+  "versionCode": 3,
+  "asset": "trencitos-0.6.1-beta-build3.apk",
+  "sha256": "61914563d381ae27f46fa7f62c6391a6df344aeed2e7554a079f23b4c8494dbe",
+  "bytes": 3858929,
+  "backend": "https://trencitos-swamp.onrender.com",
+  "sourceAssetsMatch": true,
+  "webDebugging": false,
+  "signatureVerified": true,
+  "sameSignerAsBuild2": true,
+  "signerCertificateSha256": "e3c0f136bfb7d8493e248f99bc8810b48fcb48c9ed3b415bedb0212ddd68be29",
+  "publicDownloadSha256": "61914563d381ae27f46fa7f62c6391a6df344aeed2e7554a079f23b4c8494dbe",
+  "releaseUrl": "https://github.com/Gecch12/trencitos/releases/tag/v0.6.1-mobile-beta-build3"
+}

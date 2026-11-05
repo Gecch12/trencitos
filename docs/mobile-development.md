@@ -181,7 +181,7 @@ desinstalar elimina la identidad local; conservar el enlace de recuperación.
 
 ### Android: generar y entregar el APK
 
-La [beta 0.6.1 build 2 publicada](https://github.com/Gecch12/trencitos/releases/tag/v0.6.1-mobile-beta-build2)
+La [beta 0.6.1 build 3 publicada](https://github.com/Gecch12/trencitos/releases/tag/v0.6.1-mobile-beta-build3)
 incluye el APK listo para compartir y su hash; no es necesario compilar para
 instalar esa versión. Para generar una actualización:
 

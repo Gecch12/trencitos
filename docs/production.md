@@ -1,6 +1,33 @@
 # Producción
 
-## Versión actual · 2026-11-04, 18:10 (Lima)
+## Versión actual · 2026-11-05, 12:45 (Lima)
+
+- Código `891b2d709d6c0daa8d5242ba33f905523f615d0a`, publicado desde `main`.
+  Recuperación de partidas con bots, cuenta nativa segura, zoom limitado al mapa,
+  indicadores de destinos y tablas compactas. [Alcance](work/mobile-continuity.md).
+- [CI completo](https://github.com/Gecch12/trencitos/actions/runs/42075542241):
+  `completed/success`, documentación, 706/706 pruebas Node y todos los recorridos de Chrome,
+  incluido continuidad móvil. [Resultado](qa/mobile-continuity-release/ci-result.json).
+- [Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbmc0rg8v5cc73e5t8hg):
+  **Live** a las 12:45:01 Lima, despliegue manual de 46,9 s, Node 26.13.0.
+  Sin migraciones ni cambios de credenciales. [Captura](qa/mobile-continuity-release/render-live.jpg).
+  [Verificación HTTP](qa/mobile-continuity-release/production-http.json):
+  salud 200/Supabase, cero salas, Google habilitado y once recursos idénticos a Git.
+- [Android 0.6.1 build 3](https://github.com/Gecch12/trencitos/releases/tag/v0.6.1-mobile-beta-build3):
+  APK firmado con la misma clave del build 2, mismo identificador y descarga
+  pública comprobada por SHA-256. [Paquete](qa/mobile-continuity-release/android-package.json).
+- iPhone 17 Pro Max: instalado **0.6.1 build 4** sobre `com.trencitos.beta`,
+  sin desinstalar ni abrir partidas. Dispositivo consultado después de instalar.
+  [Firma y paquete](qa/mobile-continuity-release/ios-package.json),
+  [instalación verificada](qa/mobile-continuity-release/ios-install.json).
+  La firma personal actual vence el 11 de noviembre; no se publicó en App Store.
+
+Google real y los gestos en el iPhone quedan para la prueba de uso de Ángel;
+el flujo de cuenta automatizado utiliza proveedor simulado. La integración Git
+automática de Render sigue [pendiente](work/continuous-delivery.md).
+El commit documental posterior registra esta entrega sin cambiar los paquetes.
+
+## Entrega anterior · 2026-11-04, 18:10 (Lima)
 
 - Código `c40d80f6c0f4d8a6e427a8eae385bee1697c0e9f`, publicado desde `main`.
   Incluye mesa compacta y sus refinamientos en móvil, tablet y escritorio:

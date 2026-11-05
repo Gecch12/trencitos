@@ -1,0 +1,94 @@
+{
+  "checkedAt": "2026-11-05T17:46:21.331Z",
+  "commit": "891b2d709d6c0daa8d5242ba33f905523f615d0a",
+  "deploy": "dep-dbmc0rg8v5cc73e5t8hg",
+  "health": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "storage": "supabase",
+      "rooms": 0,
+      "mobileProtocolVersion": 1
+    }
+  },
+  "googleAuthConfigured": true,
+  "assets": [
+    {
+      "url": "/",
+      "source": "frontend/index.html",
+      "status": 200,
+      "sha256": "65455412521321b2329b36bb88f64c4b3998113d43b5794868e343a7dcfc90e5",
+      "matches": true
+    },
+    {
+      "url": "/app.js",
+      "source": "frontend/app.js",
+      "status": 200,
+      "sha256": "4bb8c8556a8861e2a86605a8b3ef029290501fdd5015c205db3f878dfb854294",
+      "matches": true
+    },
+    {
+      "url": "/connection.js",
+      "source": "frontend/connection.js",
+      "status": 200,
+      "sha256": "e6b224a2b060c9b31f2b4305fc3adbafea63b72cf4859a2cffd54459584a5c76",
+      "matches": true
+    },
+    {
+      "url": "/mobile-bridge.js",
+      "source": "frontend/mobile-bridge.js",
+      "status": 200,
+      "sha256": "89ac9b70fafe4e78b32602198f15bdd96229abdaec9ea3db6ca4cfb41f2cc55d",
+      "matches": true
+    },
+    {
+      "url": "/shell-icons.js",
+      "source": "frontend/shell-icons.js",
+      "status": 200,
+      "sha256": "4f9e20882b3ab8c129daec0e476c173de90a6b506c5a4eb822c3d5f2b45e4b2e",
+      "matches": true
+    },
+    {
+      "url": "/history-ui.js",
+      "source": "frontend/history-ui.js",
+      "status": 200,
+      "sha256": "42037cddfc18f20085d127e00d9c808ec813b15930032435662d24363f325eaf",
+      "matches": true
+    },
+    {
+      "url": "/account-ui.js",
+      "source": "frontend/account-ui.js",
+      "status": 200,
+      "sha256": "a73c852afe7cd826fccf18d62590dea888d8db7959c5cde0d6fbc10fc6f20e3f",
+      "matches": true
+    },
+    {
+      "url": "/table.css",
+      "source": "frontend/table.css",
+      "status": 200,
+      "sha256": "45e69213447563ad766aac43efb5f6b295283b6076a9e1bfb381af382b08db85",
+      "matches": true
+    },
+    {
+      "url": "/game.css",
+      "source": "frontend/game.css",
+      "status": 200,
+      "sha256": "0f3c85ca88015afacc1463f0fb321c2ca4f4b97e59e5204b830346724a8b5b60",
+      "matches": true
+    },
+    {
+      "url": "/shell.css",
+      "source": "frontend/shell.css",
+      "status": 200,
+      "sha256": "dc6075ae4764481ade76fc3f1191d617f1ca0cbbca0d362352d7c14a00d39019",
+      "matches": true
+    },
+    {
+      "url": "/translations.js",
+      "source": "shared/translations.js",
+      "status": 200,
+      "sha256": "8c582a4379356ebbee720e6f7db89a6c472225171e7d43793e775ed332f20bd7",
+      "matches": true
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 ---
-{"id":"mobile-continuity","status":"validated","parent":null,"depends_on":[],"branch":"main","delivery":"worktree","updated":"2026-11-05"}
+{"id":"mobile-continuity","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-05"}
 ---
 # Continuidad móvil, cuenta y publicación
 
@@ -45,11 +45,15 @@ ni reglas del motor. No hace falta una nueva migración SQL para los DTOs de pr�
 El skill pasó el validador oficial y se instaló en la carpeta personal de skills.
 La copia canónica se conserva en el repositorio. Crear el skill no lo invoca.
 
-Ángel solicitó la entrega completa con `$trencitos-publicar`: Android build 3,
-iOS build 4 y Render después de CI. La publicación se registra en
-[Producción](../production.md) al verificar cada destino.
-Siguiente paso: completar esa entrega y probar Google real y gestos en su iPhone
-con el paquete actualizado. Esta validación local no
-acredita una nueva Release, Render Live ni instalación física; las pruebas de
-Google usaron un proveedor simulado. La prueba del zoom de página usa eventos
-sintéticos de Chrome; el pellizco del mapa usa eventos táctiles reales de Chrome.
+## Entrega · 2026-11-05
+
+Ángel invocó `$trencitos-publicar`. La revisión `891b2d7` pasó el
+[CI completo](https://github.com/Gecch12/trencitos/actions/runs/42075542241) y quedó
+Live en Render. Android build 3 está publicado en GitHub con descarga verificada;
+iOS build 4 quedó instalado sobre la app existente del iPhone conectado.
+[Estado y evidencias de cada destino](../production.md).
+
+Próximo control de uso: Ángel probará Google real y gestos en su iPhone con el
+paquete actualizado. Las pruebas de Google usaron un proveedor simulado.
+La prueba del zoom de página usa eventos sintéticos de Chrome; el pellizco
+del mapa usa eventos táctiles reales de Chrome. No se jugó en el teléfono.
