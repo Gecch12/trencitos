@@ -55,4 +55,4 @@ function createHistoryQueries({ repository }) {
   return { list, replay, replayStream };
 }
 
-module.exports = { createHistoryQueries, participant };
+module.exports = { createHistoryQueries, participant, participantSeat, placement };

@@ -10,6 +10,8 @@ function safePublic(view) {
   return result;
 }
 
+const commitmentView = room => room.commitment ? {eligible:room.commitment.eligible,disabled:room.commitment.disabledAt != null,reconnectSeconds:room.commitment.reconnectSeconds} : null;
+const publicIdentity = m => ({...typeof m.username==='string'?{username:m.username}:{},...typeof m.displayName==='string'?{displayName:m.displayName}:{},avatar:m.avatar||"person"});
 const connected = member => !!member.bot || !!(member.ws && !member.ws.closed);
 function assertSeat(room, seat) {
   if (!Number.isInteger(seat) || seat < -1 || seat >= room.members.length) throw new RangeError("Puesto inválido.");
@@ -28,15 +30,15 @@ function createAuthorizedViews({ engine, now, isPublic, capacity, normalizeTimin
       type: "lobby", code: room.code, seat: -1, spectator: true, host: false, started: true,
       mapRef: room.game?.mapRef || room.mapRef,
       sessionVersion: 1, visibility: "public", maxPlayers: capacity(room), timing: normalizeTiming(room.timing),
-      members: room.members.map(m => ({ name: m.name, color: m.color, bot: !!m.bot, connected: connected(m), autopilot: !!m.autopilot })),
+      members: room.members.map(m => ({ ...publicIdentity(m), name: m.name, color: m.color, bot: !!m.bot, connected: connected(m), autopilot: !!m.autopilot })),
     });
     return structuredClone({
-      type: "lobby", matchId: room.matchId, code: room.code, seat, token,
+      type: "lobby", commitment: commitmentView(room), matchId: room.matchId, code: room.code, seat, token,
       mapRef: room.game?.mapRef || room.mapRef,
       host: seat === (room.hostSeat ?? 0), started: !!room.game, practice: !!room.practice,
       visibility: isPublic(room) ? "public" : "private", maxPlayers: capacity(room),
       timing: normalizeTiming(room.timing), sessionVersion: 1, drawFeedbackVersion: 1, drawPipelineVersion: 1,
-      members: room.members.map((m, i) => ({ name: m.name, color: m.color, connected: connected(m), bot: !!m.bot,
+      members: room.members.map((m, i) => ({ ...publicIdentity(m), name: m.name, color: m.color, connected: connected(m), bot: !!m.bot,
         host: i === (room.hostSeat ?? 0), autopilot: !!m.autopilot, reclaim: !!m.reclaim, seat: i })),
     });
   }
@@ -46,7 +48,7 @@ function createAuthorizedViews({ engine, now, isPublic, capacity, normalizeTimin
       ...(seat !== -1 ? { drawReceipts: (room.members[seat].actionReceipts || []).filter(r => r.drawEventId !== undefined).slice(-16)
         .map(r => ({ id: r.id, eventId: r.drawEventId })) } : {}), game: { ...match(room.game, seat),
       ...(includeEarlyFinish ? { earlyFinish: !!room.earlyFinish } : {}),
-      revision: room.revision || 0, storagePaused } };
+      ...(room.commitment?{commitment:commitmentView(room)}:{}), revision: room.revision || 0, storagePaused } };
   }
   function recording(room) {
     const views = [-1, ...room.game.players.map((_, i) => i)].map(seat => {
@@ -54,7 +56,7 @@ function createAuthorizedViews({ engine, now, isPublic, capacity, normalizeTimin
       delete view.serverNow;
       return view;
     });
-    return structuredClone({ definition: engine.definition(room.game), views, members: room.members.map(m => ({ name: m.name, color: m.color,
+    return structuredClone({ definition: engine.definition(room.game), views, members: room.members.map(m => ({ ...publicIdentity(m), name: m.name, color: m.color,
       bot: !!m.bot, autopilot: !!m.autopilot, connected: connected(m) })) });
   }
   return { lobby, state, recording };

@@ -1,6 +1,6 @@
 {
   "name": "trencitos",
-  "version": "0.6.1-beta",
+  "version": "0.7.0-beta",
   "description": "Original-asset browser railway game with private authoritative WebSocket rooms for 2\u20135 players",
   "private": true,
   "engines": {

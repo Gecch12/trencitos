@@ -43,6 +43,7 @@ const inflightDraws = new Map(), drawPresentations = new Map(), handledDrawEvent
 let lastDrawLaunch = 0;
 let homeMode = "create", homeBusy = false, lobbyStarted = false;
 let preferredColor = localStorage.getItem("rr-color");
+let secondaryColor=localStorage.getItem("rr-secondary-color")||null, selectedAvatar=localStorage.getItem("rr-avatar")||"person", publicUsername=null;
 // The preview follows the latest click; profile/room colors stay authoritative.
 let pendingRoomColor = null, colorRequest = null;
 const previewColor = () => pendingRoomColor || (room && !lobbyStarted ? members[seat]?.color : null) || preferredColor;
@@ -53,7 +54,7 @@ function cancelRoomColor() {
 }
 function flushRoomColor() {
   if (colorRequest || !pendingRoomColor) return;
-  if (pendingRoomColor === preferredColor) { cancelRoomColor(); return; }
+  if (pendingRoomColor === members[seat]?.color) { cancelRoomColor(); return; }
   colorRequest = pendingRoomColor;
   send({ type: "select_color", color: colorRequest });
 }
@@ -71,6 +72,7 @@ let wagonSeed = '';
 let spectating = false, roomCapacity = 5, roomVisibility = 'private', roomTiming = GameTiming.normalize();
 let roomMapRef = MapOptions.reference(MapOptions.options[0]);
 let desiredWatch = new URLSearchParams(location.search).get('watch') || '';
+if (!ProfileRules.avatars.includes(selectedAvatar)) selectedAvatar="person";
 if (!LobbyUI.isColor(preferredColor)) preferredColor = LobbyUI.PALETTE[0].color;
 const presentationResolver = MatchPresentation.create();
 let matchContext = null, boardMap = RailMap, gameRules = MatchPresentation.legacyRules;
@@ -374,7 +376,7 @@ async function joinDesiredRoom(automatic = false) {
     }
     if (connection !== sock || code !== desiredRoom || sessionReplaced || sock.readyState !== WebSocket.OPEN) return;
     if (automatic && !attempted) return;
-    send({type:'join',code,token:credential || undefined,name:$("nickname").value,color:LobbyUI.freeColor([],preferredColor)});
+    send({type:'join',code,token:credential || undefined,name:$("nickname").value,color:preferredColor,secondaryColor,avatar:selectedAvatar,...(credential?{}:await account.joinData())});
   } catch (failure) { homeBusy = false;syncHomeAvailability();error(failure.message); }
   finally {
     resolvingJoin = false;
@@ -490,16 +492,9 @@ function connect() {
       incomingRecovery = null;
       members = m.members;
       if (enteringRoom || lobbyStarted || spectating) pendingRoomColor = colorRequest = null;
-      if (LobbyUI.isColor(members[seat]?.color)) {
-        const colorChanged = preferredColor !== members[seat].color;
-        preferredColor = members[seat].color;
-        localStorage.setItem("rr-color", preferredColor);
-        if (colorChanged) account?.changed();
-        if (colorRequest === preferredColor) {
-          colorRequest = null;
-          if (pendingRoomColor === preferredColor) pendingRoomColor = null;
-        }
-      }
+      if (colorRequest === members[seat]?.color) {colorRequest=null;if(pendingRoomColor===members[seat]?.color)pendingRoomColor=null;}
+      $('abandonRoom').hidden=spectating||practiceMode||!m.started;
+      $('commitmentNotice').textContent=I18n.t(m.commitment?.disabled?'Puedes salir sin penalización por abandono.':m.commitment?.eligible?'Compromiso: tienes 120 segundos para reconectarte.':'Esta partida no afecta tu Compromiso.');
       host = m.host;
       practiceMode = !!m.practice;
       sessionSupported = m.sessionVersion >= 1;
@@ -594,7 +589,7 @@ function renderLobby() {
   $("members").innerHTML = members
     .map(
       (m, i) =>
-        `<div class="member" data-member="${i}">${homeAvatarMarkup(m.bot || m.autopilot)}<div class="member-identity"><b>${escapeHTML(m.name)}</b><small>${[i === seat ? I18n.t("Tú") : "", m.host ? I18n.t("Anfitrión") : "", m.bot ? "Bot" : !m.connected ? I18n.t("Sin conexión · reserva 60 s") : "", I18n.t(LobbyUI.colorName(m.color))].filter(Boolean).join(" · ")}</small></div>${host && !lobbyStarted && i !== seat && !practiceMode ? I18n.t`<button class="member-remove" type="button" data-kick="${i}" aria-label="Retirar a ${escapeHTML(m.name)}" title="Retirar jugador">×</button>` : ""}</div>`,
+        `<div class="member" data-member="${i}">${homeAvatarMarkup(m.bot || m.autopilot,m.avatar)}<div class="member-identity"><button type="button" class="player-profile-trigger" data-player-profile="${i}" title="${escapeHTML(m.displayName||m.name)}">${escapeHTML(m.name)}</button><small>${[i === seat ? I18n.t("Tú") : "", m.host ? I18n.t("Anfitrión") : "", m.bot ? "Bot" : !m.connected ? I18n.t("Sin conexión · reserva 60 s") : "", I18n.t(LobbyUI.colorName(m.color))].filter(Boolean).join(" · ")}</small></div>${host && !lobbyStarted && i !== seat && !practiceMode ? I18n.t`<button class="member-remove" type="button" data-kick="${i}" aria-label="Retirar a ${escapeHTML(m.name)}" title="Retirar jugador">×</button>` : ""}</div>`,
     )
     .join("");
   $("members").querySelectorAll("[data-member]").forEach(row => applyPlayerAppearance(row, members[+row.dataset.member].color));
@@ -609,8 +604,9 @@ function renderLobby() {
       members.length < 2 ? I18n.t("Invita a alguien para empezar.") : members.some(m => !m.connected) ? I18n.t("Esperando a que todos estén conectados.") : host ? I18n.t("Todo listo. El primer turno se sortea al empezar.") : I18n.t("Esperando a que el anfitrión inicie la partida.");
   shell?.renderRoom();
 }
-function homeAvatarMarkup(bot = false) {
+function homeAvatarMarkup(bot = false,avatar = selectedAvatar) {
   if (bot) return `<span class="home-avatar is-bot" aria-hidden="true">${ShellIcons.svg('bot')}</span>`;
+  if(avatar==='capybara')return '<span class="home-avatar" aria-hidden="true"><img src="/assets/avatars/capybara.png" alt="" /></span>';
   return '<span class="home-avatar" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M7 27v-4a9 9 0 0 1 18 0v4Z"/></svg></span>';
 }
 function syncHomeAvailability() {
@@ -699,7 +695,7 @@ function initializeHome() {
   $("nickname").onkeydown = event => { if (event.key === "Enter") { event.preventDefault(); $(homeMode === "practice" ? "createTest" : homeMode === "join" ? "join" : "create").click(); } };
   $("leaveLobby").onclick = () => $("leaveRoom").click();
 }
-$("homeCreate").onsubmit = event => {
+$("homeCreate").onsubmit = async event => {
   event.preventDefault();
   if (homeBusy) return;
   if (room) return error(I18n.t("Ya perteneces a una sala."));
@@ -707,16 +703,16 @@ $("homeCreate").onsubmit = event => {
   if (!LobbyUI.isNewCode(code)) { homeCodeError("create", I18n.t("Usa entre 6 y 10 números, sin espacios.")); $("createCode").focus(); return; }
   attempted = false;
   homeBusy = true; syncHomeAvailability();
-  send({ type: "create", name: $("nickname").value, code, color: LobbyUI.freeColor([], preferredColor), visibility:'public', maxPlayers:5 });
+  try{send({type:'create',name:$('nickname').value,code,color:preferredColor,secondaryColor,avatar:selectedAvatar,visibility:'public',maxPlayers:5,...await account.joinData()});}catch(failure){homeBusy=false;syncHomeAvailability();error(failure.message);}
 };
-$("createTest").onclick = () => {
+$("createTest").onclick = async () => {
   if (homeBusy) return;
   if (room) return error(I18n.t("Ya perteneces a una sala."));
   attempted = false;
   $("lobbyError").textContent = "";
   waitingForGameStart = true;
   homeBusy = true; syncHomeAvailability();
-  send({ type: "create_test", name: $("nickname").value, color: LobbyUI.freeColor([], preferredColor) });
+  try{send({type:'create_test',name:$('nickname').value,color:preferredColor,secondaryColor,avatar:selectedAvatar,...await account.joinData()});}catch(failure){homeBusy=false;waitingForGameStart=false;syncHomeAvailability();error(failure.message);}
 };
 $("resumePractice").onclick = () => {
   if (homeBusy || room) return;
@@ -775,9 +771,11 @@ $("rotateRecovery").onclick = () => {
   if (confirm(I18n.t("¿Invalidar el enlace privado anterior? Después copia y guarda el nuevo."))) send({ type: "rotate_token" });
 };
 $("reclaimControl").onclick = () => send({ type: "reclaim" });
+document.addEventListener('click',event=>{const trigger=event.target.closest('[data-player-profile]');if(!trigger)return;event.stopPropagation();const member=members[Number(trigger.dataset.playerProfile)];if(member)ProfileUI.openPlayer(member);});
+$('abandonRoom').onclick=()=>{if(confirm(I18n.t(game?.commitment?.disabled?'¿Abandonar definitivamente? No podrás recuperar el puesto. No habrá penalización de Compromiso.':'¿Abandonar definitivamente? No podrás recuperar el puesto y perderás un punto de Compromiso si la penalización está activa.')))send({type:'abandon'});};
 $("leaveRoom").onclick = () => {
   if (practiceMode) { if (game?.phase === "finished" || confirm(I18n.t("¿Abandonar esta partida de práctica?"))) send({type:"leave_test"}); return; }
-  if (spectating || !game || game.phase === "finished" || confirm(I18n.t("¿Salir de la partida? Un bot tomará tu puesto. Si todos salen, la partida se abandonará tras 60 segundos sin conexiones."))) send({ type: "leave" });
+  if (spectating || !game || game.phase === "finished" || confirm(I18n.t("¿Salir temporalmente? Un bot tomará tu puesto. Tienes 120 segundos para reconectarte mientras la penalización siga activa."))) send({ type: "leave" });
 };
 function commandId() {
   return typeof crypto.randomUUID === 'function' ? crypto.randomUUID() :
@@ -941,6 +939,7 @@ function renderHand() {
 function playerAvatar(index, compact = false, actor = null) {
   const member = members[index];
   if (actor===null ? member?.bot || member?.autopilot : ['bot','replacement'].includes(actor)) return `<span class="player-avatar is-bot${compact ? " history-avatar" : ""}" aria-hidden="true">${ShellIcons.svg('bot')}</span>`;
+  if(member?.avatar==='capybara')return `<span class="player-avatar${compact?" history-avatar":""}" aria-hidden="true"><img src="/assets/avatars/capybara.png" alt="" /></span>`;
   return `<span class="player-avatar${compact ? " history-avatar" : ""}" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M7 27v-4a9 9 0 0 1 18 0v4Z"/></svg></span>`;
 }
 function render() {
@@ -950,6 +949,8 @@ function render() {
   document.body.classList.add("is-playing");
   $("lobby").classList.add("hidden");
   $("game").classList.remove("hidden");
+  $("commitmentBanner").hidden=!game.commitment?.disabled || ["finished","closing"].includes(game.phase);
+  $("abandonRoom").hidden=practiceMode||spectating||["finished","closing"].includes(game.phase);
   renderPracticeControls();
   $("serverWarning").classList.toggle("hidden", game.uiVersion >= 10 && sessionSupported);
   const active = amIUp();
@@ -961,7 +962,7 @@ function render() {
     .map(
       (x, i) =>
         I18n.t`<div class="scorebadge ${i === game.current && ["play", "tunnel"].includes(game.phase) ? "active" : ""}" data-player="${i}" tabindex="0" aria-label="${escapeHTML(x.name)}. ${playerScore(i)} puntos, ${x.handCount ?? "—"} cartas, ${x.trains} vagones, ${x.stations} estaciones. Enfoca para resaltar sus rutas.">
-          <div class="player-heading">${playerAvatar(i)}<div class="player-details"><b title="${escapeHTML(x.name)}">${escapeHTML(x.name)}</b><div class="player-status"><span class="player-turn-tag">EN TURNO</span><span class="player-state">${[i === seat ? I18n.t("Tú") : "", game.phase === "initial" ? (x.initialReady ? I18n.t("✓ Listo") : I18n.t("Eligiendo billetes")) : ""].filter(Boolean).join(" · ")}</span></div></div></div>
+          <div class="player-heading">${playerAvatar(i)}<div class="player-details"><button type="button" class="player-profile-trigger" data-player-profile="${i}" title="${escapeHTML(members[i]?.displayName||x.name)}">${escapeHTML(x.name)}</button><div class="player-status"><span class="player-turn-tag">EN TURNO</span><span class="player-state">${[i === seat ? I18n.t("Tú") : "", game.phase === "initial" ? (x.initialReady ? I18n.t("✓ Listo") : I18n.t("Eligiendo billetes")) : ""].filter(Boolean).join(" · ")}</span></div></div></div>
           <div class="player-metrics">${playerMetric("points", I18n.t(game.result ? "Puntuación final" : "Puntos de construcción"), playerScore(i))}${playerMetric("cards", I18n.t("Cartas en mano"), x.handCount ?? "—")}${playerMetric("trains", I18n.t("Vagones"), x.trains)}${playerMetric("stations", I18n.t("Estaciones"), x.stations)}${playerMetric("tickets", I18n.t("Billetes conservados"), x.ticketsCount ?? "—")}</div>
           <span class="player-longest" title="${I18n.t("Longitud del camino más largo")}">↝ ${game.scoreProgress?.players[i]?.longest ?? "—"}</span>${scoreBonus(i)}
           ${members[i]?.connected === false || members[i]?.autopilot ? `<span class="player-connection" role="img" aria-label="${I18n.t(members[i]?.autopilot ? 'Bot de reemplazo' : 'Sin conexión')}"></span>` : ""}
@@ -2693,8 +2694,8 @@ function resultCategories(result) {
 function resultRowHTML(result, index) {
   const open = expandedResults.has(result.seat), view = resultView(result.seat);
   return `<tbody data-result-player="${result.seat}" data-score-seat="${result.seat}">
-    <tr class="result-summary"><th scope="row"><button type="button" class="result-heading" aria-expanded="${open}" aria-controls="score-detail-${result.seat}">
-      ${playerAvatar(result.seat)}<span class="result-player-name" title="${escapeHTML(result.name)}">${index + 1}. ${escapeHTML(result.name)} ${result.winner ? '<span aria-label="'+I18n.t("Ganador")+'">🏆</span>' : ""}</span></button></th><td class="score-total">${result.score}</td>
+    <tr class="result-summary"><th scope="row"><div class="result-player-controls"><button type="button" class="result-social" data-player-profile="${result.seat}" aria-label="${I18n.t("Ver perfil")}: ${escapeHTML(result.name)}" title="${escapeHTML(members[result.seat]?.displayName||result.name)}">${playerAvatar(result.seat)}</button><button type="button" class="result-heading" aria-expanded="${open}" aria-controls="score-detail-${result.seat}">
+      <span class="result-player-name" title="${escapeHTML(result.name)}">${index + 1}. ${escapeHTML(result.name)} ${result.winner ? '<span aria-label="'+I18n.t("Ganador")+'">🏆</span>' : ""}</span></button></div></th><td class="score-total">${result.score}</td>
       ${resultCategories(result).map(([key, label, points]) => `<td><button type="button" id="score-tab-${result.seat}-${key}" data-score-category="${key}" aria-pressed="${open && view.category === key}" aria-expanded="${open && view.category === key}" aria-controls="score-panel-${result.seat}" aria-label="${escapeHTML(result.name)}: ${label}, ${signedPoints(points)}" class="score-cell${points < 0 ? " is-negative" : ""}">${signedPoints(points)}</button></td>`).join("")}
       </tr>
     <tr class="result-detail" id="score-detail-${result.seat}" ${open ? "" : "hidden"}><td colspan="6"><div class="score-breakdown"><div id="score-panel-${result.seat}" class="score-panel" role="region" aria-labelledby="score-tab-${result.seat}-${view.category}"></div></div></td></tr>
@@ -3682,18 +3683,20 @@ initializeHome();
 account = AccountUI.create({
   sessionChanged:syncRecoveryControls,
   targetRoom:()=>desiredRoom,
-  selection:()=>({nickname:$("nickname").value,color:preferredColor}),
+  selection:()=>({nickname:$("nickname").value,displayName:$("nickname").value,username:publicUsername,color:preferredColor,secondaryColor,avatar:selectedAvatar}),
   currentSeat:()=>room?{code:room,token,practice:practiceMode}:null,
   applyProfile(profile) {
-    $("nickname").value=profile.nickname; preferredColor=profile.color;
-    localStorage.setItem("rr-name",profile.nickname);localStorage.setItem("rr-color",profile.color);renderHomeColors();
+    $("nickname").value=profile.displayName??profile.nickname??""; preferredColor=profile.color; secondaryColor=profile.secondaryColor||null;selectedAvatar=profile.avatar||"person";publicUsername=profile.username||null;
+    localStorage.setItem("rr-name",$("nickname").value);localStorage.setItem("rr-color",profile.color);localStorage.setItem("rr-secondary-color",secondaryColor||"");localStorage.setItem("rr-avatar",selectedAvatar);renderHomeColors();
     shell?.identity();
   },
 });
+ProfileUI.configure({account,selection:()=>({displayName:$('nickname').value,username:publicUsername,color:preferredColor,secondaryColor,avatar:selectedAvatar})});
+window.addEventListener('profilechange',()=>ProfileUI.renderIdentity());
 shell = AppShell.create({
   state:()=>({room,game,members,host,seat,spectator:spectating,maxPlayers:roomCapacity,visibility:roomVisibility,mapRef:roomMapRef,timing:roomTiming,started:lobbyStarted,
     busy:homeBusy || sock?.readyState !== WebSocket.OPEN || sessionReplaced || storagePaused}),
-  send, saveProfile:name=>account.updateNickname(name),
+  send, saveProfile:patch=>account.updateProfile(patch),
   joinRoom(code) { $('code').value=code; $('homeJoin').requestSubmit(); },
   watchRoom(code) {
     if (room) { error(I18n.t('Sal de tu sala antes de observar otra partida.')); return; }

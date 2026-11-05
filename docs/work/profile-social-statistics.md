@@ -1,0 +1,91 @@
+---
+{"id":"profile-social-statistics","status":"validated","parent":null,"depends_on":["identity","history-replay"],"branch":"main","delivery":"none","updated":"2026-11-05"}
+---
+# Perfil, estadísticas y relaciones entre jugadores
+
+Implementar los acuerdos de Ángel del 2026-11-05: identidad Google/Discord,
+username, perfil y preferencias, capibara, Compromiso, estadísticas, amigos,
+mesas habituales y comparaciones globales. Autorización final explícita:
+«implementa todo lo acordado y actualiza la documentación»; termina la revisión Moti.
+
+Contrato canónico: [perfil, Compromiso y relaciones](../profile-social-statistics.md).
+Membresía y región siguen deshabilitadas; Apple, correo/novedades y votaciones quedan
+pendientes. Región futura: un cambio por temporada de tres meses.
+
+## Hitos
+
+- [x] Migración aditiva de identidad, username único/cooldown/reserva, preferencias
+  y capibara. Preservar UUID, apodos legados y registros históricos.
+- [x] Flujos Google/Discord de acceso/vinculación/desvinculación con protección de
+  última identidad y comprobación de UUID; proveedor externo pendiente de configuración.
+- [x] Política persistida de Compromiso, 120 s, desactivación por ausencias, sin voto.
+- [x] Cálculo de estadísticas personales y migración/cron para agregados globales.
+- [x] Amigos, bloqueo, grupos personales y sugerencias por composición exacta.
+- [x] Resumen predeterminado, Cuenta y Personalización; solicitudes en sala y juego.
+- [x] Validar recorridos locales de escritorio/móvil, regresión y cierre documental.
+  OAuth productivo y dispositivos físicos quedan en la entrega, no acreditados por QA local.
+
+## Evidencia
+
+Base `main` en `094644c`, cambios locales de esta tarea. El chat de arquitectura
+realiza una evaluación independiente en producción, sin editar código. Código
+pendiente de publicación; configuración aplicada según el registro siguiente.
+
+- `npm run test:ci`: **719/719 correctas**, sin omitidas (2026-11-05, Node 25.6.1,
+  macOS, almacenamiento local y bases PGlite). Incluye privacidad de proyecciones,
+  replays, reconexión, persistencia, bots, mapas y variantes existentes.
+- `tests/profile-social.test.js`: reglas de Compromiso, ventana de 20, cancelaciones,
+  reemplazos AFK, validación de nombres y SQL 006/007 ejecutado dos veces sobre
+  PGlite. Prueba aislamiento, permisos, grupos, unicidad y agregados; no ejecuta
+  `pg_cron` (extensión externa).
+- `tests/account-auth.test.js`: PKCE, cifrado, UUID estable, protección de última
+  identidad ante solicitudes simultáneas, proveedor disponible, rechazo de cambios
+  sociales por GET/otro origen y prueba de puesto ligada a invitado/expiración.
+- `node tests/browser-profile-social.cjs`: correcto con Chrome y ventanas de
+  1440×1000 y 390×844, [proveedor simulado](../../tests/helpers/profile-preview.js)
+  y SQL de perfil/amigos real sobre PGlite. Verifica Google → vincular Discord →
+  quitar Google → volver a entrar al mismo UUID; dos usernames con nombre visible
+  «Patricia»; capibara y color alternativo resueltos por servidor; solicitud en sala,
+  aceptación y mesa en móvil; amistad durante la partida y detalles en resultados;
+  abandono definitivo reflejado como 19/20; interfaz inglesa y controles futuros
+  deshabilitados. Sin errores JavaScript. No acredita OAuth real de los proveedores.
+- Revisión visual de Resumen, Cuenta, Personalización y Amigos, con Cuenta sin
+  desbordamiento horizontal en 390 px. Capturas reproducibles en `.qa/profile-social/`
+  (artefactos locales ignorados, sin datos de producción).
+- `node --test tests/i18n.test.js tests/mobile-beta.test.js`: **7/7 correctas** tras
+  completar los textos finales de ambos proveedores. Generación de bundle móvil
+  en directorio temporal confirma inclusión de vistas, reglas y PNG del avatar;
+  no instala aplicaciones ni modifica paquetes iOS/Android existentes.
+- `node scripts/check-docs.js` y `git diff --check`: correctos. El contraste con
+  `--base HEAD` se revisó; sus avisos de impacto no acreditan drift semántico.
+
+## Entrega pendiente
+
+El 2026-11-05 se aplicaron **006, 007 y 008** en `xnvskxwbibrxhozgcube`, confirmado
+como proyecto de Auth y estado por las variables de Render. La proyección inicial
+produjo 83 resultados y 72 agregados; las siete tablas nuevas tienen RLS y no
+permiten lectura directa de `anon` ni `authenticated`.
+[Evidencia de configuración y hashes](../qa/profile-social-setup/configuration.json),
+[permisos](../qa/profile-social-setup/table-permissions.png).
+
+El job `trencitos-statistics-nightly` (ID 1) está activo a las **08:15 UTC / 03:15
+Lima**, y la función de actualización se ejecutó correctamente al migrar.
+[Programación y carga inicial](../qa/profile-social-setup/cron-configured.png).
+Su primera ejecución programada todavía no se ha observado. No se cambió la
+frecuencia para adelantarla; la revisión automática rechazó esa prueba temporal.
+
+Discord: aplicación `1568045906513633330`, callback de Supabase guardado,
+proveedor habilitado y Manual Linking activo. El propietario creó la aplicación
+y generó su secreto; se trasladó directamente a Supabase, sin guardarlo en el
+repo. [Proveedor activo](../qa/profile-social-setup/discord-enabled.png).
+`AUTH_DISCORD_ENABLED=true` guardado en Render con **Save only**, para activarse
+con el despliegue del código validado. Google conserva su configuración.
+
+Los recorridos Chrome de CI se ejecutaron localmente. Se actualizaron las pruebas
+de Cuenta, color de sala y retorno offline para el contrato vigente, y se corrigió
+la altura de resultados móviles trasladando el acceso al perfil al avatar.
+`browser-profile-social.cjs` queda incluido en CI con proveedor simulado.
+
+Siguiente paso: CI del commit de entrega, publicación Render, APK e iPhone y
+comprobación OAuth real. Las pruebas locales y la configuración del proveedor
+no acreditan por sí solas el acceso real desde web o dispositivos.

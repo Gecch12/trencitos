@@ -69,6 +69,7 @@ function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000 })
     }
   }
   return {
+    statisticsSnapshot(filters) {return rpc("trencitos_statistics_snapshot",{p_filters:filters});},
     closeMissing(ids) { return rpc("trencitos_close_missing", {p_writer:writer,p_live:ids}); },
     readArchive(identity,id) { return rpc("trencitos_read_archive_summary", {p_guest:identity.guestId||null,p_account:identity.accountId||null,p_match:id||null}); },
     iterateFrames,

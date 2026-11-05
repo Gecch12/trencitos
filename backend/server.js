@@ -3,6 +3,7 @@ const http = require("node:http"),
   path = require("node:path"),
   crypto = require("node:crypto");
 const Engine = require("./engine");
+const Commitment = require("./commitment");
 const { createPeerOutput } = require("./peer-output");
 const metrics = require("./runtime-metrics").createRuntimeMetrics();
 const { servePublicAsset } = require("./public-assets");
@@ -18,6 +19,7 @@ const GameTiming = require("../shared/game-timing");
 const {createMatchArchive}=require("./match-archive");
 const {guestId,ensureGuest}=require("./guest-identity");
 const LobbyUI = require("../shared/lobby-ui");
+const ProfileRules = require("../shared/profile-rules");
 const { createPracticeController } = require("./practice");
 const { createGameClock } = require("./game-clock");
 const { createMultiplayerController, shiftDeadlines, GRACE_MS, soloWithBots, reconnectGrace } = require("./multiplayer");
@@ -57,11 +59,12 @@ function restoreLoaded(data) {
         if(Date.now()-r.emptySince>=reconnectGrace(r))continue;
       }
       else {
-        if (r.emptySince != null && Date.now() - r.emptySince >= GRACE_MS) continue;
+        if (r.emptySince != null && (r.savedAt || r.updated) - r.emptySince >= reconnectGrace(r)) continue;
         shiftDeadlines(r.game, Math.max(0, Date.now() - (r.savedAt || Date.now())));
         if (r.game) Engine.normalize(r.game);
         r.emptySince = Date.now();
       }
+      Commitment.restart(r);
       const colors = LobbyUI.restoreColors(r.members, r.game?.players);
       r.members.forEach((m, i) => { m.color = colors[i]; if (r.game) r.game.players[i].color = colors[i]; m.ws = null; m.disconnectedAt = Date.now(); });
       live.push(r);
@@ -78,7 +81,7 @@ const committed = new WeakMap();
 for (const r of rooms.values()) committed.set(r, snapshot(r));
 function captureRuntime() {
   return { failureAt: storageFailureAt, archivePending:archive.snapshot(),
-    rooms: [...rooms.values()].map(r => ({ room: r, data: { ...r, game: r.game ? structuredClone(r.game) : null },
+    rooms: [...rooms.values()].map(r => ({ room: r, data: { ...r, commitment: structuredClone(r.commitment), game: r.game ? structuredClone(r.game) : null },
       members: r.members.map(member => ({ member, data: { ...member, actionIds: [...(member.actionIds || [])], actionReceipts: structuredClone(member.actionReceipts || []) } })) })),
     peers: [...peers].map(peer => ({ peer, room: peer.room, watching: peer.watching, seat: peer.seat, token: peer.token })) };
 }
@@ -142,10 +145,10 @@ const clocks = createGameClock({ rooms, sendRoom, automaticPlay, runBot, dispatc
 const multiplayer = createMultiplayerController({ rooms, sendRoom, automaticPlay, runBot, removeRoom, dispatch, blocked: () => storageFailureAt !== null });
 const roomBots = createRoomBots({ rooms, sendRoom, automaticPlay, runBot, dispatch, blocked: () => storageFailureAt !== null });
 function snapshot(r) {
-  return { archiveHash:r.archiveHash,matchId:r.matchId,archiveSeq:r.archiveSeq,archiveFull:r.archiveFull,archiveStartedAt:r.archiveStartedAt,archiveClosedAt:r.archiveClosedAt,_archiveState:r._archiveState,_archiveIdentity:r._archiveIdentity, game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
+  return { commitment: structuredClone(r.commitment), emptySince:r.emptySince, archiveHash:r.archiveHash,matchId:r.matchId,archiveSeq:r.archiveSeq,archiveFull:r.archiveFull,archiveStartedAt:r.archiveStartedAt,archiveClosedAt:r.archiveClosedAt,_archiveState:r._archiveState,_archiveIdentity:r._archiveIdentity, game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
     hostSeat: r.hostSeat, practicePausedAt:r.practicePausedAt, visibility: r.visibility, maxPlayers: r.maxPlayers, mapRef: r.mapRef ? {...r.mapRef} : undefined, timing: r.timing ? {...r.timing} : undefined,
     members: r.members.map(m => ({ member: m, data: { token: m.token || m.ws?.token, tokenHash: m.tokenHash,
-      name: m.name, bot: m.bot, color: m.color, accountId: m.accountId, guestId:m.guestId, actionIds: [...(m.actionIds || [])], actionReceipts: structuredClone(m.actionReceipts || []), autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
+      name: m.name, username:m.username, displayName:m.displayName, avatar:m.avatar, participation:structuredClone(m.participation), disconnectedAt:m.disconnectedAt, bot: m.bot, color: m.color, accountId: m.accountId, guestId:m.guestId, actionIds: [...(m.actionIds || [])], actionReceipts: structuredClone(m.actionReceipts || []), autopilot: m.autopilot, autopilotSince: m.autopilotSince, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
 }
 function restoreLocalCheckpoint(e) {
   console.error("Could not persist rooms:", e.message);
@@ -153,7 +156,7 @@ function restoreLocalCheckpoint(e) {
   for (const r of rooms.values()) {
     const saved = committed.get(r);
     if (saved) {
-      r.game = structuredClone(saved.game); r.revision = saved.revision;
+      r.game = structuredClone(saved.game); r.revision = saved.revision; r.commitment=structuredClone(saved.commitment); r.emptySince=saved.emptySince;
       for(const key of ["archiveHash","matchId","archiveSeq","archiveFull","archiveStartedAt","archiveClosedAt","_archiveState","_archiveIdentity"])r[key]=saved[key];
       watchRecording(r);
       r.hostSeat = saved.hostSeat; r.practicePausedAt=saved.practicePausedAt; r.visibility = saved.visibility; r.maxPlayers = saved.maxPlayers; r.mapRef = saved.mapRef; r.timing = saved.timing;
@@ -207,13 +210,24 @@ async function linkGuest(req,res,accountId) {
     throw error;
   }
 }
-const accountAuth = createAccountAuth({linkGuest, logoutGuest:(req,res)=>ensureGuest(req,res,true),seats:createAccountSeats({rooms,dispatch,sendRoom,
+const accountAuth = createAccountAuth({linkGuest,socialPresence:id=>({online:[...rooms.values()].some(r=>r.members.some(m=>m.accountId===id&&m.ws&&!m.ws.closed))}), logoutGuest:(req,res)=>ensureGuest(req,res,true),seats:createAccountSeats({rooms,dispatch,sendRoom,
   unavailable:()=>!storageReady || stopping || storageFailureAt!==null})});
 const server = http.createServer(async (req, res) => {
   let url = new URL(req.url, "http://localhost");
   if (nativeClient.handleNativeHttp(req, res, url)) return;
   if (req.method === "GET" && (APP_ROUTES.has(url.pathname)||url.pathname === "/")) ensureGuest(req,res);
   if (await accountAuth.handle(req,res,url)) return;
+  if (url.pathname === '/api/stats') {
+    res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type','application/json; charset=utf-8');
+    try {
+      if(req.method!=='GET')throw Object.assign(Error('Método no permitido.'),{status:405});
+      const Stats=require('./player-statistics'), identity={guestId:guestId(req),accountId:await accountAuth.identify(req,res)}, filters=Stats.filters(url.searchParams);
+      const global=remoteStore?await remoteStore.statisticsSnapshot(filters):Stats.snapshot(Object.values(archive.state.matches),archive.state.claims,filters);
+      const social=identity.accountId?await accountAuth.socialFor(req,res):null;
+      res.end(JSON.stringify(await Stats.overview({archive,identity,params:url.searchParams,social,global})));
+    }catch(error){res.statusCode=error.status||503;res.end(JSON.stringify({message:error.status?error.message:'Las estadísticas no están disponibles ahora.'}));}
+    return;
+  }
   if (url.pathname.startsWith("/api/history")) {
     res.setHeader("Cache-Control","no-store");
     res.setHeader("Content-Type","application/json; charset=utf-8");
@@ -401,6 +415,15 @@ function sendSpectator(peer, r) {
 function deny(peer, msg, code) {
   peer.send({ type: "error", message: msg, code });
 }
+function enteringIdentity(peer,msg,room) {
+  const profile=msg.accountTicket?accountAuth.roomProfile(msg.accountTicket,peer.guestId):null;
+  if(msg.accountTicket&&!profile)throw Error('Tu acceso caducó. Vuelve a entrar a la sala.');
+  if(profile&&room.members.some(m=>m.accountId===profile.id))throw Error('Tu cuenta ya tiene un puesto en esta sala.');
+  let name=profile?.username;
+  if(!name){do{name='guest_'+crypto.randomBytes(3).toString('hex');}while(room.members.some(m=>m.name===name));}
+  return {name,username:name,displayName:profile?profile.displayName:cleanName(msg.name),avatar:profile?.avatar||(ProfileRules.avatars.includes(msg.avatar)?msg.avatar:'person'),accountId:profile?.id,
+    color:LobbyUI.freeColor(room.members,profile?.color||msg.color,profile?profile.secondaryColor:msg.secondaryColor)};
+}
 function onMessage(peer, msg) {
   if (!msg || typeof msg !== "object" || Array.isArray(msg))
     return deny(peer, "Mensaje incorrecto.");
@@ -429,8 +452,9 @@ function onMessage(peer, msg) {
     const elapsed = Date.now() - storageFailureAt;
     const absenceTimes = new Map();
     for (const r of rooms.values()) {
-      absenceTimes.set(r, { emptySince: r.emptySince, members: r.members.map(m => m.disconnectedAt) });
+      absenceTimes.set(r, { emptySince: r.emptySince, commitment: structuredClone(r.commitment), autopilotTimes:r.members.map(m=>m.autopilotSince), members: r.members.map(m => m.disconnectedAt) });
       shiftDeadlines(r.game, elapsed);
+      Commitment.shift(r, elapsed);
       if (r.emptySince != null) r.emptySince += elapsed;
       r.members.forEach(m => { if (m.disconnectedAt != null) m.disconnectedAt += elapsed; });
     }
@@ -440,6 +464,8 @@ function onMessage(peer, msg) {
     } else {
       for (const [r, times] of absenceTimes) {
         r.emptySince = times.emptySince;
+        r.commitment = times.commitment;
+        r.members.forEach((m,i)=>m.autopilotSince=times.autopilotTimes[i]);
         r.members.forEach((m, i) => m.disconnectedAt = times.members[i]);
       }
       deny(peer, "El guardado sigue fallando. La partida permanece pausada.", "STORAGE_FAILED");
@@ -464,11 +490,8 @@ function onMessage(peer, msg) {
     const r = { code, hostSeat: 0, updated: Date.now(), game: null, mapRef, members: [], revision: 0,
       visibility: msg.type === "create_test" ? "private" : msg.visibility || "public", maxPlayers: msg.maxPlayers || 5, timing: GameTiming.normalize(msg.timing) };
     rooms.set(code, r);
-    const human = {
-      name: cleanName(msg.name),
-      color: LobbyUI.freeColor([], msg.color),
-      token: crypto.randomBytes(24).toString("hex"),
-    };
+    let identity;try{identity=enteringIdentity(peer,msg,r);}catch(error){rooms.delete(r.code);return deny(peer,error.message);}
+    const human = {...identity,token:crypto.randomBytes(24).toString('hex')};
     if (msg.type === "create_test") {
       r.practice = true; r.archiveFull=true; human.guestId=peer.guestId;
       peer.room = r;
@@ -497,6 +520,7 @@ function onMessage(peer, msg) {
       const tokenHash = typeof msg.token === "string" ? hashToken(msg.token) : "";
       const index = r.members.findIndex((m) => !m.bot && (m.tokenHash === tokenHash || m.token === msg.token));
       if (index >= 0) {
+        if (r.members[index].participation?.definitive) return deny(peer, "Abandonaste definitivamente esta partida.", "SEAT_ABANDONED");
         let prev = r.members[index].ws;
         if (prev && prev !== peer) {
           prev.send({ type: "session_replaced" });
@@ -521,11 +545,8 @@ function onMessage(peer, msg) {
       );
     if (r.members.length >= Directory.capacity(r)) return deny(peer, "La sala está completa.", "ROOM_FULL");
     if (msg.color !== undefined && !LobbyUI.isColor(msg.color)) return deny(peer, "Color inválido.", "INVALID_COLOR");
-    return attach(peer, r, {
-      name: cleanName(msg.name),
-      color: LobbyUI.freeColor(r.members, msg.color),
-      token: crypto.randomBytes(24).toString("hex"),
-    });
+    let identity;try{identity=enteringIdentity(peer,msg,r);}catch(error){return deny(peer,error.message);}
+    return attach(peer,r,{...identity,token:crypto.randomBytes(24).toString('hex')});
   }
   if (!peer.room) return deny(peer, "Crea o únete primero a una sala.");
   const r = peer.room;
@@ -563,18 +584,20 @@ function onMessage(peer, msg) {
     if (!sendRoom(r)) deny(peer, "No se pudo guardar el color. Reintenta cuando vuelva la conexión.", "STORAGE_FAILED");
     return;
   }
-  if (msg.type === "leave" && !r.practice) {
+  if (["leave", "abandon"].includes(msg.type) && !r.practice) {
     if (soloWithBots(r)) return removeRoom(r, "Abandonaste la partida con bots.");
     if (!r.game) multiplayer.removeSeat(r, peer.seat);
     else {
       const leavingSeat = peer.seat;
+      if (msg.type === "abandon") Commitment.abandon(r, leavingSeat);
       r.members[peer.seat].autopilot = true;
+      r.members[peer.seat].autopilotSince ??= Date.now();
       r.members[peer.seat].reclaim = false;
       r.members[peer.seat].ws = null;
       r.members[peer.seat].disconnectedAt = Date.now();
       if (r.hostSeat === leavingSeat) r.hostSeat = r.members.findIndex(m => m.ws && !m.ws.closed);
       peer.room = null; peer.seat = -1;
-      peer.send({ type: "room_closed", preserveIdentity: true, message: "Saliste. Puedes recuperar tu puesto con tu enlace privado mientras la partida exista." });
+      peer.send({ type: "room_closed", preserveIdentity: msg.type !== "abandon", message: msg.type === "abandon" ? "Abandonaste definitivamente la partida. Puedes consultar sus resultados en tu historial." : "Saliste. Puedes recuperar tu puesto con tu enlace privado mientras la partida exista." });
     }
     if (rooms.has(r.code)) sendRoom(r);
     return;
@@ -606,7 +629,7 @@ function onMessage(peer, msg) {
     member.ws = null; member.disconnectedAt = Date.now();
     peer.send({ type: "room_closed", preserveIdentity: true }); peer.room = null; peer.seat = -1;
     sendRoom(r);
-    return attach(peer, next, { name: member.name, accountId:member.accountId, color: LobbyUI.freeColor(next.members, member.color), token: crypto.randomBytes(24).toString("hex") });
+    return attach(peer, next, { name: member.name, username:member.username, displayName:member.displayName, avatar:member.avatar, accountId:member.accountId, color: LobbyUI.freeColor(next.members, member.color), token: crypto.randomBytes(24).toString("hex") });
   }
   if (msg.type === "finish_test" || msg.type === "leave_test") {
     if (!r.practice || peer.seat !== 0)
@@ -624,6 +647,7 @@ function onMessage(peer, msg) {
       return deny(peer, "Todos deben estar conectados para iniciar.");
     r.archiveFull=true;
     r.game = startRoomGame(r);
+    Commitment.initialize(r);
     return sendRoom(r);
   }
   if (msg.type === "action") {
@@ -659,10 +683,7 @@ function startRoomGame(r) {
 }
 function cleanName(s) {
   return (
-    String(s || "Jugador")
-      .replace(/[<>"'&]/g, "")
-      .trim()
-      .slice(0, 24) || "Jugador"
+    [...String(s ?? "").replace(/[<>"'&\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu, "").trim()].slice(0,20).join("")
   );
 }
 server.on("upgrade", (req, socket) => {
@@ -725,7 +746,7 @@ const multiplayerHeartbeat = setInterval(() => {
   for (const peer of peers) {
     if (peer.closed || peer.room?.practice) continue;
     if (Date.now() - peer.lastSeen > 70000) {
-      peer.close();
+      peer.close(peer.lastSeen);
       continue;
     }
     try {

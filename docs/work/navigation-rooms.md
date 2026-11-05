@@ -103,3 +103,6 @@ de este despliegue.
 
 La ampliación del menú de partida, controles de sala y relojes configurables
 se registra en [Controles de mesa y sala](table-controls.md).
+
+Ampliación local del perfil y sus flujos: [perfil, Compromiso y relaciones](profile-social-statistics.md).
+La evidencia histórica de esta ficha no acredita el nuevo OAuth Discord ni su despliegue.

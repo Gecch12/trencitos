@@ -43,17 +43,12 @@ const HistoryUI = (() => {
   const clearTracks=()=>{scrollCleanups.forEach(clean=>clean());scrollCleanups=[];};
   async function profile(tab) {
     const request=++profileRequest;clearTracks();ShellIcons.hideTooltip();
-    const root=$('historyPanel');root.hidden=!['history','overview'].includes(tab);if(root.hidden)return;
+    const root=$('historyPanel');root.hidden=tab!=='history';if(root.hidden)return;
     root.innerHTML=`<p role="status">${t('Cargando…')}</p>`;
     try {
       const {matches}=await api();if(request!==profileRequest)return;
-      if(tab==='overview') {
-        const completed=matches.filter(m=>m.status==='completed');
-        root.innerHTML=t`<div class="history-summary"><strong>${completed.length}</strong><span>Partidas completadas</span><strong>${matches.filter(m=>m.status==='abandoned').length}</strong><span>Partidas abandonadas</span><strong>${matches.filter(m=>m.status==='active').length}</strong><span>Partidas en curso</span></div><p class="shell-muted">Las partidas abandonadas no cuentan como resultados completados.</p>`;
-        return;
-      }
       root.innerHTML=`<div class="history-toolbar"><label for="historyFilter">${t('Filtrar partidas')}<select id="historyFilter"><option value="all">${t('Todas')}</option><option value="active">${t('En curso')}</option><option value="completed" selected>${t('Completadas')}</option><option value="abandoned">${t('Abandonadas')}</option></select></label>
-        <details class="history-info"><summary aria-label="${t('Acerca de tu historial')}" title="${t('Acerca de tu historial')}">i</summary><p>${t('Tu historial se guarda en el servidor. Vincula Google para acceder desde otros dispositivos; sin vincular, borrar los datos del navegador puede hacerte perder el acceso.')}</p></details></div>
+        <details class="history-info"><summary aria-label="${t('Acerca de tu historial')}" title="${t('Acerca de tu historial')}">i</summary><p>${t('Tu historial se guarda en el servidor. Vincula Google o Discord para acceder desde otros dispositivos; sin vincular, borrar los datos del navegador puede hacerte perder el acceso.')}</p></details></div>
         <div id="matchList" class="history-list"></div>`;
       const draw=()=>{
         clearTracks();ShellIcons.hideTooltip();

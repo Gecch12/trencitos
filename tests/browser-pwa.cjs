@@ -28,7 +28,15 @@ const { startMobileServer } = require("../scripts/mobile-server");
     assert.match(await page.locator("body").innerText(), /conexión|Internet/i);
     await context.setOffline(false);
     await page.getByRole("button").click();
+    // Retry preserves the requested room; an invalid recovery fragment does
+    // not silently grant a seat or change the requested route to the lobby.
+    await page.locator("#joinDialog").waitFor();
+    assert.equal(await page.locator("#code").inputValue(), "12345678");
+    assert.equal(new URL(page.url()).hash, "");
+    await page.locator("#joinDialog [data-close-dialog]").click();
+    await page.locator('.app-nav [data-page="rooms"]').click();
     await page.locator("#create").waitFor();
+    await page.waitForFunction(() => !document.getElementById("create").disabled);
     console.log("PWA: manifest, icon sizes, private data excluded from cache, offline fallback and recovery passed.");
   } finally { await browser.close(); await app.shutdown(); fs.rmSync(dir, { recursive: true, force: true }); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

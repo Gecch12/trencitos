@@ -22,7 +22,7 @@ const AppShell = (() => {
     $('languageSelect').value = I18n.language;
     $('languageSelect').onchange = event => { if (event.target.value !== I18n.language && I18n.select(event.target.value)) location.reload(); };
 
-    function identity() { for (const el of document.querySelectorAll('[data-username]')) el.textContent = $('nickname').value || I18n.t('Jugador'); }
+    function identity() { ProfileUI.renderIdentity(); }
     function route(url = new URL(location.href), push = false) {
       if (state().game) return;
       page = url.pathname.split('/')[1] || 'rooms';
@@ -41,10 +41,11 @@ const AppShell = (() => {
       }
       $('returnRoom').hidden = !state().room || page === 'rooms';
       if (page === 'profile') {
-        const tab = ['account','friends','history','overview'].includes(url.searchParams.get('tab')) ? url.searchParams.get('tab') : 'account';
-        $('profileTitle').textContent = I18n.t(tab[0].toUpperCase()+tab.slice(1));
+        const tab = ['overview','history','customization','friends','account'].includes(url.searchParams.get('tab')) ? url.searchParams.get('tab') : 'overview';
+        $('profileTitle').textContent = I18n.t(tab==='customization'?'Personalización':tab[0].toUpperCase()+tab.slice(1));
         $('accountPanel').hidden = tab !== 'account';
         HistoryUI.profile(tab);
+        ProfileUI.show(tab);
         for (const link of document.querySelectorAll('[data-profile]')) {
           link.classList.toggle('active',link.dataset.profile === tab);
           if (link.dataset.profile === tab) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current');
@@ -72,15 +73,14 @@ const AppShell = (() => {
       if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close();
     });
     $('openJoin').onclick = () => { $('joinCodeError').textContent=''; $('joinDialog').showModal(); $('code').focus(); };
-    $('editProfile').onclick = () => { $('profileName').value=$('nickname').value; $('profileError').textContent=''; $('profileDialog').showModal(); $('profileName').focus(); };
+    $('editProfile').onclick = () => ProfileUI.editIdentity();
+    $('accountEdit').onclick = () => ProfileUI.editIdentity();
     $('profileForm').onsubmit = async event => {
       event.preventDefault();
-      const name = $('profileName').value.trim();
-      if (!name || name.length > 24 || /[<>"'&\p{Cc}]/u.test(name)) { $('profileError').textContent=I18n.t('Elige un nombre de 1 a 24 caracteres, sin símbolos especiales.'); return; }
-      $('saveProfile').disabled = true; $('profileError').textContent='';
-      try { await saveProfile(name); identity(); $('profileDialog').close(); }
-      catch(error) { $('profileError').textContent=error.message; }
-      finally { $('saveProfile').disabled=false; }
+      $('saveProfile').disabled=true;$('profileError').textContent='';
+      try {await saveProfile({displayName:$('profileName').value.trim(),username:$('profileUsername').disabled?null:ProfileRules.normalizeUsername($('profileUsername').value)});identity();$('profileDialog').close();}
+      catch(error){$('profileError').textContent=error.message;}
+      finally{$('saveProfile').disabled=false;}
     };
     function setupTabs(selector, select) {
       const tabs = [...document.querySelectorAll(selector)];
@@ -171,7 +171,7 @@ const AppShell = (() => {
       $('roomVisibilityHint').textContent = s.visibility === 'public' ? I18n.t('Visible en Open Rooms. La partida se podrá observar.') : I18n.t('Solo podrán entrar quienes tengan el código o el enlace.');
       $('waitingHost').hidden = s.host;
       const full = s.members.length >= s.maxPlayers;
-      $('roomFriendsMessage').textContent = full ? I18n.t('La sala está llena. No puedes invitar a más amigos.') : I18n.t('Tus amigos aparecerán aquí. Mientras tanto, comparte el enlace de la sala.');
+      $('roomFriendsMessage').textContent = full ? I18n.t('La sala está llena. No puedes invitar a más amigos.') : I18n.t('Comparte el enlace de la sala para invitar a tus amigos.');
       $('emptySeats').innerHTML = Array.from({length:Math.max(0,s.maxPlayers-s.members.length)},(_,i)=>`<div class="empty-player">${s.host?I18n.t`<button type="button" class="add-bot" data-add-bot ${s.busy?'disabled':''}>${ShellIcons.svg('bot')}Añadir bot</button>`:I18n.t`${ShellIcons.svg('user')}<span>Plaza disponible</span>`}</div>`).join('');
       for (const el of $('emptySeats').querySelectorAll('[data-add-bot]')) el.onclick = () => { el.disabled=true; send({type:'add_bot'}); };
     }

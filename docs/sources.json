@@ -609,5 +609,22 @@
     "tests/practice-recovery.test.js",
     "tests/browser-mobile-continuity.cjs",
     "skills/trencitos-publicar/SKILL.md"
+  ],
+  "profile-social-statistics.md": [
+    "backend/commitment.js",
+    "backend/player-statistics.js",
+    "backend/account-auth.js",
+    "backend/account-seats.js",
+    "backend/match-archive.js",
+    "frontend/profile-ui.js",
+    "frontend/profile.css",
+    "frontend/account-ui.js",
+    "frontend/privacy.html",
+    "shared/profile-rules.js",
+    "supabase/006_profiles_social.sql",
+    "supabase/007_statistics.sql",
+    "supabase/008_statistics_cron.sql",
+    "tests/profile-social.test.js",
+    "tests/browser-profile-social.cjs"
   ]
 }

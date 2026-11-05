@@ -66,7 +66,7 @@ test("all disconnected cancels bots and abandons only after the reconnect grace"
   const f = fixture(); f.room.members[0].autopilot = true;
   f.room.members.forEach(m => m.ws = null); f.publish(f.room);
   const before = JSON.stringify(f.room.game);
-  f.tick(GRACE_MS - 1); assert.equal(JSON.stringify(f.room.game), before);
+  f.tick(120000 - 1); assert.equal(JSON.stringify(f.room.game), before);
   assert.equal(f.rooms.has(f.room.code), true);
   f.tick(1); assert.equal(f.rooms.has(f.room.code), false); assert.equal(f.timers.size, 0);
 });

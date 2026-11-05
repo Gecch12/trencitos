@@ -68,7 +68,8 @@ async function visibleLayout(page,label){
   report.checks.push('Laptop/mobile fit, sticky start, scrolling maps and all six gallery models on mobile');
   // Families without six variants retain their single model and an accurate CTA.
   const single=await page.evaluate(async()=>{const m=await import('/wagon-models.mjs');return LobbyUI.PALETTE.find(p=>!members.some(member=>member.color===p.color)&&m.wagonVariants(m.wagonStyle(p.color).model).length===1)?.color;});
-  if(single){await page.locator(`#roomColors [data-color="${single}"]`).click();await page.waitForFunction(c=>preferredColor===c&&!colorRequest,single);
+  if(single){const preference=await page.evaluate(()=>preferredColor);await page.locator(`#roomColors [data-color="${single}"]`).click();await page.waitForFunction(c=>members[seat]?.color===c&&!colorRequest,single);
+    assert.equal(await page.evaluate(()=>preferredColor),preference,'room choice does not overwrite the saved profile preference');
     assert.equal(await page.locator('#openWagonCollection').innerText(),'Ver detalle');await page.locator('#openWagonCollection').click();await page.waitForFunction(()=>wagonCollection);
     assert.equal(await page.locator('#wagonCollectionStage [data-variant]').count(),1);await page.keyboard.press('Escape');}
   await page.setViewportSize({width:1440,height:900});

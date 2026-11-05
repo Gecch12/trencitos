@@ -16,6 +16,7 @@ No cargues todos los documentos ni todos los informes de QA al iniciar un chat.
 | Experiencia de usuario detallada | [Guía del juego](../README.md) |
 | Símbolos, significados y ayudas accesibles | [Iconografía](iconography.md) |
 | Desplegar en Render/Supabase | [Guía de despliegue](RENDER_SUPABASE.md) |
+| Perfil, Compromiso, amigos y estadísticas | [Contrato del perfil](profile-social-statistics.md) |
 | Configurar Google y perfiles | [Google Auth](GOOGLE_AUTH.md) |
 | Qué revisión está publicada y cómo se verificó | [Producción](production.md) |
 | Evidencia de verificaciones anteriores | [Índice de QA](qa-index.md) |

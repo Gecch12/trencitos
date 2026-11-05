@@ -6,8 +6,8 @@ const reject = (status,message) => { throw Object.assign(new Error(message),{sta
 
 // Always invoked with a server-verified account ID, never an ID from the body.
 function createAccountSeats({rooms, dispatch, sendRoom, unavailable}) {
-  return async function accountSeats(action,accountId,input) {
-    if (action === 'rooms') return {rooms:[...rooms.values()].filter(r=>!r.practice && r.members.some(m=>m.accountId===accountId)).map(r=>({code:r.code,started:!!r.game,nickname:r.members.find(m=>m.accountId===accountId).name}))};
+  return async function accountSeats(action,accountId,input,profile) {
+    if (action === 'rooms') return {rooms:[...rooms.values()].filter(r=>!r.practice && r.members.some(m=>m.accountId===accountId&&!m.participation?.definitive)).map(r=>({code:r.code,started:!!r.game,nickname:r.members.find(m=>m.accountId===accountId).name}))};
     let result, failure;
     await dispatch(() => {
       try {
@@ -21,11 +21,14 @@ function createAccountSeats({rooms, dispatch, sendRoom, unavailable}) {
           if (!member || (member.accountId && member.accountId !== accountId)) reject(403,'Este puesto no se puede vincular a tu cuenta.');
           if (r.members.some(m=>m!==member && m.accountId===accountId)) reject(409,'Tu cuenta ya tiene otro puesto en esta sala.');
           member.accountId = accountId;
+          if(profile && !r.game) { member.username=profile.username; member.displayName=profile.displayName; member.avatar=profile.avatar; if(profile.username)member.name=profile.username; }
+
           if (!sendRoom(r)) reject(503,'No se pudo guardar la vinculación.');
           result = {ok:true};
         } else if (action === 'recover') {
           const member = r.members.find(m=>!m.bot && m.accountId===accountId);
           if (!member) reject(403,'Esta sala no está vinculada a tu cuenta.');
+          if(member.participation?.definitive)reject(409,'Abandonaste definitivamente esta partida.');
           // A verified owner with the current seat credential can resume without
           // rotating it on every load. Stale credentials still require ownership.
           if (input.resume === true && typeof input.token === 'string' && /^[a-f0-9]{48}$/.test(input.token) &&

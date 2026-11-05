@@ -16,9 +16,9 @@ function nativeToken(req) {
 }
 function handleNativeHttp(req, res, url) {
   if (!isNativeRequest(req)) return false;
-  const account=/^\/api\/account(?:\/(?:profile|logout|rooms|link|recover|native\/(?:start|exchange)))?$/.test(url.pathname);
-  const allowed = account || url.pathname === "/healthz" || /^\/api\/history(?:\/|$)/.test(url.pathname);
-  const methods=account&&!['/api/account','/api/account/rooms'].includes(url.pathname)?['POST']:['GET'];
+  const account=/^\/api\/account(?:\/(?:profile|room-profile|logout|rooms|link|recover|social|unlink|native\/(?:start|exchange)))?$/.test(url.pathname);
+  const allowed = account || url.pathname === "/api/stats" || url.pathname === "/healthz" || /^\/api\/history(?:\/|$)/.test(url.pathname);
+  const methods=url.pathname==='/api/account/social'?['GET','POST']:account&&!['/api/account','/api/account/rooms','/api/account/room-profile'].includes(url.pathname)?['POST']:['GET'];
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("Vary", "Origin");
   res.setHeader("Content-Type", "application/json; charset=utf-8");

@@ -5,6 +5,10 @@ const ROOT = path.resolve(__dirname, "..");
 // Public URLs are a transport contract, independent of the repository layout.
 // Never expose a directory wholesale: shared modules are public only if listed.
 const ASSETS = Object.freeze({
+  "/profile-rules.js": ["shared/profile-rules.js", "text/javascript; charset=utf-8"],
+  "/profile-ui.js": ["frontend/profile-ui.js", "text/javascript; charset=utf-8"],
+  "/profile.css": ["frontend/profile.css", "text/css; charset=utf-8"],
+  "/assets/avatars/capybara.png": ["frontend/assets/avatars/capybara.png", "image/png"],
   "/turn-history.js": ["frontend/turn-history.js", "text/javascript; charset=utf-8"],
   "/": ["frontend/index.html", "text/html; charset=utf-8"],
   "/index.html": ["frontend/index.html", "text/html; charset=utf-8"],

@@ -11,7 +11,7 @@ El estado de archivo predeterminado sigue siendo `room-state.json` de la raíz,
 aunque el proceso se lance desde otra carpeta. Las herramientas Python viven en `scripts/`.
 Ejecutar `npm ci` para instalar Three.js y las herramientas de QA.
 PGlite es dependencia solo de desarrollo para comprobar SQL/permisos de identidad e historial;
-no se carga en producción. Auth es optativo: [configuración Google](GOOGLE_AUTH.md).
+no se carga en producción. Auth es optativo: [configuración Google/Discord](GOOGLE_AUTH.md).
 `npm ci --omit=dev` basta para servir el juego; no requiere proceso de build.
 `npm start` sirve HTTP y WebSocket en el mismo proceso, puerto 3000 por defecto.
 Las pruebas usan `node --test` y abren puertos de loopback; un `listen EPERM`
@@ -231,3 +231,8 @@ de producción. La latencia retenida en la prueba no representa la de Render.
 
 Los respaldos de estado preexistentes conservados durante la limpieza visual
 están en `.qa/state-backups/preexisting-2026-11-02/`, fuera de Git y de la entrega.
+
+La entrega de [perfiles y estadísticas](profile-social-statistics.md#configuración-y-verificación)
+requiere migración 006 en Auth, 007/008 en estado y configuración externa de Discord
+y Cron antes de habilitarlos. El avatar y las nuevas vistas forman parte de los
+activos web y del paquete móvil; no requieren un servidor de imágenes adicional.

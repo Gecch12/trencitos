@@ -104,3 +104,11 @@ Las pruebas automáticas usan una simulación de la Data API; estos pasos valida
 - **Gratuidad:** confirma los planes Free y vigila límites de uso en ambos paneles. Render puede suspender o reiniciar el servicio; Supabase puede pausar proyectos inactivos. No se prometen costes cero fuera de los límites gratuitos ni disponibilidad continua.
 
 Fuentes: [Render Free](https://render.com/docs/free), [Supabase Pricing](https://supabase.com/pricing), [API keys](https://supabase.com/docs/guides/getting-started/api-keys), [seguridad de la Data API](https://supabase.com/docs/guides/api/securing-your-api).
+
+## Entrega de perfil, amigos y estadísticas
+
+Antes del código nuevo, aplicar SQL 006 en el proyecto Auth y SQL 007/008 en el de
+estado. Discord requiere su aplicación/proveedor, Manual Linking y la variable
+`AUTH_DISCORD_ENABLED=true`. El orden, ventanas y evidencia pendiente están en
+[perfil y estadísticas](profile-social-statistics.md) y [su ficha](work/profile-social-statistics.md).
+No iniciar un escritor local contra producción para probar esta entrega.

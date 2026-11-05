@@ -2,28 +2,33 @@
 const AccountUI = (() => {
   function create({selection,applyProfile,currentSeat,targetRoom=()=>null,sessionChanged=()=>{}}) {
     const el = id=>document.getElementById(id);
-    let profile=null, enabled=false, timer=null, saving=Promise.resolve(), linked='', binding='';
+    let profile=null, providers=[], connections=[], enabled=false, timer=null, saving=Promise.resolve(), linked='', binding='';
     let editing=0, loading=true, stopped=false, accountKnown=false;
-    const initial = selection();
     async function api(path,data) {
       const response = await TrencitosConnection.request('/api/account'+path,{credentials:'same-origin',cache:'no-store',
         ...(data ? {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)} : {})});
       const value = await response.json();
       if (!response.ok) {
-        if (response.status===401) { profile=null; render(); }
+        if (response.status===401) { profile=null; connections=[]; linked=''; render(); }
         throw Error(I18n.t(value.message) || I18n.t('No pudimos conectar con tu cuenta.'));
       }
       return value;
     }
     function message(text) { el('accountStatus').textContent=I18n.t(text); }
     function render() {
-      el('googleLogin').hidden=!!profile;
-      el('googleLogin').disabled=!enabled || loading;
+      for(const provider of ['google','discord']) {
+        const identity=connections.find(i=>i.provider===provider), login=el(provider+'Login'), unlink=el(provider+'Unlink');
+        login.hidden=!!identity;login.disabled=!enabled||loading||!providers.includes(provider);
+        login.textContent=I18n.t((profile?'Conectar ':'Continuar con ')+(provider==='google'?'Google':'Discord'));
+        unlink.hidden=!identity;unlink.disabled=!connections.some(i=>i.provider!==provider&&providers.includes(i.provider))||loading;
+        el(provider+'Identity').textContent=identity?.email||I18n.t(identity?'Conectado':providers.includes(provider)?'Sin conectar':'Pendiente de configuración');
+      }
       el('accountLogout').hidden=!profile;
       el('accountRetry').hidden=true;
       el('accountRetry').textContent=I18n.t('Reintentar guardado');
       el('accountRooms').replaceChildren();
       sessionChanged();
+      globalThis.dispatchEvent(new Event("profilechange"));
       el('accountLabel').textContent=profile?I18n.t('Tu cuenta'):I18n.t('Juega como invitado o guarda tu perfil');
     }
     async function listRooms() {
@@ -73,20 +78,24 @@ const AccountUI = (() => {
       catch(error) { message(error.message); }
       finally { if(binding===stamp) binding=''; }
     }
-    el('googleLogin').onclick=async()=>{
-      el('googleLogin').disabled=true; message(I18n.t('Abriendo Google…'));
-      const returnRoom=currentSeat()?.code || targetRoom() || new URLSearchParams(location.search).get('room');
-      if (LobbyUI.isJoinCode(returnRoom)) sessionStorage.setItem('rr-account-return-room',returnRoom);
-      try {
-        if(TrencitosConnection.packaged) {await TrencitosConnection.login();await load();}
-        else {const result=await api('/google',{}); location.assign(result.url);}
-      }
-      catch(error) {message(error.message);el('googleLogin').disabled=!enabled;}
-    };
+    for(const provider of ['google','discord']) {
+      el(provider+'Login').onclick=async()=>{
+        el(provider+'Login').disabled=true;message(I18n.t('Abriendo acceso…'));
+        const returnRoom=currentSeat()?.code||targetRoom();if(LobbyUI.isJoinCode(returnRoom))sessionStorage.setItem('rr-account-return-room',returnRoom);
+        try{if(TrencitosConnection.packaged){await TrencitosConnection.login(provider);await load();}else{const result=await api('/'+provider,{});location.assign(result.url);}}
+        catch(error){message(error.message);render();}
+      };
+      el(provider+'Unlink').onclick=async()=>{
+        if(!confirm(I18n.t('¿Desvincular esta cuenta? Seguirás entrando con la otra cuenta conectada.')))return;
+        el(provider+'Unlink').disabled=true;
+        try{const value=await api('/unlink',{provider});connections=value.connections||[];render();message(I18n.t('Cuenta desvinculada.'));}
+        catch(error){message(error.message);render();}
+      };
+    }
     el('accountLogout').onclick=async()=>{
       stopped=true; clearTimeout(timer); el('accountLogout').disabled=true;
       await saving;
-      try { await api('/logout',{});await TrencitosConnection.forgetAccount();profile=null;linked='';render();message(I18n.t('Sesión cerrada. Puedes seguir como invitado.')); }
+      try { await api('/logout',{});await TrencitosConnection.forgetAccount();profile=null;connections=[];linked='';render();message(I18n.t('Sesión cerrada. Puedes seguir como invitado.')); }
       catch(error) {message(error.message);}
       finally {stopped=false;el('accountLogout').disabled=false;}
     };
@@ -94,29 +103,32 @@ const AccountUI = (() => {
     async function load(){
       loading=true;
       try {
-        const value=await api('');enabled=value.enabled;profile=value.profile;loading=false;accountKnown=true;render();
+        const value=await api('');enabled=value.enabled;profile=value.profile;providers=value.providers||[];connections=value.connections||[];loading=false;accountKnown=true;render();
         if (profile) {
-          if (!profile.initialized) { save(); await saving; }
-          else if (!editing && !currentSeat() && JSON.stringify(selection())===JSON.stringify(initial)) applyProfile(profile);
-          else if (editing) save();
-          if (profile?.initialized && !editing) message(I18n.t('Nombre y vagón guardados en tu cuenta.'));
+          if(!editing)applyProfile(profile);
+          if(profile.username)message(I18n.t('Perfil guardado en tu cuenta.'));
+          else message(I18n.t('Edita tu perfil para elegir un username único.'));
           await linkSeat(); await listRooms();
         } else message(enabled?I18n.t('Tu nombre y vagón podrán acompañarte en otros dispositivos.'):I18n.t('El acceso con Google aún no está disponible. Puedes jugar como invitado.'));
       } catch(error) {loading=false;message(error.message);el('accountRetry').hidden=false;el('accountRetry').textContent=I18n.t('Reintentar conexión');}
       const params=new URLSearchParams(location.search);
       if (params.has('auth')) {
-        if (params.get('auth')==='error') message(I18n.t('No se completó el acceso con Google. Puedes reintentarlo.'));
+        if (params.get('auth')==='error') message(I18n.t('No se completó el acceso. Puedes reintentarlo.'));
         params.delete('auth');history.replaceState(null,'',location.pathname+(params.size?'?'+params:'')+location.hash);
       }
     }
     const ready=load();
-    async function updateNickname(nickname) {
+    async function updateProfile(patch) {
       await ready;
       if (loading || stopped) throw Error(I18n.t('Espera a que termine la conexión con tu cuenta.'));
       if (!accountKnown) throw Error(I18n.t('No pudimos comprobar tu cuenta. Reintenta la conexión antes de guardar.'));
       clearTimeout(timer); editing++;
       await saving;
-      const data={...selection(),nickname};
+      const data={...selection(),...patch};
+      if(!ProfileRules.validDisplayName(data.displayName||''))throw Error(I18n.t('El nombre visible admite hasta 20 caracteres.'));
+      if(data.secondaryColor===data.color)throw Error(I18n.t('El segundo color debe ser diferente del primero.'));
+      if(profile&&data.username&&!ProfileRules.validUsername(ProfileRules.normalizeUsername(data.username)))throw Error(I18n.t('Username inválido. Usa entre 3 y 20 letras sin tildes, números o guion bajo.'));
+      if(!profile)data.username=null;
       if (profile) {
         const accountId=profile.id, value=await api('/profile',data);
         if (!profile || profile.id!==accountId) throw Error(I18n.t('Tu sesión cambió. Vuelve a intentarlo.'));
@@ -124,9 +136,10 @@ const AccountUI = (() => {
         applyProfile(profile);
         message(I18n.t('Perfil guardado en tu cuenta.'));
       } else {
-        applyProfile({...data,avatar:'person'});
+        applyProfile(data);
         message(I18n.t('Perfil guardado en este dispositivo.'));
       }
+      linked='';await linkSeat();render();
     }
     function ownsCurrentSeat() {
       const seat=currentSeat();
@@ -142,7 +155,7 @@ const AccountUI = (() => {
       linked=profile.id+':'+code+':'+recovered.token;
       sessionChanged(); return recovered;
     }
-    return {changed,linkSeat,ready,updateNickname,listRooms,resumeSeat,ownsCurrentSeat};
+    return {async joinData(){await ready;if(!accountKnown)throw Error(I18n.t('No pudimos comprobar tu cuenta. Reintenta la conexión.'));if(!profile)return {};if(!profile.username){ProfileUI.editIdentity();throw Error(I18n.t('Elige tu username para entrar.'));}const {ticket}=await api('/room-profile');return {accountTicket:ticket};},changed,linkSeat,ready,updateProfile,updateNickname:nickname=>updateProfile({displayName:nickname}),listRooms,resumeSeat,ownsCurrentSeat,get profile(){return profile;}};
   }
   return {create};
 })();

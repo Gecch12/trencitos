@@ -17,9 +17,9 @@ const LobbyUI = (() => {
     };
     return String(random(100000000)).padStart(8, "0");
   }
-  function freeColor(members, preferred) {
+  function freeColor(members, preferred, secondary) {
     const used = new Set(members.map(m => m.color));
-    return isColor(preferred) && !used.has(preferred) ? preferred : colors.find(color => !used.has(color));
+    return [preferred, secondary, ...colors].find(color => isColor(color) && !used.has(color));
   }
   function restoreColors(members, players) {
     const used = new Set();

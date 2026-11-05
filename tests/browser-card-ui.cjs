@@ -120,8 +120,8 @@ function room(code,refresh) {
  const results=resultsRoom('QABOTS');results.members[1].bot=true;app.rooms.set(results.code,results);
  const result=await page(results,0);await result.waitForSelector('.results-table');
  assert.equal(await result.locator('.result-rules').count(),0);
- assert.equal(await result.locator('.result-heading .is-bot rect').evaluate(n=>getComputedStyle(n).fill),'rgb(255, 249, 233)');
- assert.equal(await result.locator('.result-heading .is-bot svg').evaluate(n=>getComputedStyle(n).stroke),'rgb(33, 65, 78)');
+ assert.equal(await result.locator('.result-summary .is-bot rect').evaluate(n=>getComputedStyle(n).fill),'rgb(255, 249, 233)');
+ assert.equal(await result.locator('.result-summary .is-bot svg').evaluate(n=>getComputedStyle(n).stroke),'rgb(33, 65, 78)');
  await result.screenshot({path:path.join(out,'results-bot.png')});
  report.checks.push('Bot avatar white fill/dark outline and final table without tie explanation');
  assert.deepEqual(report.errors,[]);report.passed=true;

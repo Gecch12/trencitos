@@ -29,7 +29,7 @@ según el [contrato de recibos](architecture.md#recibos-de-comandos). Salas norm
 recuperan desde el checkpoint. La práctica conserva también su sesión activa y
 elecciones pendientes durante 24 h de ausencia, incluso al reiniciar el proceso.
 Las salas iniciadas con un humano y bots usan esa misma ventana; con varios
-humanos permanece la ventana de 60 s cuando todos se desconectan.
+humanos permanece la ventana de 120 s cuando todos se desconectan.
 
 ## Acceso
 
@@ -272,7 +272,7 @@ El servidor añade `ownSeat` y `rank` al listado privado a partir de la identida
 verificada y sus reclamaciones de invitado, nunca del nombre. El puesto solo
 existe al completar: compara puntos, destinos completados, puntos de estaciones
 y Express, compartiendo puesto en empate exacto. No expone IDs de propiedad.
-Resumen cuenta los estados por separado. `/replay?id=UUID`
+Resumen usa resultados y responsabilidad individual conforme al [contrato de estadísticas](profile-social-statistics.md). `/replay?id=UUID`
 reutiliza el tablero, mercado, jugadores, mano y resultados, sin conexión de juego
 ni envío de acciones. Pulsar un avatar del panel normal selecciona su perspectiva;
 los iconos de persona/robot, nombres y colores son los mismos de la partida.
@@ -315,7 +315,7 @@ los plazos del servidor.
 El cambio recarga la ruta actual, conservando los mecanismos de reconexión.
 Las plantillas se traducen antes de interpolar nombres, códigos y otros valores:
 los datos del jugador no se traducen ni cambian de identidad. Las ciudades conservan
-sus nombres propios. No se han inventado contenidos para Jugar, amigos, chat o las
+sus nombres propios. No se han inventado contenidos para Jugar, chat o las
 secciones futuras.
 
 ## Verificación y auditoría local

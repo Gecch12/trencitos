@@ -1,6 +1,6 @@
-# Google y perfiles: operación
+# Google, Discord y perfiles: operación
 
-El código está publicado y Auth habilitado en la [versión actual](production.md).
+La base de Google está publicada y Auth habilitado en la [versión actual](production.md).
 El cliente/proveedor, perfiles SQL, callbacks y variables de Render están configurados.
 Una cuenta real autorizada completó acceso, perfil, recarga, recuperación, logout
 y segundo acceso. La marca de Google continúa en modo Testing; la matriz restante
@@ -69,13 +69,12 @@ Las sesiones se renuevan en el servidor; caducidad máxima de cookie 30 días tr
 renovación. Logout revoca la sesión local en Supabase y elimina cookies.
 
 `game_profiles.id` es un UUID del juego, separado de `auth.users.id` y de email.
-El primer acceso conserva el apodo y color elegidos como invitado. Otro dispositivo
-carga el perfil persistente; cambios manuales posteriores guardan apodo/color.
-`/profile` concentra Cuenta y el botón **Editar perfil**. Su modal valida el
-apodo y espera la respuesta de `/api/account/profile`; un fallo deja el modal
-abierto y no sustituye el nombre mostrado. Sin cuenta se guarda localmente.
-El avatar actual sigue siendo la personita del juego, única opción del modal. Foto/nombre de Google no
-se publican; accesorios, tonos de piel y emblemas siguen en [personalización](work/commerce.md).
+El checkout amplía el perfil con username, nombre visible y preferencias. La
+nueva migración y las reglas de Compromiso/social viven en
+[el contrato de perfil](profile-social-statistics.md); requieren SQL 006 antes de
+publicar esta versión. El modal espera confirmación de guardado; sin cuenta guarda
+preferencias locales. Foto/nombre del proveedor nunca se importan al perfil público.
+
 `game_profile` y `game_update_profile` comprueban `auth.sessions`/`session_id`,
 incluida revocación y `not_after`, además de la verificación del servidor.
 
@@ -174,3 +173,21 @@ una sala; el login no concede puestos de terceros.
 Validación local y límites de esta implementación en
 [continuidad móvil](work/mobile-continuity.md). Las pruebas con proveedor simulado
 y compilaciones no acreditan un acceso Google real en el teléfono ni despliegue.
+
+## Discord y desvinculación
+
+El BFF admite `google` y `discord` en web y en el flujo nativo. Discord se anuncia
+solo con `AUTH_DISCORD_ENABLED=true`. Registrar la aplicación en Discord Developer
+Portal, callback `https://<proyecto-auth>.supabase.co/auth/v1/callback`, copiar Client
+ID/Secret a Supabase → Discord y habilitar Manual Linking. Los scopes son
+`identify email`. La configuración externa aplicada y los límites de la
+verificación OAuth real se registran en [la ficha de entrega](work/profile-social-statistics.md).
+
+Con sesión se usa `/auth/v1/user/identities/authorize`; el callback comprueba el mismo
+UUID de juego. Desvincular exige la otra identidad Google/Discord conectada y habilitada como acceso. Cuenta muestra
+correo de las identidades únicamente al titular. Username no sirve para iniciar
+sesión. Apple y envío de correos no forman parte de esta activación.
+
+Fuentes oficiales consultadas: [Discord](https://supabase.com/docs/guides/auth/social-sign-in/auth-discord),
+[identidades](https://supabase.com/docs/guides/auth/auth-identity-linking),
+[cliente Auth de referencia](https://github.com/supabase/auth-js/blob/master/src/GoTrueClient.ts).

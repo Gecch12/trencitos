@@ -31,7 +31,7 @@ async function main(){
   const u=new URL(route.request().url()),code=crypto.randomUUID();codes.set(code,u.searchParams.get('code_challenge'));
   await route.fulfill({contentType:'text/html',body:`<a href="${base}/auth/callback?code=${code}">Acceder con cuenta de prueba</a>`});
  });
- await a.goto(base+'/rooms?room='+room.code);await a.locator('#joinDialog [data-close-dialog]').click();await a.locator('[data-page="profile"]').click();await a.locator('#googleLogin').click();
+ await a.goto(base+'/rooms?room='+room.code);await a.locator('#joinDialog [data-close-dialog]').click();await a.locator('[data-page="profile"]').click();await a.locator('.profile-nav [data-profile="account"]').click();await a.locator('#googleLogin').click();
  await a.getByText('Acceder con cuenta de prueba').click();
  await a.waitForFunction(()=>typeof seat==='number'&&game?.phase==='play'&&seat===0&&!members[0].autopilot);
  assert.equal(await a.locator('#privateSession').isHidden(),true);

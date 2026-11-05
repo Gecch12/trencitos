@@ -1,4 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const temp=fs.mkdtempSync(path.join(require('node:os').tmpdir(),'trencitos-deployment-test-'));
+process.env.STATE_BACKEND='file';process.env.STATE_FILE=path.join(temp,'state.json');process.env.AUTH_ENABLED='false';
 const {server}=require('../backend/server');
 const ROOT=path.resolve(__dirname,'..');
 test('all 12 original SVG card/deck/ticket/favicon files are valid and present',()=>{
@@ -109,4 +111,4 @@ test('static SVG is served safely with right MIME and traversal returns 404',asy
   response=await fetch(base+file);assert.equal(response.status,404);
  }
 });
-test.after(()=>{if(server.listening)server.close()});
+test.after(()=>{if(server.listening)server.close();fs.rmSync(temp,{recursive:true,force:true});});

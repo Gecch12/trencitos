@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="room-setup.css" />
       <link rel="stylesheet" href="destination-map.css">
     <link rel="stylesheet" href="table.css" />
+    <link rel="stylesheet" href="profile.css" />
   </head>
   <body>
     <a href="#lobby" class="skip-link">Saltar al contenido</a>
@@ -72,6 +73,7 @@
           </div>
           <aside class="directory-aside" aria-hidden="true"></aside>
         </div>
+        <div id="accountRooms" class="account-rooms"></div>
       </section>
       <section id="playPage" class="shell-page" aria-label="Play" hidden></section>
       <section id="morePage" class="shell-page more-page" aria-label="More" hidden>
@@ -79,22 +81,25 @@
       </section>
       <section id="contentPage" class="shell-page content-page" hidden><button id="backMore" class="text-button" type="button" data-icon="back">More</button><h1 id="contentTitle"></h1></section>
       <section id="profilePage" class="shell-page profile-page" aria-label="Profile" hidden>
-        <div class="profile-heading"><span class="profile-avatar" data-icon="user"></span><h1 data-username>Jugador</h1><button id="editProfile" class="text-button" type="button" data-icon="edit">Edit Profile</button></div>
+        <div class="profile-heading"><span class="profile-avatar" data-icon="user"></span><div class="profile-identity"><h1 data-username>Jugador</h1><small id="profileHandle"></small></div><button id="editProfile" class="text-button" type="button" data-icon="edit">Edit Profile</button></div>
         <div class="profile-layout">
           <nav class="profile-nav" aria-label="Secciones del perfil">
-            <a href="/profile?tab=account" data-profile="account" data-icon="settings">Account</a>
-            <a href="/profile?tab=friends" data-profile="friends" data-icon="friends">Friends</a>
-            <a href="/profile?tab=history" data-profile="history" data-icon="history">History</a>
             <a href="/profile?tab=overview" data-profile="overview" data-icon="user">Overview</a>
+            <a href="/profile?tab=history" data-profile="history" data-icon="history">History</a>
+            <a href="/profile?tab=customization" data-profile="customization" data-icon="edit">Personalización</a>
+            <a href="/profile?tab=friends" data-profile="friends" data-icon="friends">Friends</a>
+            <a href="/profile?tab=account" data-profile="account" data-icon="settings">Account</a>
           </nav>
-          <div class="profile-content"><h2 id="profileTitle">Account</h2><section id="historyPanel" hidden></section>
+          <div class="profile-content"><h2 id="profileTitle">Account</h2><section id="historyPanel" hidden></section><section id="profileFeatures" hidden></section>
             <section id="accountPanel" class="account-panel" aria-label="Tu cuenta">
-              <h3>Tu cuenta</h3>
-              <div class="account-row"><span id="accountLabel">Juega como invitado o guarda tu perfil</span><button id="googleLogin" class="shell-primary" type="button" disabled>Continuar con Google</button><button id="accountLogout" class="shell-outline" type="button" hidden>Cerrar sesión</button></div>
-              <p id="accountStatus" role="status">Comprobando tu cuenta…</p>
-              <button id="accountRetry" type="button" hidden>Reintentar guardado</button>
-              <div id="accountRooms" class="account-rooms"></div>
-              <a class="privacy-link" href="/privacy.html">Privacidad y eliminación de cuenta</a>
+              <h3>Membresía</h3><div class="account-row"><div><strong>Trencitos</strong><p>Próximamente</p></div><button type="button" disabled>Obtener membresía</button></div>
+              <h3>Cuentas conectadas</h3><p id="accountLabel">Juega como invitado o guarda tu perfil</p>
+              <div class="account-row"><div><strong>Google</strong><p id="googleIdentity">Sin conectar</p></div><button id="googleLogin" class="shell-primary" type="button" disabled>Continuar con Google</button><button id="googleUnlink" type="button" hidden>Desconectar</button></div>
+              <div class="account-row"><div><strong>Discord</strong><p id="discordIdentity">Sin conectar</p></div><button id="discordLogin" class="shell-primary" type="button" disabled>Continuar con Discord</button><button id="discordUnlink" type="button" hidden>Desconectar</button></div>
+              <p id="identityHint" class="shell-muted">Conecta Google y Discord antes de desvincular una cuenta.</p>
+              <p id="accountStatus" role="status">Comprobando tu cuenta…</p><button id="accountRetry" type="button" hidden>Reintentar guardado</button>
+              <h3>Región de clasificación</h3><fieldset class="region-preview" disabled><legend>Próximamente</legend><label>Continente<select><option>Sin configurar</option></select></label><label>País<select><option>Sin configurar</option></select></label><label>Región<select><option>Sin configurar</option></select></label><button type="button" disabled>Guardar región</button></fieldset>
+              <h3>Administrar</h3><div class="account-row"><button id="accountEdit" type="button">Editar perfil</button><button id="accountLogout" class="shell-outline" type="button" hidden>Cerrar sesión</button><a class="privacy-link" href="/privacy.html">Privacidad y eliminación de cuenta</a></div>
             </section>
           </div>
         </div>
@@ -108,7 +113,7 @@
         </div>
         <aside id="roomPlayersPanel" class="room-players-panel">
           <div class="room-player-list"><h2>Jugadores (<span id="roomCount">1/5</span>)</h2><div id="members" class="memberlist" aria-label="Jugadores en la sala"></div><div id="emptySeats" class="empty-seats"></div></div>
-          <section class="room-friends"><h2>Amigos (0/0)</h2><p id="roomFriendsMessage">Tus amigos aparecerán aquí.</p></section>
+          <section class="room-friends"><h2>Amigos</h2><p id="roomFriendsMessage">Comparte el enlace de la sala para invitar a tus amigos.</p><a href="/profile?tab=friends" data-profile="friends">Ver amigos</a></section>
         </aside>
         <section id="roomSettingsPanel" class="room-settings-panel">
           <header class="room-title"><h1>Sala: <span id="roomcode"></span></h1><button id="leaveLobby" type="button" class="icon-button" aria-label="Salir de la sala" data-icon="close"></button></header>
@@ -157,8 +162,9 @@
       <form id="homeJoin" novalidate><label for="code">Código de invitación</label><input id="code" maxlength="10" autocomplete="off" spellcheck="false" placeholder="Introduce el código" aria-describedby="joinCodeHint joinCodeError" required /><p id="joinCodeHint" class="shell-muted">Pídeselo a quien creó la sala.</p><p id="joinCodeError" class="field-error" role="alert"></p><button id="join" type="submit" class="shell-primary full">Unirme a la sala</button></form>
     </dialog>
     <dialog id="profileDialog" class="shell-dialog" aria-labelledby="editTitle"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button><h2 id="editTitle">Edit Profile</h2>
-      <form id="profileForm" autocomplete="off"><label for="profileName">Nombre de usuario</label><input id="profileName" maxlength="24" required autocomplete="off" aria-describedby="profileError" /><fieldset class="avatar-options"><legend>Avatar</legend><button type="button" class="avatar-option" aria-label="Avatar básico" aria-pressed="true" data-icon="user"><span>Básico</span></button></fieldset><p id="profileError" class="field-error" role="alert"></p><div class="dialog-actions"><button type="button" data-close-dialog>Cancelar</button><button id="saveProfile" type="submit" class="shell-primary">Guardar</button></div></form>
+      <form id="profileForm" autocomplete="off"><label for="profileUsername">Username</label><input id="profileUsername" minlength="3" maxlength="20" pattern="[a-zA-Z][a-zA-Z0-9_]{2,19}" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="usernameHint profileError" /><p id="usernameHint" class="shell-muted">Único. Letras sin tildes, números y guion bajo. Puedes cambiarlo cada 30 días.</p><label for="profileName">Nombre visible</label><input id="profileName" maxlength="20" autocomplete="off" aria-describedby="displayNameHint profileError" /><p id="displayNameHint" class="shell-muted">Opcional, hasta 20 caracteres. Se muestra en tu perfil y al abrir tus detalles durante una partida.</p><p id="profileError" class="field-error" role="alert"></p><div class="dialog-actions"><button type="button" data-close-dialog>Cancelar</button><button id="saveProfile" type="submit" class="shell-primary">Guardar</button></div></form>
     </dialog>
+    <dialog id="playerProfileDialog" class="shell-dialog" aria-label="Perfil del jugador"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar">×</button><div id="playerProfileContent"></div></dialog>
     <dialog id="languageDialog" class="shell-dialog" aria-labelledby="languageTitle"><button type="button" class="dialog-close" data-close-dialog aria-label="Cerrar" data-icon="close"></button><h2 id="languageTitle">Idioma</h2><label for="languageSelect">Idioma de la aplicación</label><select id="languageSelect"><option value="es">Español (ESP)</option><option value="en">English (ENG)</option></select><button type="button" class="shell-primary full" data-close-dialog>Listo</button></dialog>
     <div id="homeSetup" hidden>
       <input id="nickname" maxlength="24" value="Jugador" /><span id="homeAvatar"></span>
@@ -166,7 +172,7 @@
       <section id="homePractice" hidden><span id="practiceColorName"></span><div id="practiceColors"></div><button id="createTest" type="button">Practicar</button></section>
     </div>
     <section id="replayControls" class="replay-controls" aria-label="Controles de repetición" hidden></section>
-    <div id="game" class="game hidden">
+    <div id="game" class="game hidden"><p id="commitmentBanner" class="commitment-banner" role="status" hidden>Puedes salir sin penalización por abandono.</p>
       <main class="game-stage" aria-label="Mesa de juego">
           <div class="mapscroll is-3d" id="mapscroll">
             <svg id="board" viewBox="-60 -10 980 660"
@@ -189,7 +195,9 @@
                     <button id="rotateRecovery" type="button" data-icon="refresh">Cambiar enlace de recuperación</button>
                   </section>
                   <button id="reclaimControl" class="hidden" type="button">Recuperar control</button>
-                  <button id="leaveRoom" class="menu-leave" type="button" data-icon="exit">Abandonar partida</button>
+                  <button id="leaveRoom" class="menu-leave" type="button" data-icon="exit">Salir temporalmente</button>
+                  <button id="abandonRoom" class="menu-leave" type="button">Abandonar definitivamente</button>
+                  <p id="commitmentNotice" class="shell-muted" role="status"></p>
                   <button id="leaveWatch" class="menu-leave" type="button" hidden data-icon="exit">Dejar de observar</button>
                 </div>
               </details>
@@ -322,10 +330,12 @@
     <script src="draw-intent.js"></script>
     <script src="lobby-ui.js"></script>
     <script src="board-camera.js"></script>
+    <script src="profile-rules.js"></script>
     <script src="account-ui.js"></script>
     <script src="shell-icons.js"></script>
     <script src="replay-state.js"></script><script src="history-ui.js"></script>
     <script src="room-map-picker.js"></script>
+    <script src="profile-ui.js"></script>
     <script src="shell.js"></script>
     <script src="destination-planner.js"></script>
     <script src="mobile-bridge.js"></script>

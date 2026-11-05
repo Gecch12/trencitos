@@ -101,3 +101,6 @@ Esta ampliación se publicó en la entrega conjunta siguiente; no se repitió OA
 La implementación de esta ficha quedó publicada en `ef65487`, Live en Render
 tras CI aprobado. El alcance publicado, las comprobaciones de producción y
 sus límites están en [Producción](../production.md).
+
+Ampliación local del perfil y sus flujos: [perfil, Compromiso y relaciones](profile-social-statistics.md).
+La evidencia histórica de esta ficha no acredita el nuevo OAuth Discord ni su despliegue.

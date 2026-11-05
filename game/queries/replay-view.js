@@ -7,7 +7,7 @@ const { checkRecordedDefinition, requireRecordedDefinition } = require("../compa
 
 function projectSummary(record, full) {
   return structuredClone({ ...record, frames: undefined,
-    players: record.players.map(({ name, color, bot }) => ({ name, color, bot })),
+    players: record.players.map(({ name, color, bot, username, displayName, avatar }) => ({ name, color, bot, username, displayName, avatar })),
     scores: record.scores.map(score => full ? score : {
       seat: score.seat, route: score.route, score: score.score, partial: score.partial, winner: score.winner,
     }),

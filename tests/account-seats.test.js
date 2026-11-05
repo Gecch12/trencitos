@@ -37,3 +37,10 @@ test('automatic resume keeps a valid credential; stale credentials recover only 
  const recovered=await f.api('recover','me',{code:f.r.code,token:'f'.repeat(48),resume:true});
  assert.notEqual(recovered.token,same.token);assert.equal(closed,true);
 });
+
+test('a definitive departure cannot be resumed or advertised as a recoverable room',async()=>{
+ const f=setup();await f.api('link','me',{code:f.r.code,token:'a'.repeat(48)});
+ f.r.members[0].participation={definitive:true,leftAt:1,penalizedAt:1};
+ assert.deepEqual(await f.api('rooms','me',{}),{rooms:[]});
+ await assert.rejects(()=>f.api('recover','me',{code:f.r.code,token:'a'.repeat(48),resume:true}),{status:409});
+});

@@ -133,7 +133,7 @@ creada desde iPhone o navegador; su anfitrión debe iniciar la partida y elegir
 destinos mientras la prueba espera.
 
 La primera entrega se probó con invitados. El checkout incorpora el flujo de
-Google nativo descrito en [Google Auth](GOOGLE_AUTH.md); requiere actualizar tanto
+Acceso nativo Google/Discord descrito en [OAuth](GOOGLE_AUTH.md); requiere actualizar tanto
 servidor como paquete. Enlaces de invitación que abren directamente la app,
 notificaciones y publicación en tiendas requieren trabajo posterior. La beta firmada para Android se describe abajo.
 Las pruebas en simulador/emulador no certifican batería ni rendimiento en teléfonos.
@@ -169,7 +169,7 @@ HTTP y la inspección de WebView. **`mobile:apk` fuerza QA desactivado** y recha
 servidores locales. La beta distribuida no tiene depuración web ni tráfico HTTP.
 
 Las apps nativas usan un invitado persistente por instalación y servidor,
-independiente de Safari/Chrome; puede vincularse a la misma cuenta Google. Su credencial
+independiente de Safari/Chrome; puede vincularse a la misma cuenta mediante Google o Discord habilitado. Su credencial
 aleatoria se guarda en localStorage; se envía en `X-Trencitos-Guest` para lecturas
 de historial y como subprotocolo WebSocket, nunca en la URL. El servidor acepta
 solo los orígenes locales exactos de Capacitor. La sesión de cuenta cifrada viaja
@@ -224,7 +224,7 @@ esté desbloqueado y actualizar sus componentes con
 En Safari abrir [Trencitos](https://trencitos-swamp.onrender.com), pulsar
 Compartir → Añadir a pantalla de inicio y activar «Abrir como app web» si aparece.
 Esta opción funciona sin la firma de Xcode ni membresía Apple y mantiene las
-funciones de la web, incluido Google cuando esté configurado.
+funciones de la web, incluidos Google y Discord cuando estén configurados. Perfil, amigos y estadísticas usan el mismo BFF, con la credencial nativa privada; las preferencias y el capibara se incluyen en el paquete. Ver [contrato de perfiles](profile-social-statistics.md).
 
 El manifest y los iconos pertenecen al servidor. El service worker conserva solo
 una pantalla de desconexión y sus recursos: no almacena partidas, historial,

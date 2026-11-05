@@ -1,5 +1,5 @@
 ---
-{"id":"commerce","status":"planned","parent":null,"depends_on":["identity"],"branch":null,"delivery":"none","updated":"2026-11-02"}
+{"id":"commerce","status":"planned","parent":null,"depends_on":["identity"],"branch":null,"delivery":"none","updated":"2026-11-05"}
 ---
 # Personalización y preparación comercial
 
@@ -17,7 +17,10 @@ checkout en esta etapa. Vendedor: Perú. Persona/empresa y proveedor sin definir
 - [ ] Avatares aplazados por decisión del usuario: una entidad con rostro y cuerpo
   simbólico. Al retomar, proponer cinco diseños y zonas personalizables por especie:
   piel, cabello y barba/bigote en humanos; pelaje en animales. Preparar su selección
-  y personalización como cosméticos; no implementar compra ni nuevos avatares ahora.
+  y personalización como cosméticos; no implementar compra ni el catálogo amplio ahora.
+  El encargo del 2026-11-05 autoriza específicamente el capibara y preferencias
+  de perfil en [Perfil, estadísticas y relaciones](profile-social-statistics.md).
+  Ese alcance no habilita el catálogo amplio ni pagos.
 - [ ] Contrato de facturación separado: derechos los concede el servidor tras
   verificación; futuro proveedor no invade el motor del juego.
 - [ ] Reevaluar proveedores internacionales desde Perú (Paddle/Xsolla como

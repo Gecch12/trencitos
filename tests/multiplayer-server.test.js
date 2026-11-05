@@ -83,8 +83,8 @@ test("voluntary exit installs a bot without deleting pieces; private link reclai
 });
 test("expired all-offline room cannot be revived by racing its cleanup timer", async () => {
   const f = await playing();
-  for (const m of f.r.members) { m.ws.room = null; m.ws = null; m.disconnectedAt = Date.now() - 60001; }
-  f.r.emptySince = Date.now() - 60001;
+  for (const m of f.r.members) { m.ws.room = null; m.ws = null; m.disconnectedAt = Date.now() - 120001; }
+  f.r.emptySince = Date.now() - 120001;
   const c = await client(); c.send({ type: "join", code: f.la.code, token: f.la.token });
   assert.equal((await c.next("error")).code, "ROOM_NOT_FOUND"); assert.equal(rooms.has(f.la.code), false);
 });

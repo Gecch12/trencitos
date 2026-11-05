@@ -825,7 +825,7 @@ Alcance y pruebas en
   consumir la misma vista autorizada, sin duplicar el motor.
 - Las prácticas se pausan al desconectar y se conservan 24 h, incluso tras
   reiniciar el servidor. Las salas iniciadas con un humano y bots permanentes
-  reciben la misma ventana; salas con varios humanos conservan 60 s. Salas y grabación
+  reciben la misma ventana; salas con varios humanos conservan 120 s. Salas y grabación
   se confirman de forma atómica. En disco local, un manifiesto pequeño referencia
   el prefijo confirmado de los pasos anexados por partida; cambiar de color no
   reescribe pasos anteriores. [Historial/replay](history-replay.md) define retención,
@@ -1070,3 +1070,13 @@ actualizado junto con la selección. Representa
 la reserva física actual, independiente de la estimación de cada destino.
 En la selección inicial no se generan ese bloque ni las líneas `.ticket-plan`;
 el planificador sigue calculando los recorridos para la vista previa del mapa.
+
+## Perfil social y agregados
+
+[profile-ui.js](../frontend/profile-ui.js) presenta métricas, personalización, amigos
+y mesas. [player-statistics.js](../backend/player-statistics.js) calcula desde metadatos
+autorizados; [commitment.js](../backend/commitment.js) participa del checkpoint durable.
+SQL 006 incorpora perfil/relaciones con RPC autenticadas; SQL 007 materializa
+resultados y cortes globales; SQL 008 agenda su refresco. El almacenamiento Auth
+y el de estado pueden ser proyectos distintos. Contratos y activación en
+[perfil y estadísticas](profile-social-statistics.md).

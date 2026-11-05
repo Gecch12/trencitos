@@ -207,7 +207,7 @@ de vencimientos y jugadas en [automatic-play.js](../game/application/automatic-p
   En salas normales usan la política estratégica de práctica y se guardan con ella.
 - Partida: dos turnos consecutivos agotados activan reemplazo; salida voluntaria
   lo activa directamente. Recuperar control respeta el turno automático en curso.
-- Todos desconectados en una partida con varios humanos: pausa durante 60 s;
+- Todos desconectados en una partida con varios humanos: pausa durante 120 s;
   después se elimina la sala. Una partida iniciada con un único humano y bots
   permanentes se conserva pausada 24 h; el abandono explícito la cierra.
 - Práctica: un humano y tres bots, sin invitados. Se guarda con el historial y
@@ -238,3 +238,9 @@ La proyección pública `scoreProgress.players[].longestRoutes` incluye los tram
 del camino más largo exacto calculado por el servidor. Solo usa vías ocupadas
 públicas del jugador, sin destinos privados; no añade puntos ni cambia desempates.
 El cliente lo usa para explicar visualmente el bono provisional.
+
+## Perfil y participación
+
+Identidad pública, Compromiso, sanciones individuales y métricas se definen en
+[el contrato de perfil](profile-social-statistics.md). El cierre global `abandoned`
+no demuestra abandono de una persona. Las votaciones quedan pendientes.

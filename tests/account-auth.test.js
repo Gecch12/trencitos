@@ -5,7 +5,7 @@ const crypto = require('node:crypto');
 const {createAccountAuth} = require('../backend/account-auth');
 
 async function fixture(t, hooks={}) {
-  let auth, time=Date.now(), revoked=false, expired=false, refreshCount=0;
+  let auth, time=Date.now(), revoked=false, expired=false, refreshCount=0, identities=[];
   const calls=[], codes=new Map(), profiles=new Map();
   const env={AUTH_ENABLED:'true',AUTH_SUPABASE_URL:'https://auth.example.test',AUTH_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',AUTH_COOKIE_SECRET:'a'.repeat(64)};
   const fetchImpl=async(url,options)=>{
@@ -19,12 +19,16 @@ async function fixture(t, hooks={}) {
       } else {refreshCount++;if(revoked || body.refresh_token!=='refresh-private') return reply({},400);}
       return reply({access_token:'access-private',refresh_token:'refresh-private',expires_in:expired?1:3600,user:{email:'private@example.test',user_metadata:{full_name:'PRIVATE GOOGLE NAME',avatar_url:'PRIVATE PHOTO'}}});
     }
-    if (u.pathname==='/auth/v1/user') return reply(token==='access-private'?{id:'provider-user',is_anonymous:false}:{},token==='access-private'?200:401);
+    if (u.pathname==='/auth/v1/user') return reply(token==='access-private'?{id:'provider-user',is_anonymous:false,identities}:{},token==='access-private'?200:401);
+    if (u.pathname==='/auth/v1/user/identities/authorize') return reply({url:'https://auth.example.test/auth/v1/authorize'+u.search});
+    if (u.pathname.startsWith('/auth/v1/user/identities/') && options.method==='DELETE') {
+      identities=identities.filter(i=>i.identity_id!==u.pathname.split('/').pop());return reply({},200);
+    }
     if (u.pathname==='/auth/v1/logout') {revoked=true;return reply(null,204);}
     if (u.pathname.startsWith('/rest/v1/rpc/')) {
       if (revoked) return reply({},403);
       if (!profiles.has(token)) profiles.set(token,{id:'stable-account',nickname:'Jugador',color:'#d45748',avatar:'person',initialized:false});
-      if (u.pathname.endsWith('game_update_profile')) Object.assign(profiles.get(token),{nickname:body.p_nickname,color:body.p_color,initialized:true});
+      if (u.pathname.endsWith('game_update_profile_v2')) Object.assign(profiles.get(token),{nickname:body.p_display_name||'Jugador',display_name:body.p_display_name,username:body.p_username,secondary_color:body.p_secondary_color,color:body.p_color,avatar:body.p_avatar,initialized:true});
       return reply([profiles.get(token)]);
     }
     throw Error('Unexpected upstream '+u.pathname);
@@ -47,7 +51,7 @@ async function fixture(t, hooks={}) {
     const callback=await request('/auth/callback?code='+code);assert.equal(callback.status,303);assert.equal(callback.headers.get('location'),'/?auth=ok');
     return {target,code,headers:r.headers};
   }
-  return {request,login,jar,calls,codes,seatCalls,reset,env,setRevoked:()=>{revoked=true;},setExpired:()=>{expired=true;},advance:n=>{time+=n;},refreshCount:()=>refreshCount};
+  return {request,login,jar,calls,codes,seatCalls,reset,env,roomProfile:(...args)=>auth.roomProfile(...args),setProfileId:id=>{profiles.get('access-private').id=id;},setIdentities:value=>{identities=value;},setRevoked:()=>{revoked=true;},setExpired:()=>{expired=true;},advance:n=>{time+=n;},refreshCount:()=>refreshCount};
 }
 test('Google uses PKCE and encrypted HttpOnly cookies; only a separate game profile is public',async t=>{
   const f=await fixture(t), {target,code,headers}=await f.login();
@@ -110,10 +114,10 @@ test('origin, request size, profile fields and account IDs are verified on the s
   const f=await fixture(t);await f.login();
   assert.equal((await f.request('/api/account/profile',{nickname:'Evil',color:'#d45748'},{headers:{Origin:'https://evil.test'}})).status,403);
   assert.equal((await f.request('/api/account/profile',{nickname:'x'.repeat(5000),color:'#d45748'})).status,413);
-  for(const input of [{nickname:'<script>',color:'#d45748'},{nickname:'Angel',color:'#123456'},{nickname:'',color:'#d45748'}]) assert.equal((await f.request('/api/account/profile',input)).status,400);
+  for(const input of [{nickname:'<script>',color:'#d45748'},{nickname:'Angel',color:'#123456'},{displayName:'x'.repeat(21),color:'#d45748'}]) assert.equal((await f.request('/api/account/profile',input)).status,400);
   assert.equal((await f.request('/api/account/profile',{nickname:'Retired',color:'#ffffff'})).status,400);
   const res=await f.request('/api/account/profile',{id:'victim',nickname:'Angel',color:'#9ed7ed'});
-  assert.equal(res.status,200);assert.deepEqual((await res.json()).profile,{id:'stable-account',nickname:'Angel',color:'#9ed7ed',avatar:'person',initialized:true});
+  assert.equal(res.status,200);assert.deepEqual((await res.json()).profile,{id:'stable-account',nickname:'Angel',displayName:'Angel',username:null,usernameChangedAt:null,secondaryColor:null,color:'#9ed7ed',avatar:'person',initialized:true});
   await f.request('/api/account/link',{id:'victim',code:'123456',token:'a'.repeat(48)});
   assert.equal(f.seatCalls[0][1],'stable-account');
 });
@@ -157,4 +161,34 @@ test('verified Google callback links guest history once; logout cannot expose th
  const loggedOut=guestId({headers:{cookie:'trencitos_guest='+f.jar.get('trencitos_guest')}});
  assert.equal((await archive.list({guestId:loggedOut})).length,0);
  assert.equal((await archive.list({accountId:'stable-account'})).length,1);
+});
+
+test('social changes require POST with origin checks, never a GET navigation',async t=>{
+ const f=await fixture(t);await f.login();
+ for(const action of ['request','accept','block','delete_group'])assert.equal((await f.request('/api/account/social?action='+action+'&target=victim')).status,405);
+ assert.equal((await f.request('/api/account/social',{action:'block',target:'victim'},{headers:{Origin:'https://other.example'}})).status,403);
+ assert.equal(f.calls.some(c=>c.path.endsWith('/game_social')),false);
+});
+test('simultaneous unlinks retain a configured login provider and linking rejects a changed profile',async t=>{
+ const f=await fixture(t);f.env.AUTH_DISCORD_ENABLED='true';f.reset();await f.login();
+ const identities=['google','discord'].map((provider,i)=>({provider,identity_id:(i?'b':'a').repeat(8)+'-1111-4111-a111-111111111111'}));
+ f.setIdentities(identities);
+ const responses=await Promise.all(['google','discord'].map(provider=>f.request('/api/account/unlink',{provider})));
+ assert.deepEqual(responses.map(r=>r.status).sort(),[200,400]);
+ assert.equal((await (await f.request('/api/account')).json()).connections.length,1);
+ f.setIdentities(identities);f.env.AUTH_DISCORD_ENABLED='false';f.reset();assert.equal((await f.request('/api/account/unlink',{provider:'google'})).status,400);
+ f.env.AUTH_DISCORD_ENABLED='true';f.reset();
+ const linked=await f.request('/api/account/discord',{}),target=new URL((await linked.json()).url);
+ assert.equal(target.searchParams.get('provider'),'discord');assert.equal(target.searchParams.get('scopes'),'identify email');
+ const code=crypto.randomUUID();f.codes.set(code,target.searchParams.get('code_challenge'));f.setProfileId('different-account');
+ assert.equal((await f.request('/auth/callback?code='+code)).headers.get('location'),'/?auth=error');
+});
+test('room identity proof is bound to the device guest, authenticated contents and a 60s lifetime',async t=>{
+ const f=await fixture(t);await f.login();const token='c'.repeat(64);f.jar.set('trencitos_guest',token);
+ const guest=crypto.createHash('sha256').update(token).digest('hex');
+ await f.request('/api/account/profile',{username:'angel_25',displayName:'Ángel',color:'#d45748',avatar:'capybara'});
+ const {ticket}=await (await f.request('/api/account/room-profile')).json();
+ assert.equal(f.roomProfile(ticket,guest).username,'angel_25');assert.equal(f.roomProfile(ticket,'other'),null);
+ const tampered=Buffer.from(ticket,'base64url');tampered[35]^=1;assert.equal(f.roomProfile(tampered.toString('base64url'),guest),null);
+ f.advance(60000);assert.equal(f.roomProfile(ticket,guest),null);
 });

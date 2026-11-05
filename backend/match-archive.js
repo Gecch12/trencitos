@@ -1,5 +1,6 @@
 "use strict";
 const Journal=require('./match-journal');
+const Commitment=require('./commitment');
 const MapOptions = require("../shared/map-options");
 const {randomUUID,createHash}=require('node:crypto');
 const canonical=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
@@ -15,13 +16,14 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null,engine=Eng
     // Closure seals the recording. Later disconnects or room expiry must not
     // append an abandonment event to an already completed game.
     if(!room.game || room.archiveClosedAt) return;
+    Commitment.reconcile(room);
     room.matchId ||= randomUUID();
     const g=room.game, previous=room._archiveState;
     Journal.syncRoom(room);
     if(!previous&&room.archiveSeq>=0)Journal.record(g,'notice',null,{text:'Grabación reanudada tras reiniciar el servidor.'},{system:true});
     if(endReason)Journal.record(g,'ended',null,{text:endReason},{system:true});
     engine.normalize(g);
-    const identity=JSON.stringify(room.members.map(m=>[m.name,m.color,!!m.bot,m.accountId||null,m.guestId||null,!!m.autopilot,!!m.bot||!!(m.ws&&!m.ws.closed)]));
+    const identity=JSON.stringify(room.members.map(m=>[m.name,m.color,!!m.bot,m.accountId||null,m.guestId||null,m.participation||null,room.commitment||null,!!m.autopilot,!!m.bot||!!(m.ws&&!m.ws.closed)]));
     // The action observer already recorded this exact state. Staging commonly
     // calls capture again; skip its expensive authorized views and replay diff.
     if(previous&&!endReason&&!room.archiveAction&&room._archiveIdentity===identity&&JSON.stringify(g)===JSON.stringify(previous.game))return;
@@ -30,7 +32,7 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null,engine=Eng
     const changes=previous?Replay.diff(previous,next):[];
     const old=pending.get(room.matchId)||{frames:[]};
     const changed=!previous||changes.length||endReason;
-    if(!changed && old.match && JSON.stringify(old.match.players)===JSON.stringify(room.members.map(m=>({name:m.name,color:m.color,bot:!!m.bot,accountId:m.accountId||null,guestId:m.guestId||null})))) return;
+    if(!changed && old.match && JSON.stringify(old.match.commitment)===JSON.stringify(room.commitment) && JSON.stringify(old.match.players)===JSON.stringify(room.members.map(m=>({name:m.name,username:m.username??null,displayName:m.displayName??null,avatar:m.avatar||"person",participation:m.participation??null,color:m.color,bot:!!m.bot,accountId:m.accountId||null,guestId:m.guestId||null})))) return;
     const seq=(room.archiveSeq??-1)+(changed?1:0), now=Date.now();
     if(changed){
       const priorSerial=previous?.game.logSerial??(room.archiveSeq>=0?g.logSerial:0);
@@ -51,8 +53,8 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null,engine=Eng
     }
     const status=g.phase==='finished'&&!room.earlyFinish?'completed':endReason||room.earlyFinish?'abandoned':'active';
     room.archiveStartedAt ||= now;
-    const players=room.members.map(m=>({name:m.name,color:m.color,bot:!!m.bot,accountId:m.accountId||null,guestId:m.guestId||null}));
-    old.match={id:room.matchId,code:room.code,schemaVersion:1,definitionVersion:definition.schemaVersion,
+    const players=room.members.map(m=>({name:m.name,username:m.username??null,displayName:m.displayName??null,avatar:m.avatar||"person",participation:m.participation??null,color:m.color,bot:!!m.bot,accountId:m.accountId||null,guestId:m.guestId||null}));
+    old.match={...(room.commitment?{commitment:structuredClone(room.commitment)}:{}),id:room.matchId,code:room.code,schemaVersion:1,definitionVersion:definition.schemaVersion,
       mapRef:structuredClone(definition.mapRef),rulesRef:structuredClone(definition.rulesRef),
       rulesVersion:`${definition.rulesRef.id}-${definition.rulesRef.version}`,map:MapOptions.name(definition.mapRef),
       mode:room.practice?'Práctica':'Clásico',visibility:room.visibility||'private',startedAt:room.archiveStartedAt,updatedAt:now,closedAt:status==='active'?null:room.archiveClosedAt||now,status,endReason:status==='abandoned'?endReason||'Práctica terminada anticipadamente.':null,complete:!!room.archiveFull,steps:seq+1,digest:room.archiveHash,players,
@@ -87,6 +89,6 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null,engine=Eng
     }
   }
   const queries=createHistoryQueries({repository:{records,frames:(id,steps)=>remote.readFrames(id,steps),iterateFrames:(id,steps)=>remote.iterateFrames(id,steps)}});
-  return {bootstrap,capture,claim,list:queries.list,replay:queries.replay,replayStream:queries.replayStream,snapshot,rollback,get pending(){return [...pending.values()]},get state(){return state},prepare:()=>applyPending(state),commit(next){if(next)state=next;pending.clear();},restore(next){state=next;pending.clear();}};
+  return {records,bootstrap,capture,claim,list:queries.list,replay:queries.replay,replayStream:queries.replayStream,snapshot,rollback,get pending(){return [...pending.values()]},get state(){return state},prepare:()=>applyPending(state),commit(next){if(next)state=next;pending.clear();},restore(next){state=next;pending.clear();}};
 }
 module.exports={createMatchArchive,safePublic,participant,frameHash};

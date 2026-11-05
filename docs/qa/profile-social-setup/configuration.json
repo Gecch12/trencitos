@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-05",
+  "project": "xnvskxwbibrxhozgcube",
+  "authAndStateSameProject": true,
+  "migrations": [
+    {
+      "file": "supabase/006_profiles_social.sql",
+      "sha256": "a8d58259a53cc3a80f44eeb61deb573ae54f1576e94b62ad7ba4219c05b39b33",
+      "applied": true
+    },
+    {
+      "file": "supabase/007_statistics.sql",
+      "sha256": "8e3110fff0c7ecea4b20225d66126f3c0372fb828e85295cd4bd43161d756af4",
+      "applied": true
+    },
+    {
+      "file": "supabase/008_statistics_cron.sql",
+      "sha256": "af4a2b2cd4612b46b64ec785da069f3d70db4af2073d35770d3c8efef1956963",
+      "applied": true
+    }
+  ],
+  "projection": {
+    "results": 83,
+    "snapshots": 72,
+    "initialRefreshUtc": "2026-11-05T23:28:58.298309Z"
+  },
+  "cron": {
+    "jobId": 1,
+    "name": "trencitos-statistics-nightly",
+    "scheduleUtc": "15 8 * * *",
+    "timeLima": "03:15",
+    "active": true,
+    "scheduledExecutionVerified": false
+  },
+  "newTables": {
+    "count": 7,
+    "rlsEnabled": true,
+    "anonDirectRead": false,
+    "authenticatedDirectRead": false
+  },
+  "discord": {
+    "applicationId": "1568045906513633330",
+    "providerEnabled": true,
+    "manualLinking": true,
+    "callback": "https://xnvskxwbibrxhozgcube.supabase.co/auth/v1/callback",
+    "realOAuthVerified": false
+  },
+  "render": {
+    "discordFlagSaved": true,
+    "deployed": false
+  }
+}

@@ -23,7 +23,7 @@ globalThis.TrencitosConnection = (() => {
   }
   async function request(path, options = {}) {
     if (!packaged) return fetch(path, options);
-    if (!/^\/api\/(?:account|history)(?:[/?]|$)/.test(path)) throw Error("Ruta móvil no permitida.");
+    if (!/^\/api\/(?:account|history|stats)(?:[/?]|$)/.test(path)) throw Error("Ruta móvil no permitida.");
     const url = new URL(path, origin);
     if (url.origin !== origin) throw Error("Servidor móvil inválido.");
     const headers = new Headers(options.headers);
@@ -37,8 +37,8 @@ globalThis.TrencitosConnection = (() => {
     }
     return response;
   }
-  async function login() {
-    if(!packaged||!accountPlugin())throw Error('El acceso con Google requiere actualizar la app.');
+  async function login(provider='google') {
+    if(!packaged||!accountPlugin())throw Error('El acceso a tu cuenta requiere actualizar la app.');
     const base64=bytes=>btoa(String.fromCharCode(...bytes)).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
     const verifier=base64(crypto.getRandomValues(new Uint8Array(48)));
     const challenge=base64(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier))));
@@ -46,10 +46,10 @@ globalThis.TrencitosConnection = (() => {
       const response=await request('/api/account/native/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
       const result=await response.json();if(!response.ok)throw Error(result.message);return result;
     };
-    const {url}=await post('start',{challenge});
+    const {url}=await post('start',{challenge,provider});
     const callback=await accountPlugin().authenticate({server:origin,url});
     const returned=new URL(callback.url);
-    if(returned.protocol!=='trencitos:'||returned.hostname!=='auth'||returned.searchParams.has('error'))throw Error('No se completó el acceso con Google. Puedes reintentarlo.');
+    if(returned.protocol!=='trencitos:'||returned.hostname!=='auth'||returned.searchParams.has('error'))throw Error('No se completó el acceso. Puedes reintentarlo.');
     await post('exchange',{code:returned.searchParams.get('code'),verifier});
   }
   async function forgetAccount() {

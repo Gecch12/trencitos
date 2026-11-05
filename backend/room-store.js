@@ -40,11 +40,11 @@ function writeDurable(file, data) {
 
 function serializableRoom(room) {
   const { code, updated, game, hostSeat = 0, revision = 0, emptySince, savedAt, rematchCode, visibility = "private", maxPlayers = 5, timing, mapRef } = room;
-  return { code, updated, game, hostSeat, revision, emptySince, savedAt, rematchCode, visibility, maxPlayers, timing, mapRef,
+  return { code, updated, game, hostSeat, revision, emptySince, savedAt, rematchCode, visibility, maxPlayers, timing, mapRef, commitment:room.commitment,
     ...(room.practice ? {practice:true,practicePausedAt:room.practicePausedAt} : {}),
     matchId:room.matchId,archiveHash:room.archiveHash,archiveSeq:room.archiveSeq,archiveFull:room.archiveFull,archiveStartedAt:room.archiveStartedAt,archiveClosedAt:room.archiveClosedAt,
-    members: room.members.map(({ name, color, accountId, guestId, token, tokenHash, bot, autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds, actionReceipts }) =>
-      ({ name, color, accountId, guestId, bot: !!bot, tokenHash: tokenHash || (token ? hashToken(token) : undefined), autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds, actionReceipts })) };
+    members: room.members.map(({ name, username, displayName, avatar, participation, color, accountId, guestId, token, tokenHash, bot, autopilot, autopilotSince, reclaim, reclaimSerial, disconnectedAt, actionIds, actionReceipts }) =>
+      ({ name, username, displayName, avatar, participation, color, accountId, guestId, bot: !!bot, tokenHash: tokenHash || (token ? hashToken(token) : undefined), autopilot, autopilotSince, reclaim, reclaimSerial, disconnectedAt, actionIds, actionReceipts })) };
 }
 function loadState(file) {
   file = path.resolve(file);
