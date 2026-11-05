@@ -89,3 +89,14 @@ la altura de resultados móviles trasladando el acceso al perfil al avatar.
 Siguiente paso: CI del commit de entrega, publicación Render, APK e iPhone y
 comprobación OAuth real. Las pruebas locales y la configuración del proveedor
 no acreditan por sí solas el acceso real desde web o dispositivos.
+
+## Ajuste de la prueba en CI
+
+El primer CI de `66c0299` pasó las 719 pruebas Node y todos los recorridos previos,
+pero agotó la espera del estado inicial en `browser-profile-social.cjs`. La salida
+mostraba la partida y sus billetes iniciales, sin errores del producto. Las esperas
+de estado de protocolo ahora consultan cada 100 ms, con límite de 20 s, en lugar
+de depender de `requestAnimationFrame` en dos páginas con WebGL por software.
+Se conservan todas las aserciones. El caso anterior también pasó localmente con
+`CI=true`; por tanto, no se afirma reproducción local determinista del fallo.
+La nueva revisión requiere otra ejecución completa de CI antes de publicar.
