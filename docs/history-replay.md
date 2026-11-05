@@ -26,8 +26,10 @@ reconexión, reserva, plazos y deduplicación por ID de acción. Los recibos nue
 comparan también la huella de la acción y su dependencia opcional `after`; un ID reutilizado con contenido diferente
 se rechaza sin añadir pasos al replay. IDs antiguos y ventana de 128 se conservan
 según el [contrato de recibos](architecture.md#recibos-de-comandos). Salas normales se
-recuperan desde el checkpoint. La práctica conserva su archivo, pero la sesión
-activa sigue siendo efímera y no se reanuda tras reiniciar el proceso.
+recuperan desde el checkpoint. La práctica conserva también su sesión activa y
+elecciones pendientes durante 24 h de ausencia, incluso al reiniciar el proceso.
+Las salas iniciadas con un humano y bots usan esa misma ventana; con varios
+humanos permanece la ventana de 60 s cuando todos se desconectan.
 
 ## Acceso
 
@@ -63,8 +65,10 @@ En la beta nativa, `connection.js` conserva una credencial aleatoria propia por
 instalación/servidor. `native-client.js` la recibe por cabecera o subprotocolo WS
 solo desde los orígenes de Capacitor, y `guest-identity.js` aplica el mismo SHA-256
 antes de asociarla al historial. No se aceptan cookies de cuenta en esa frontera.
-Safari, Chrome y la app conservan identidades distintas; la beta nativa no inicia
-OAuth. [Distribución y límites](mobile-development.md).
+Safari, Chrome y la app conservan invitados distintos. El login nativo permite
+vincularlos con la misma cuenta mediante el BFF; la sesión cifrada usa cabecera
+explícita y almacenamiento seguro, no cookies web. [Contrato de cuenta](GOOGLE_AUTH.md)
+y [distribución y límites](mobile-development.md).
 
 La composición de vistas de lobby, partida y grabación vive en
 [authorized-views.js](../game/queries/authorized-views.js), compartida por servidor

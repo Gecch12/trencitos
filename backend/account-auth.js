@@ -2,6 +2,7 @@
 // Server-only BFF: the browser never receives Google/Supabase tokens or metadata.
 const crypto = require('node:crypto');
 const Lobby = require('../shared/lobby-ui');
+const {isNativeRequest,nativeToken}=require('./native-client');
 const DAY = 86400000;
 const fail = (status, message) => Object.assign(new Error(message), { status });
 
@@ -37,16 +38,22 @@ function createAccountAuth({ env = process.env, fetchImpl = fetch, now = Date.no
     return result;
   }
   function read(req, purpose) {
-    const value = (req.headers.cookie || '').split(';').map(c=>c.trim()).find(c=>c.startsWith(cookieName(purpose)+'='))?.split('=')[1];
+    const native = isNativeRequest(req) && purpose==='session';
+    const value = native ? req.headers['x-trencitos-session'] : (req.headers.cookie || '').split(';').map(c=>c.trim()).find(c=>c.startsWith(cookieName(purpose)+'='))?.split('=')[1];
+    if(native)purpose='native-session';
     if (!value || value.length > 3800) return null;
     try {
       const bytes = Buffer.from(value, 'base64url'), decipher = crypto.createDecipheriv('aes-256-gcm',cookieKey,bytes.subarray(0,12));
       decipher.setAAD(Buffer.from(`${origin.origin}:${purpose}`)); decipher.setAuthTag(bytes.subarray(12,28));
       const data = JSON.parse(Buffer.concat([decipher.update(bytes.subarray(28)),decipher.final()]));
-      return data.until > now() ? data : null;
+      return data.until > now() && (!native || data.guest===nativeToken(req)) ? data : null;
     } catch { return null; }
   }
   function cookie(res, purpose, data, seconds) {
+    if(res.nativeGuest) {
+      if(purpose==='session')res.setHeader('X-Trencitos-Session',data?seal({...data,guest:res.nativeGuest},'native-session'):'');
+      return;
+    }
     const value = data ? seal(data,purpose) : '';
     res.setHeader('Set-Cookie', [...(res.getHeader('Set-Cookie') || []), `${cookieName(purpose)}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${seconds}${secure ? '; Secure' : ''}`]);
   }
@@ -93,7 +100,7 @@ function createAccountAuth({ env = process.env, fetchImpl = fetch, now = Date.no
     return profile(await request('/rest/v1/rpc/game_profile',{method:'POST',token:session.access,body:{}}));
   }
   async function body(req) {
-    if (req.headers.origin !== origin.origin || req.headers['sec-fetch-site'] === 'cross-site') throw fail(403,'Solicitud de otro sitio rechazada.');
+    if (!(isNativeRequest(req) && nativeToken(req)) && (req.headers.origin !== origin.origin || req.headers['sec-fetch-site'] === 'cross-site')) throw fail(403,'Solicitud de otro sitio rechazada.');
     if (!/^application\/json(?:;|$)/i.test(req.headers['content-type'] || '')) throw fail(415,'Se requiere JSON.');
     let data = '', length = 0;
     for await (const chunk of req) {
@@ -104,37 +111,76 @@ function createAccountAuth({ env = process.env, fetchImpl = fetch, now = Date.no
   }
   const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'}); res.end(JSON.stringify(value)); };
   const redirect = (res,to) => { res.writeHead(303,{Location:to}); res.end(); };
-  const routes = new Set(['/api/account','/api/account/profile','/api/account/google','/api/account/logout','/api/account/rooms','/api/account/link','/api/account/recover','/auth/callback']);
+  const routes = new Set(['/api/account','/api/account/profile','/api/account/google','/api/account/logout','/api/account/rooms','/api/account/link','/api/account/recover','/auth/callback','/auth/native','/api/account/native/start','/api/account/native/exchange']);
+  // Short-lived, single-use transfers. A server restart cancels unfinished login,
+  // never revives a consumed code. The app must prove its independent verifier.
+  const nativeFlows=new Map(), nativeCodes=new Map();
+  function authorize(res, nativeId) {
+    const verifier=crypto.randomBytes(48).toString('base64url');
+    cookie(res,'oauth',{verifier,nativeId,until:now()+600000},600);
+    const target=new URL('/auth/v1/authorize',supabase);
+    target.search=new URLSearchParams({provider:'google',redirect_to:origin.origin+'/auth/callback',code_challenge:crypto.createHash('sha256').update(verifier).digest('base64url'),code_challenge_method:'s256',scopes:'openid email profile'}).toString();
+    return target.href;
+  }
   let inFlight = 0;
   async function handle(req,res,url) {
     if (!routes.has(url.pathname)) return false;
+    if(isNativeRequest(req))res.nativeGuest=nativeToken(req);
     res.setHeader('Cache-Control','no-store'); res.setHeader('Referrer-Policy','no-referrer'); res.setHeader('X-Content-Type-Options','nosniff');
-    if (!enabled) { json(res,url.pathname === '/api/account' ? 200 : 503,{enabled:false,profile:null,message:'El acceso con Google aún no está disponible.'}); return true; }
+    if (!enabled) { json(res,url.pathname === '/api/account' ? 200 : 503,{enabled:false,profile:null,...(res.nativeGuest?{mobile:true}:{}),...(url.pathname==='/api/account'?{}:{message:'El acceso con Google aún no está disponible.'})}); return true; }
     if (inFlight >= 64) { json(res,429,{message:'Inténtalo de nuevo en unos segundos.'}); return true; }
     inFlight++;
+    let nativeCallback=false;
     try {
+      for(const [id,flow] of nativeFlows)if(flow.until<=now())nativeFlows.delete(id);
+      for(const [code,flow] of nativeCodes)if(flow.until<=now())nativeCodes.delete(code);
+      if(url.pathname==='/auth/native') {
+        if(req.method!=='GET'||isNativeRequest(req))throw fail(405,'Método no permitido.');
+        const id=url.searchParams.get('flow'),flow=nativeFlows.get(id);
+        if(!flow||flow.launched)throw fail(401,'Acceso cancelado o caducado.');
+        flow.launched=true;redirect(res,authorize(res,id));return true;
+      }
       if (url.pathname === '/auth/callback') {
         if (req.method !== 'GET') throw fail(405,'Método no permitido.');
         const flow = read(req,'oauth'); cookie(res,'oauth',null,0);
+        nativeCallback=!!flow?.nativeId;
         const code = url.searchParams.get('code');
         if (!flow?.verifier || !code || code.length > 256 || url.searchParams.has('error')) throw fail(401,'Acceso cancelado o caducado.');
         const session = tokenSession(await request('/auth/v1/token?grant_type=pkce',{method:'POST',body:{auth_code:code,code_verifier:flow.verifier}}));
         // Explicit server validation, never trust metadata, email or client claims.
         await request('/auth/v1/user',{token:session.access});
         const own=await getProfile(session);
+        if(flow.nativeId) {
+          const pending=nativeFlows.get(flow.nativeId);nativeFlows.delete(flow.nativeId);
+          if(!pending?.launched)throw fail(401,'Acceso cancelado o caducado.');
+          const code=crypto.randomBytes(32).toString('hex');
+          nativeCodes.set(code,{...pending,session,accountId:own.id,until:now()+60000});
+          redirect(res,'trencitos://auth?code='+code);return true;
+        }
         await linkGuest(req,res,own.id);
         cookie(res,'session',session,30*86400); redirect(res,'/?auth=ok'); return true;
       }
       const readOnly = ['/api/account','/api/account/rooms'].includes(url.pathname);
       if (req.method !== (readOnly?'GET':'POST')) throw fail(405,'Método no permitido.');
       const input = readOnly ? {} : await body(req);
+      if(url.pathname==='/api/account/native/start') {
+        if(!res.nativeGuest||!/^[-_A-Za-z0-9]{43}$/.test(input.challenge||''))throw fail(400,'Solicitud inválida.');
+        if(nativeFlows.size+nativeCodes.size>=256)throw fail(429,'Inténtalo de nuevo en unos segundos.');
+        const id=crypto.randomBytes(32).toString('hex');
+        nativeFlows.set(id,{challenge:input.challenge,guest:res.nativeGuest,until:now()+600000});
+        json(res,200,{url:origin.origin+'/auth/native?flow='+id});return true;
+      }
+      if(url.pathname==='/api/account/native/exchange') {
+        const flow=nativeCodes.get(input.code);
+        if(!res.nativeGuest||!flow||flow.guest!==res.nativeGuest||!/^[-_A-Za-z0-9]{43,128}$/.test(input.verifier||''))throw fail(401,'Acceso cancelado o caducado.');
+        const challenge=crypto.createHash('sha256').update(input.verifier).digest('base64url');
+        if(!crypto.timingSafeEqual(Buffer.from(challenge),Buffer.from(flow.challenge)))throw fail(401,'Acceso cancelado o caducado.');
+        nativeCodes.delete(input.code);
+        await linkGuest(req,res,flow.accountId);cookie(res,'session',flow.session,30*86400);
+        json(res,200,{ok:true});return true;
+      }
       if (url.pathname === '/api/account/google') {
-        const verifier = crypto.randomBytes(48).toString('base64url');
-        cookie(res,'oauth',{verifier,until:now()+600000},600);
-        const target = new URL('/auth/v1/authorize',supabase);
-        target.search = new URLSearchParams({provider:'google',redirect_to:origin.origin+'/auth/callback',
-          code_challenge:crypto.createHash('sha256').update(verifier).digest('base64url'),code_challenge_method:'s256',scopes:'openid email profile'}).toString();
-        json(res,200,{url:target.href}); return true;
+        json(res,200,{url:authorize(res)}); return true;
       }
       if (url.pathname === '/api/account/logout') {
         const session = read(req,'session');
@@ -144,7 +190,7 @@ function createAccountAuth({ env = process.env, fetchImpl = fetch, now = Date.no
             await request('/auth/v1/logout?scope=local',{method:'POST',token:current.access});
           } catch (error) { if (error.status !== 401) throw error; }
         }
-        refreshes.clear(); logoutGuest(req,res); cookie(res,'session',null,0); cookie(res,'oauth',null,0);
+        refreshes.clear(); if(!res.nativeGuest)logoutGuest(req,res); cookie(res,'session',null,0); cookie(res,'oauth',null,0);
         json(res,200,{ok:true}); return true;
       }
       if (url.pathname === '/api/account' && !read(req,'session')) { json(res,200,{enabled:true,profile:null}); return true; }
@@ -159,7 +205,7 @@ function createAccountAuth({ env = process.env, fetchImpl = fetch, now = Date.no
       }
       json(res,200,{enabled:true,profile:own});
     } catch (error) {
-      if (url.pathname === '/auth/callback') redirect(res,'/?auth=error');
+      if (url.pathname === '/auth/callback') redirect(res,nativeCallback?'trencitos://auth?error=cancelled':'/?auth=error');
       else {
         if (error.status === 401) cookie(res,'session',null,0);
         json(res,error.status || 503,{message:error.status ? error.message : 'No pudimos conectar con tu cuenta.'});
@@ -167,6 +213,6 @@ function createAccountAuth({ env = process.env, fetchImpl = fetch, now = Date.no
     } finally { inFlight--; }
     return true;
   }
-  return {handle,async identify(req,res) { if(!enabled||!read(req,"session"))return null;try{return (await getProfile(await authenticate(req,res))).id;}catch(error){if(error.status===401)return null;throw error;} }};
+  return {handle,async identify(req,res) { if(isNativeRequest(req))res.nativeGuest=nativeToken(req);if(!enabled||!read(req,"session"))return null;try{return (await getProfile(await authenticate(req,res))).id;}catch(error){if(error.status===401)return null;throw error;} }};
 }
 module.exports = { createAccountAuth };

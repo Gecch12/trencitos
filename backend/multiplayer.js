@@ -4,6 +4,8 @@ const Engine = require("./engine");
 const { createLegacyAutomaticPlay } = require("../game/compat/legacy-automatic-play");
 
 const GRACE_MS = 60000;
+const soloWithBots = room => !!room.game && room.members.filter(member=>!member.bot).length===1 && room.members.some(member=>member.bot);
+const reconnectGrace = room => soloWithBots(room) ? 24*60*60*1000 : GRACE_MS;
 const connected = member => !!member.ws && !member.ws.closed;
 function shiftDeadlines(game, elapsed) {
   if (!game || elapsed <= 0) return;
@@ -64,8 +66,8 @@ function createMultiplayerController({ rooms, sendRoom, removeRoom,
       shiftDeadlines(room.game, time - room.emptySince);
       room.emptySince = null;
     }
-    if (room.emptySince != null && time >= room.emptySince + GRACE_MS) {
-      removeRoom(room, "Partida abandonada: nadie se reconectó durante 60 segundos."); return;
+    if (room.emptySince != null && time >= room.emptySince + reconnectGrace(room)) {
+      removeRoom(room, soloWithBots(room) ? "La práctica caducó tras 24 horas sin actividad." : "Partida abandonada: nadie se reconectó durante 60 segundos."); return;
     }
     if (!room.game) {
       for (let i = room.members.length - 1; i >= 0; i--) {
@@ -94,7 +96,7 @@ function createMultiplayerController({ rooms, sendRoom, removeRoom,
     cancel(room);
     if (!live(room) || blocked()) return;
     const state = { lifecycle: null, bot: null }; active.set(room, state);
-    const deadlines = room.emptySince != null ? [room.emptySince + GRACE_MS]
+    const deadlines = room.emptySince != null ? [room.emptySince + reconnectGrace(room)]
       : room.members.flatMap(m => !m.bot && !connected(m) && (!room.game || room.members[room.hostSeat] === m) ? [m.disconnectedAt + GRACE_MS] : []);
     if (deadlines.length) {
       state.lifecycle = setTimer(() => dispatch(() => { reconcile(room); if (live(room)) sendRoom(room); }), Math.max(0, Math.min(...deadlines) - now()));
@@ -112,4 +114,4 @@ function createMultiplayerController({ rooms, sendRoom, removeRoom,
   function close() { for (const room of active.keys()) cancel(room); }
   return { reconcile, sync, cancel, close, removeSeat, requestControl };
 }
-module.exports = { createMultiplayerController, connected, shiftDeadlines, GRACE_MS };
+module.exports = { createMultiplayerController, connected, shiftDeadlines, GRACE_MS, soloWithBots, reconnectGrace };

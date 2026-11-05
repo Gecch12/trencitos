@@ -14,6 +14,7 @@ No cargues todos los documentos ni todos los informes de QA al iniciar un chat.
 | Por qué se eligió una solución | [Decisiones](decisions/README.md) |
 | Mantener docs o reconciliar ramas | [Método](maintenance.md) |
 | Experiencia de usuario detallada | [Guía del juego](../README.md) |
+| Símbolos, significados y ayudas accesibles | [Iconografía](iconography.md) |
 | Desplegar en Render/Supabase | [Guía de despliegue](RENDER_SUPABASE.md) |
 | Configurar Google y perfiles | [Google Auth](GOOGLE_AUTH.md) |
 | Qué revisión está publicada y cómo se verificó | [Producción](production.md) |

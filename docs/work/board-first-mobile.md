@@ -148,3 +148,9 @@ la app existente y el dispositivo confirmó la versión y el build. Evidencia en
 [Producción](../production.md). No se abrió el juego ni se ejecutaron partidas.
 
 Siguiente paso: recoger la prueba de juego de Ángel en el iPhone.
+
+## Continuación · 2026-11-05
+
+Los ajustes posteriores de indicadores, iconos y resultados se siguen en
+[continuidad móvil](mobile-continuity.md), junto con reconexión y cuenta nativa.
+Esta referencia no cambia la evidencia ni la publicación histórica de esta ficha.

@@ -26,7 +26,7 @@ function fixture(t, remote = null) {
 
 test("file preparation detaches room state and receipts, includes practice history, and commits them together", t => {
   const f = fixture(t), committer = createFileCheckpointCommitter(f), batch = committer.prepare(f.repository);
-  assert.equal(batch.rooms.length, 1);assert.equal(Object.keys(batch.archive.matches).length, 2);
+  assert.equal(batch.rooms.length, 2);assert.equal(Object.keys(batch.archive.matches).length, 2);
   assert.equal(Object.keys(f.archive.state.matches).length, 0);assert.equal(f.archive.pending.length, 2);
   assert.ok(!JSON.stringify(batch).includes("private-recovery"));
   f.room.revision++;f.room.members[0].actionIds.push("later-command");f.room.game.players[0].hand.push("red");
@@ -135,7 +135,7 @@ test("multiple stages share one remote checkpoint and a queued job cannot overta
   release();await Promise.all([first, second]);
   assert.deepEqual(sent, [2, 3]);assert.deepEqual(failures, []);
   assert.deepEqual(api.calls.filter(c => c.method === "ferrovia_save_checkpoint_v2").map(c => c.body.p_rooms[0].revision), [2, 3]);
-  assert.equal(f.practice.savedAt, undefined);assert.equal(f.room.savedAt, 2000);
+  assert.equal(f.practice.savedAt, 2000);assert.equal(f.room.savedAt, 2000);
   const before = structuredClone(api.state), runtime = structuredClone(f.room);
   api.fail = true;
   await queue.run(() => { f.room.revision++;f.archive.capture(f.room);checkpoint.persist();queue.defer(() => sent.push("failed")); });

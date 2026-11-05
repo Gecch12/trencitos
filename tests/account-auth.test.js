@@ -47,7 +47,7 @@ async function fixture(t, hooks={}) {
     const callback=await request('/auth/callback?code='+code);assert.equal(callback.status,303);assert.equal(callback.headers.get('location'),'/?auth=ok');
     return {target,code,headers:r.headers};
   }
-  return {request,login,jar,calls,seatCalls,reset,env,setRevoked:()=>{revoked=true;},setExpired:()=>{expired=true;},advance:n=>{time+=n;},refreshCount:()=>refreshCount};
+  return {request,login,jar,calls,codes,seatCalls,reset,env,setRevoked:()=>{revoked=true;},setExpired:()=>{expired=true;},advance:n=>{time+=n;},refreshCount:()=>refreshCount};
 }
 test('Google uses PKCE and encrypted HttpOnly cookies; only a separate game profile is public',async t=>{
   const f=await fixture(t), {target,code,headers}=await f.login();
@@ -60,6 +60,51 @@ test('Google uses PKCE and encrypted HttpOnly cookies; only a separate game prof
   assert.equal(JSON.parse(text).profile.nickname,'Jugador');
   assert.equal((await f.request('/auth/callback?code='+code)).headers.get('location'),'/?auth=error');
   f.reset();assert.equal((await (await f.request('/api/account')).json()).profile.id,'stable-account');
+});
+
+async function nativeLogin(f, guest='1'.repeat(64)) {
+  const verifier=crypto.randomBytes(48).toString('base64url');
+  const headers={Origin:'capacitor://localhost','X-Trencitos-Guest':guest};
+  const started=await f.request('/api/account/native/start',{challenge:crypto.createHash('sha256').update(verifier).digest('base64url')},{headers});
+  assert.equal(started.status,200);
+  const launch=new URL((await started.json()).url);
+  const opened=await f.request(launch.pathname+launch.search);
+  const target=new URL(opened.headers.get('location')), code=crypto.randomUUID();
+  f.codes.set(code,target.searchParams.get('code_challenge'));
+  const callback=await f.request('/auth/callback?code='+code);
+  const returned=new URL(callback.headers.get('location'));
+  assert.equal(returned.protocol,'trencitos:');assert.equal(returned.hostname,'auth');
+  assert.doesNotMatch(returned.href,/access-private|refresh-private/);
+  assert.equal(f.jar.has('trencitos_session'),false);
+  return {headers,verifier,code:returned.searchParams.get('code')};
+}
+test('native login proves the requesting app, consumes its code once and keeps provider tokens sealed',async t=>{
+  const claims=[],f=await fixture(t,{linkGuest:async(req,res,id)=>claims.push([req.headers['x-trencitos-guest'],id])});
+  const flow=await nativeLogin(f);
+  assert.equal((await f.request('/api/account/native/exchange',{code:flow.code,verifier:'x'.repeat(64)},{headers:flow.headers})).status,401);
+  assert.equal((await f.request('/api/account/native/exchange',flow,{headers:{...flow.headers,'X-Trencitos-Guest':'2'.repeat(64)}})).status,401);
+  const exchange=await f.request('/api/account/native/exchange',flow,{headers:flow.headers});assert.equal(exchange.status,200);
+  const session=exchange.headers.get('x-trencitos-session');assert.ok(session);assert.doesNotMatch(session,/private/);
+  assert.equal(exchange.headers.get('set-cookie'),null);assert.deepEqual(claims,[['1'.repeat(64),'stable-account']]);
+  assert.equal((await f.request('/api/account/native/exchange',flow,{headers:flow.headers})).status,401);
+  const headers={...flow.headers,'X-Trencitos-Session':session};
+  assert.equal((await (await f.request('/api/account',undefined,{headers})).json()).profile.id,'stable-account');
+  assert.equal((await (await f.request('/api/account',undefined,{headers:{...headers,'X-Trencitos-Guest':'2'.repeat(64)}})).json()).profile,null);
+  assert.equal((await (await f.request('/api/account',undefined,{headers:{cookie:'trencitos_session='+session}})).json()).profile,null);
+  f.reset();assert.equal((await (await f.request('/api/account',undefined,{headers})).json()).profile.id,'stable-account');
+  assert.equal((await f.request('/api/account/profile',{nickname:'Native',color:'#d45748'},{headers})).status,200);
+  f.advance(3600000);
+  const renewed=await f.request('/api/account',undefined,{headers});assert.equal(renewed.status,200);assert.ok(renewed.headers.get('x-trencitos-session'));assert.equal(f.refreshCount(),1);
+  headers['X-Trencitos-Session']=renewed.headers.get('x-trencitos-session');
+  const logout=await f.request('/api/account/logout',{}, {headers});assert.equal(logout.status,200);assert.equal(logout.headers.get('x-trencitos-session'),'');
+  assert.equal((await f.request('/api/account/profile',{nickname:'Revoked',color:'#d45748'},{headers})).status,401);
+});
+test('native transfer expiry and process restart require a new login, without accepting caller-supplied destinations',async t=>{
+  const f=await fixture(t),flow=await nativeLogin(f);f.advance(60001);
+  assert.equal((await f.request('/api/account/native/exchange',flow,{headers:flow.headers})).status,401);
+  const next=await nativeLogin(f);f.reset();
+  assert.equal((await f.request('/api/account/native/exchange',next,{headers:next.headers})).status,401);
+  assert.equal((await f.request('/api/account/native/start',{challenge:'a'.repeat(43)})).status,400);
 });
 test('origin, request size, profile fields and account IDs are verified on the server',async t=>{
   const f=await fixture(t);await f.login();

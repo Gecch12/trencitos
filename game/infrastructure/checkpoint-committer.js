@@ -2,8 +2,8 @@
 const { serializableRoom, saveCheckpoint } = require("../../backend/room-store");
 
 // Detach the durable room DTOs from mutable runtime objects before committing.
-// Practice rooms are temporary, but their history participates in the checkpoint.
-const roomRecords = repository => structuredClone([...repository.values()].filter(room => !room.practice).map(serializableRoom));
+// Practice and multiplayer rooms share the same durable checkpoint as history.
+const roomRecords = repository => structuredClone([...repository.values()].map(serializableRoom));
 
 function createFileCheckpointCommitter({ file, archive }) {
   return {
@@ -25,7 +25,6 @@ function createRemoteCheckpointCommitter({ store, archive }) {
     prepare(repository, dirtyCodes=null) {
       const rooms=[],changed=[];
       for(const room of repository.values()) {
-        if(room.practice)continue;
         const prior=committed.get(room.code);
         const record=!prior||!dirtyCodes||dirtyCodes.has(room.code)?structuredClone(serializableRoom(room)):{...prior,savedAt:room.savedAt};
         rooms.push(record);if(!prior||!dirtyCodes||dirtyCodes.has(room.code))changed.push(record);

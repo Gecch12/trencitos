@@ -2,7 +2,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const Engine = require("../backend/engine");
-const { createPracticeController } = require("../backend/practice");
+const { createPracticeController, ABSENCE_MS } = require("../backend/practice");
 
 function setup(random = () => 0, options = {}) {
   let time = 0, id = 0;
@@ -140,7 +140,7 @@ test("finish abandons an unpaid tunnel without spending cards or awarding its ro
   assert.deepEqual([...game.deck].sort(), ["blue", "green", "red"]);
 });
 
-test("disconnect pauses bots and expires at exactly 30 seconds, even after repeated broadcasts", () => {
+test("disconnect pauses bots and expires at exactly 24 hours, even after repeated broadcasts", () => {
   const { clock, room, rooms, controller, disconnect } = setup();
   room.game.current = 1;
   controller.sync(room);
@@ -149,7 +149,7 @@ test("disconnect pauses bots and expires at exactly 30 seconds, even after repea
   const state = JSON.stringify(room.game);
   clock.tick(10000);
   controller.sync(room);
-  clock.tick(19999);
+  clock.tick(ABSENCE_MS - 10001);
   assert.ok(rooms.has(room.code));
   assert.equal(JSON.stringify(room.game), state);
   clock.tick(1);
@@ -164,7 +164,7 @@ test("reconnection before expiry preserves the game and restarts automatic turns
   room.game.current = 1;
   controller.sync(room);
   disconnect();
-  clock.tick(29999);
+  clock.tick(ABSENCE_MS - 1);
   room.members[0].ws = human;
   controller.sync(room);
   clock.tick(1);
@@ -173,7 +173,7 @@ test("reconnection before expiry preserves the game and restarts automatic turns
   clock.tick(249);
   assert.equal(room.game.initialDone, 3);
   disconnect();
-  clock.tick(29999);
+  clock.tick(ABSENCE_MS - 1);
   assert.ok(rooms.has(room.code));
   clock.tick(1);
   assert.equal(rooms.size, 0);
@@ -185,7 +185,7 @@ test("connected readers have no inactivity timeout and silent failures use the l
   clock.tick(120000);
   assert.ok(rooms.has(room.code));
   disconnect(clock.now() - 10000);
-  clock.tick(19999);
+  clock.tick(ABSENCE_MS - 10001);
   assert.ok(rooms.has(room.code));
   clock.tick(1);
   assert.equal(rooms.size, 0);
@@ -205,6 +205,19 @@ test("leaving deletes the room, releases the socket and cancels every timer", ()
   controller.sync(room);
   clock.tick(5000);
   assert.equal(room.game.initialDone, 0);
+});
+
+test('closing the controller preserves the checkpoint, pauses pending offers and resumes their remaining budget',()=>{
+  const {clock,room,rooms,human,controller,disconnect}=setup();
+  room.game.turnDeadline=60000;room.game.initialDeadline=120000;
+  room.game.players[0].offer={id:1,deadline:70000,tickets:[]};
+  disconnect();clock.tick(3600000);controller.close();
+  assert.equal(rooms.get(room.code),room);assert.equal(clock.timers.size,0);assert.equal(room.practicePausedAt,0);
+  room.members[0].ws=human;controller.reconcile(room);
+  assert.equal(room.game.turnDeadline-clock.now(),60000);
+  assert.equal(room.game.initialDeadline-clock.now(),120000);
+  assert.equal(room.game.players[0].offer.deadline-clock.now(),70000);
+  assert.equal(room.practicePausedAt,undefined);controller.close();
 });
 
 test("bots yield when remaining destination draws and stations have no strategic value", () => {

@@ -32,6 +32,16 @@ function fixture(started = true) {
   }
   return { room, rooms, ctrl, tick, publish, timers, socket, sent };
 }
+test('a single human playing permanent bots can resume after an hour, with the same turn budget',()=>{
+  const f=fixture();f.room.members.slice(1).forEach(m=>{m.bot=true;m.ws=null;});
+  const deadline=f.room.game.turnDeadline;
+  f.room.members[0].ws=null;f.publish(f.room);f.tick(3600000);
+  assert.equal(f.rooms.get(f.room.code),f.room);assert.equal(f.room.game.turnDeadline,deadline);
+  f.room.members[0].ws=f.socket();f.publish(f.room);
+  assert.equal(f.room.game.turnDeadline,deadline+3600000);assert.equal(f.room.emptySince,null);
+  f.room.members[0].ws=null;f.publish(f.room);f.tick(86400000-1);assert.ok(f.rooms.has(f.room.code));
+  f.tick(1);assert.equal(f.rooms.has(f.room.code),false);
+});
 test("lobby departure reindexes sockets and transfers host without deleting connected guests", () => {
   const f = fixture(false);
   f.ctrl.removeSeat(f.room, 0); f.publish(f.room);

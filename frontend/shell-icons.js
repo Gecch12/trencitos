@@ -2,6 +2,11 @@
 // Small original line icons share Trencitos' rail geometry and warm accent.
 const ShellIcons = (() => {
   const paths = {
+    routes: '<path d="M10 4v24M22 4v24M7 7h18M7 13h18M7 19h18M7 25h18"/>',
+    ticket: '<path d="M3 7h26v6a3 3 0 0 0 0 6v6H3v-6a3 3 0 0 0 0-6ZM11 7v3m0 4v4m0 4v3"/>',
+    'ticket-add': '<path d="M3 4h20v5a3 3 0 0 0 0 6v3H3v-3a3 3 0 0 0 0-6ZM10 4v3m0 4v3m0 2v2"/><path class="icon-accent" d="M24 22v8m-4-4h8"/>',
+    station: '<path d="m3 14 13-11 13 11M7 11v18h18V11M12 29V18h8v11M13 11h6"/>',
+    express: '<path d="M4 27h15a5 5 0 0 0 0-10h-8a5 5 0 0 1 0-10h6M6 24v6m6-6v6m6-6v6M9 14v6m6-6v6"/><path class="icon-accent" d="m25 2 1.5 4 4 .3-3.1 2.7 1 4-3.4-2.2-3.4 2.2 1-4L19.5 6.3l4-.3Z"/>',
     link: '<path d="m13 19 6-6M11 22l-2 2a6 6 0 0 1-8-8l7-7a6 6 0 0 1 8 0m5 1 2-2a6 6 0 0 1 8 8l-7 7a6 6 0 0 1-8 0" transform="translate(1 -1) scale(.92)"/>',
     key: '<circle cx="11" cy="11" r="7"/><path d="m16 16 12 12m-6-6 4-4m-8 0 4-4"/>',
     lock: '<rect x="6" y="14" width="20" height="15" rx="3"/><path d="M10 14V9a6 6 0 0 1 12 0v5m-6 6v4"/>',
@@ -41,6 +46,48 @@ const ShellIcons = (() => {
     x: '<path d="m4 4 19 24h5L9 4ZM27 4l-9 11M4 28l10-12"/>',
   };
   const svg = name => `<svg viewBox="0 0 32 32" aria-hidden="true" class="shell-icon" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[name] || paths.info}</svg>`;
-  function mount(root = document) { for (const el of root.querySelectorAll('[data-icon]')) if (!el.querySelector('.shell-icon')) el.insertAdjacentHTML('afterbegin', svg(el.dataset.icon)); }
-  return { svg, mount };
+  const scoreLabels = {routes:'Puntos por tramos ocupados',ticket:'Puntos por destinos',station:'Puntos por estaciones sin utilizar',express:'Bono del camino más largo',trophy:'Puntuación total'};
+  const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const scoreHeader = name => `<button type="button" class="score-icon-help" data-score-help="${escape(I18n.t(scoreLabels[name]))}" aria-label="${escape(I18n.t(scoreLabels[name]))}">${svg(name)}</button>`;
+  let tooltip = null, tooltipOwner = null;
+  function hideTooltip() {
+    tooltip?.remove(); tooltip=null;
+    tooltipOwner?.removeAttribute('aria-describedby'); tooltipOwner=null;
+  }
+  function showTooltip(button) {
+    hideTooltip(); tooltipOwner=button;
+    tooltip=document.createElement('div'); tooltip.id='score-icon-tooltip';tooltip.className='score-icon-tooltip';tooltip.role='tooltip';
+    tooltip.textContent=button.dataset.scoreHelp;document.body.append(tooltip);
+    button.setAttribute('aria-describedby',tooltip.id);
+    const rect=button.getBoundingClientRect(),width=tooltip.offsetWidth;
+    tooltip.style.left=Math.max(8,Math.min(innerWidth-width-8,rect.left+rect.width/2-width/2))+'px';
+    tooltip.style.top=Math.min(innerHeight-tooltip.offsetHeight-8,rect.bottom+6)+'px';
+  }
+  function mount(root = document) {
+    for (const el of root.querySelectorAll('[data-icon]')) if (!el.querySelector('.shell-icon')) el.insertAdjacentHTML('afterbegin', svg(el.dataset.icon));
+    for (const button of root.querySelectorAll('[data-score-help]')) {
+      button.onclick=()=>showTooltip(button);
+      button.onmouseenter=()=>showTooltip(button);button.onmouseleave=hideTooltip;
+      button.onfocus=()=>showTooltip(button);button.onblur=hideTooltip;
+      button.onkeydown=event=>{if(event.key==='Escape')hideTooltip();};
+    }
+  }
+  // Native iOS scrollbars fade away. This synchronized range remains visible
+  // while there is overflow, and works with touch, mouse and arrow keys.
+  function scrollTrack(scroller) {
+    const track=document.createElement('input');track.type='range';track.className='score-scroll-track';
+    track.min='0';track.step='1';track.setAttribute('aria-label',I18n.t('Desplazar tabla horizontalmente'));
+    scroller.after(track);
+    const update=()=>{const max=Math.max(0,scroller.scrollWidth-scroller.clientWidth);track.max=String(max);track.value=String(scroller.scrollLeft);track.hidden=max<2;};
+    track.oninput=()=>{scroller.scrollLeft=Number(track.value);};
+    scroller.addEventListener('scroll',update,{passive:true});
+    const observer=new ResizeObserver(update);observer.observe(scroller);if(scroller.firstElementChild)observer.observe(scroller.firstElementChild);
+    update();
+    return ()=>{observer.disconnect();scroller.removeEventListener('scroll',update);track.remove();hideTooltip();};
+  }
+  if(typeof document!=='undefined') {
+    document.addEventListener('pointerdown',event=>{if(!event.target.closest('[data-score-help]'))hideTooltip();});
+    document.addEventListener('scroll',hideTooltip,true);
+  }
+  return { svg, mount, scoreHeader, scrollTrack, hideTooltip };
 })();

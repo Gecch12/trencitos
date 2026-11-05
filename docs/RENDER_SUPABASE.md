@@ -91,7 +91,7 @@ Las pruebas automáticas usan una simulación de la Data API; estos pasos valida
 3. Elige destinos y roba dos cartas rápidamente. Comprueba movimiento al clic y envío de la segunda petición sin esperar el primer ACK (`drawPipelineVersion:1`). Una carta oculta espera fuera de la mano, revela el color recibido y se incorpora una sola vez con su imagen cargada. Una visible puede incorporarse provisionalmente; un rechazo la retira. Mide por separado clic → color reconocible → llegada a la mano, además de confirmación del servidor.
 4. Desde Supabase, verifica que `ferrovia_checkpoint.version` aumenta. No compartas el contenido de `rooms`: incluye manos, mazo y destinos secretos.
 5. Reinicia manualmente el servicio en Render. Reconecta los navegadores dentro de los 60 segundos posteriores al arranque: mismo código, puesto, mano, rutas y elección pendiente. Los contadores conservan el tiempo pendiente, descontando el tiempo jugado, no el de caída.
-6. Repite con dos o tres salas simultáneas. Las salas con bots de práctica son efímeras intencionalmente y no sirven para probar persistencia.
+6. Repite con dos o tres salas simultáneas. Incluye una práctica o sala iniciada con un humano y bots: se conserva pausada 24 h y también debe sobrevivir al reinicio, con sus elecciones y tiempo restantes.
 7. Verifica que `/.env`, `/supabase-store.js`, `/room-state.json` y `/supabase/001_active_games.sql` respondan 404.
 
 ## Recuperación y límites

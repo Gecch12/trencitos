@@ -86,7 +86,7 @@ function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000 })
     saveCheckpoint,
     async save(rooms, archive) {
       if (fenced || version === null) throw failure("STORE_CONFLICT");
-      return saveCheckpoint({ rooms: [...rooms.values()].filter(r => !r.practice).map(serializableRoom), archive });
+      return saveCheckpoint({ rooms: [...rooms.values()].map(serializableRoom), archive });
     },
   };
 }

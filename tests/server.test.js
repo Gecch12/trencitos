@@ -62,7 +62,7 @@ test("WebSocket practice flow: create, choose tickets, bots, finish, leave and c
   assert.equal(initial.current, rooms.get(lobby.code).game.first);
   if (!initial.initial) await peer.next("state", m => !!m.game.initial, 10000);
   assert.equal(initial.players[1].hand, undefined);
-  assert.equal(JSON.parse(fs.readFileSync(process.env.STATE_FILE)).rooms.length, 0);
+  assert.equal(JSON.parse(fs.readFileSync(process.env.STATE_FILE)).rooms.find(r=>r.code===lobby.code)?.practice, true);
 
   const outsider = await client();
   outsider.send({ type: "join", code: lobby.code, name: "Invitado" });
@@ -99,7 +99,7 @@ test("WebSocket practice flow: create, choose tickets, bots, finish, leave and c
   assert.equal(ended.earlyFinish, true);
   assert.equal(ended.result.length, 4);
   assert.ok(ended.result.every(r => r.details && r.details.totals.total === r.score));
-  assert.equal(JSON.parse(fs.readFileSync(process.env.STATE_FILE)).rooms.length, 0);
+  assert.equal(JSON.parse(fs.readFileSync(process.env.STATE_FILE)).rooms.find(r=>r.code===lobby.code)?.practice, true);
 
   peer.send({ type: "leave_test" });
   await peer.next("room_closed");
@@ -377,7 +377,7 @@ test("normal multiplayer still starts, persists and rejects practice commands", 
   assert.equal((await host.next("state")).game.phase, "initial");
   const stored = JSON.parse(fs.readFileSync(process.env.STATE_FILE, "utf8")).rooms;
   assert.ok(stored.some((room) => room.code === lobby.code));
-  assert.ok(stored.every((room) => !room.practice));
+  assert.ok(stored.some((room) => room.code===lobby.code && !room.practice));
   host.close();
   guest.close();
 });

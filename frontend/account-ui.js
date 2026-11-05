@@ -77,13 +77,16 @@ const AccountUI = (() => {
       el('googleLogin').disabled=true; message(I18n.t('Abriendo Google…'));
       const returnRoom=currentSeat()?.code || targetRoom() || new URLSearchParams(location.search).get('room');
       if (LobbyUI.isJoinCode(returnRoom)) sessionStorage.setItem('rr-account-return-room',returnRoom);
-      try { const result=await api('/google',{}); location.assign(result.url); }
+      try {
+        if(TrencitosConnection.packaged) {await TrencitosConnection.login();await load();}
+        else {const result=await api('/google',{}); location.assign(result.url);}
+      }
       catch(error) {message(error.message);el('googleLogin').disabled=!enabled;}
     };
     el('accountLogout').onclick=async()=>{
       stopped=true; clearTimeout(timer); el('accountLogout').disabled=true;
       await saving;
-      try { await api('/logout',{});profile=null;linked='';render();message(I18n.t('Sesión cerrada. Puedes seguir como invitado.')); }
+      try { await api('/logout',{});await TrencitosConnection.forgetAccount();profile=null;linked='';render();message(I18n.t('Sesión cerrada. Puedes seguir como invitado.')); }
       catch(error) {message(error.message);}
       finally {stopped=false;el('accountLogout').disabled=false;}
     };

@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-05",
+  "timezone": "America/Lima",
+  "base": "f8d269a8ce36b2102e3e094beb143026a68538f4",
+  "scope": "Local working tree on main; not committed, published or installed on a physical device.",
+  "node": {
+    "command": "npm run test:ci",
+    "passed": 706,
+    "failed": 0,
+    "durationMs": 160721.757291,
+    "isolation": "STATE_BACKEND=file, temporary STATE_FILE, AUTH_ENABLED=false"
+  },
+  "browser": {
+    "checks": [
+      "Destination progress excludes offered tickets; highlight and camera survive cancellation/confirmation on three sizes",
+      "Cold page restart continues the saved practice with its pending destination offer",
+      "Compact results keep totals beside players, provide tap help, and show a usable horizontal track on phone",
+      "History defaults to completed matches with shared icons; non-map browser gestures are prevented (synthetic event check)"
+    ],
+    "errors": []
+  },
+  "regression": [
+    "browser-table-refinement.cjs: five groups, zero page errors; real two-finger Chrome touch events preserve map pinch",
+    "browser-account-resume.cjs: four groups, zero errors; simulated OAuth provider"
+  ],
+  "native": {
+    "ios": "xcodebuild generic iOS build succeeded, CODE_SIGNING_ALLOWED=NO",
+    "android": "Gradle assembleDebug succeeded; no release uploaded"
+  },
+  "skill": {
+    "name": "trencitos-publicar",
+    "validation": "official quick_validate.py passed in a temporary Python venv with PyYAML",
+    "installed": "/Users/angelaltarodri/.codex/skills/trencitos-publicar/SKILL.md"
+  },
+  "limits": [
+    "Google provider was simulated; no personal Google login completed on a physical phone.",
+    "Browser zoom guard tested in Chrome using synthetic non-map gesture events; deliberate map pinch uses real Chrome touch events. Physical iPhone interaction remains to be checked.",
+    "Native compilation verifies the plugins; no new distributed APK, iPhone installation or Render deployment was performed."
+  ],
+  "logs": ".qa/mobile-continuity/"
+}

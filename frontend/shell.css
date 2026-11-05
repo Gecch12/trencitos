@@ -428,3 +428,24 @@ body .player-avatar.is-bot > svg,body .home-avatar.is-bot > svg { fill:none; str
   .room-setting-field { padding: 8px; }
   .room-stepper > button { flex-basis: 32px; min-height: 44px; }
 }
+
+/* Shared score vocabulary and touch help, used by history and final results. */
+.score-icon-help { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; min-height: 44px; padding: 10px; border: 0; background: transparent; color: #285a68; }
+.score-icon-help .shell-icon { width: 22px; height: 22px; }
+.score-icon-tooltip { position: fixed; z-index: 10000; max-width: min(260px, calc(100vw - 16px)); padding: 8px 12px; border-radius: 8px; background: #173e4d; color: #fff; font: 14px/1.4 system-ui,sans-serif; box-shadow: 0 3px 12px #1234; pointer-events: none; }
+.score-scroll-track { display: block; appearance: none; width: 100%; height: 24px; margin: 2px 0; padding: 0; background: transparent; cursor: ew-resize; touch-action: pan-y; accent-color: #2b6472; }
+.score-scroll-track[hidden] { display: none; }
+.score-scroll-track::-webkit-slider-runnable-track { height: 6px; border-radius: 5px; background: #cedcdd; }
+.score-scroll-track::-webkit-slider-thumb { appearance: none; width: 38px; height: 10px; margin-top: -2px; border-radius: 5px; background: #477580; }
+.score-scroll-track::-moz-range-track { height: 6px; border-radius: 5px; background: #cedcdd; }
+.score-scroll-track::-moz-range-thumb { width: 38px; height: 10px; border: 0; border-radius: 5px; background: #477580; }
+.history-score-table table { min-width: 324px; table-layout: fixed; font-variant-numeric: tabular-nums; }
+.history-score-table th, .history-score-table td { padding: 4px; height: 44px; text-align: center; font-size: 14px; }
+.history-score-table th:first-child { width: 96px; text-align: left; position: sticky; left: 0; z-index: 1; background: #f5f8f6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.history-score-table .history-score-total, .history-score-table thead th:nth-child(2) { font-weight: 800; position: sticky; left: 104px; background: #f5f8f6; box-shadow: 2px 0 0 #d4dfe0; }
+.resume-practice { margin: 0 0 12px; background: #265b69; color: #fff; min-height: 44px; }
+@media (pointer: coarse) {
+  html, body { touch-action: pan-x pan-y; }
+  button, a, summary { touch-action: manipulation; }
+  input:not([type=range]), select, textarea { font-size: max(16px, 1em); }
+}

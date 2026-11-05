@@ -43,6 +43,8 @@ Para después:
 
 Mejoras solicitadas del juego:
 
+- [Continuidad móvil, cuenta y skill de publicación](mobile-continuity.md).
+
 - [Mesa compacta con prioridad al mapa](board-first-mobile.md).
 - [Controles de mesa y sala](table-controls.md).
 - [Circo, Vivienda y variantes de Pasajeros](wagon-variants.md).

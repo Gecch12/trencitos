@@ -7,7 +7,7 @@ function createCheckpointHandler({ repository, committer, now, deferCommit,
   onLocalCommit, onLocalFailure }) {
   let dirtyCodes = new Set(), allDirty = false;
   function stampRooms() {
-    for (const room of repository.values()) if (!room.practice) room.savedAt = now();
+    for (const room of repository.values()) room.savedAt = now();
   }
   function commit() {
     const batch = committer.prepare(repository, allDirty ? null : dirtyCodes);

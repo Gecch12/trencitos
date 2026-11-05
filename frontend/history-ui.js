@@ -19,8 +19,8 @@ const HistoryUI = (() => {
     return `<div class="history-detail-content"><strong>${escape(t(match.map))} · ${escape(t(match.mode))}</strong>
       ${!match.complete ? `<p>${t('Registro parcial: la grabación comenzó con la partida ya iniciada.')}</p>` : ''}
       <div class="history-score-table"><table><caption class="sr-only">${t(match.status==='completed'?'Desglose de puntos':'Progreso registrado')}</caption>
-      <thead><tr><th>${t('Jugador')}</th><th>${t('Rutas')}</th><th>${t('Destinos')}</th><th>${t('Estaciones')}</th><th>${t('Camino más largo')}</th><th>${t('Total')}</th></tr></thead>
-      <tbody>${match.scores.map(s=>`<tr><th>${escape(match.players[s.seat]?.name)}${s.winner?' 🏆':''}</th><td>${s.route}</td><td>${s.partial?'—':s.destination}</td><td>${s.partial?'—':s.stations}</td><td>${s.partial?'—':s.express}</td><td>${s.score}${s.partial?'*':''}</td></tr>`).join('')}</tbody></table></div>
+      <thead><tr><th>${t('Jugador')}</th>${['trophy','routes','ticket','station','express'].map(icon=>`<th>${ShellIcons.scoreHeader(icon)}</th>`).join('')}</tr></thead>
+      <tbody>${match.scores.map(s=>`<tr><th>${escape(match.players[s.seat]?.name)}${s.winner?' 🏆':''}</th><td class="history-score-total">${s.score}${s.partial?'*':''}</td><td>${s.route}</td><td>${s.partial?'—':s.destination}</td><td>${s.partial?'—':s.stations}</td><td>${s.partial?'—':s.express}</td></tr>`).join('')}</tbody></table></div>
       ${match.status!=='completed'?`<p>${t('Puntos parciales de rutas. Los destinos y las bonificaciones no se liquidan hasta completar la partida.')}</p>`:''}
       ${match.status==='active'?`<p>${t('La repetición estará disponible cuando la partida se cierre.')}</p>`:''}</div>`;
   }
@@ -39,9 +39,10 @@ const HistoryUI = (() => {
       </tr><tr id="match-detail-${i}" class="history-detail" hidden><td colspan="6">${scoreDetails(m)}</td></tr>`;
     }).join('');
   }
-  let profileRequest=0;
+  let profileRequest=0, scrollCleanups=[];
+  const clearTracks=()=>{scrollCleanups.forEach(clean=>clean());scrollCleanups=[];};
   async function profile(tab) {
-    const request=++profileRequest;
+    const request=++profileRequest;clearTracks();ShellIcons.hideTooltip();
     const root=$('historyPanel');root.hidden=!['history','overview'].includes(tab);if(root.hidden)return;
     root.innerHTML=`<p role="status">${t('Cargando…')}</p>`;
     try {
@@ -51,14 +52,17 @@ const HistoryUI = (() => {
         root.innerHTML=t`<div class="history-summary"><strong>${completed.length}</strong><span>Partidas completadas</span><strong>${matches.filter(m=>m.status==='abandoned').length}</strong><span>Partidas abandonadas</span><strong>${matches.filter(m=>m.status==='active').length}</strong><span>Partidas en curso</span></div><p class="shell-muted">Las partidas abandonadas no cuentan como resultados completados.</p>`;
         return;
       }
-      root.innerHTML=`<div class="history-toolbar"><label for="historyFilter">${t('Filtrar partidas')}<select id="historyFilter"><option value="all">${t('Todas')}</option><option value="active">${t('En curso')}</option><option value="completed">${t('Completadas')}</option><option value="abandoned">${t('Abandonadas')}</option></select></label>
+      root.innerHTML=`<div class="history-toolbar"><label for="historyFilter">${t('Filtrar partidas')}<select id="historyFilter"><option value="all">${t('Todas')}</option><option value="active">${t('En curso')}</option><option value="completed" selected>${t('Completadas')}</option><option value="abandoned">${t('Abandonadas')}</option></select></label>
         <details class="history-info"><summary aria-label="${t('Acerca de tu historial')}" title="${t('Acerca de tu historial')}">i</summary><p>${t('Tu historial se guarda en el servidor. Vincula Google para acceder desde otros dispositivos; sin vincular, borrar los datos del navegador puede hacerte perder el acceso.')}</p></details></div>
         <div id="matchList" class="history-list"></div>`;
       const draw=()=>{
+        clearTracks();ShellIcons.hideTooltip();
         const rows=matches.filter(m=>$('historyFilter').value==='all'||m.status===$('historyFilter').value);
         $('matchList').innerHTML=rows.length?`<table class="history-table"><caption class="sr-only">${t('Historial de partidas')}</caption>
           <thead><tr><th>${t('Fecha')}</th><th>${t('Tu puesto')}</th><th>${t('Jugadores')}</th><th>${t('Duración')}</th><th>${t('Estado')}</th><th><span class="sr-only">${t('Ver repetición')}</span></th></tr></thead>
           <tbody>${historyRows(rows)}</tbody></table>`:`<p class="history-empty">${t(matches.length?'No hay partidas con este filtro.':'Todavía no hay partidas en este historial.')}</p>`;
+        ShellIcons.mount($('matchList'));
+        scrollCleanups=[...$('matchList').querySelectorAll('.history-score-table')].map(ShellIcons.scrollTrack);
       };
       $('matchList').onclick=event=>{
         const row=event.target.closest('[data-history-row]');

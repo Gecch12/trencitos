@@ -379,14 +379,14 @@ button:focus-visible, summary:focus-visible, [tabindex="0"]:focus-visible { outl
 .results-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #a99873 #f0e7d6; padding: 0 18px 12px 22px; }
 .results-scroll > .err:empty { display: none; }
 .results-table-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
-.results-table { width: 100%; min-width: 640px; border-collapse: separate; border-spacing: 0; table-layout: fixed; color: #244a58; }
+.results-table { width: 100%; min-width: 440px; border-collapse: separate; border-spacing: 0; table-layout: fixed; color: #244a58; }
 .results-table th, .results-table td { padding: 0; border-bottom: 1px solid #d8d7c9; }
-.results-table thead th { padding: 12px 6px; font-size: 12px; text-align: center; font-weight: 700; background: #f1eee3; }
-.results-table thead th:first-child { width: 28%; text-align: left; padding-left: 12px; }
+.results-table thead th { padding: 2px; font-size: 12px; text-align: center; font-weight: 700; background: #f1eee3; }
+.results-table thead th:first-child { width: 150px; text-align: left; padding-left: 12px; }
 .results-table thead th:last-child { width: 11%; }
-.results-table .result-heading { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 76px; padding: 10px; color: inherit; background: transparent; text-align: left; font-size: 14px; border-radius: 0; }
+.results-table .result-heading { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 52px; padding: 10px; color: inherit; background: transparent; text-align: left; font-size: 14px; border-radius: 0; }
 .results-table .result-heading[aria-expanded="true"] { background: #f1eee3; }
-.results-table .score-cell { width: 100%; min-height: 76px; padding: 8px 4px; background: transparent; color: #42645f; border-radius: 0; border-bottom: 3px solid transparent; font-size: 20px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.results-table .score-cell { width: 100%; min-height: 52px; padding: 8px 4px; background: transparent; color: #42645f; border-radius: 0; border-bottom: 3px solid transparent; font-size: 20px; font-weight: 750; font-variant-numeric: tabular-nums; }
 .results-table .score-cell.is-negative { color: #ad4139; }
 .results-table .score-cell[aria-pressed="true"] { background: #e7efeb; color: #234c59; border-bottom-color: #2b6572; }
 .results-table .score-cell:hover, .results-table .result-heading:hover { background: #f1eee3; }
@@ -649,3 +649,12 @@ button:focus-visible, summary:focus-visible, [tabindex="0"]:focus-visible { outl
 @media(max-width:1100px),(max-height:600px){.compact-players .live-score-details{display:none}.compact-players .live-bonus{position:absolute;top:-5px;right:1px;font-size:9px;padding:0 2px}.compact-players .scorebadge{position:relative}.game .compact-player-detail{flex-wrap:wrap;z-index:45;max-height:calc(100dvh - var(--compact-players-height) - var(--compact-bottom) - 28px);overflow:auto}.compact-score-detail{flex-basis:100%}.compact-score-detail:empty{display:none}}
 
 .live-bonus{justify-self:start;white-space:nowrap}.scorebadge:has(.live-score-details[open]){z-index:5}
+
+.results-table .result-heading { padding: 6px; gap: 6px; font-size: 13px; }
+.results-table .result-heading .player-avatar { width: 30px; height: 30px; min-width: 30px; }
+.results-table .result-player-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.results-table .score-cell { font-size: 16px; padding: 4px 2px; }
+.results-table .score-total { font-size: 18px; width: 58px; }
+.results-table thead th:nth-child(2) { width: 58px; }
+.results-table .result-summary > th, .results-table thead th:first-child { position: sticky; left: 0; z-index: 2; background: #fffcf5; }
+.results-table .result-summary > td:nth-child(2), .results-table thead th:nth-child(2) { position: sticky; left: 150px; z-index: 2; background: #fffcf5; box-shadow: 2px 0 0 #d8d7c9; }

@@ -20,7 +20,7 @@ const {guestId,ensureGuest}=require("./guest-identity");
 const LobbyUI = require("../shared/lobby-ui");
 const { createPracticeController } = require("./practice");
 const { createGameClock } = require("./game-clock");
-const { createMultiplayerController, shiftDeadlines, GRACE_MS } = require("./multiplayer");
+const { createMultiplayerController, shiftDeadlines, GRACE_MS, soloWithBots, reconnectGrace } = require("./multiplayer");
 const { hashToken, loadState } = require("./room-store");
 const { createSupabaseStore } = require("./supabase-store");
 const { createDurableQueue } = require("./durable-queue");
@@ -50,11 +50,18 @@ function restoreLoaded(data) {
     return {...r,members:r.members.map(m=>({...m})),game,mapRef:roomMapReference({...r,game})};
   }), live=[];
   for (const r of restored) {
-    if (!r.practice && Date.now() - r.updated < TTL) {
-      if (r.emptySince != null && Date.now() - r.emptySince >= GRACE_MS) continue;
-      shiftDeadlines(r.game, Math.max(0, Date.now() - (r.savedAt || Date.now())));
-      if (r.game) Engine.normalize(r.game);
-      r.emptySince = Date.now();
+    if (Date.now() - (r.practice ? r.practicePausedAt ?? r.savedAt ?? r.updated : r.updated) < TTL) {
+      if (r.practice) r.practicePausedAt ??= r.savedAt || Date.now();
+      else if (soloWithBots(r)) {
+        r.emptySince ??= r.savedAt || Date.now();
+        if(Date.now()-r.emptySince>=reconnectGrace(r))continue;
+      }
+      else {
+        if (r.emptySince != null && Date.now() - r.emptySince >= GRACE_MS) continue;
+        shiftDeadlines(r.game, Math.max(0, Date.now() - (r.savedAt || Date.now())));
+        if (r.game) Engine.normalize(r.game);
+        r.emptySince = Date.now();
+      }
       const colors = LobbyUI.restoreColors(r.members, r.game?.players);
       r.members.forEach((m, i) => { m.color = colors[i]; if (r.game) r.game.players[i].color = colors[i]; m.ws = null; m.disconnectedAt = Date.now(); });
       live.push(r);
@@ -115,7 +122,7 @@ const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, rest
 const dispatch = (job, kind) => stopping ? undefined : durable ? durable.run(() => { if (!stopping) job(); }, kind) : job();
 const sendRoom = createRoomStager({ repository: rooms, engine: Engine, history: archive, checkpoint,
   now: () => Date.now(), storagePaused: () => storageFailureAt !== null,
-  watchRoom: watchRecording, reconcileRoom: room => multiplayer.reconcile(room), queueViews: queueRoomViews,
+  watchRoom: watchRecording, reconcileRoom: room => room.practice ? practice.reconcile(room) : multiplayer.reconcile(room), queueViews: queueRoomViews,
   scheduleRoom: room => {
     if (room.practice) practice.sync(room);
     else { multiplayer.sync(room); roomBots.sync(room); }
@@ -131,12 +138,12 @@ const runBot = require("./bot-runner").createBotRunner({planner:botPlanner,dispa
   schedule:room=>{if(room.practice)practice.sync(room);else{roomBots.sync(room);multiplayer.sync(room);}},
   onError:()=>console.error("Bot planning deferred; room will retry.")});
 const practice = createPracticeController({ rooms, sendRoom, automaticPlay, runBot, dispatch, blocked:()=>storageFailureAt!==null, onRemove: room => { clocks.cancel(room); archive.capture(room,"Práctica cerrada."); return persist(); } });
-const clocks = createGameClock({ rooms, sendRoom, automaticPlay, runBot, dispatch, canTick: r => storageFailureAt === null && (r.practice || r.emptySince == null) });
+const clocks = createGameClock({ rooms, sendRoom, automaticPlay, runBot, dispatch, canTick: r => storageFailureAt === null && (r.practice ? r.practicePausedAt == null && !!r.members[0]?.ws && !r.members[0].ws.closed : r.emptySince == null) });
 const multiplayer = createMultiplayerController({ rooms, sendRoom, automaticPlay, runBot, removeRoom, dispatch, blocked: () => storageFailureAt !== null });
 const roomBots = createRoomBots({ rooms, sendRoom, automaticPlay, runBot, dispatch, blocked: () => storageFailureAt !== null });
 function snapshot(r) {
   return { archiveHash:r.archiveHash,matchId:r.matchId,archiveSeq:r.archiveSeq,archiveFull:r.archiveFull,archiveStartedAt:r.archiveStartedAt,archiveClosedAt:r.archiveClosedAt,_archiveState:r._archiveState,_archiveIdentity:r._archiveIdentity, game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
-    hostSeat: r.hostSeat, visibility: r.visibility, maxPlayers: r.maxPlayers, mapRef: r.mapRef ? {...r.mapRef} : undefined, timing: r.timing ? {...r.timing} : undefined,
+    hostSeat: r.hostSeat, practicePausedAt:r.practicePausedAt, visibility: r.visibility, maxPlayers: r.maxPlayers, mapRef: r.mapRef ? {...r.mapRef} : undefined, timing: r.timing ? {...r.timing} : undefined,
     members: r.members.map(m => ({ member: m, data: { token: m.token || m.ws?.token, tokenHash: m.tokenHash,
       name: m.name, bot: m.bot, color: m.color, accountId: m.accountId, guestId:m.guestId, actionIds: [...(m.actionIds || [])], actionReceipts: structuredClone(m.actionReceipts || []), autopilot: m.autopilot, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
 }
@@ -149,7 +156,7 @@ function restoreLocalCheckpoint(e) {
       r.game = structuredClone(saved.game); r.revision = saved.revision;
       for(const key of ["archiveHash","matchId","archiveSeq","archiveFull","archiveStartedAt","archiveClosedAt","_archiveState","_archiveIdentity"])r[key]=saved[key];
       watchRecording(r);
-      r.hostSeat = saved.hostSeat; r.visibility = saved.visibility; r.maxPlayers = saved.maxPlayers; r.mapRef = saved.mapRef; r.timing = saved.timing;
+      r.hostSeat = saved.hostSeat; r.practicePausedAt=saved.practicePausedAt; r.visibility = saved.visibility; r.maxPlayers = saved.maxPlayers; r.mapRef = saved.mapRef; r.timing = saved.timing;
       for (const member of r.members) if (!saved.members.some(entry => entry.member === member) && member.ws) {
         const peer = member.ws;
         peer.room = null; peer.seat = -1; member.ws = null;
@@ -557,6 +564,7 @@ function onMessage(peer, msg) {
     return;
   }
   if (msg.type === "leave" && !r.practice) {
+    if (soloWithBots(r)) return removeRoom(r, "Abandonaste la partida con bots.");
     if (!r.game) multiplayer.removeSeat(r, peer.seat);
     else {
       const leavingSeat = peer.seat;
@@ -753,11 +761,15 @@ const ready = (remoteStore ? remoteStore.load().then(restoreLoaded) : Promise.re
   await archive.bootstrap(rooms);
   await dispatch(()=>{for(const room of rooms.values())archive.capture(room);if(rooms.size||(!remoteStore&&Object.keys(archive.state.matches).length))persist();});
   storageReady = true;
-  for (const room of rooms.values()) { watchRecording(room); multiplayer.sync(room); clocks.sync(room); roomBots.sync(room); }
+  for (const room of rooms.values()) { watchRecording(room); if(room.practice)practice.sync(room);else{multiplayer.sync(room);roomBots.sync(room);} clocks.sync(room); }
 });
 async function shutdown() {
   if (stopping) return;
-  await dispatch(()=>practice.close());
+  await dispatch(()=>{
+    for (const room of rooms.values()) if(room.practice) room.practicePausedAt ??= Date.now();
+    persist();
+    practice.close();
+  });
   stopping = true; clocks.close(); multiplayer.close(); roomBots.close();
   // Finish an in-flight durable commit, then disconnect without recording a
   // voluntary abandonment. The next process restores the saved clock budget.

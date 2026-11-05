@@ -56,6 +56,7 @@
         <section id="watchUnavailable" class="room-unavailable" role="alert" tabindex="-1" hidden><h2>Esta partida ya no está disponible</h2><p>Puede haber terminado, caducado o dejado de ser pública. Elige otra partida para observar.</p></section>
         <div class="directory-layout">
           <div class="directory-main">
+            <button id="resumePractice" class="resume-practice" type="button" hidden>Continuar partida</button>
             <div class="segmented directory-tabs" role="tablist" aria-label="Tipo de salas">
               <button id="openRoomsTab" type="button" role="tab" aria-selected="true" aria-controls="roomDirectory" data-directory="open">Open Rooms</button>
               <button id="spectateTab" type="button" role="tab" aria-selected="false" aria-controls="roomDirectory" tabindex="-1" data-directory="spectate">Spectate</button>
@@ -238,8 +239,7 @@
         <section class="sidepanel">
           <div class="sectiontitle market-toolbar">
             <span class="market-heading">ROBOS <span class="market-info"><button type="button" aria-label="Información de los mazos" aria-describedby="deckinfo"><span aria-hidden="true">i</span></button><span id="deckinfo" role="tooltip"></span></span></span><span id="drawstats"></span>
-            <button id="drawtickets" class="destination-deck" aria-label="Robar nuevos destinos" title="Nuevos destinos · Roba hasta 3 billetes y conserva al menos 1">
-              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h15v4a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4ZM7 4v11M8 19h13M17 15v8"/></svg>
+            <button id="drawtickets" class="destination-deck" data-icon="ticket-add" aria-label="Robar nuevos destinos" title="Nuevos destinos · Roba hasta 3 billetes y conserva al menos 1">
             </button>
           </div>
           <div id="market" class="market" aria-label="Cinco cartas visibles y mazo oculto">
@@ -275,11 +275,11 @@
         <section id="compactHand" aria-label="Tu mano, siempre visible"></section>
       </div>
       <nav class="table-tools table-tools-left" aria-label="Historial y chat">
-        <button type="button" data-panel="history" data-icon="history" aria-label="Historial" title="Historial" aria-controls="compactPanel" aria-expanded="false"><span id="historyUnread" class="table-unread hidden"></span></button>
+        <button type="button" data-panel="history" data-icon="history" aria-label="Historial" title="Historial" aria-controls="compactPanel" aria-expanded="false"></button>
         <button type="button" data-panel="chat" data-icon="chat" aria-label="Chat próximamente" title="Chat próximamente" aria-controls="compactPanel" aria-expanded="false"></button>
       </nav>
       <nav id="tableMapTools" class="table-tools table-tools-right" aria-label="Mapa y destinos">
-        <button type="button" data-panel="destinations" data-icon="flag" aria-label="Tus destinos" title="Tus destinos" aria-controls="compactPanel" aria-expanded="false"></button>
+        <button type="button" data-panel="destinations" data-icon="flag" aria-label="Tus destinos" title="Tus destinos" aria-controls="compactPanel" aria-expanded="false"><span id="destinationProgress" class="destination-progress" hidden></span></button>
         <button id="resetMapView" type="button" data-icon="fullscreen" aria-label="Ver mapa completo" title="Ver mapa completo"></button>
         <button id="returnMapView" class="hidden" type="button" data-icon="back" aria-label="Volver a mi encuadre" title="Volver a mi encuadre"></button>
       </nav>

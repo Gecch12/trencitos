@@ -218,6 +218,7 @@ let resultsSeen = false, resultMapSelection = null;
 const expandedResults = new Set();
 const resultViews = new Map();
 let resultMapCleanup = null, resultCamera = null, resultCameraKey = "";
+let resultScrollCleanup = null;
 let toastTimer = null;
 const ticketColor = i => TICKET_COLORS[i % TICKET_COLORS.length];
 let pendingChoiceKey = null,
@@ -295,6 +296,7 @@ function resetToLobby(message = "", preserveIdentity = false) {
   cancelTunnelReveal(); disposeTicketMap();
   board3D?.setTunnelCards(null, cardArtwork); $("tunnelBoardNotice").hidden = true;
   if (!spectating && !preserveIdentity && (room || desiredRoom)) localStorage.removeItem(identityKey(room || desiredRoom));
+  if (!preserveIdentity && localStorage.getItem("rr-practice-room") === (room || desiredRoom)) localStorage.removeItem("rr-practice-room");
   spectating = false; desiredWatch = ''; roomCapacity = 5;
   room = desiredRoom = token = "";
   game = null;
@@ -509,6 +511,7 @@ function connect() {
       $("reclaimControl").disabled = !!members[seat]?.reclaim;
       $("reclaimControl").textContent = members[seat]?.reclaim ? I18n.t("Volverás en tu siguiente turno") : I18n.t("Recuperar control");
       if (!spectating) localStorage.setItem(identityKey(room), token);
+      if (!spectating && (practiceMode || m.started && members.filter(member=>!member.bot).length===1 && members.some(member=>member.bot))) localStorage.setItem("rr-practice-room", room);
       localStorage.setItem("rr-name", $("nickname").value);
       if (enteringRoom || m.started) history.replaceState(null, "", spectating ? '/rooms?watch='+room : "/rooms?room=" + room);
       renderLobby();
@@ -613,6 +616,9 @@ function homeAvatarMarkup(bot = false) {
 function syncHomeAvailability() {
   const unavailable = homeBusy || sock?.readyState !== WebSocket.OPEN || sessionReplaced || storagePaused;
   for (const id of ["create", "join", "createTest"]) $(id).disabled = unavailable;
+  const savedPractice = localStorage.getItem("rr-practice-room");
+  $("resumePractice").hidden = !LobbyUI.isJoinCode(savedPractice) || !localStorage.getItem(identityKey(savedPractice));
+  $("resumePractice").disabled = unavailable;
   for (const tab of document.querySelectorAll("[data-home-tab]")) tab.disabled = homeBusy;
   $("regenerateCode").disabled = homeBusy;
   $("createCode").readOnly = homeBusy;
@@ -711,6 +717,13 @@ $("createTest").onclick = () => {
   waitingForGameStart = true;
   homeBusy = true; syncHomeAvailability();
   send({ type: "create_test", name: $("nickname").value, color: LobbyUI.freeColor([], preferredColor) });
+};
+$("resumePractice").onclick = () => {
+  if (homeBusy || room) return;
+  desiredRoom = localStorage.getItem("rr-practice-room") || "";
+  if (!LobbyUI.isJoinCode(desiredRoom)) return;
+  attempted = true; homeBusy = true; syncHomeAvailability();
+  joinDesiredRoom();
 };
 $("finishTest").onclick = () => send({ type: "finish_test" });
 $("leaveTest").onclick = () => send({ type: "leave_test" });
@@ -2249,6 +2262,7 @@ $("drawtickets").onclick = confirmDestinationDraw;
 $("pass").onclick = () => act("pass");
 function showDialog(title, body, ticketDialog = false, dismissible = false) {
   disposeTicketMap();
+  resultScrollCleanup?.(); resultScrollCleanup=null;ShellIcons.hideTooltip();
   resultMapCleanup?.(); resultMapCleanup = null;
   closeMapMenu();
   hoveredDestination = null;
@@ -2276,7 +2290,7 @@ function closeOptionalDialog() {
   disposeTicketMap();
   const choosing = uiDialog === "tickets";
   const closingResults = uiDialog === "results";
-  if (closingResults) { resultMapCleanup?.(); resultMapCleanup = null; }
+  if (closingResults) { resultMapCleanup?.(); resultMapCleanup = null; resultScrollCleanup?.(); resultScrollCleanup=null;ShellIcons.hideTooltip(); }
   const returningToMap = uiDialog === "routes";
   uiDialog = buildTarget = null;
   buildSubmitting = false;
@@ -2351,6 +2365,11 @@ function drawDestinationBadges(el, parent, entries, x, y, scale = 1) {
   return size;
 }
 function updateDestinationSpotlight() {
+  const badge = $("destinationProgress"), total=game?.tickets.length || 0;
+  const completed=game?.tickets.filter(ticket=>GameUI.destinationStatus(game,ticket.id)?.completed).length || 0;
+  badge.hidden=!total;badge.textContent=`${completed}/${total}`;
+  badge.classList.toggle('is-complete',total>0&&completed===total);
+  badge.parentElement.setAttribute('aria-label',I18n.t('Tus destinos')+`: ${completed}/${total}`);
   const toggle = $("toggleDestinations");
   toggle.disabled = !game?.tickets.length;
   toggle.setAttribute("aria-pressed", String(allDestinationsVisible && !toggle.disabled));
@@ -2363,7 +2382,7 @@ function updateDestinationSpotlight() {
     overlay.id = "destinationSpotlight"; overlay.setAttribute("aria-hidden", "true");
     $("mapscroll").appendChild(overlay);
   }
-  const selection = !tableFocus && !uiDialog && $("overlay").classList.contains("hidden") &&
+  const selection = !tableFocus &&
     GameUI.destinationSpotlightSelection(game, hoveredDestination, allDestinationsVisible, resultMapSelection);
   boardSpotlight = selection ? {
     routes: selection.routes || [], completedRoutes:selection.completedRoutes, stationRoutes: selection.stationRoutes || [],
@@ -2675,9 +2694,9 @@ function resultRowHTML(result, index) {
   const open = expandedResults.has(result.seat), view = resultView(result.seat);
   return `<tbody data-result-player="${result.seat}" data-score-seat="${result.seat}">
     <tr class="result-summary"><th scope="row"><button type="button" class="result-heading" aria-expanded="${open}" aria-controls="score-detail-${result.seat}">
-      ${playerAvatar(result.seat)}<span class="result-player-name">${index + 1}. ${escapeHTML(result.name)} ${result.winner ? '<span aria-label="'+I18n.t("Ganador")+'">🏆</span>' : ""}</span><span class="result-chevron" aria-hidden="true">${open ? "▾" : "▸"}</span></button></th>
+      ${playerAvatar(result.seat)}<span class="result-player-name" title="${escapeHTML(result.name)}">${index + 1}. ${escapeHTML(result.name)} ${result.winner ? '<span aria-label="'+I18n.t("Ganador")+'">🏆</span>' : ""}</span></button></th><td class="score-total">${result.score}</td>
       ${resultCategories(result).map(([key, label, points]) => `<td><button type="button" id="score-tab-${result.seat}-${key}" data-score-category="${key}" aria-pressed="${open && view.category === key}" aria-expanded="${open && view.category === key}" aria-controls="score-panel-${result.seat}" aria-label="${escapeHTML(result.name)}: ${label}, ${signedPoints(points)}" class="score-cell${points < 0 ? " is-negative" : ""}">${signedPoints(points)}</button></td>`).join("")}
-      <td class="score-total">${result.score}</td></tr>
+      </tr>
     <tr class="result-detail" id="score-detail-${result.seat}" ${open ? "" : "hidden"}><td colspan="6"><div class="score-breakdown"><div id="score-panel-${result.seat}" class="score-panel" role="region" aria-labelledby="score-tab-${result.seat}-${view.category}"></div></div></td></tr>
   </tbody>`;
 }
@@ -2760,11 +2779,13 @@ function showResults() {
   showDialog(game.earlyFinish ? I18n.t("Prueba terminada anticipadamente") : I18n.t("Fin de partida"),
     I18n.t`<div class="results-scroll">${game.earlyFinish ? I18n.t('<p class="score-preview-note">Estado actual · Solo billetes conservados</p>') : ""}
     <div class="results-table-scroll"><table class="results-table"><caption class="sr-only">Puntuación final por jugador</caption>
-    <thead><tr><th scope="col">Jugador</th><th scope="col">Rutas</th><th scope="col">Destinos</th><th scope="col">Estaciones</th><th scope="col">Camino más largo</th><th scope="col">Total</th></tr></thead>
+    <thead><tr><th scope="col">Jugador</th>${['trophy','routes','ticket','station','express'].map(icon=>`<th scope="col">${ShellIcons.scoreHeader(icon)}</th>`).join('')}</tr></thead>
     ${game.result.map(resultRowHTML).join("")}</table></div>
     </div>
     <div class="result-actions"><button id="exploreMap" class="primary">Explorar mapa</button>${practiceMode ? I18n.t('<button id="practiceHome" class="tertiary">Volver al inicio</button>') : I18n.t('<button id="rematch" class="tertiary">Revancha</button><button id="multiplayerHome" class="tertiary">Volver al inicio</button>')}</div>`, false, true);
   $("dialog").classList.add("results-dialog");
+  ShellIcons.mount($("dialog"));
+  resultScrollCleanup?.();resultScrollCleanup=ShellIcons.scrollTrack($("dialog").querySelector('.results-table-scroll'));
   $("dialog")._resultSignature = signature;
   const heading = document.createElement("div"); heading.className = "results-header";
   $("dialog").prepend(heading); heading.append($("dialogTitle"), $("dialog").querySelector(".dialog-close"));
@@ -2782,7 +2803,6 @@ function showResults() {
         const active = other === row && open;
         other.querySelector(".result-detail").hidden = !active;
         other.querySelector(".result-heading").setAttribute("aria-expanded", String(active));
-        other.querySelector(".result-chevron").textContent = active ? "▾" : "▸";
         other.querySelector(".score-panel").replaceChildren();
         for (const button of other.querySelectorAll("[data-score-category]")) {
           const selected = active && button.dataset.scoreCategory === category;
@@ -3380,8 +3400,6 @@ function renderTableHand() {
   $("tableHandDetail").replaceChildren(...[...$("hand").querySelectorAll('.traincard')].map(card=>card.cloneNode(true)));
 }
 function updateHistoryUnread() {
-  $("historyUnread").textContent = historyUnreadCount > 99 ? '99+' : String(historyUnreadCount);
-  $("historyUnread").classList.toggle('hidden', !historyUnreadCount);
   $("historyLatest").textContent = historyUnreadCount ? I18n.t`${historyUnreadCount} jugada(s) nueva(s) ↓` : I18n.t('Nuevos ↓');
 }
 function noteNewHistoryRows(ids) {

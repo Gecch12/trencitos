@@ -21,7 +21,7 @@ test('Supabase stores private rooms with hashed recovery tokens and reloads afte
   const api = fakeSupabase(), first = createSupabaseStore({ ...options, fetchImpl: api.fetch });
   assert.deepEqual(await first.load(), []); await first.save(rooms());
   const second = createSupabaseStore({ ...options, fetchImpl: api.fetch }), restored = await second.load();
-  assert.equal(restored.length, 1); assert.equal(restored[0].members[0].tokenHash, hashToken('private-token'));
+  assert.equal(restored.length, 2); assert.equal(restored[1].practice,true); assert.equal(restored[0].members[0].tokenHash, hashToken('private-token'));
   assert.ok(!JSON.stringify(restored).includes('private-token'));
   assert.equal(api.calls[0].headers.apikey, options.secret); assert.equal(api.calls[0].headers.Authorization, undefined);
   await assert.rejects(first.save(rooms()), { code: 'STORE_CONFLICT' });
@@ -37,9 +37,9 @@ test('uncertain remote commit fences later writes; restart reads the committed r
   await store.load(); api.lostResponses = 2;
   await assert.rejects(store.save(rooms()), { code: 'STORE_UNCERTAIN' });
   await assert.rejects(store.save(new Map()), { code: 'STORE_CONFLICT' });
-  assert.equal(api.state.rooms.length, 1);
+  assert.equal(api.state.rooms.length, 2);
   const next = createSupabaseStore({ ...options, fetchImpl: api.fetch });
-  assert.equal((await next.load()).length, 1);
+  assert.equal((await next.load()).length, 2);
 });
 test('failed load never becomes an empty save; invalid config and public keys fail closed', async () => {
   assert.throws(() => createSupabaseStore({ ...options, url: 'http://fixture.supabase.co' }), /HTTPS/);

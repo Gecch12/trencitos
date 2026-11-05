@@ -207,10 +207,12 @@ de vencimientos y jugadas en [automatic-play.js](../game/application/automatic-p
   En salas normales usan la política estratégica de práctica y se guardan con ella.
 - Partida: dos turnos consecutivos agotados activan reemplazo; salida voluntaria
   lo activa directamente. Recuperar control respeta el turno automático en curso.
-- Todos desconectados: pausa durante 60 s; después se elimina la sala. La
-  caducidad general de 24 h no promete una recuperación de 24 h tras abandono.
-- Práctica: un humano y tres bots, sin invitados ni recuperación de sesión tras reinicio; conserva historial. Pausa al
-  desconectar; elimina a los 30 s. Los bots de práctica pueden conservar 2–4
+- Todos desconectados en una partida con varios humanos: pausa durante 60 s;
+  después se elimina la sala. Una partida iniciada con un único humano y bots
+  permanentes se conserva pausada 24 h; el abandono explícito la cierra.
+- Práctica: un humano y tres bots, sin invitados. Se guarda con el historial y
+  sobrevive a reinicios. Al desconectar pausa bots y plazos (incluidas ofertas y
+  túneles); recupera el tiempo restante al volver. Caduca tras 24 h de ausencia. Los bots de práctica pueden conservar 2–4
   billetes iniciales, tomar destinos nuevos y construir estaciones conforme a
   las mismas reglas del motor. Resuelven ofertas pendientes también fuera de
   turno y al cerrar. Los reemplazos usan otra política. Ninguno consulta secretos

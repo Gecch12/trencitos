@@ -1,8 +1,9 @@
 "use strict";
 const { randomInt } = require("node:crypto");
 const { createLegacyAutomaticPlay } = require("../game/compat/legacy-automatic-play");
+const { shiftDeadlines } = require("./multiplayer");
 
-const ABSENCE_MS = 30000;
+const ABSENCE_MS = 24 * 60 * 60 * 1000;
 
 function createPracticeController({
   rooms,
@@ -37,8 +38,8 @@ function createPracticeController({
       active.delete(room);
     }
     if (!live(room)) return;
-    if(onRemove(room)===false)return;
     rooms.delete(room.code);
+    if(onRemove(room)===false){rooms.set(room.code,room);return;}
     room.members.forEach((member) => {
       if (member.ws) {
         member.ws.send({ type: "room_closed" });
@@ -53,12 +54,25 @@ function createPracticeController({
     const state = runtime(room);
     cancelBot(state);
     if (state.deadline !== null) return;
-    state.deadline = at + ABSENCE_MS;
+    room.practicePausedAt ??= at;
+    state.deadline = room.practicePausedAt + ABSENCE_MS;
     state.expiry = setTimer(() => dispatch(() => remove(room)), Math.max(0, state.deadline - now()));
     state.expiry.unref?.();
   }
+  function reconcile(room) {
+    if (!live(room)) return;
+    if (!connected(room)) return disconnected(room);
+    if (room.practicePausedAt != null) {
+      shiftDeadlines(room.game, Math.max(0, now() - room.practicePausedAt));
+      delete room.practicePausedAt;
+    }
+    const state = runtime(room);
+    if (state.expiry !== null) clearTimer(state.expiry);
+    state.expiry = state.deadline = null;
+  }
   function sync(room) {
     if (!live(room)) return;
+    reconcile(room);
     const state = runtime(room);
     if(blocked()){cancelBot(state);return;}
     if (!connected(room)) return disconnected(room);
@@ -85,7 +99,7 @@ function createPracticeController({
     automaticPlay.finishPractice(room);
   }
   function expired(room) {
-    const deadline = active.get(room)?.deadline;
+    const deadline = room.practicePausedAt == null ? null : room.practicePausedAt + ABSENCE_MS;
     if (deadline !== null && deadline !== undefined && now() >= deadline) {
       remove(room);
       return true;
@@ -93,9 +107,13 @@ function createPracticeController({
     return false;
   }
   function close() {
-    for (const room of active.keys()) remove(room);
+    for (const state of active.values()) {
+      cancelBot(state);
+      if (state.expiry !== null) clearTimer(state.expiry);
+    }
+    active.clear();
   }
-  return { sync, disconnected, finish, remove, expired, close };
+  return { sync, reconcile, disconnected, finish, remove, expired, close };
 }
 
 module.exports = { createPracticeController, ABSENCE_MS };

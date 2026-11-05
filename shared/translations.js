@@ -1,6 +1,20 @@
 "use strict";
 // Spanish source messages and their English translations. Values are never translated.
 const Translations = {
+  "Continuar partida": "Continue game",
+  "Puntos por tramos ocupados": "Points from claimed routes",
+  "Puntos por destinos": "Points from destinations",
+  "Puntos por estaciones sin utilizar": "Points from unused stations",
+  "Bono del camino más largo": "Longest path bonus",
+  "Puntuación total": "Total score",
+  "Desplazar tabla horizontalmente": "Scroll table horizontally",
+  "La práctica caducó tras 24 horas sin actividad.": "The practice game expired after 24 hours without activity.",
+  "Abandonaste la partida con bots.": "You left the game with bots.",
+  "El acceso con Google requiere actualizar la app.": "Update the app to sign in with Google.",
+  "Servidor de cuenta inválido.": "Invalid account server.",
+  "Desbloquea el iPhone para acceder a tu cuenta.": "Unlock your iPhone to access your account.",
+  "No se pudo guardar la sesión de forma segura.": "Your session could not be saved securely.",
+  "Ya hay un acceso en curso.": "Sign-in is already in progress.",
   "Ocupó {0} (+{1})": "Claimed {0} (+{1})",
   "Ver": "View",
   "Est.": "St.",

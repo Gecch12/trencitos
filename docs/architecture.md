@@ -14,8 +14,10 @@ eventos nativos de retorno/Atrás con el cliente existente y no actúa en navega
 No distribuye el motor ni introduce otro escritor de producción.
 El modo beta empaqueta recursos públicos con `scripts/mobile-bundle.js` y conecta
 al backend remoto mediante `frontend/connection.js`. `backend/native-client.js`
-limita CORS a los orígenes de Capacitor y a lecturas del invitado; la identidad
-nativa y la de cookies se mantienen separadas. El servidor sigue autorizando
+limita CORS a los orígenes de Capacitor y a rutas explícitas de cuenta/historial;
+la identidad nativa y la de cookies se mantienen separadas. El BFF permite
+autenticación nativa mediante transferencia de un uso ligada al verificador y
+al invitado, y sesión cifrada guardada en Keychain/Keystore (ver Google Auth). El servidor sigue autorizando
 historial y puestos. La web tiene manifest e iconos; su service worker almacena
 solo la pantalla de desconexión, nunca API ni partidas.
 Configuración, distribución gratuita y límites en [pruebas móviles](mobile-development.md).
@@ -508,14 +510,13 @@ invoca `checkpoint.commit()` una vez, con todos los cambios acumulados.
 | Puerto implementado | Contrato de transición |
 | --- | --- |
 | `repository.get(code)`, `repository.values()` | El `Map` de salas existente satisface el puerto; conserva identidad mutable y búsqueda por código. Todavía no es el repositorio objetivo por `matchId`. |
-| `committer.prepare(repository)` | Produce `{rooms, archive}` sin escribir ni aceptar historial. Copia los DTOs persistibles de sala, incluidos revisión y recibos; excluye sockets, tokens sin hash y salas de práctica. |
+| `committer.prepare(repository)` | Produce `{rooms, archive}` sin escribir ni aceptar historial. Copia los DTOs persistibles de sala, incluidos revisión y recibos; incluye las prácticas; excluye sockets y tokens de puesto sin hash. |
 | `committer.commit(batch)` | Guarda conjuntamente sala e historial y solo después acepta el historial pendiente. Es síncrono para archivo; devuelve promesa para remoto. |
 | `queueViews`, `queueDirectory` | El transporte obtiene DTOs de las consultas autorizadas y serializa los mensajes. `peer.send` los entrega en archivo o los retiene en el outbox remoto hasta el commit. |
 
 El lote local contiene el archivo completo preparado, con frames ya confirmados
 compartidos como datos inmutables: no se copian ni serializan de nuevo. El lote
-remoto copia solo los registros/pasos nuevos. Las prácticas se excluyen de
-`rooms`, pero su historial participa en ambos lotes. Los formatos físicos siguen
+remoto copia solo los registros/pasos nuevos. Las prácticas y su historial participan conjuntamente en ambos lotes. Los formatos físicos siguen
 siendo el manifiesto/prefijo JSONL local y la RPC atómica remota. `saveRooms` y
 `store.save` siguen disponibles como entradas compatibles; el nuevo adaptador
 utiliza `saveCheckpoint` con DTOs preparados.
@@ -822,7 +823,9 @@ Alcance y pruebas en
   de Supabase Auth. La cuenta no aparece en vistas rivales ni sustituye el puesto.
 - La cartografía visual está separada de `data.js`/`engine.js`. Three.js debe
   consumir la misma vista autorizada, sin duplicar el motor.
-- La sesión de práctica es efímera, pero su archivo se conserva. Salas y grabación
+- Las prácticas se pausan al desconectar y se conservan 24 h, incluso tras
+  reiniciar el servidor. Las salas iniciadas con un humano y bots permanentes
+  reciben la misma ventana; salas con varios humanos conservan 60 s. Salas y grabación
   se confirman de forma atómica. En disco local, un manifiesto pequeño referencia
   el prefijo confirmado de los pasos anexados por partida; cambiar de color no
   reescribe pasos anteriores. [Historial/replay](history-replay.md) define retención,

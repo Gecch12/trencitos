@@ -132,9 +132,10 @@ Guarda capturas e informe en `.qa/mobile/`. Por defecto utiliza `emulator-5554`;
 creada desde iPhone o navegador; su anfitrión debe iniciar la partida y elegir
 destinos mientras la prueba espera.
 
-La primera entrega se prueba con invitados. OAuth nativo de Google, enlaces de
-invitación que abren directamente la app, notificaciones y publicación en tiendas
-requieren trabajo posterior. La beta firmada para Android se describe abajo.
+La primera entrega se probó con invitados. El checkout incorpora el flujo de
+Google nativo descrito en [Google Auth](GOOGLE_AUTH.md); requiere actualizar tanto
+servidor como paquete. Enlaces de invitación que abren directamente la app,
+notificaciones y publicación en tiendas requieren trabajo posterior. La beta firmada para Android se describe abajo.
 Las pruebas en simulador/emulador no certifican batería ni rendimiento en teléfonos.
 El controlador OpenGL de esta Mac emite un aviso inicial `GL_INVALID_ENUM` en
 `GetIntegerv`; queda registrado como aviso gráfico. Con la imagen API 36 se
@@ -168,10 +169,12 @@ HTTP y la inspección de WebView. **`mobile:apk` fuerza QA desactivado** y recha
 servidores locales. La beta distribuida no tiene depuración web ni tráfico HTTP.
 
 Las apps nativas usan un invitado persistente por instalación y servidor,
-independiente de Safari/Chrome y de las cuentas Google de la web. Su credencial
+independiente de Safari/Chrome; puede vincularse a la misma cuenta Google. Su credencial
 aleatoria se guarda en localStorage; se envía en `X-Trencitos-Guest` para lecturas
 de historial y como subprotocolo WebSocket, nunca en la URL. El servidor acepta
-solo los orígenes locales exactos de Capacitor, conserva el control de los
+solo los orígenes locales exactos de Capacitor. La sesión de cuenta cifrada viaja
+en `X-Trencitos-Session`, se renueva por cabecera expuesta CORS y se conserva en
+Keychain/Keystore, nunca localStorage. El servidor conserva el control de los
 puestos y filtra el historial privado. Las invitaciones apuntan a la web pública;
 para entrar en la app se puede introducir el código. Borrar los datos o
 desinstalar elimina la identidad local; conservar el enlace de recuperación.
@@ -242,3 +245,10 @@ ejecutar `TRENCITOS_MOBILE_MODE=beta npm run test:mobile:android`.
 La prueba exige el origen local de la WebView, el protocolo nativo, historial,
 mapa visible y recuperación. `TRENCITOS_MOBILE_PORT` selecciona el puerto QA.
 Evidencia y estado de entrega en [la ficha de beta](work/mobile-beta.md).
+
+## Entrega repetible
+
+El skill [trencitos-publicar](../skills/trencitos-publicar/SKILL.md) está instalado
+para Ángel como `$trencitos-publicar`. Sigue las instrucciones de este documento
+y del despliegue; entrega la página de Release, verifica Render Live e instala
+sobre el iPhone conectado. Crear o modificar el skill no ejecuta una publicación.

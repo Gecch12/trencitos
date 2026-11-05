@@ -9,7 +9,7 @@ function createRoomStager({ repository, engine, history, checkpoint, now, storag
     watchRoom(room);
     if (repository.get(room.code) !== room) return;
     if (!automatic) room.updated = now();
-    if (!room.practice && !storagePaused()) reconcileRoom(room);
+    if (!storagePaused()) reconcileRoom(room);
     if (repository.get(room.code) !== room) return;
     if (room.game) engine.normalize(room.game, now());
     room.savedAt = now();

@@ -64,6 +64,10 @@ jobs:
         env:
           QA_OUT: .qa/ci/account-resume
         run: node tests/browser-account-resume.cjs
+      - name: Check mobile continuity, score tables and destination indicators
+        env:
+          QA_OUT: .qa/ci/mobile-continuity
+        run: node tests/browser-mobile-continuity.cjs
       - name: Keep browser evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

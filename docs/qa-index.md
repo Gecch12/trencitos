@@ -34,3 +34,6 @@ iteraciones. Pruebas pendientes en dispositivos reales y despliegue se siguen en
 
 - [Experiencia de cartas y recuperación de puesto](qa/card-experience/validation.json):
   comprobaciones locales de la ampliación de noviembre; [alcance](work/card-interactions.md).
+
+- [Continuidad móvil y cuenta · 2026-11-05](qa/mobile-continuity/verification.json):
+  pruebas locales, compilaciones y capturas; sin publicación ni Google real.

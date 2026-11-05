@@ -41,6 +41,7 @@ function writeDurable(file, data) {
 function serializableRoom(room) {
   const { code, updated, game, hostSeat = 0, revision = 0, emptySince, savedAt, rematchCode, visibility = "private", maxPlayers = 5, timing, mapRef } = room;
   return { code, updated, game, hostSeat, revision, emptySince, savedAt, rematchCode, visibility, maxPlayers, timing, mapRef,
+    ...(room.practice ? {practice:true,practicePausedAt:room.practicePausedAt} : {}),
     matchId:room.matchId,archiveHash:room.archiveHash,archiveSeq:room.archiveSeq,archiveFull:room.archiveFull,archiveStartedAt:room.archiveStartedAt,archiveClosedAt:room.archiveClosedAt,
     members: room.members.map(({ name, color, accountId, guestId, token, tokenHash, bot, autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds, actionReceipts }) =>
       ({ name, color, accountId, guestId, bot: !!bot, tokenHash: tokenHash || (token ? hashToken(token) : undefined), autopilot, reclaim, reclaimSerial, disconnectedAt, actionIds, actionReceipts })) };
@@ -80,7 +81,7 @@ function validateRooms(data) {
     throw new Error("Formato de partidas inválido");
 }
 function saveRooms(file, rooms, archive) {
-  return saveCheckpoint(file, { rooms: [...rooms.values()].filter(r=>!r.practice).map(serializableRoom), archive });
+  return saveCheckpoint(file, { rooms: [...rooms.values()].map(serializableRoom), archive });
 }
 function saveCheckpoint(file, { rooms: records, archive }) {
   file = path.resolve(file);

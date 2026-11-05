@@ -593,5 +593,21 @@
     "backend/guest-identity.js",
     "backend/server.js",
     "tests/native-android.cjs"
+  ],
+  "iconography.md": [
+    "frontend/shell-icons.js",
+    "frontend/history-ui.js",
+    "frontend/game.css",
+    "frontend/shell.css"
+  ],
+  "work/mobile-continuity.md": [
+    "backend/practice.js",
+    "backend/multiplayer.js",
+    "backend/account-auth.js",
+    "frontend/connection.js",
+    "frontend/mobile-bridge.js",
+    "tests/practice-recovery.test.js",
+    "tests/browser-mobile-continuity.cjs",
+    "skills/trencitos-publicar/SKILL.md"
   ]
 }

@@ -83,7 +83,7 @@ incluida revocación y `not_after`, además de la verificación del servidor.
 puesto. No cambia un propietario previo ni permite dos puestos de la misma cuenta
 en una sala. Recuperar desde la cuenta es explícito, rota la credencial y reemplaza
 la conexión anterior, con guardado confirmado antes de devolver el resultado.
-Las cuentas no eliminan el límite de vida de una sala. Sesiones de práctica siguen efímeras, pero sus archivos se conservan.
+Las cuentas no eliminan el límite de vida de una sala. La práctica y las salas iniciadas con un humano y bots se conservan pausadas durante 24 h de ausencia; sus archivos históricos se conservan después.
 Logout de cuenta no revoca por sí solo un enlace de partida: son credenciales
 distintas, y el enlace conserva su advertencia y control para renovarlo.
 
@@ -146,3 +146,31 @@ Una pestaña sustituida no inicia recuperaciones automáticas en bucle. El bot
 cede al reconectar fuera de su turno; si lo está ejecutando, termina ese turno.
 Los botones de enlace privado se ocultan únicamente cuando el puesto está vinculado
 a la cuenta presente. Cerrar sesión vuelve a mostrar las opciones del invitado.
+
+## Aplicaciones nativas
+
+El checkout incorpora el mismo BFF mediante `NativeAccount` en iOS y Android.
+El navegador del sistema realiza Google/Supabase usando el cliente web y callback
+HTTPS ya configurados: no se introduce OAuth dentro de la WebView ni se distribuyen
+tokens de proveedor. `POST /api/account/native/start` recibe un desafío SHA-256
+de un verificador aleatorio conservado en memoria de la app y liga el flujo a su
+invitado. `/auth/native` abre el proveedor con cookie PKCE. El callback entrega
+a `trencitos://auth` un código opaco; solo la app con ese verificador e identidad
+puede canjearlo en `/api/account/native/exchange`.
+
+El inicio vence en 10 min y la transferencia en 60 s; el canje es de un solo uso.
+Reiniciar el proceso cancela accesos en curso. La sesión ya establecida sobrevive
+mediante AES-GCM con propósito separado de las cookies, ligada al invitado y
+guardada en Keychain (`WhenUnlockedThisDeviceOnly`) / Android Keystore AES-GCM.
+Cambiar de dispositivo o borrar datos exige iniciar sesión nuevamente. Android
+descarta una copia cifrada cuyo Keystore no pueda recuperarse de un backup.
+
+CORS admite únicamente los orígenes de Capacitor y rutas/métodos explícitos.
+Las cookies web se ignoran para esos orígenes. `X-Trencitos-Session` devuelve la
+renovación; logout revoca Supabase, borra la sesión segura y rota el invitado en
+el cliente. La prueba del puesto sigue siendo necesaria para vincular/recuperar
+una sala; el login no concede puestos de terceros.
+
+Validación local y límites de esta implementación en
+[continuidad móvil](work/mobile-continuity.md). Las pruebas con proveedor simulado
+y compilaciones no acreditan un acceso Google real en el teléfono ni despliegue.

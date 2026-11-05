@@ -13,7 +13,7 @@ let app, port, base;
 test.before(async () => { app = await startMobileServer({ port: 0, stateFile: path.join(dir, "rooms.json") }); port = app.server.address().port; base = `http://127.0.0.1:${port}`; });
 test.after(async () => { peers.forEach(c => c.close()); await app.shutdown(); fs.rmSync(dir, { recursive: true, force: true }); });
 const headers = (guest = token) => ({ Origin: "capacitor://localhost", "X-Trencitos-Guest": guest });
-test("native HTTP boundary permits guest reads and rejects browser credentials and mutations", async () => {
+test("native HTTP boundary permits explicit account routes and rejects browser cookies and invalid methods", async () => {
   const preflight = await fetch(base + "/api/history", { method: "OPTIONS", headers: { Origin: "https://localhost", "Access-Control-Request-Method": "GET", "Access-Control-Request-Headers": "x-trencitos-guest,accept" } });
   assert.equal(preflight.status, 204); assert.equal(preflight.headers.get("access-control-allow-origin"), "https://localhost");
   assert.equal(preflight.headers.get("access-control-allow-credentials"), null);
@@ -22,7 +22,7 @@ test("native HTTP boundary permits guest reads and rejects browser credentials a
   assert.equal(account.headers.get("set-cookie"), null);
   assert.equal((await fetch(base + "/api/history", { headers: { Origin: "capacitor://localhost", Cookie: "trencitos_guest=" + token } })).status, 401);
   assert.equal((await fetch(base + "/api/account", { method: "POST", headers: headers() })).status, 401);
-  assert.equal((await fetch(base + "/api/account/logout", { method: "POST", headers: headers() })).status, 403);
+  assert.equal((await fetch(base + "/api/account/logout", { method: "POST", headers: headers() })).status, 503);
   const foreign = await fetch(base + "/api/history", { headers: { ...headers(), Origin: "https://attacker.example" } });
   assert.equal(foreign.headers.get("access-control-allow-origin"), null);
   assert.equal((await fetch(base + "/api/history", { method: "OPTIONS", headers: { Origin: "capacitor://localhost", "Access-Control-Request-Method": "POST" } })).status, 403);

@@ -131,7 +131,7 @@ Cada bot conserva planes viables y los replantea ante bloqueos, amenazas o falta
 
 El panel **Controles de prueba** aparece abajo a la izquierda, separado de la interfaz del juego y sobre sus diálogos. Arrástralo desde su encabezado con el ratón, o enfoca el encabezado y usa las flechas del teclado. **Terminar partida de pruebas** detiene los bots inmediatamente y muestra la puntuación actual como cierre anticipado. **Volver al inicio** elimina la sala y permite crear otra prueba.
 
-Estas salas son privadas y temporales: no admiten invitados, la sesión no se recupera al reiniciar el servidor, pero su historial sí se conserva. Al desconectarte los bots se pausan; puedes volver con el mismo navegador en menos de 30 segundos para continuar. Si no vuelves, la sala se elimina. Leer sin hacer clic o dejar la pestaña en segundo plano no cuenta como desconexión.
+Estas salas son privadas y no admiten invitados. Al desconectarte se pausan bots y relojes durante hasta 24 horas; la sesión y su historial sobreviven a reinicios del servidor. La misma ventana se aplica a las salas iniciadas con un único humano y bots añadidos. Al abrir de nuevo la app, **Continuar partida** recupera tu último juego con bots y cualquier elección pendiente. Abandonar expresamente cierra esa partida; cerrar la app solo la pausa. Leer sin hacer clic no cuenta como desconexión.
 
 `npm test` comprueba las decisiones de los bots, partidas completas simuladas, tiempos y limpieza de salas con un reloj simulado, y la integración real por WebSocket.
 
@@ -347,7 +347,7 @@ según la sala. Por ejemplo, 20 s restantes con +30 s dan 50 s para elegir. **Ve
 - En partida, los puestos y las piezas nunca se eliminan por desconexión. Después de **dos turnos consecutivos agotados**, un bot de reemplazo decide al azar entre construir una ruta pagable o robar una fuente legal de mesa/mazo. No pide destinos, no coloca estaciones ni consulta cartas rivales. Resuelve el suplemento de sus túneles según pueda pagarlo. Una salida voluntaria activa el bot directamente.
 - Si el bot tiene el control, usa **Menú de partida → Recuperar control**; una reconexión lo solicita automáticamente. Se devuelve al siguiente turno humano, sin interrumpir una primera carta o un túnel del bot. Completar un turno manual rompe la racha de ausencias; tomar solo una carta no la rompe.
 - Una segunda pestaña toma la sesión y la anterior deja de reconectarse. Esta ofrece un botón explícito para recuperar el control de la conexión.
-- Si **todos** pierden conexión, se detienen relojes y bots durante un margen de reconexión de 60 segundos. Al regresar se conserva el tiempo restante, no se reinicia el turno. Si nadie vuelve, se abandona y elimina la sala, sin simular partidas entre bots. No se ofrece reanudación a las 24 horas. Las salas que sigan existiendo mantienen el límite general de inactividad de 24 horas.
+- En partidas con varios humanos, si **todos** pierden conexión se detienen relojes y bots durante un margen de reconexión de 60 segundos. Al regresar se conserva el tiempo restante, no se reinicia el turno. Si nadie vuelve, se abandona y elimina la sala, sin simular partidas entre bots. Las partidas con un único humano y bots conservan la pausa hasta 24 horas; al volver mantienen el tiempo restante. Las demás salas que sigan existiendo mantienen el límite general de inactividad de 24 horas.
 - Al terminar, **Volver al inicio** permite salir y **Revancha** reúne en una sala nueva a quienes acepten. Los resultados anteriores se conservan mientras exista su sala (el mismo margen de abandono se aplica si todos se marchan).
 - Las acciones llevan identificadores para evitar duplicados al reconectar y una revisión para rechazar jugadas sobre una mesa desactualizada. El servidor confirma después del guardado local. Si falla, revierte la jugada no guardada y pausa las salas multijugador; se muestra **Reintentar guardado**. Los snapshots usan sustitución atómica y una copia anterior; no sustituyen una base de datos externa ni un disco persistente.
 
@@ -419,7 +419,7 @@ Guía completa: [docs/RENDER_SUPABASE.md](docs/RENDER_SUPABASE.md).
 3. Configura `SUPABASE_URL` y `SUPABASE_SECRET_KEY` (clave `sb_secret_…`) en **Render → Environment**, nunca en el frontend, Git o el chat. El Blueprint fija `STATE_BACKEND=supabase`.
 4. Comprueba `/healthz`: debe responder 200, `ok: true` y `storage: "supabase"`. Realiza la prueba de reinicio indicada en la guía antes de invitar jugadores.
 
-Un único servicio aloja las salas. La cola serializa mensajes, bots y relojes; la respuesta de éxito se publica después del guardado. Un identificador de commit evita duplicar escrituras al perder una respuesta. Un nuevo proceso toma el control del checkpoint y bloquea escrituras de la instancia anterior. Tras un reinicio, los puestos, manos, rutas y tiempo pendiente se recuperan; se abre una ventana de reconexión de 60 segundos. Si todos ya habían abandonado y agotado su ventana, la sala no se revive.
+Un único servicio aloja las salas. La cola serializa mensajes, bots y relojes; la respuesta de éxito se publica después del guardado. Un identificador de commit evita duplicar escrituras al perder una respuesta. Un nuevo proceso toma el control del checkpoint y bloquea escrituras de la instancia anterior. Tras un reinicio, los puestos, manos, rutas y tiempo pendiente se recuperan; se abre una ventana de reconexión de 60 segundos para varios humanos. Las prácticas y partidas de un humano con bots conservan su ventana de 24 horas, sin reiniciarla en cada despliegue. Si todos ya habían abandonado y agotado su ventana, la sala no se revive.
 
 Si falla el guardado remoto, no hay fallback al disco efímero: se pausa y no se confirma la jugada. Ante un resultado de escritura incierto, hay que **reiniciar el servicio** y reconectar para leer el último checkpoint; no se vuelve a guardar a ciegas una copia en memoria. Esto puede interrumpir una partida, pero evita sobrescribir una jugada que sí llegó a la base. Las salas caducadas se retiran del checkpoint, sin mantener un historial ilimitado.
 
@@ -441,3 +441,14 @@ Si falla el guardado remoto, no hay fallback al disco efímero: se pausa y no se
 La mesa se ha comprobado en 1280×720, 1366×768 y 1920×1080, incluida una vista de cinco jugadores y los nueve grupos de cartas. Las pruebas de `game-ui.js` cubren pagos, disponibilidad, estaciones, paso sin jugadas, encaje entre paneles y zoom centrado en el cursor. Al actualizar, reinicia el proceso `npm start` para servir los nuevos archivos `game-ui.js` y `game.css`, y recarga el navegador. No hace falta iniciar frontend y backend por separado.
 
 - Durante una sala abierta, los navegadores envían un mensaje de mantenimiento cada 3 minutos para evitar la suspensión por inactividad. Esto no impide reinicios de Render ni sustituye almacenamiento persistente.
+
+La bandera de **Tus destinos** muestra completados/conservados (por ejemplo,
+`2/4`); las ofertas sin confirmar no cuentan. El historial de movimientos no
+lleva contador permanente. Historial de partidas empieza en **Completadas** y
+comparte los iconos de puntuación con los resultados; tocarlos explica su
+significado. Los totales quedan junto a cada jugador, con filas compactas y
+desplazamiento horizontal visible cuando hace falta.
+
+En móvil el documento no se amplía por doble toque o pellizco; los mapas
+conservan sus propias cámaras y gestos. Pedir destinos mantiene el mapa
+resaltado detrás de la confirmación y la selección.
