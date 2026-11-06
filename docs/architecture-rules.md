@@ -55,5 +55,9 @@ ejecutables, pero para impedir además un bypass administrativo hace falta una
 regla de protección de `main` en GitHub; la configuración del proveedor y los
 permisos de quien puede saltarla son otra capa, no una propiedad del skill.
 
+Ángel decidió el 2026-11-06 mantener trabajo directo en `main` por ahora.
+Los controles siguen ejecutándose, pero la prohibición administrativa de
+integrar sin CI queda pospuesta; no crear ramas/PR por defecto para este fin.
+
 La [ficha de guardrails](work/match-performance-guardrails.md) conserva evidencia
 de implementación y entrega, no este contrato.

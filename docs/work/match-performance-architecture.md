@@ -1,5 +1,5 @@
 ---
-{"id":"match-performance-architecture","status":"active","parent":null,"depends_on":[],"branch":"main","delivery":"worktree","updated":"2026-11-06"}
+{"id":"match-performance-architecture","status":"validated","parent":null,"depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-06"}
 ---
 # Arquitectura y respuesta de las partidas
 
@@ -34,11 +34,25 @@ de HTTP, UI, Supabase ni métricas; la aplicación coordina y los adaptadores mi
 
 Revisión de commits y contratos completada antes de editar código. Las mediciones
 del 2026-11-05 corresponden a `891b2d7` y no acreditan rendimiento de esta base.
-Fase 0 publicada y medida en `5a57127`; fases 1–4 publicadas en `15636fb`
-tras CI completo (736 Node y todos los recorridos Chrome). SQL 009 activo,
-continuidad de partidas e independencia de dos salas verificadas en producción.
-La comparación redujo captura, ejecución, RPC y espera visual; la mediana
-clic→confirmación de 566 ms todavía supera la meta inicial. La fase 1 continúa
-con un hito adicional de transporte incremental definido a partir de esta
-medición. Las demás fichas conservan evidencia y límites. No confundir menos
-bytes o pruebas simuladas con una mejora productiva aún no medida.
+Fases 0–4 implementadas, publicadas y verificadas; entrega final `d4de3ae`,
+[CI completo](https://github.com/Gecch12/trencitos/actions/runs/42289041784) con
+741 Node y todos los recorridos Chrome. SQL 009 activo, recuperación de una
+partida del servidor anterior, dos salas concurrentes y reconexión final
+comprobadas. [Resultado y comparación](../qa/match-performance-results.md).
+
+Clic→estado: mediana 624,55 → 390,05 ms; p95 observado 959,4 → 567,9 ms.
+La meta original <500 ms sigue sin cumplirse para la muestra completa: las dos
+superaciones corresponden a segundas cartas de pares rápidos, ordenadas detrás
+de la primera escritura. Recepción→visible máximo 52,9 ms tampoco acredita
+<50 ms en todos los casos. Las altas de bots no muestran una mejora estable.
+El padre queda `validated`, no `done`: entrega técnica verificada, metas de
+latencia pendientes. No redefinirlas retrospectivamente ni confundir este
+recorrido acotado con capacidad para cientos de usuarios.
+
+Siguiente decisión importante: población/región de jugadores que se prioriza
+antes de evaluar un cambio de ubicación de servicios y su coste. Oregón↔Lima
+conserva unos 240 ms de ping de aplicación. Mantener confirmación durable y
+secretos; no introducir una espera artificial en el primer robo para agrupar
+comandos sin evaluar su efecto. No hay otro cambio de código pendiente de esta
+entrega. Node continúa y el flujo directo en main se mantiene por decisión
+explícita de Ángel; CI/AGENTS protegen disciplina, no prohíben un bypass del push.

@@ -1,6 +1,18 @@
 # Producción
 
-## Versión web actual · 2026-11-06, 15:12 (Lima)
+## Versión web actual · 2026-11-06, 15:43 (Lima)
+
+Código `d4de3aededc4cdb96ba248996454d877cbc4c452`, [Render Live](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbn3nj8n74is73ehu760).
+Añade deltas de vistas confirmadas y recuperación por snapshot, con compatibilidad
+para clientes anteriores. [CI completo](https://github.com/Gecch12/trencitos/actions/runs/42289041784):
+741 Node y todos los recorridos Chrome, incluido el nuevo control de transporte.
+[Resultado final y límites](qa/match-performance-results.md), [datos](qa/match-performance-final.json)
+y [entrega/migración](qa/match-performance-delivery.json). Dieciséis robos, cuatro
+altas de bots, reconexión exacta y cero errores. Salas propias cerradas; tres
+salas previas conservadas, salud correcta y ninguna pausada. No hay SQL nuevo
+respecto a la entrega 15:12. Los binarios nativos mantienen la entrega 13:21.
+
+## Entrega web anterior · 2026-11-06, 15:12 (Lima)
 
 Código `15636fb86e28f354eda0bca9b2bd1d4ffd327b74`, [Render Live](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbn396bl550s73fblaeg).
 Incluye diagnóstico, menor trabajo por jugada, transacciones/recuperación por sala,
@@ -9,8 +21,7 @@ con permisos verificados antes del código. [CI](https://github.com/Gecch12/tren
 736 Node y todos los recorridos Chrome. [Entrega y continuidad](qa/match-performance-delivery.json),
 [comparación](qa/match-performance-comparison.json) y [concurrencia](qa/match-performance-concurrency.json).
 Las salas propias de QA se cerraron; tres salas anteriores conservadas y ninguna
-pausada. La [iniciativa](work/match-performance-architecture.md) continúa midiendo
-el ajuste incremental del transporte. Los binarios móviles mantienen la entrega
+pausada. La entrega posterior del transporte se documenta arriba. Los binarios móviles mantienen la entrega
 13:21 descrita abajo; esta publicación es de web/servidor.
 
 ## Entrega anterior · 2026-11-06, 13:21 (Lima)

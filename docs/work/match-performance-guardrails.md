@@ -1,5 +1,5 @@
 ---
-{"id":"match-performance-guardrails","status":"active","parent":"match-performance-architecture","depends_on":["match-performance-isolation","match-performance-presentation"],"branch":"main","delivery":"released","updated":"2026-11-06"}
+{"id":"match-performance-guardrails","status":"done","parent":"match-performance-architecture","depends_on":["match-performance-isolation","match-performance-presentation"],"branch":"main","delivery":"released","updated":"2026-11-06"}
 ---
 # Prevenir regresiones de arquitectura y respuesta
 
@@ -34,14 +34,21 @@ en CI, pero la rama no impide un push directo. Exigir PR/CI mediante protección
 cambiaría el flujo actual de trabajo en main; requiere acordar ese cambio de
 flujo, y no se presenta como configurado.
 
+Decisión explícita de Ángel el 2026-11-06: «Mantener main directo por ahora».
+Se pospone protección obligatoria mediante ramas/PR. Permanecen AGENTS y CI;
+no afirmar que GitHub impide saltarse los checks. No se cambiaron permisos ni
+se activó la propuesta de protección.
+
 
 Entrega `15636fb`: 736/736 Node y todos los recorridos Chrome en
 [CI completo](https://github.com/Gecch12/trencitos/actions/runs/42283725508),
 [Render Live y recuperación](../qa/match-performance-delivery.json),
 [comparación real](../qa/match-performance-comparison.json) y
 [dos salas](../qa/match-performance-concurrency.json). El hito adicional de
-transporte de fase 1 debe pasar esos mismos controles antes de publicarse.
-La revisión conjunta final permanece abierta hasta medir ese ajuste.
+transporte pasó [CI de d4de3ae](https://github.com/Gecch12/trencitos/actions/runs/42289041784):
+741 Node y todos los recorridos Chrome, incluido transporte. Publicado y medido;
+[resultado conjunto](../qa/match-performance-results.md). Se verificó el alcance
+técnico; metas de latencia y capacidad no acreditadas permanecen explícitas.
 
 El recorrido Chrome de transporte queda además incorporado explícitamente en
 CI: delta y ACK juntos, construcción, vista privada y snapshot nuevo después de

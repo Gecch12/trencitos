@@ -67,5 +67,29 @@
   "regions": {
     "render": "Oregon (US West)",
     "supabase": "us-west-2 (Oregon)"
+  },
+  "incrementalTransport": {
+    "commit": "d4de3aededc4cdb96ba248996454d877cbc4c452",
+    "implementation": "271516e33fa4ba607ed3f434c32d91fedf6beea6",
+    "ci": "https://github.com/Gecch12/trencitos/actions/runs/42289041784",
+    "ciConclusion": "success",
+    "nodeTests": 741,
+    "browserChecks": "all, including incremental transport recovery and 16 draw scenarios",
+    "deploy": "dep-dbn3nj8n74is73ehu760",
+    "status": "Live",
+    "liveAt": "2026-11-06T20:43:35Z",
+    "observedStatePatches": 16,
+    "observedErrors": 0,
+    "healthAfterCleanup": {
+      "ok": true,
+      "rooms": 3,
+      "mode": "room",
+      "pausedRooms": 0
+    },
+    "reconnect": {
+      "sameMatch": true,
+      "sameHand": true,
+      "handCount": 19
+    }
   }
 }

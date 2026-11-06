@@ -37,3 +37,8 @@ Los 16 robos y cuatro altas de bots no produjeron errores. La información ya no
 espera un giro/aterrizaje; el máximo recepción→visible fue 59 ms. La meta de
 <50 ms en todos los casos aún no se acredita en este navegador, y no se oculta
 esa diferencia. [Mediciones](../qa/match-performance-comparison.json).
+
+
+Repetición final en `d4de3ae`: recepción→color oculto mediano 41 ms;
+recepción→visible de todos los robos, mediana 39,1 y máximo 52,9 ms. El objetivo
+original <50 ms aún no se acredita en todos los casos. [Resultado final](../qa/match-performance-results.md).

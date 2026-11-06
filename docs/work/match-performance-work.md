@@ -1,5 +1,5 @@
 ---
-{"id":"match-performance-work","status":"active","parent":"match-performance-architecture","depends_on":["match-performance-baseline"],"branch":"main","delivery":"worktree","updated":"2026-11-06"}
+{"id":"match-performance-work","status":"done","parent":"match-performance-architecture","depends_on":["match-performance-baseline"],"branch":"main","delivery":"released","updated":"2026-11-06"}
 ---
 # Trabajo por jugada
 
@@ -13,8 +13,8 @@ La espera en cola fue menor de 0,1 ms en esta muestra sin carga simultánea.
   poseen sus objetos y se volvían a clonar al redactar el observador/grabar.
 - [x] Recorrer diferencias de replay una vez por árbol, evitando serializar de
   nuevo cada subárbol a cada nivel. Preservar el formato de patches y aplicación.
-- [ ] Validar privacidad, propiedad de objetos, replay, CI y versión productiva.
-- [ ] Comparar la medición bajo el mismo método; no presentar costes de CI como
+- [x] Validar privacidad, propiedad de objetos, replay, CI y versión productiva.
+- [x] Comparar la medición bajo el mismo método; no presentar costes de CI como
   latencia del servidor ni prometer eliminar el viaje a la base de datos.
 
 La siguiente fase separa copias y guardado por sala. No se cambia la estrategia
@@ -25,8 +25,8 @@ Validación de código: 30 comprobaciones de proyecciones, privacidad, archivo,
 patches y replay correctas. No son mediciones de rendimiento productivo. El CI de `43e375e` pasó Node y los primeros recorridos Chrome, pero agotó
 sus 20 minutos tras una instalación de Chrome de más de diez minutos
 ([ejecución](https://github.com/Gecch12/trencitos/actions/runs/42277663209)).
-No se publicó ese commit aislado. El siguiente CI valida conjuntamente fases 1–4
-con límite de 30 minutos y todas las pruebas; sigue pendiente la comparación.
+No se publicó ese commit aislado. El CI siguiente validó conjuntamente fases 1–4 con límite de 30 minutos y
+todas las pruebas. La comparación y el ajuste posterior se detallan abajo.
 
 ## Ajuste adicional tras medir la entrega
 
@@ -34,7 +34,7 @@ con límite de 30 minutos y todas las pruebas; sigue pendiente la comparación.
 ejecución de 26,09 a 14,74 ms y RPC de 159,87 a 109,47 ms. Clic→estado todavía
 es 566,45 ms de mediana (antes 624,55). No se atribuye la diferencia residual
 a Render ni a la red sin medirla. La vista repite rutas e historial: mediana
-25.795 caracteres por mensaje, hasta 33.567. Evidencia provisional en
+25.795 caracteres por mensaje, hasta 33.567. Evidencia intermedia en
 [comparación](../qa/match-performance-comparison.json).
 
 Siguiente hito, definido antes de implementarlo: protocolo incremental optativo
@@ -54,5 +54,10 @@ eliminen el coste de SQL o el RTT.
 Implementación incremental `271516e`: 741/741 Node correctas, 16 recorridos de
 cartas y el recorrido de transporte Chrome correctos, incluida recuperación
 real de una nueva vista tras una secuencia inválida en el entorno aislado.
-El recorrido de transporte se añade a CI; falta su ejecución remota conjunta
-y la comparación posterior a publicación. La producción continúa en `15636fb`.
+El recorrido quedó en CI mediante `d4de3ae`; [ejecución completa aprobada](https://github.com/Gecch12/trencitos/actions/runs/42289041784),
+741/741 Node y todos los recorridos Chrome. Publicado a las 15:43:35 Lima.
+La [comparación final](../qa/match-performance-results.md) registra captura
+mediana 0,68 ms, ejecución 11,33 ms, mensajes de 6.394 caracteres y clic→estado
+390,05 ms. Dieciséis deltas, cero errores y reconexión exacta. El alcance de
+reducción/validación está entregado; las metas p95 pendientes permanecen
+explícitas en la iniciativa y no se declaran cumplidas.
