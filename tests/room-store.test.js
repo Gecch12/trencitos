@@ -151,3 +151,36 @@ test('corrupt JSON diagnostics never expose fragments of private save contents',
     return true;
   });
 });
+test('corrupt replay JSON identifies its file and line without exposing or overwriting saved contents', t => {
+  const f = archiveFixture(t), secret = 'private-replay-credential';
+  f.archive.matches[f.id].frames.push({ seq: 1, secret });
+  saveRooms(f.file, f.rooms, f.archive);
+  saveRooms(f.file, f.rooms, f.archive);
+  const bytes = fs.readFileSync(f.log);
+  bytes[bytes.indexOf('\n') + 1] = '!'.charCodeAt(0);
+  fs.writeFileSync(f.log, bytes);
+  const before = [f.file, f.file + '.bak', f.log].map(file => fs.readFileSync(file));
+  assert.throws(() => loadState(f.file), error => {
+    assert.equal(error.code, 'STATE_LOAD_FAILED');
+    assert.ok(error.message.includes(f.log));
+    assert.match(error.message, /JSON inválido en repetición: .*; línea 2\./);
+    assert.ok(!error.message.includes(secret));
+    return true;
+  });
+  assert.deepEqual([f.file, f.file + '.bak', f.log].map(file => fs.readFileSync(file)), before);
+});
+test('invalid JSON beyond the backup replay prefix still recovers the prior checkpoint', t => {
+  const f = archiveFixture(t);
+  saveRooms(f.file, f.rooms, f.archive);
+  const prefix = fs.statSync(f.log).size;
+  f.archive.matches[f.id].frames.push({ seq: 1, action: 'new' });
+  f.room.revision = 1;
+  saveRooms(f.file, f.rooms, f.archive);
+  const bytes = fs.readFileSync(f.log);
+  bytes[prefix] = '!'.charCodeAt(0);
+  fs.writeFileSync(f.log, bytes);
+  const restored = loadState(f.file);
+  assert.equal(restored.rooms[0].revision, 0);
+  assert.equal(restored.archive.matches[f.id].frames.length, 1);
+  assert.deepEqual(fs.readFileSync(f.log), bytes);
+});

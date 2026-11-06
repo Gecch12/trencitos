@@ -65,7 +65,8 @@ function selectRoomColor(color) {
   flushRoomColor();
 }
 let account = null, shell = null;
-const replayMode = location.pathname === "/replay";
+let replayMode = location.pathname === "/replay";
+let inlineReplaySnapshot=null, currentMatchId=null;
 let replayAt = null;
 let replayMotion = false, replaySpeed = 1;
 let wagonSeed = '';
@@ -212,6 +213,7 @@ const constructionBusy=()=>!replayMode&&!!game?.construction&&Date.now()+serverO
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 let uiDialog = null, dialogReturnFocus = null, buildTarget = null, buildSubmitting = false;
 let tunnelReveal = null;
+let tunnelDecisionView = null;
 let ticketMapView = null, ticketMapLoadingNode = null, ticketMapCamera = null, ticketMapCameraKey = null;
 let pinnedTicket = null, ticketPlans = new Map(), ticketMapShaded = true;
 function disposeTicketMap() { ticketMapView?.dispose(); ticketMapView = null; ticketMapLoadingNode = null; }
@@ -293,6 +295,7 @@ function identityKey(code) {
   return "rr-room-" + code;
 }
 function resetToLobby(message = "", preserveIdentity = false) {
+  Postgame.reset();currentMatchId=null;
   pendingRoomColor = colorRequest = null;
   message = I18n.t(message);
   cancelTunnelReveal(); disposeTicketMap();
@@ -476,6 +479,11 @@ function connect() {
       return;
     }
     if (m.type === "lobby") {
+      if(inlineReplaySnapshot){
+        if(m.started&&m.matchId===currentMatchId){inlineReplaySnapshot.members=m.members;host=m.host;return;}
+        Postgame.reset();
+      }
+      currentMatchId=m.matchId||null;
       const enteringRoom = room !== m.code;
       homeBusy = false;
       lobbyStarted = !!m.started;
@@ -521,6 +529,10 @@ function connect() {
       return;
     }
     if (m.type === "state") {
+      if(inlineReplaySnapshot){
+        if(m.game.phase==='finished'){inlineReplaySnapshot.game=m.game;return;}
+        Postgame.reset();
+      }
       try { useMatchDefinition(m.game, m.definition); } catch { return; }
       const effects = prepareEffects(m.game), oldTurn = game?.turnSerial, oldOffer = game?.ticketOffer;
       if (oldOffer && oldOffer.id !== m.game.ticketOffer?.id) localStorage.removeItem(`rr-choice-${room}-${seat}-${oldOffer.id}`);
@@ -1017,8 +1029,6 @@ function render() {
   layoutHand();
   renderMarket();
   $("pendingTickets").classList.toggle("hidden", !game.ticketOffer);
-  $("deckinfo").textContent =
-    I18n.t`${game.deckCount} cartas ocultas · ${game.ticketDeckCount} destinos por robar`;
   $("drawblind").title = I18n.t`Robar una carta oculta · ${game.deckCount} disponibles`;
   $("drawtickets").title = I18n.t`Robar nuevos destinos · ${game.ticketDeckCount} disponibles`;
   $("drawstats").textContent = active ? `${game.drawCount}/${gameRules.trainCards.drawsPerTurn}` : "";
@@ -1241,16 +1251,17 @@ let observedDrawEnd = 0, observedDrawLaunch = 0;
 function playEffects(events, speed=1) {
   for (const event of events) {
     if (event.type === "draw") {
-      if (event.seat === seat && handledDrawEvents.has(event.id)) continue;
+      if (!replayMode && event.seat === seat && handledDrawEvents.has(event.id)) continue;
       const now = performance.now();
       const followsRenewal = marketRefresh && !events.some(e => e.type === 'market_refresh' && e.id === marketRefresh.id);
       const drawDelay = reducedMotion.matches ? 0 : Math.max(0, observedDrawLaunch + 320/speed - now, followsRenewal ? (marketRefresh.until || now) - now : 0);
       observedDrawLaunch = now + drawDelay; observedDrawEnd = observedDrawLaunch + 680/speed;
       const timer = setTimeout(() => {
         effectTimers.delete(timer);
-        if (document.hidden || game?.phase === "finished") return;
+        if (document.hidden || game?.phase === "finished") { settleReplayDraw(event); return; }
         playSound("card");
         if (!reducedMotion.matches && event.source?.width) animateCardFlight(event,speed);
+        else settleReplayDraw(event);
       }, drawDelay);
       effectTimers.add(timer);
     } else if (event.type === "market_refresh") {
@@ -1446,6 +1457,7 @@ function animateMarketRefresh() {
     const rect = slots[i], image = document.createElement("img");
     image.src = `assets/cards/${color}.svg`; image.alt = ""; image.draggable = false;
     Object.assign(image.style, {left: `${rect.x - bounds.x}px`, top: `${rect.y - bounds.y}px`, width: `${rect.width}px`, height: `${rect.height}px`});
+    if(!compactMedia.matches){image.style.objectFit='contain';image.style.rotate='90deg';image.style.width=rect.height+'px';image.style.height=rect.width+'px';image.style.left=(rect.x-bounds.x+(rect.width-rect.height)/2)+'px';image.style.top=(rect.y-bounds.y+(rect.height-rect.width)/2)+'px';}
     layer.appendChild(image); return image;
   };
   const move = (x, y, scale = 1, rotation = 0) => `translate(${x}px,${y}px) scale(${scale}) rotate(${rotation}deg)`;
@@ -1489,10 +1501,14 @@ function cancelDrawFeedback(preservePending = false) {
   queuedDraw = preservePending ? [...inflightDraws.values()][1] || null : null;
   renderHand();
 }
+function cardFlightOrigin(rect){
+ if(!rect||compactMedia.matches)return rect;
+ return {x:rect.x+(rect.width-rect.height)/2,y:rect.y+(rect.height-rect.width)/2,width:rect.height,height:rect.width,rotation:90};
+}
 function startDrawFeedback(draw) {
   const intent = draw.intent;
   const source = intent.index < 0 ? $("drawblind") : $("market").querySelector(`[data-market-index="${intent.index}"]`);
-  const start = source?.getBoundingClientRect();
+  const start = cardFlightOrigin(source?.getBoundingClientRect());
   if (!start?.width || document.hidden) { draw.cancelled = true;draw.landed = true;return null; }
   const node = document.createElement("div"), face = document.createElement("div"), img = document.createElement("img");
   node.className = "draw-flight draw-flight-pending";node.dataset.drawId = draw.id;
@@ -1505,7 +1521,7 @@ function startDrawFeedback(draw) {
   const order = draw.order || 1;
   const hold = `translate(${-28 - (order - 1) * 24}px,${-22 - (order - 1) * 16}px) scale(.93) rotate(${-5 + (order - 1) * 9}deg)`;
   const motion = node.animate(reducedMotion.matches ? [{opacity:.7},{opacity:1}] : [
-    { transform: 'translate(0,0) scale(1)', opacity:1 }, { transform: hold, opacity:1 },
+    { transform: `translate(0,0) scale(1) rotate(${start.rotation||0}deg)`, opacity:1 }, { transform: hold, opacity:1 },
   ], { duration: reducedMotion.matches ? 40 : 150, delay, easing:'ease-out', fill:'forwards' });
   const flight = { node, face, img, animations:[motion], motion, started, deadline:started + delay + 520 };
   cardFlights.add(flight);
@@ -1633,8 +1649,8 @@ function animateCardFlight(event, speed=1) {
     if (!rect?.width || rect.left < area.left || rect.right > area.right || rect.top < area.top || rect.bottom > area.bottom)
       target = own ? $("handCount") : $("compactPlayers");
   }
-  if (!target || (own && !color)) return;
-  const end = target.getBoundingClientRect(), start = event.source;
+  if (!target || (own && !color)) { settleReplayDraw(event); return; }
+  const end = target.getBoundingClientRect(), start = cardFlightOrigin(event.source);
   const node = document.createElement("div");
   node.className = "draw-flight";
   node.setAttribute("aria-hidden", "true");
@@ -1651,7 +1667,7 @@ function animateCardFlight(event, speed=1) {
   const dy = end.y + end.height / 2 - start.y - start.height / 2;
   const scale = (own ? end.width : 24) / start.width;
   const motion = node.animate([
-    { transform: "translate(0,0) scale(1)", opacity: 1 },
+    { transform: `translate(0,0) scale(1) rotate(${start.rotation||0}deg)`, opacity: 1 },
     { transform: "translate(-28px,-22px) scale(.93) rotate(-5deg)", offset: .22, opacity: 1 },
     { transform: "translate(-28px,-22px) scale(.93) rotate(-5deg)", offset: .44, opacity: 1 },
     { transform: `translate(${dx}px,${dy}px) scale(${scale})`, opacity: own ? 1 : .2 },
@@ -1666,13 +1682,20 @@ function animateCardFlight(event, speed=1) {
   if(replayDraw)replayDraw.flight=flight;
   motion.onfinish = () => {
     node.remove(); cardFlights.delete(flight);
-    if(replayDraw){replayDraw.landed=true;drawPresentations.delete(replayDraw.id);renderHand();}
+    settleReplayDraw(event,replayDraw);
     const landing = document.querySelector(targetSelector);
     const pulseTarget = own ? landing?.querySelector(".cardcount") : landing;
     if (pulseTarget && !reducedMotion.matches) pulseTarget.animate([
       { transform: "scale(1)" }, { transform: "scale(1.15)", offset: .45 }, { transform: "scale(1)" },
     ], { duration: 180/speed });
   };
+  motion.oncancel = () => { node.remove();cardFlights.delete(flight);settleReplayDraw(event,replayDraw); };
+}
+function settleReplayDraw(event, expected) {
+  const draw=drawPresentations.get(`replay:${event.id}`);
+  if(!draw||(expected&&draw!==expected))return;
+  draw.landed=true;drawPresentations.delete(draw.id);
+  if(game)renderHand();
 }
 function constructionTarget(event) {
   return event.routeId !== undefined ? $("board").querySelector(`[data-route-id="${CSS.escape(String(event.routeId))}"]`) : $("board").querySelector(`[data-city="${CSS.escape(event.city)}"]`);
@@ -1885,11 +1908,12 @@ function syncBoard3D(transitionMs = 0) {
     spotlight = { ...spotlight, routes: [...routes], endpoints: [...endpoints],
       activeRoutes: active.routeId === undefined ? [] : [active.routeId] };
   }
+  if(Postgame.spotlight())spotlight=Postgame.spotlight();
   const focus = document.activeElement.closest?.("#board [data-route-id]");
   const cityFocus = document.activeElement.closest?.("#board [data-city]");
   board3D.update({ routes: game.routes.map(({ id, owner, color, tunnel, ferry, a, b }) => ({ id, owner, color, tunnel, ferry, a, b })),
     players: game.players.map(p => ({ color: GameUI.playerColor(p.color), placed: [...p.placed] })),
-    visualSeed: wagonSeed, hiddenRoute: null, highlight, spotlight,
+    visualSeed: wagonSeed, hiddenRoute: null, highlight, spotlight, recount:Postgame.recount(),
     transitionMs: transitionMs || constructionFocus?.transitionMs || (tunnelChanged ?
       (tunnelRoute === null ? GameTiming.construction.restoreMs : GameTiming.construction.focusMs) : 0),
     selectedRoute: selected ?? (focus ? routeIdFromDom(focus.dataset.routeId) : null), selectedCity: stationCity ?? cityFocus?.dataset.city ?? null,
@@ -2268,7 +2292,8 @@ function showDialog(title, body, ticketDialog = false, dismissible = false) {
   closeMapMenu();
   hoveredDestination = null;
   $("overlay").onpointerdown = null;
-  $("overlay").classList.remove("hidden");
+  $("overlay").classList.remove("hidden","postgame-results");
+  $("dialog").setAttribute("role","dialog");$("dialog").setAttribute("aria-modal","true");
   $("dialog").classList.toggle("ticket-dialog", ticketDialog);
   $("dialog").classList.remove("tunnel-dialog", "results-dialog", "build-dialog", "destination-confirm");
   delete $("dialog").dataset.sharedTunnel;
@@ -2291,7 +2316,7 @@ function closeOptionalDialog() {
   disposeTicketMap();
   const choosing = uiDialog === "tickets";
   const closingResults = uiDialog === "results";
-  if (closingResults) { resultMapCleanup?.(); resultMapCleanup = null; resultScrollCleanup?.(); resultScrollCleanup=null;ShellIcons.hideTooltip(); }
+  if (closingResults) { Postgame.map();resultMapCleanup?.(); resultMapCleanup = null; resultScrollCleanup?.(); resultScrollCleanup=null;ShellIcons.hideTooltip(); }
   const returningToMap = uiDialog === "routes";
   uiDialog = buildTarget = null;
   buildSubmitting = false;
@@ -2383,7 +2408,7 @@ function updateDestinationSpotlight() {
     overlay.id = "destinationSpotlight"; overlay.setAttribute("aria-hidden", "true");
     $("mapscroll").appendChild(overlay);
   }
-  const selection = !tableFocus &&
+  const selection = !Postgame.spotlight() && !tableFocus &&
     GameUI.destinationSpotlightSelection(game, hoveredDestination, allDestinationsVisible, resultMapSelection);
   boardSpotlight = selection ? {
     routes: selection.routes || [], completedRoutes:selection.completedRoutes, stationRoutes: selection.stationRoutes || [],
@@ -2646,7 +2671,13 @@ function showTicketDialog(tickets, min, viewing = false) {
 }
 function renderDialog() {
   if (!game) return;
+  const tunnelView = syncTunnelDecisionView();
   if(replayMode){if(uiDialog==="results")showResults();else if(uiDialog==="routes")showTicketDialog(game.tickets,0,true);else $("overlay").classList.add("hidden");return;}
+  if(tunnelView?.minimized){
+    if(uiDialog==='routes')showTicketDialog(game.tickets,0,true);
+    else $("overlay").classList.add("hidden");
+    return;
+  }
   if (game.sharedTunnel) {
     if (isTunnelBuilder()) { showSharedTunnel(); return; }
     if ($("dialog").classList.contains("tunnel-dialog")) { cancelTunnelReveal(); $("overlay").classList.add("hidden"); }
@@ -2748,9 +2779,11 @@ function renderResultPanel(result) {
       I18n.t`<button type="button" class="score-choice" data-express-seat="${r.seat}" aria-pressed="${r.seat === compared.seat}"><span class="score-trail-place">${standings.findIndex(p => p.longest === r.longest) + 1}</span>${playerAvatar(r.seat)}<span class="score-trail-name">${escapeHTML(r.name)}<small>${r.longest} vagones</small></span>${r.express ? I18n.t`<strong class="score-bonus" aria-label="Bonificación: ${r.express} puntos">+${r.express}</strong>` : I18n.t('<span class="score-no-bonus">—<span class="sr-only"> Sin bonificación</span></span>')}</button>`).join("")}</div>`;
   }
   panel.innerHTML = I18n.t`<div class="score-section-heading"><h3>${title}</h3><strong>${total}</strong></div>
+    ${category!=="stations"?`<button type="button" class="recount-launch">${ShellIcons.svg("play")}${I18n.t("Ver recuento")}</button>`:""}
     <div class="score-detail-layout ${category === "routes" ? "score-detail-routes" : ""}">
     <figure class="score-map-panel"><div class="score-map-stage"><svg id="scoreMap" role="group" aria-label="Mapa: ${escapeHTML(title)} de ${escapeHTML(result.name)}" tabindex="0"></svg>${empty ? `<span class="score-map-empty">${empty}</span>` : ""}<button type="button" class="score-map-expand" aria-label="${view.expanded ? "Reducir" : "Ampliar"} mapa" aria-pressed="${view.expanded}" title="${view.expanded ? "Reducir" : "Ampliar"} mapa">⛶</button></div><figcaption aria-live="polite">${escapeHTML(caption)}</figcaption></figure>
     <div class="score-side-detail">${content}</div></div>`;
+  if(panel.querySelector(".recount-launch"))panel.querySelector(".recount-launch").onclick=()=>Postgame.start(category==='express'?(game.result.find(r=>r.seat===view.expressSeat)||result):result,category);
   for (const button of panel.querySelectorAll("[data-score-choice]")) button.onclick = () => {
     view.index = +button.dataset.scoreChoice; renderResultPanel(result);
     panel.querySelector(`[data-score-choice="${view.index}"]`)?.focus({ preventScroll: true });
@@ -2771,20 +2804,27 @@ function renderResultPanel(result) {
   renderResultMap(result, GameUI.resultSelection(game, result.seat, category, view.index, view.expressSeat));
 }
 function showResults() {
+  if(Postgame.mode()==="replay")Postgame.results();
   if (game?.phase !== "finished") return;
+  if(Postgame.mode()!=="results")Postgame.results();
   const signature = JSON.stringify([game.result, game.players.map(p => p.color)]);
   if (uiDialog === "results" && $("dialog")._resultSignature === signature && $("dialog").querySelector(".results-scroll") && !$("overlay").classList.contains("hidden")) return;
   if (!resultsSeen) expandedResults.clear();
   uiDialog = "results"; resultsSeen = true;
   hoveredDestination = null;
   showDialog(game.earlyFinish ? I18n.t("Prueba terminada anticipadamente") : I18n.t("Fin de partida"),
-    I18n.t`<div class="results-scroll">${game.earlyFinish ? I18n.t('<p class="score-preview-note">Estado actual · Solo billetes conservados</p>') : ""}
+    I18n.t`<nav class="postgame-navigation" aria-label="Fin de partida"><button aria-current="page" type="button">${ShellIcons.svg("trophy")}Resultados</button><button id="postgameMap" type="button">${ShellIcons.svg("map")}Mapa</button><button id="postgameReplay" type="button">${ShellIcons.svg("history")}Repetición</button><button id="watchRecount" type="button">${ShellIcons.svg("play")}Ver recuento</button></nav><div class="results-scroll">${game.earlyFinish ? I18n.t('<p class="score-preview-note">Estado actual · Solo billetes conservados</p>') : ""}
     <div class="results-table-scroll"><table class="results-table"><caption class="sr-only">Puntuación final por jugador</caption>
     <thead><tr><th scope="col">Jugador</th>${['trophy','routes','ticket','station','express'].map(icon=>`<th scope="col">${ShellIcons.scoreHeader(icon)}</th>`).join('')}</tr></thead>
     ${game.result.map(resultRowHTML).join("")}</table></div>
     </div>
-    <div class="result-actions"><button id="exploreMap" class="primary">Explorar mapa</button>${practiceMode ? I18n.t('<button id="practiceHome" class="tertiary">Volver al inicio</button>') : I18n.t('<button id="rematch" class="tertiary">Revancha</button><button id="multiplayerHome" class="tertiary">Volver al inicio</button>')}</div>`, false, true);
+    <div class="result-actions">${practiceMode ? I18n.t('<button id="practiceHome" class="tertiary">Volver al inicio</button>') : I18n.t('<button id="rematch" class="primary">Revancha</button><button id="multiplayerHome" class="tertiary">Volver al inicio</button>')}</div>`, false, true);
   $("dialog").classList.add("results-dialog");
+  $("overlay").classList.add("postgame-results");$("dialog").setAttribute("role","region");$("dialog").removeAttribute("aria-modal");
+  $("postgameMap").onclick=closeOptionalDialog;
+  $("postgameReplay").onclick=()=>Postgame.replay();
+  $("watchRecount").onclick=()=>Postgame.start(game.result.find(r=>r.seat===seat)||game.result[0],"routes");
+  Postgame.layout();
   ShellIcons.mount($("dialog"));
   resultScrollCleanup?.();resultScrollCleanup=ShellIcons.scrollTrack($("dialog").querySelector('.results-table-scroll'));
   $("dialog")._resultSignature = signature;
@@ -2823,7 +2863,6 @@ function showResults() {
     }
     if (expandedResults.has(playerSeat)) renderResultPanel(result);
   }
-  $("exploreMap").onclick = closeOptionalDialog;
   if (practiceMode) $("practiceHome").onclick = () => send({ type: "leave_test" });
   else {
     $("multiplayerHome").onclick = () => send({ type: "leave" });
@@ -3030,6 +3069,8 @@ function syncTunnelBoard() {
   const t = game?.sharedTunnel;
   const notice = $("tunnelBoardNotice");
   notice.hidden = !t || !$("overlay").classList.contains("hidden");
+  const deciding=!!syncTunnelDecisionView()?.minimized;
+  $("tunnelDecisionReturn").hidden=!deciding;
   if (!t) { board3D?.setTunnelCards(null, cardArtwork); return; }
   if (!notice.hidden) {
     const rect = $("mapscroll").getBoundingClientRect(), safe = mapSafeArea(rect);
@@ -3041,7 +3082,7 @@ function syncTunnelBoard() {
   const surcharge = t.revealed.slice(0, shown).filter(c => tunnelCardMatch(c, t.paymentColor)).length;
   const text = t.stage === "result" ? I18n.t(t.outcome === "built" ? "Túnel construido" : "Túnel no construido")
     : I18n.t`${game.players[t.seat].name} · ${shown} de ${t.revealed.length} cartas · Suplemento: ${surcharge}`;
-  $("tunnelBoardStatus").textContent = text;
+  $("tunnelBoardStatus").textContent = deciding ? I18n.t`Decisión pendiente · Suplemento: ${surcharge}` : text;
   board3D?.setTunnelCards({ id: t.id, routeId: t.routeId, animate: !reducedMotion.matches && t.stage === "reveal",
     cards: t.revealed.map((color, i) => ({ color: i < shown ? color : null, match: i < shown && tunnelCardMatch(color, t.paymentColor), age: now - t.startedAt - (i + 1) * t.cardMs })) }, cardArtwork);
 }
@@ -3053,6 +3094,21 @@ function prepareTunnelReveal() {
 function isTunnelBuilder() {
   return !replayMode && game?.phase === "tunnel" && game.current === seat &&
     !members[seat]?.bot && !members[seat]?.autopilot;
+}
+// Minimizing is a local view choice, tied to this attempt; the server clock keeps running.
+function syncTunnelDecisionView() {
+  if(!isTunnelBuilder()||!game.tunnel||game.sharedTunnel?.stage!=='decision'){
+    tunnelDecisionView=null;return null;
+  }
+  const key=`${game.sharedTunnel.id}:${game.tunnel.routeId}`;
+  if(tunnelDecisionView?.key!==key)tunnelDecisionView={key,minimized:false,payment:null};
+  return tunnelDecisionView;
+}
+function minimizeTunnel() {
+  const view=syncTunnelDecisionView();if(!view)return;
+  view.minimized=true;uiDialog=null;cancelTunnelReveal();
+  $("overlay").classList.add('hidden');syncTunnelBoard();updateClocks();
+  $("returnTunnel").focus({preventScroll:true});
 }
 function syncTunnelMask() { syncBoard3D(); syncTunnelBoard(); }
 function cancelTunnelMotion() {
@@ -3189,17 +3245,20 @@ function animateTunnelResult(t) {
 }
 function showTunnelDialog() {
   if (!game?.tunnel || !isTunnelBuilder()) return;
+  const decision=syncTunnelDecisionView();
+  if(decision?.minimized)return;
   const t = game.tunnel, shared = { ...game.sharedTunnel, base: t.base }, route = game.routes.find(r => r.id === t.routeId);
   const key = JSON.stringify([t.revealId, t.routeId, t.revealed, game.hand]);
   if ($("dialog").dataset.tunnelDecision === key && !$("overlay").classList.contains("hidden")) return;
   const options = GameUI.tunnelPayments(game.hand, t);
+  if(decision&&!options.some(option=>option.wild===decision.payment))decision.payment=options[0]?.wild??null;
   const count = t.surcharge;
   showDialog(I18n.t`Túnel: ${count} carta${count === 1 ? "" : "s"} adicional${count === 1 ? "" : "es"}`,
-    `${dialogClockHTML()}<p class="tunnel-route">${escapeHTML(routeName(route))}</p>
+    `${dialogClockHTML()}<div class="tunnel-decision-heading"><p class="tunnel-route">${escapeHTML(routeName(route))}</p><button id="minimizeTunnel" type="button" class="secondary">${I18n.t('Ver mapa')}</button></div>
     ${tunnelSteps("decision")}${tunnelEvidence(shared)}
     <div id="tunnelTotal" aria-live="polite"></div>
     <fieldset class="tunnel-payments"><legend>${options.length > 1 ? I18n.t("¿Cómo pagas el suplemento?") : ""}</legend>
-      ${options.length > 1 ? `<div class="tunnel-options">${options.map((option, i) => `<label class="tunnel-option"><input type="radio" name="tunnelPayment" value="${option.wild}" ${i === 0 ? "checked" : ""}><span><span class="payment-icons">${paymentIcons(option)}</span><span class="payment-label">${paymentDescription(option)}</span></span></label>`).join("")}</div>`
+      ${options.length > 1 ? `<div class="tunnel-options">${options.map((option, i) => `<label class="tunnel-option"><input type="radio" name="tunnelPayment" value="${option.wild}" ${(decision?option.wild===decision.payment:i===0) ? "checked" : ""}><span><span class="payment-icons">${paymentIcons(option)}</span><span class="payment-label">${paymentDescription(option)}</span></span></label>`).join("")}</div>`
         : options.length ? "" : `<p class="tunnel-insufficient">${GameUI.tunnelShortfall(game.hand, t) === 1 ? I18n.t("Te falta 1 carta para completar este túnel.") : I18n.t`Te faltan ${GameUI.tunnelShortfall(game.hand, t)} cartas para completar este túnel.`}</p>`}
     </fieldset>
     <div class="dialog-actions"><button class="primary full" id="acceptTunnel" ${options.length ? "" : "disabled"}>${I18n.t("Pagar suplemento y construir")}</button>
@@ -3207,9 +3266,10 @@ function showTunnelDialog() {
   $("dialog").dataset.tunnelDecision = key;
   const chosen = () => options.length === 1 ? options[0]
     : options.find(option => option.wild === +document.querySelector('input[name="tunnelPayment"]:checked')?.value);
-  const total = () => { $("tunnelTotal").innerHTML = tunnelLedger(shared, chosen()); };
+  const total = () => { const payment=chosen();if(decision)decision.payment=payment?.wild??null;$("tunnelTotal").innerHTML = tunnelLedger(shared, payment); };
   document.querySelectorAll('input[name="tunnelPayment"]').forEach(input => input.addEventListener("change", total));
   total(); startTunnelPresentation(shared);
+  $("minimizeTunnel").onclick=minimizeTunnel;
   const submit = type => {
     if ($("declineTunnel").disabled) return;
     const option = chosen();
@@ -3220,6 +3280,11 @@ function showTunnelDialog() {
   $("acceptTunnel").onclick = () => submit("pay_tunnel");
   $("declineTunnel").onclick = () => submit("decline_tunnel");
 }
+
+$("returnTunnel").onclick=()=>{
+  const view=syncTunnelDecisionView();if(!view)return;
+  view.minimized=false;uiDialog=null;setCompactPanel('map');showTunnelDialog();syncTunnelBoard();
+};
 
 function renderPracticeControls() {
   $("practiceControls").classList.toggle("hidden", !practiceMode || !game);
@@ -3282,7 +3347,7 @@ function syncTableLayout() {
 }
 function setCompactPanel(next = compactPanel) {
   if (next === "cards") next = "map"; // The market is always on the table.
-  if (!compactMedia.matches && ["history", "destinations"].includes(next)) next = "map";
+  if (!compactMedia.matches && ["history", "destinations", "chat"].includes(next)) next = "map";
   if (next !== "map" && !compactSections[next]) return;
   if (next !== "map") clearTableFocus();
   syncCompactControls();
@@ -3294,12 +3359,14 @@ function setCompactPanel(next = compactPanel) {
     if (!compactMedia.matches && ["history", "destinations"].includes(section)) {
       const anchor = tableHomes.get(node);
       if (node.previousSibling !== anchor) anchor.after(node);
+    } else if (!compactMedia.matches&&section==="chat") { $("gameSidebar").querySelector(".history-panel").after(node);
     } else if (node.parentElement !== $("tablePanelHome")) $("tablePanelHome").append(node);
   }
   const open = next !== "map";
   if (open) $("tablePanelContent").append(...compactSections[next]);
+  if(compactMedia.matches&&next==="chat")$("tableChat").open=true;
   $("compactPanel").classList.toggle("hidden", !open);
-  $("tablePanelTitle").textContent = { destinations: I18n.t("Tus destinos"), history: I18n.t("Historial"), rules: I18n.t("Puntos y final de partida"), chat: I18n.t("Chat próximamente"), hand: I18n.t("Tu mano") }[next] || "";
+  $("tablePanelTitle").textContent = { destinations: I18n.t("Tus destinos"), history: I18n.t("Historial"), rules: I18n.t("Puntos y final de partida"), chat: I18n.t("Chat"), hand: I18n.t("Tu mano") }[next] || "";
   $("game").dataset.compactPanel = next;
   for (const button of document.querySelectorAll("[data-panel]")) {
     button.setAttribute("aria-pressed", String(button.dataset.panel === next));
@@ -3394,7 +3461,7 @@ function clearTableFocus(restore = true) {
 function fitTableRoutes(ids) {
   const points = ids.flatMap(id => geometryFor(id)?.points || []); if (!points.length) return;
   const xs = points.map(p=>p[0]), ys = points.map(p=>p[1]), view = mapViewSize();
-  const safe = mapSafeArea($("mapscroll").getBoundingClientRect(), true), baseScale = view.scale * zoom;
+  const safe = Postgame.cameraArea(mapSafeArea($("mapscroll").getBoundingClientRect(), true)), baseScale = view.scale * zoom;
   mapCenter = {x:(Math.min(...xs)+Math.max(...xs))/2,y:(Math.min(...ys)+Math.max(...ys))/2};
   zoom = Math.max(1, Math.min(3.5, baseScale * safe.width / (Math.max(...xs)-Math.min(...xs)+100),
     baseScale * safe.height / ((Math.max(...ys)-Math.min(...ys)) * Math.cos(BoardCamera.tilt) + 100)));
@@ -3481,11 +3548,13 @@ window.addEventListener("resize", () => {
 });
 
 function mapSafeArea(rect, forCamera = false) {
+  const statusBottom=Postgame.spotlight()?rect.top:$("boardStatusActions").getBoundingClientRect().bottom;
+  const replayControls=replayMode&&!$('replayControls').hidden?$('replayControls').getBoundingClientRect():null;
   if (!compactMedia.matches) {
     const sidebar = $("gameSidebar").getBoundingClientRect(), dock = $("handdock").getBoundingClientRect();
     const banner = turnBanner.getBoundingClientRect();
     return TableUI.cameraArea({width:rect.width,height:rect.height}, {
-      top: Math.max(8, $("boardStatusActions").getBoundingClientRect().bottom - rect.top + 8),
+      top: Math.max(8, statusBottom - rect.top + 8, replayControls?replayControls.bottom-rect.top+8:0),
       bottom: Math.min(dock.top, banner.top) - rect.top - 8,
       left: 8, right: Math.max(8, rect.right - sidebar.left + 8), forCamera,
     });
@@ -3493,8 +3562,8 @@ function mapSafeArea(rect, forCamera = false) {
   const panel = $("compactPanel").getBoundingClientRect(), hud = $("compactHud").getBoundingClientRect();
   const players = $("compactPlayers").getBoundingClientRect();
   return TableUI.cameraArea({width:rect.width,height:rect.height}, {
-    top: Math.max($("boardStatusActions").getBoundingClientRect().bottom, players.bottom) - rect.top + 8,
-    bottom: hud.top - rect.top - 8,
+    top: Math.max(statusBottom, players.bottom, replayMode?$('compactMarket').getBoundingClientRect().bottom:0) - rect.top + 8,
+    bottom: Math.min(hud.top,replayControls?.top??hud.top) - rect.top - 8,
     left: Math.max(8, document.querySelector('.table-tools-left').getBoundingClientRect().left - rect.left),
     right: Math.max(8, rect.right - $("tableMapTools").getBoundingClientRect().right), forCamera,
     panel: $("compactPanel").classList.contains('hidden') ? null : {top:panel.top-rect.top-8},
@@ -3503,7 +3572,7 @@ function mapSafeArea(rect, forCamera = false) {
 function mapViewSize() {
   const rect = $("mapscroll").getBoundingClientRect(), { width, height } = rect;
   if (!width || !height) return null;
-  return BoardCamera.view(MAP_BOUNDS, { width, height }, mapSafeArea(rect, true), zoom, mapCenter, GameUI.camera);
+  return BoardCamera.view(MAP_BOUNDS, { width, height }, Postgame.cameraArea(mapSafeArea(rect, true)), zoom, mapCenter, GameUI.camera);
 }
 function applyZoom() {
   const view = mapViewSize();
@@ -3678,7 +3747,7 @@ window.addEventListener("keydown", (e) => {
       $("board").querySelector(selector)?.focus({ preventScroll: true });
     }
   }
-  if (e.key === "Tab" && !$("overlay").classList.contains("hidden")) {
+  if (e.key === "Tab" && !$("overlay").classList.contains("hidden") && !$("overlay").classList.contains("postgame-results")) {
     const focusable = [...$("dialog").querySelectorAll('button:not(:disabled), input, select, summary, [tabindex="0"]')].filter(node => node.getClientRects().length);
     const first = focusable[0], last = focusable.at(-1);
     if (!first) { e.preventDefault(); return; }
@@ -3742,9 +3811,8 @@ shell = AppShell.create({
   },
   leaveRoom:()=>send({type:'leave'}),
 });
-if(replayMode){
-  document.body.classList.add('is-replaying');
-  HistoryUI.replay(new URLSearchParams(location.search).get('id')||'',(view,recordedMembers,context)=>{
+function paintReplay(view,recordedMembers,context){
+    if(['results','recount'].includes(Postgame.mode()))Postgame.map();
     replayMotion=context.animate;replaySpeed=context.speed;
     if(!context.animate){cancelReplayEffects();lastEffectId=null;}
     useMatchDefinition(view, context.definition, {replay:true});
@@ -3765,13 +3833,39 @@ if(replayMode){
     if(context.animate)prepareMarketRefresh(effects,context.speed);
     render();
     if(context.animate)playEffects(effects,context.speed);
-  },{cancelEffects:cancelReplayEffects,decorateRow(node,row){
+}
+const replayOptions={cancelEffects:cancelReplayEffects,avatar:i=>playerAvatar(i),onLayout:()=>{if(game){applyZoom();layoutHand();}},decorateRow(node,row){
     if(Number.isInteger(row.seat)&&game.players[row.seat]){
       node.insertAdjacentHTML('afterbegin',playerAvatar(row.seat,true,row.events[0]?.actor||'player'));
       applyPlayerAppearance(node,game.players[row.seat].color);node.dataset.actor=row.seat;
     }
-  }});
-}else connect();
+  }};
+Postgame.setup({
+ board:()=>board3D, sync:()=>{if(game)updateDestinationSpotlight();}, refresh:()=>{if(game)applyZoom();}, area:r=>mapSafeArea(r,true),
+ capture:()=>({zoom,center:{...mapCenter},destinations:allDestinationsVisible,labels:[...labelPriority]}),
+ restore:s=>{zoom=s.zoom;mapCenter={...s.center};allDestinationsVisible=s.destinations;labelPriority=s.labels;resultMapSelection=null;applyZoom();},
+ fit:ids=>{if(ids.length)fitTableRoutes(ids);else applyZoom();}, geometry:geometryFor,routes:()=>game.routes,
+ city:cityName,cityPoint:id=>boardMap.cities[id]?{x:boardMap.cities[id][0],y:boardMap.cities[id][1]}:null,
+ hideResults:()=>{uiDialog=null;$("overlay").classList.add("hidden");resultMapSelection=null;},
+ results:showResults,error:message=>toast(message),
+ async replay(){
+  if(location.pathname==='/replay'){Postgame.map();ReplayUI.restart();return;}
+  if(!currentMatchId)throw Error(I18n.t('Esta repetición no está disponible.'));
+  inlineReplaySnapshot={game,members,seat,spectating,replayAt,zoom,center:{...mapCenter},wagonSeed};
+  zoom=1;mapCenter={...MAP_CENTER};
+  replayMode=true;document.body.classList.add('is-replaying');
+  await HistoryUI.replay(currentMatchId,paintReplay,{...replayOptions,onClose:showResults});
+ },
+ endReplay(){
+  if(!inlineReplaySnapshot)return;
+  ReplayUI.close();const saved=inlineReplaySnapshot;inlineReplaySnapshot=null;
+  replayMode=false;game=saved.game;members=saved.members;seat=saved.seat;spectating=saved.spectating;replayAt=saved.replayAt;wagonSeed=saved.wagonSeed;
+  zoom=saved.zoom;mapCenter=saved.center;document.body.classList.remove('is-replaying');document.body.classList.toggle('is-spectating',spectating);
+  $('leaveRoom').hidden=spectating;$('connection').classList.remove('hidden');uiDialog=null;resultsSeen=true;render();applyZoom();
+ }
+});
+if(replayMode){document.body.classList.add('is-replaying');HistoryUI.replay(new URLSearchParams(location.search).get('id')||'',paintReplay,replayOptions);}else connect();
+
 function cancelReplayEffects(){
   replayMotion=false;
   if(game)cancelCardFlights();cancelConstruction();cancelTunnelMotion();stopSounds();

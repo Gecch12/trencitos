@@ -1,5 +1,5 @@
 ---
-{"id":"profile-social-statistics","status":"validated","parent":null,"depends_on":["identity","history-replay"],"branch":"main","delivery":"released","updated":"2026-11-05"}
+{"id":"profile-social-statistics","status":"validated","parent":null,"depends_on":["identity","history-replay"],"branch":"main","delivery":"worktree","updated":"2026-11-06"}
 ---
 # Perfil, estadísticas y relaciones entre jugadores
 
@@ -119,3 +119,43 @@ incluido el recorrido de perfiles, 719 pruebas Node y todos los navegadores.
 [segundo intento](../qa/profile-social-setup/ci-second-attempt.json). El recorrido
 también pasó localmente con CPU de Chrome ralentizada seis veces mediante CDP.
 Los ajustes de pruebas no modificaron código ni recursos de la aplicación.
+
+## Ampliación local · Mi estilo · 2026-11-06
+
+Ángel aprobó implementar el selector con scroll y miniaturas de vagones, y los
+avatares circulares con el primer color. Esta ampliación está validada en el
+checkout de `main`, sin commit ni publicación; las entregas anteriores descritas
+arriba conservan su evidencia histórica. Se preservaron los cambios locales de
+Resumen, cierre de partida e historial que ya estaban presentes.
+
+- [x] Primer/segundo color con miniaturas estáticas de los 20 modelos reales,
+  nombre/tipo, selección marcada, teclado y panel inferior táctil. «Sin preferencia»
+  permanece disponible y se impiden colores duplicados en el formulario.
+- [x] Básico y Capibara dentro de una ficha circular; previsualización inmediata
+  del primer color y actualización de cabecera al guardar. Sin cambiar la
+  asignación autoritativa de color en las salas.
+- [x] Generador reproducible de PNG y recursos incluidos en el bundle móvil.
+- [x] Validación local y recorrido nuevo añadido al workflow de CI.
+
+Evidencia del cambio:
+
+- `node tests/browser-profile-style.cjs`: correcto en Chrome, escritorio
+  1440×1000 y móvil 390×844/320×640. Verifica carga de las 20 imágenes, ausencia
+  de select/canvas en el formulario, lista desplazable, flechas/Inicio/Fin/letras,
+  Escape y recuperación del foco, scroll mediante gesto táctil, colores distintos,
+  previsualización de ambos avatares, guardado/recarga, fallo de guardado sin
+  cambiar cabecera y descarte del borrador al salir. Textos españoles/ingleses y
+  consola sin errores. Capturas inspeccionadas en `.qa/profile-style/`.
+- `node tests/browser-profile-social.cjs`: correcto con proveedor simulado y SQL
+  local. El selector actualizado guarda el segundo color y el avatar; al entrar
+  en la sala, el servidor asigna la alternativa cuando el primer color está ocupado.
+- `node --test tests/mobile-beta.test.js tests/profile-social.test.js tests/wagon-models.test.js tests/i18n.test.js`:
+  **24/24 correctas**. El bundle temporal incluye el nuevo módulo y un PNG válido
+  para cada modelo del catálogo. No se instalaron builds nativos.
+- `node scripts/check-docs.js`, contraste `--base HEAD` y `git diff --check`:
+  correctos. Los avisos de impacto de los otros cambios del checkout se mantienen
+  separados de esta evidencia; no se acredita una ejecución completa de CI.
+
+Siguiente paso: cuando se autorice la entrega, publicar la ampliación junto con
+la revisión acordada del checkout y comprobar CI/despliegue. Contrato y regeneración
+de recursos en [Personalización](../profile-social-statistics.md#personalización).

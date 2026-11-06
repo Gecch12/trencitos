@@ -958,6 +958,16 @@ de navegador y puesto; OAuth reclama el historial con el perfil verificado.
 `i18n.js` y `translations.js` traducen la app sin modificar datos interpolados.
 Contrato y detalles de seguridad en [historial/replay](history-replay.md).
 
+`postgame.js` conserva el contexto de consulta final y la cámara previa al cierre;
+`score-recount.js` transforma el desglose guardado en pasos visuales y
+`score-medals.js` dibuja sus fichas en Three.js. `board-3d.js` recibe visibilidad
+por celda y foco acumulado sin modificar el estado de la partida. `replay-ui.js`
+permite cerrar una sesión embebida y restaurar la mesa original.
+`profile-summary.js` presenta métricas y ayudas; `player-statistics.js` calcula
+la media de porcentajes por partida. Contrato en [perfil](profile-social-statistics.md).
+Los nuevos módulos forman parte del manifiesto `backend/public-assets.js`, compartido
+por web y empaquetado móvil.
+
 
 ## Ejecución y presentación de la entrega Sudamérica
 

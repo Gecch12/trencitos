@@ -5,7 +5,17 @@ const ROOT = path.resolve(__dirname, "..");
 // Public URLs are a transport contract, independent of the repository layout.
 // Never expose a directory wholesale: shared modules are public only if listed.
 const ASSETS = Object.freeze({
+  "/profile-style.js": ["frontend/profile-style.js", "text/javascript; charset=utf-8"],
+  ...Object.fromEntries([
+    'passenger', 'tanker', 'alfalfa', 'grain', 'goods', 'timber', 'auto-carrier', 'coal', 'stone', 'mail',
+    'steel', 'crane', 'wine', 'tractors', 'cement', 'fruit', 'flowers', 'boat', 'dwelling', 'circus',
+  ].map(model => [`/assets/wagons/${model}.png`, [`frontend/assets/wagons/${model}.png`, 'image/png']])),
   "/profile-rules.js": ["shared/profile-rules.js", "text/javascript; charset=utf-8"],
+  "/profile-summary.js": ["frontend/profile-summary.js", "text/javascript; charset=utf-8"],
+  "/postgame.js": ["frontend/postgame.js", "text/javascript; charset=utf-8"],
+  "/score-recount.js": ["frontend/score-recount.js", "text/javascript; charset=utf-8"],
+  "/score-medals.js": ["frontend/score-medals.js", "text/javascript; charset=utf-8"],
+  "/postgame.css": ["frontend/postgame.css", "text/css; charset=utf-8"],
   "/profile-ui.js": ["frontend/profile-ui.js", "text/javascript; charset=utf-8"],
   "/profile.css": ["frontend/profile.css", "text/css; charset=utf-8"],
   "/assets/avatars/capybara.png": ["frontend/assets/avatars/capybara.png", "image/png"],

@@ -42,6 +42,18 @@ jobs:
         env:
           QA_OUT: .qa/ci/profile-social
         run: node tests/browser-profile-social.cjs
+      - name: Check visual wagon preferences and avatar previews
+        env:
+          QA_OUT: .qa/ci/profile-style
+        run: node tests/browser-profile-style.cjs
+      - name: Check postgame recounts and responsive replay
+        env:
+          QA_OUT: .qa/ci/postgame-summary
+        run: node tests/browser-postgame-summary.cjs
+      - name: Check recorded hands at every playback speed
+        env:
+          QA_OUT: .qa/ci/replay-analysis
+        run: node tests/browser-replay-analysis.cjs
       - name: Check installable web and offline privacy
         run: node tests/browser-pwa.cjs
       - name: Check two-client lobby

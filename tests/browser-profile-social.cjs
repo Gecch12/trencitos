@@ -10,7 +10,7 @@ const {chromium}=require('playwright');
  const tab=(p,name)=>p.locator(`.profile-nav [data-profile="${name}"]`).click();
  async function login(p,index,provider='google'){await p.goto(fixture.base+'/profile?tab=account');await p.locator('#'+provider+'Login').click();await p.getByText('Cuenta de prueba '+index,{exact:true}).click();await p.waitForURL(fixture.base+'/**');await p.locator('.app-nav [data-page="profile"]').click();await p.locator('#editProfile').waitFor();}
  async function identify(p,username){await p.locator('#editProfile').click();await p.locator('#profileUsername').fill(username);await p.locator('#profileName').fill('Patricia');await p.locator('#saveProfile').click();await p.locator('#profileDialog').waitFor({state:'hidden'});}
- async function customize(p){await tab(p,'customization');await p.locator('[name="avatar"][value="capybara"]').check();await p.locator('[name="secondaryColor"]').selectOption('#9ed7ed');await p.getByRole('button',{name:'Guardar preferencias'}).click();await p.getByText('Preferencias guardadas.').waitFor();}
+ async function customize(p){await tab(p,'customization');await p.locator('[name="avatar"][value="capybara"]').check();await p.getByRole('button',{name:'Segundo color Sin preferencia'}).click();await p.getByRole('option',{name:'Azul hielo Lancha'}).click();await p.getByRole('button',{name:'Guardar preferencias'}).click();await p.getByText('Preferencias guardadas.').waitFor();}
  try{
   await login(a,1);await identify(a,'patricia_uno');await customize(a);await tab(a,'account');assert.equal(await a.locator('#googleUnlink').isDisabled(),true);
   const original=await a.evaluate(async()=> (await (await fetch('/api/account')).json()).profile.id);

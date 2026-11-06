@@ -68,6 +68,7 @@ function renderHarness() {
     $: () => panel, matchContext: {cityName: id => E.CITIES[id]?.[2] || id}, playerAvatar: () => '<span class="player-avatar"></span>',
     applyPlayerAppearance() {}, renderResultMap() {},
     escapeHTML: x => String(x).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;") });
+  vm.runInContext(fs.readFileSync(require.resolve('../frontend/shell-icons.js'),'utf8'),context);
   vm.runInContext(app.slice(app.indexOf("const cityName ="), app.indexOf("function showResults()")), context);
   return { g, result, panel, context };
 }
@@ -110,7 +111,7 @@ test("empty route UI does not invite tapping nonexistent points or an empty list
 test("unchanged finished snapshots preserve the current tab, focus, scroll and map gesture", () => {
   const game = resultsRoom().game;
   const dialog = { _resultSignature: JSON.stringify([game.result, game.players.map(p => p.color)]), querySelector: () => ({}) };
-  const context = vm.createContext({ I18n: require("../shared/i18n"), game, uiDialog: "results", $: id => id === "dialog" ? dialog : { classList: { contains: () => false } },
+  const context = vm.createContext({ I18n: require("../shared/i18n"), Postgame:{mode:()=>"results"}, game, uiDialog: "results", $: id => id === "dialog" ? dialog : { classList: { contains: () => false } },
     showDialog() { throw new Error("An unchanged snapshot must not rebuild the results DOM"); } });
   vm.runInContext(app.slice(app.indexOf("function showResults()"), app.indexOf("function renderResultMap(")), context);
   context.showResults();

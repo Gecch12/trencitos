@@ -26,11 +26,17 @@ escritorio está a la izquierda; en tablet y móvil, abajo. El nombre se consult
 en el perfil; la cabecera no muestra usuario ni campana. **Perfil → Editar perfil**
 permite cambiar el nombre y conserva el avatar básico. La cuenta guarda el perfil;
 un invitado conserva su preferencia en este navegador. Cuenta, Historial y Resumen
-tienen contenido; Amigos y Jugar siguen preparados para próximas integraciones.
+tienen contenido; Amigos permite gestionar relaciones y mesas habituales. Jugar sigue preparado para próximas integraciones.
 **Más → Idioma** cambia entre español (predeterminado, ESP) e inglés (ENG),
 también en móvil. Durante la partida está en **Menú de partida → Idioma**;
 recarga conservando el puesto, los plazos y los billetes pendientes seleccionados.
 Los seis iconos sociales siguen sin enlaces; Privacidad abre el aviso existente.
+
+**Perfil → Resumen** combina indicadores y gráficos con nuestros iconos. Tocar,
+enfocar o pasar el cursor explica el cálculo y su muestra. «Destinos completados»
+es el promedio de porcentajes por partida: 4/4 y 0/8 dan 50%. Los acumulados de
+puntos/categorías ya no ocupan el resumen. Los tabs quedan fijos al desplazarse
+en escritorio/tablet; la personalización se llama **Mi estilo**.
 
 **Perfil → Historial** conserva partidas completas y abandonadas por separado,
 en filas compactas con fecha, puesto propio, jugadores, duración, estado y acceso
@@ -153,7 +159,7 @@ restaura el encuadre; con el mapa enfocado, las flechas desplazan, `+`/`−`
 cambian el zoom e **Inicio** centra. El zoom permite de 25 % a 600 %.
 
 La mesa comparte controles y estado, con distribuciones distintas y sin scroll de
-página. En escritorio, el lateral derecho contiene historial, robos y jugadores;
+página. En escritorio, el lateral derecho contiene historial, chat deshabilitado, robos y jugadores;
 la franja inferior contiene la mano y los destinos. Tablet conserva estos paneles
 permanentes: en vertical la franja inferior ocupa el ancho disponible y en
 horizontal deja sitio al lateral. El mapa mantiene su renderizado y gestos.
@@ -171,11 +177,11 @@ derecho, con dorsos apilados horizontalmente. La mano queda separada por un pequ
 espacio y agrupa colores con contadores. Las áreas de robo siguen midiendo al menos
 44 px; tras el primero aparece **Roba una carta más**. Los iconos del mapa permiten
 consultar destinos o **robar nuevos destinos**. En tablet y escritorio, el mercado
-dispone las cinco cartas y el mazo en dos filas de tres; el botón para robar destinos
-está en su cabecera y los destinos propios junto a la mano. **Robar nuevos destinos** pide confirmación y solo
+dispone las cinco cartas y el mazo en dos filas de tres, en horizontal para liberar altura; al llegar a la mano vuelven a vertical; el botón para robar destinos
+ocupa el ancho completo encima de las cartas y los destinos propios quedan junto a la mano. **Robar nuevos destinos** pide confirmación y solo
 está disponible cuando la acción es legal. Abrir/cancelar no revela billetes ni
 gasta el turno; confirmar envía el comando y obliga a conservar el mínimo indicado.
-El chat muestra «Próximamente», con escritura/envío deshabilitados.
+El chat lateral empieza plegado; abrirlo muestra una conversación vacía con escritura/envío deshabilitados. Al plegarlo, el historial recupera ese espacio. Historial, mercado y jugadores conservan etiquetas accesibles sin cabeceras visibles redundantes; los movimientos sencillos del historial comparten una línea.
 
 Los paneles temporales se superponen sin reencuadrar el mapa. El icono **i** abre
 una ficha de puntos y última ronda según la definición de la partida. Las existencias
@@ -252,6 +258,8 @@ opcionales que un observador esté consultando no se sustituyen por el túnel.
 El constructor conserva su decisión obligatoria. El resultado dura tres segundos,
 se cierra automáticamente y conserva sus plazos al reconectar; movimiento reducido
 muestra el mismo resumen sin desplazamientos.
+
+Durante la decisión de un túnel, **Ver mapa** minimiza el diálogo para explorar el tablero y consultar tus destinos. **Volver al túnel** recupera la opción de pago elegida; el suplemento y el reloj siguen visibles. El tiempo del servidor continúa corriendo y el resultado se presenta aunque el diálogo esté minimizado.
 
 **Tus destinos** abre los billetes conservados en un panel con scroll interno. Los pendientes son beige; los conectados, dorados con **✓ verde**, también en el modal. El servidor calcula el progreso de forma privada y emplea una asignación compatible de estaciones para todos los billetes; los destinos cumplidos se reflejan en tu desglose privado y se liquidan en el resultado final. **Ver rutas** abre tus billetes conservados, incluso durante turnos ajenos. Pulsar un billete concreto lo abre resaltado. Las casillas del modal solo resaltan conexiones: no descartan billetes ni consumen acciones. Un destino completado resalta un recorrido real de vías construidas; los tramos prestados mediante estación son discontinuos. Se cierra con X o Escape. **Historial** se abre con su icono sin desplazar el tablero ni la mano; su rueda recorre únicamente los movimientos.
 
@@ -334,9 +342,18 @@ según la sala. Por ejemplo, 20 s restantes con +30 s dan 50 s para elegir. **Ve
 
 ### Revisar el final
 
-**Fin de partida** muestra una tabla ordenada por clasificación, con una fila por jugador y columnas de Rutas, Destinos, Estaciones, Camino más largo y Total. Empieza plegada. Pulsar una celda de categoría abre su mapa y datos debajo de esa fila; las propias celdas cambian de categoría y marcan la selección. Solo hay un detalle abierto; la flecha junto al nombre lo pliega. Las flechas izquierda/derecha permiten navegar entre categorías con teclado. En móvil la tabla admite desplazamiento horizontal y el mapa mantiene el ancho visible.
+**Fin de partida** integra los resultados en el área del mapa, con el lateral disponible y el fondo ensombrecido. Muestra una tabla ordenada por clasificación, con una fila por jugador y columnas de Rutas, Destinos, Estaciones, Camino más largo y Total. Empieza plegada. Pulsar una celda de categoría abre su mapa y datos debajo de esa fila; las propias celdas cambian de categoría y marcan la selección. Solo hay un detalle abierto; la flecha junto al nombre lo pliega. Las flechas izquierda/derecha permiten navegar entre categorías con teclado. En móvil la tabla admite desplazamiento horizontal y el mapa mantiene el ancho visible.
 
-**Explorar mapa** cierra los resultados sin salir de la sala; **Ver resultados** los vuelve a abrir conservando la selección. El tablero queda en consulta. Cada categoría mantiene su evidencia: rutas y puntos, billetes completados o penalizados, estaciones sin construir ×4 y préstamos, y recorrido más largo con longitud, empates y bonificación. Los destinos rivales se muestran al finalizar a participantes. Un registro antiguo con diferencias entre puntos de rutas y vías guardadas conserva su ajuste explícito.
+**Mapa** cierra los resultados sin salir de la sala; **Ver resultados** los vuelve a abrir conservando la selección. El tablero queda en consulta. Cada categoría mantiene su evidencia: rutas y puntos, billetes completados o penalizados, estaciones sin construir ×4 y préstamos, y recorrido más largo con longitud, empates y bonificación. Los destinos rivales se muestran al finalizar a participantes. Un registro antiguo con diferencias entre puntos de rutas y vías guardadas conserva su ajuste explícito.
+
+El botón **Ver recuento** ofrece animaciones opcionales: rutas construidas con sus
+puntos, camino más largo vagón por vagón (700 ms a 1× y una pausa de 350 ms entre tramos) y destinos con su recorrido y puntos o
+penalización. Las fichas flotan encima del tablero; las rutas y puntos anteriores
+permanecen visibles. El contador queda abajo a la derecha en escritorio/tablet y
+sobre la mano en móvil. Permite pausar, cambiar velocidad, saltar y repetir; respeta
+movimiento reducido. Al terminar, el mapa sigue sombreado y vuelve el botón
+**Volver a resultados**. **Mapa** restaura cámara y modo de resaltado previos.
+**Repetición** reutiliza el replay con regreso a esos resultados, sin salir de la mesa. Sus controles forman un bloque plegable arriba del mapa en escritorio/tablet. En móvil, mercado y jugadores quedan arriba, y el progreso y transporte sobre la mano. Los avatares cambian la perspectiva grabada; no hay botón «Vista general».
 
 ## Flujo de partida
 

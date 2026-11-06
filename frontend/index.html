@@ -24,6 +24,7 @@
       <link rel="stylesheet" href="destination-map.css">
     <link rel="stylesheet" href="table.css" />
     <link rel="stylesheet" href="profile.css" />
+    <link rel="stylesheet" href="postgame.css" />
   </head>
   <body>
     <a href="#lobby" class="skip-link">Saltar al contenido</a>
@@ -86,7 +87,7 @@
           <nav class="profile-nav" aria-label="Secciones del perfil">
             <a href="/profile?tab=overview" data-profile="overview" data-icon="user">Overview</a>
             <a href="/profile?tab=history" data-profile="history" data-icon="history">History</a>
-            <a href="/profile?tab=customization" data-profile="customization" data-icon="edit">Personalización</a>
+            <a href="/profile?tab=customization" data-profile="customization" data-icon="edit">Mi estilo</a>
             <a href="/profile?tab=friends" data-profile="friends" data-icon="friends">Friends</a>
             <a href="/profile?tab=account" data-profile="account" data-icon="settings">Account</a>
           </nav>
@@ -217,7 +218,7 @@
               <span id="finalRoundNotice" class="final-round-notice hidden" role="status"></span>
               <button id="pendingTickets" class="pending-tickets hidden" type="button" aria-haspopup="dialog">Elegir billetes <span data-clock="offer"></span></button>
               <span id="initialStatus" class="initial-status hidden" role="status"><span id="initialStatusText"></span> · <strong data-clock="initial"></strong></span>
-              <button id="viewResults" class="pending-tickets hidden" type="button" aria-haspopup="dialog">Ver resultados</button>
+              <button id="viewResults" class="pending-tickets hidden" type="button" aria-controls="dialog">Ver resultados</button>
               <span id="resultContext" class="result-context hidden"><span></span><button type="button" aria-label="Quitar resaltado del resultado">×</button></span>
           </div>
         <section class="handdock" id="handdock">
@@ -237,7 +238,7 @@
       </main>
       <aside class="sidebar" id="gameSidebar" aria-label="Historial, cartas disponibles y jugadores">
         <section class="history-panel" aria-labelledby="historyTitle">
-          <div class="history-heading"><h2 class="sectiontitle" id="historyTitle">HISTORIAL</h2><button id="historyLatest" class="hidden" type="button">Nuevos ↓</button></div>
+          <div class="history-heading"><h2 class="sr-only" id="historyTitle">Historial</h2><button id="historyLatest" class="hidden" type="button">Nuevos ↓</button></div>
           <div class="history-scroll">
             <div id="history" role="log" aria-live="off" tabindex="0" aria-label="Últimos 25 movimientos; los más recientes están abajo"><div id="historyEntries"></div></div>
             <div id="historyScrollbar" class="history-scrollbar hidden" role="scrollbar" tabindex="0" aria-label="Desplazar historial" aria-controls="history" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span id="historyThumb"></span></div>
@@ -246,8 +247,8 @@
         </section>
         <section class="sidepanel">
           <div class="sectiontitle market-toolbar">
-            <span class="market-heading">ROBOS <span class="market-info"><button type="button" aria-label="Información de los mazos" aria-describedby="deckinfo"><span aria-hidden="true">i</span></button><span id="deckinfo" role="tooltip"></span></span></span><span id="drawstats"></span>
-            <button id="drawtickets" class="destination-deck" data-icon="ticket-add" aria-label="Robar nuevos destinos" title="Nuevos destinos · Roba hasta 3 billetes y conserva al menos 1">
+            <button id="drawtickets" class="destination-deck" aria-label="Robar nuevos destinos" title="Nuevos destinos · Roba hasta 3 billetes y conserva al menos 1">
+              <span data-icon="ticket-add" aria-hidden="true"></span><span class="destination-deck-label">Nuevos destinos</span>
             </button>
           </div>
           <div id="market" class="market" aria-label="Cinco cartas visibles y mazo oculto">
@@ -255,10 +256,11 @@
               <span class="deck-stack" aria-hidden="true"><i></i><img src="assets/cards/back.svg" alt="" draggable="false"></span>
             </button>
           </div>
+          <span id="drawstats" class="draw-status"></span>
           <button id="pass" class="tertiary full hidden">Pasar turno (sin jugadas)</button>
         </section>
         <section class="players-panel" aria-label="Jugadores">
-          <div class="sectiontitle"><span>JUGADORES</span><span id="roundStatus"></span></div>
+          <div class="sectiontitle players-status"><span id="roundStatus"></span></div>
           <div class="scorestrip" id="scores"></div>
         </section>
         <span id="turntitle" class="sr-only" role="status"></span>
@@ -272,10 +274,13 @@
       </section>
       <div id="tablePanelHome" hidden>
         <section id="tableRulesContent" class="table-rules"></section>
-        <section id="tableChat" class="table-chat" aria-label="Chat próximamente">
-          <div class="chat-placeholder"><span data-icon="chat" aria-hidden="true"></span><strong>Chat próximamente</strong><p>Este espacio estará disponible para conversar con la mesa.</p></div>
-          <div class="chat-composer"><input type="text" aria-label="Escribir mensaje; próximamente" placeholder="Enviar un mensaje" disabled /><button type="button" data-icon="send" aria-label="Enviar mensaje" disabled></button></div>
-        </section>
+        <details id="tableChat" class="table-chat" aria-label="Chat">
+          <summary><span>Chat</span><span class="chat-chevron" aria-hidden="true">⌃</span></summary>
+          <div class="chat-body">
+            <div class="chat-messages" role="log" aria-label="Mensajes"></div>
+            <div class="chat-composer"><input type="text" aria-label="Escribir mensaje" placeholder="Enviar un mensaje" disabled /><button type="button" data-icon="send" aria-label="Enviar mensaje" disabled></button></div>
+          </div>
+        </details>
         <section id="tableHandDetail" class="table-hand-detail" aria-label="Tu mano"></section>
       </div>
       <div id="compactHud" class="compact-hud" hidden>
@@ -284,7 +289,7 @@
       </div>
       <nav class="table-tools table-tools-left" aria-label="Historial y chat">
         <button type="button" data-panel="history" data-icon="history" aria-label="Historial" title="Historial" aria-controls="compactPanel" aria-expanded="false"></button>
-        <button type="button" data-panel="chat" data-icon="chat" aria-label="Chat próximamente" title="Chat próximamente" aria-controls="compactPanel" aria-expanded="false"></button>
+        <button type="button" data-panel="chat" data-icon="chat" aria-label="Chat" title="Chat" aria-controls="compactPanel" aria-expanded="false"></button>
       </nav>
       <nav id="tableMapTools" class="table-tools table-tools-right" aria-label="Mapa y destinos">
         <button type="button" data-panel="destinations" data-icon="flag" aria-label="Tus destinos" title="Tus destinos" aria-controls="compactPanel" aria-expanded="false"><span id="destinationProgress" class="destination-progress" hidden></span></button>
@@ -296,7 +301,7 @@
         <strong id="compactClock" class="turn-clock" data-clock="turn" data-clock-format="timer"></strong>
       </section>
     </div>
-    <div id="tunnelBoardNotice" class="tunnel-board-notice" hidden><span id="tunnelBoardStatus" role="status"></span></div>
+    <div id="tunnelBoardNotice" class="tunnel-board-notice" hidden><span id="tunnelBoardStatus" role="status"></span><span id="tunnelDecisionReturn" hidden><strong data-clock="turn" data-clock-format="timer"></strong><button id="returnTunnel" type="button">Volver al túnel</button></span></div>
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
     <div id="overlay" class="overlay hidden">
       <div class="dialog" id="dialog" role="dialog" aria-modal="true"></div>
@@ -335,10 +340,13 @@
     <script src="shell-icons.js"></script>
     <script src="replay-state.js"></script><script src="history-ui.js"></script>
     <script src="room-map-picker.js"></script>
+    <script src="profile-summary.js"></script>
     <script src="profile-ui.js"></script>
     <script src="shell.js"></script>
     <script src="destination-planner.js"></script>
     <script src="mobile-bridge.js"></script>
+    <script src="score-recount.js"></script>
+    <script src="postgame.js"></script>
     <script src="app.js"></script>
     <script src="pwa.js"></script>
   </body>

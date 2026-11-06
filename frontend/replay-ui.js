@@ -3,8 +3,8 @@ if (location.pathname === '/replay') document.documentElement.classList.add('rep
 const ReplayUI = (() => {
   const $=id=>document.getElementById(id);
   const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let dispose=null,selectViewer=()=>{};
-  async function open({id,load,show,decorateRow=()=>{},cancelEffects=()=>{}}) {
+  let dispose=null,selectViewer=()=>{},restart=()=>{};
+  async function open({id,load,show,decorateRow=()=>{},cancelEffects=()=>{},onClose=null,avatar=()=>'',onLayout=()=>{}}) {
     dispose?.();
     const t=I18n.t,controls=$('replayControls'),controller=new AbortController();
     const compact=matchMedia('(max-width: 699px), (max-width: 1100px) and (max-height: 600px)');
@@ -14,19 +14,35 @@ const ReplayUI = (() => {
     const history=$('historyEntries');
     let loader=$('replayLoading');
     if(!loader){loader=document.createElement('dialog');loader.id='replayLoading';loader.className='replay-loading';document.body.append(loader);}
-    loader.innerHTML=`<div class="loading-train" aria-hidden="true"><span>▰</span><span>▰</span><span>▰</span></div><p role="status">${t('Preparando repetición…')}</p>`;
-    loader.oncancel=e=>e.preventDefault();if(!loader.open)loader.showModal();
+    const exitMarkup=onClose?`<button id="closeInlineReplay">${t('Volver a resultados')}</button>`:'';
+    const bindExit=()=>{if(onClose)$('closeInlineReplay').onclick=onClose;};
+    loader.innerHTML=`<div class="loading-train" aria-hidden="true"><span>▰</span><span>▰</span><span>▰</span></div><p role="status">${t('Preparando repetición…')}</p>${exitMarkup}`;
+    bindExit();loader.oncancel=e=>{e.preventDefault();onClose?.();};if(!loader.open)loader.showModal();
     function stop(){playing=false;clearTimeout(timer);timer=null;cancelEffects();if($('replayPlay')){$('replayPlay').textContent='▶';$('replayPlay').setAttribute('aria-label',t('Reproducir'));}}
     const visibility=()=>{if(document.hidden)stop();};
-    const place=()=>{if(!ready)return;if(compact.matches)document.body.append(controls);else $('gameSidebar').prepend(controls);$('replayDock').open=!compact.matches;};
-    dispose=()=>{stop();controller.abort();compact.removeEventListener('change',place);document.removeEventListener('visibilitychange',visibility);};
+    const layout=()=>{if(!ready)return;document.body.style.setProperty('--replay-height',controls.getBoundingClientRect().height+'px');onLayout();};
+    const place=()=>{if(!ready)return;document.body.append(controls);$('replayDock').open=true;layout();};
+    const resize=new ResizeObserver(layout);
+    dispose=()=>{stop();controller.abort();resize.disconnect();compact.removeEventListener('change',place);window.removeEventListener('resize',layout);document.removeEventListener('visibilitychange',visibility);};
     function updateControls(){
       $('replaySeek').max=data.frames.length-1;$('replaySeek').value=step;
       $('replayPosition').textContent=`${step+1}/${data.match.steps||data.frames.length}`;
       $('replayFirst').disabled=$('replayPrevious').disabled=step===0;
       $('replayLast').disabled=!data.complete||step===data.frames.length-1;
       $('replayNext').disabled=step===data.frames.length-1;
-      $('replayGeneral').setAttribute('aria-pressed',String(viewer===-1));
+      const viewers=$('replayPlayers');
+      if(data.full){
+        const signature=JSON.stringify(data.match.players.map((player,i)=>[player.name,avatar(i)]));
+        if(viewers.dataset.signature!==signature){
+          viewers.dataset.signature=signature;
+          viewers.innerHTML=data.match.players.map((player,i)=>`<button type="button" data-replay-seat="${i}" aria-label="${escape(t`Ver perspectiva de ${player.name}`)}" title="${escape(player.name)}">${avatar(i)||ShellIcons.svg('user')}</button>`).join('');
+        }
+        for(const button of viewers.querySelectorAll('button')){
+          const i=Number(button.dataset.replaySeat);button.setAttribute('aria-pressed',String(i===viewer));
+          if(lastView?.players[i])button.style.setProperty('--replay-color',GameUI.playerColor(lastView.players[i].color));
+        }
+      }
+      viewers.hidden=!data.full;
       $('replayProgress').hidden=data.complete;
       $('replayProgress').textContent=data.complete?'':`${t('Cargando…')} ${Math.floor(100*data.frames.length/data.match.steps)}%`;
     }
@@ -76,21 +92,25 @@ const ReplayUI = (() => {
     function setup(){
       viewer=data.full?0:-1;playCursor=ReplayState.cursor(data.frames);indexCursor=ReplayState.cursor();
       controls.hidden=false;history.replaceChildren();$('history').setAttribute('aria-label',t('Historial completo de la repetición'));
-      controls.innerHTML=`<details id="replayDock" open><summary><strong>${t('Repetición')}</strong><output id="replayPosition"></output></summary><div class="replay-body">
-        <div class="replay-top"><a href="/profile?tab=history">← ${t('Historial')}</a><button id="replayGeneral" title="${t('Vista general')}" aria-label="${t('Vista general')}" aria-pressed="false">◎</button></div>
-        <div class="replay-transport"><button id="replayFirst" aria-label="${t('Ir al inicio')}">⏮</button><button id="replayPrevious" aria-label="${t('Paso anterior')}">◀</button><button id="replayPlay" aria-label="${t('Reproducir')}">▶</button><button id="replayNext" aria-label="${t('Paso siguiente')}">▶|</button><button id="replayLast" aria-label="${t('Ir al final')}">⏭</button><select id="replaySpeed" aria-label="${t('Velocidad')}">${[.5,1,2,4,8].map(n=>`<option ${n===1?'selected':''} value="${n}">${n}×</option>`).join('')}</select></div>
+      controls.innerHTML=`<details id="replayDock" open><summary><strong>${t('Repetición')}</strong><output id="replayPosition"></output><span aria-hidden="true" class="replay-chevron">⌃</span></summary><div class="replay-body">
+        <div class="replay-transport"><button id="replayFirst" class="replay-extra" aria-label="${t('Ir al inicio')}">⏮</button><button id="replayPrevious" aria-label="${t('Paso anterior')}">‹</button><button id="replayPlay" aria-label="${t('Reproducir')}">▶</button><button id="replayNext" aria-label="${t('Paso siguiente')}">›</button><button id="replayLast" class="replay-extra" aria-label="${t('Ir al final')}">⏭</button><select id="replaySpeed" class="replay-extra" aria-label="${t('Velocidad')}">${[.5,1,2,4,8].map(n=>`<option ${n===1?'selected':''} value="${n}">${n}×</option>`).join('')}</select><button type="button" id="replayMore" aria-label="${t('Más controles')}" aria-expanded="false">${ShellIcons.svg('more')}</button></div>
         <input id="replaySeek" type="range" min="0" value="0" aria-label="${t('Paso de la repetición')}">
+        <div class="replay-context"><div id="replayPlayers" aria-label="${t('Perspectiva del jugador')}"></div>${onClose?`<button id="postgameReplayReturn" type="button">${t('Resultados')}</button>`:`<a href="/profile?tab=history">${t('Historial')}</a>`}</div>
         <small id="replayProgress" role="status"></small>
-        ${!data.match.complete?`<small>${t('Registro parcial: la grabación comenzó con la partida ya iniciada.')}</small>`:''}
+        ${!data.match.complete?`<small>${data.match.recovery?.notice?escape(data.match.recovery.notice):t('Registro parcial: la grabación comenzó con la partida ya iniciada.')}</small>`:''}
       </div></details>`;
-      selectViewer=i=>{if(!data.full||i< -1||i>=data.match.players.length||failed)return;stop();viewer=i;paint(false);};
-      $('replayGeneral').onclick=()=>selectViewer(-1);
+      selectViewer=i=>{if(!data.full||i<0||i>=data.match.players.length||failed)return;stop();viewer=i;paint(false);};
+      restart=()=>{seek(0);start();};
+      $('replayPlayers').onclick=e=>{const button=e.target.closest('[data-replay-seat]');if(button)selectViewer(Number(button.dataset.replaySeat));};
+      if(onClose)$('postgameReplayReturn').onclick=onClose;
+      $('replayMore').onclick=()=>{const expanded=controls.classList.toggle('has-more');$('replayMore').setAttribute('aria-expanded',String(expanded));layout();};
+      $('replayDock').ontoggle=layout;
       $('replayFirst').onclick=()=>seek(0);$('replayPrevious').onclick=()=>seek(step-1);$('replayNext').onclick=()=>seek(step+1);$('replayLast').onclick=()=>seek(data.frames.length-1);
       $('replaySeek').oninput=e=>seek(e.target.value);
       $('replayPlay').onclick=()=>{if(playing)stop();else{if(data.complete&&step===data.frames.length-1){step=0;paint(false);}start();}};
       $('replaySpeed').onchange=e=>{const resume=playing;stop();speed=Number(e.target.value);if(resume)start();};
       history.onclick=e=>{const row=e.target.closest('[data-step]');if(row)seek(row.dataset.step);};
-      ready=true;place();compact.addEventListener('change',place);document.addEventListener('visibilitychange',visibility);
+      ready=true;place();resize.observe(controls);compact.addEventListener('change',place);window.addEventListener('resize',layout);document.addEventListener('visibilitychange',visibility);
     }
     function indexFrames(){
       for(;indexed<data.frames.length;indexed++){
@@ -127,9 +147,9 @@ const ReplayUI = (() => {
     }catch(error){
       if(controller.signal.aborted)return;
       failed=true;stop();
-      loader.innerHTML=`<p role="alert">${escape(error.message)}</p><button id="retryReplay">${t('Reintentar')}</button><a href="/profile?tab=history">${t('Volver al historial')}</a>`;
-      if(!loader.open)loader.showModal();$('retryReplay').onclick=()=>open({id,load,show,decorateRow,cancelEffects});
+      loader.innerHTML=`<p role="alert">${escape(error.message)}</p><button id="retryReplay">${t('Reintentar')}</button>${exitMarkup||`<a href="/profile?tab=history">${t('Volver al historial')}</a>`}`;
+      bindExit();if(!loader.open)loader.showModal();$('retryReplay').onclick=()=>open({id,load,show,decorateRow,cancelEffects,onClose,avatar,onLayout});
     }
   }
-  return {open,selectViewer:i=>selectViewer(i)};
+  return {open,selectViewer:i=>selectViewer(i),restart:()=>restart(),close(){dispose?.();dispose=null;$('replayControls').hidden=true;$('replayLoading')?.close();document.documentElement.classList.remove('replay-loading-mode');}};
 })();

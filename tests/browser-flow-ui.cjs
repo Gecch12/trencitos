@@ -130,7 +130,9 @@ let browser;
  assert.equal(await rp.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
  await rp.screenshot({path:path.join(out,'results-mobile.png')});
  await rp.evaluate(()=>{I18n.select('en');location.reload();});await rp.waitForSelector('.results-table');
- assert.match(await rp.locator('.results-table thead').innerText(),/Routes/);
+ const routeHelp=rp.locator('.results-table thead .score-icon-help').nth(1);
+ assert.equal(await routeHelp.getAttribute('aria-label'),'Points from claimed routes');
+ await routeHelp.click();assert.equal(await rp.locator('#score-icon-tooltip').isVisible(),true);
  report.checks.push('Results: summary, every category, one expanded row, keyboard, maps, mobile width, English');
  assert.deepEqual(report.errors,[]);report.passed=true;
 })().catch(error=>{report.failure=error.stack;process.exitCode=1;console.error(error);}).finally(async()=>{

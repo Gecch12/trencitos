@@ -1,5 +1,5 @@
 ---
-{"id":"commerce","status":"planned","parent":null,"depends_on":["identity"],"branch":null,"delivery":"none","updated":"2026-11-05"}
+{"id":"commerce","status":"planned","parent":null,"depends_on":["identity"],"branch":null,"delivery":"none","updated":"2026-11-06"}
 ---
 # Personalización y preparación comercial
 
@@ -23,6 +23,14 @@ checkout en esta etapa. Vendedor: Perú. Persona/empresa y proveedor sin definir
   Ese alcance no habilita el catálogo amplio ni pagos.
 - [ ] Contrato de facturación separado: derechos los concede el servidor tras
   verificación; futuro proveedor no invade el motor del juego.
+- [ ] Definir acceso compartido a mapas antes de venderlos. Propuesta diferida
+  del 2026-11-06: permitir que el propietario organice partidas para su grupo;
+  distinguir ese acceso durante la partida de la propiedad del mapa. Alcance,
+  continuidad si sale el anfitrión y condiciones definitivas quedan pendientes.
+- [ ] Definir conservación y recuperación de compras ligadas a la cuenta en
+  dispositivos compatibles, con límites de plataforma explícitos. Diferenciar
+  compra permanente, acceso compartido y habilitación temporal de beta; no
+  prometer transferencias ni compatibilidades que aún no estén implementadas.
 - [ ] Reevaluar proveedores internacionales desde Perú (Paddle/Xsolla como
   candidatos discutidos): elegibilidad para videojuegos/cosméticos, desembolsos,
   costes y obligaciones. No hay proveedor elegido ni cuenta contratada.

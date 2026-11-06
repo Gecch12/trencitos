@@ -1,5 +1,5 @@
 ---
-{"id":"history-replay","status":"validated","parent":null,"depends_on":["navigation-rooms","identity"],"branch":"main","delivery":"released","updated":"2026-11-03"}
+{"id":"history-replay","status":"validated","parent":null,"depends_on":["navigation-rooms","identity"],"branch":"main","delivery":"released","updated":"2026-11-06"}
 ---
 # Historial, repetición, idiomas y ajustes de observación
 
@@ -9,6 +9,55 @@ Implementación autorizada después del análisis con `$moti`. Contrato canónic
 Refinamiento local de 2026-11-02: historial compacto y puesto del usuario por
 identidad, registrado y verificado en [Controles de mesa y sala](table-controls.md).
 La entrega histórica de abajo no incluye todavía este refinamiento.
+
+## Recuperación local de JSON en una repetición · 2026-11-06
+
+En `main` sobre `141e2ea`, con cambios locales preexistentes de otros chats,
+`npm start` fallaba con `STATE_LOAD_FAILED`. Ambos manifiestos eran JSON válidos
+y compartían una grabación cerrada dañada: su línea 6 contenía el snapshot 5
+truncado seguido del paso 12. El tamaño coincidía con el manifiesto, pero había
+247 líneas frente a 254 pasos esperados. No se determinó qué escritura produjo
+el daño; esta reparación no acredita haber eliminado su causa.
+
+- Respaldo íntegro de los 19 archivos, verificado por SHA-256, en
+  `.qa/state-recovery-2026-11-06/original/`. Las otras 16 partidas pasan la
+  auditoría completa y permanecen idénticas.
+- En la partida afectada se verificaron 247 frames originales: 0–4 y 12–253.
+  Los pasos 12–31 son diferencias que dependen de estados ausentes; se conservan
+  como evidencia, pero la reproducción salta al snapshot verificado 32.
+- La copia derivada conserva los primeros cinco frames sin cambios y los
+  estados 32–253, con 227 pasos reproducibles. Cada paso posterior al salto
+  conserva `sourceSeq`/`sourceHash`, con una nueva cadena identificada como
+  recuperación. Los originales nunca se reescriben en el respaldo.
+- Se conservan las 17 partidas, sus IDs, jugadores, resultados, reclamaciones
+  y las salas de cada manifiesto. El estado final reconstruido coincide
+  exactamente con el tramo original válido. La grabación afectada lleva
+  `complete:false` y un aviso visible que explica los 27 pasos omitidos.
+- El cargador ahora identifica archivo y línea de JSON inválido en replay,
+  sin filtrar fragmentos privados. Conserva el rechazo de corrupción y la
+  recuperación de un prefijo válido desde `.bak`.
+
+Validación con Node **22.16.0**:
+
+- **39/39** pruebas de almacenamiento, checkpoints, archivo, carga legada y
+  servidor de historial. La primera ejecución del sandbox no pudo abrir puertos
+  (`EPERM`); la repetición autorizada con estado temporal pasó completa.
+- `npm start` en puerto 3128 con copia aislada: `/` y `/healthz` HTTP 200,
+  almacenamiento sano, cero salas activas y ping/pong WebSocket. Servidor cerrado
+  al terminar; no queda un segundo proceso usando el guardado habitual.
+- Chrome **156.0.8078.80**: aviso visible, navegación hasta **227/227**, resultados
+  coincidentes por asiento y cero errores de página. La respuesta de esa
+  repetición privada se inyectó solo en el navegador de prueba; no se cambió
+  su visibilidad en el servidor ni en los archivos instalados.
+- Instalados el manifiesto, su `.bak` y el único `.jsonl` reparado, después de
+  verificar que ninguno de los 19 archivos había cambiado desde el respaldo.
+  El cargador habitual lee las 17 partidas; las otras 16 grabaciones siguen
+  idénticas y el respaldo conserva los hashes originales.
+
+Evidencia, captura y scripts en `.qa/state-recovery-2026-11-06/`, excluidos de Git.
+Documentación y `git diff --check` correctos. Estos cambios son locales y no
+forman parte de la entrega publicada que figura abajo. Siguiente paso: ejecutar
+`npm start`; conservar el respaldo para investigar el origen de la corrupción.
 
 ## Reparación local del arranque · 2026-11-03
 

@@ -31,6 +31,51 @@ elecciones pendientes durante 24 h de ausencia, incluso al reiniciar el proceso.
 Las salas iniciadas con un humano y bots usan esa misma ventana; con varios
 humanos permanece la ventana de 120 s cuando todos se desconectan.
 
+## Cierre integrado y recuento opcional
+
+La tabla final y sus mapas por categoría se presentan dentro del área útil del
+tablero, como región accesible sin bloquear el lateral de escritorio/tablet.
+Se mantienen clasificación, selección de jugadores/categorías, detalles, revancha
+existente y salida. El chat lateral empieza plegado y recupera espacio para el historial; abierto
+muestra una conversación vacía y un compositor **deshabilitado**, sin anuncio de
+próxima disponibilidad. En móvil se conserva el panel desplegable. No hay transporte de mensajes.
+
+`postgame.js` coordina resultados, mapa, recuento y repetición. Resultados y recuento
+mantienen el tablero ensombrecido. La acción única «Mapa» restaura cámara, zoom
+y el modo anterior (normal o destinos resaltados). Al terminar el recuento quedan
+los resaltados y las fichas visibles, con «Repetir» y «Volver a resultados»; no hay
+salto automático ni reproducción obligatoria.
+
+`score-recount.js` consume exclusivamente `result.details` y los totales guardados:
+
+- Rutas construidas: primero tramos conectados, colocando los vagones de un tramo
+  por paso. Mantiene los anteriores con base suave, el actual más intenso y sus
+  fichas de puntos para seguir la suma. Un ajuste legado se suma explícitamente.
+- Camino más largo: recorre el camino continuo registrado en su dirección, vagón
+  por vagón. Cuenta longitud en vagones; muestra la bonificación aparte, sin
+  confundirla con la longitud. La comparación permite reproducir el jugador elegido,
+  también sin bono. El ritmo base es 700 ms por vagón más 350 ms al cambiar de
+  tramo. Repetir reinicia el mismo plan y lleva el foco al control de pausa.
+- Destinos: coloca a la vez las rutas del recorrido guardado para cada billete y
+  suma sus puntos o resta su penalización. Conserva dueños y distingue préstamos.
+  Un billete incompleto no inventa un recorrido. Un registro sin detalles conserva
+  su total y muestra que no dispone de detalle, sin animación ficticia.
+
+`score-medals.js` dibuja fichas con volumen encima de los vagones, orientadas hacia
+la cámara y con separación frente a otras fichas y nombres de ciudades. El contador acumulado se ubica abajo
+a la derecha del mapa en escritorio/tablet y en una franja compacta encima de la
+mano en móvil; el encuadre reserva ese espacio. Pausa, velocidad y salto están
+accesibles por teclado/tap; cambiar de pestaña pausa y movimiento reducido muestra
+el estado final directamente. Nunca se escriben resultados desde estos efectos.
+
+«Repetición» abre el motor existente dentro de la mesa, con un retorno a los
+resultados originales aun durante carga, fallo o un paso intermedio. Se reutilizan
+las autorizaciones de historial; no se revela información adicional por abrir el
+cierre. La vista de replay no envía jugadas y restaura el contexto de la mesa al
+salir. La URL autónoma `/replay` continúa funcionando.
+
+Aceptación local y pendientes en [la ficha de experiencia](work/summary-postgame-experience.md).
+
 ## Acceso
 
 Durante la partida se conserva el filtrado por puesto. Desde UI 8, las vistas
@@ -216,7 +261,10 @@ ni cartas anteriores. El replay utiliza las perspectivas grabadas y completa
 su información visible con los hechos del estado y diario originales, sin
 recalcular jugadas ni alterar hashes:
 el paso actual muestra solo lo ya ocurrido, y las filas futuras se distinguen.
-La repetición no reproduce avisos de cuenta atrás de plazos archivados.
+La repetición no reproduce avisos de cuenta atrás de plazos archivados. Las animaciones de robos del replay no usan la
+deduplicación de la sesión viva. La mano procede del paso grabado: al terminar,
+omitir o cancelar un vuelo, se retira su ocultación temporal. Pausar o saltar
+limpia las presentaciones pendientes y muestra las cantidades de ese paso.
 
 `replay-state.diff` anexa índices de `journal`, `turnHistory` y sus listas de
 hechos cuando crecen. Usa las mismas operaciones v1 y conserva compatibilidad
@@ -278,20 +326,22 @@ ni envío de acciones. Pulsar un avatar del panel normal selecciona su perspecti
 los iconos de persona/robot, nombres y colores son los mismos de la partida.
 Tiene inicio/final, pasos, historial pulsable, barra de posición, pausa y velocidades
 0,5×, 1×, 2×, 4× y 8×. Todo visitante autorizado puede elegir cualquier
-perspectiva y consultar su mano y destinos. La interfaz no muestra selectores de
-perspectiva/acción, hitos, estadísticas adicionales ni enlaces de auditoría. La
-vista general conserva el tablero y el historial completo, sin asignar una mano
-propia al observador.
+perspectiva y consultar su mano y destinos mediante los avatares. La interfaz no
+muestra selector de acción, hitos, estadísticas adicionales ni enlaces de auditoría.
+Se elimina el botón de vista general; las grabaciones sin detalle privado conservan
+únicamente su información disponible.
 
-La repetición usa la distribución de la mesa en vivo: mercado y mano en la franja
-móvil; mercado e historial en el lateral y mano/destinos abajo en tablet/escritorio.
-El transporte del replay se coloca en el lateral cuando está disponible y flota
-en móvil. Reproducir un robo o renovación mantiene esa disposición. Las animaciones comparten
-`prepareEffects`, `playEffects`, `animateCardFlight`, `prepareMarketRefresh` y
-`animateConstruction` con el juego. Sus tiempos siguen la velocidad seleccionada;
-las cartas del puesto observado entran al contador cuando aterrizan. Pausar,
-cambiar de jugador o saltar lejos cancela efectos; avanzar un paso reproduce su
-animación. La preferencia de movimiento reducido se respeta.
+La repetición reutiliza mercado, mano, jugadores e historial de la mesa, pero
+reubica sus controles: en escritorio/tablet, bloque plegable arriba del mapa,
+fuera del lateral; en móvil, mercado y jugadores arriba, mano abajo y transporte
+justo encima de ella. El encuadre reserva el espacio ocupado. La barra de progreso,
+anterior/reproducir/siguiente y las perspectivas por avatar permanecen accesibles;
+en móvil, velocidad e inicio/final se amplían desde «Más controles». Se retira
+«Vista general». El retorno a resultados se integra en el bloque del replay.
+Al abrirlo desde el cierre se muestra el mapa completo; salir recupera su cámara. Las animaciones comparten `playEffects`, `animateCardFlight`,
+`prepareMarketRefresh` y `animateConstruction` con la mesa. Sus tiempos siguen la
+velocidad seleccionada y respetan movimiento reducido; pausar, cambiar de jugador
+o saltar cancela los efectos pendientes.
 
 Las manos iniciales separan miniaturas y destinos. Cada destino ofrecido aparece
 una sola vez, con sus puntos y ✓/✕ cuando la decisión está registrada. No repiten

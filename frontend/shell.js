@@ -42,7 +42,7 @@ const AppShell = (() => {
       $('returnRoom').hidden = !state().room || page === 'rooms';
       if (page === 'profile') {
         const tab = ['overview','history','customization','friends','account'].includes(url.searchParams.get('tab')) ? url.searchParams.get('tab') : 'overview';
-        $('profileTitle').textContent = I18n.t(tab==='customization'?'Personalización':tab[0].toUpperCase()+tab.slice(1));
+        $('profileTitle').textContent = I18n.t(tab==='customization'?'Mi estilo':tab[0].toUpperCase()+tab.slice(1));
         $('accountPanel').hidden = tab !== 'account';
         HistoryUI.profile(tab);
         ProfileUI.show(tab);

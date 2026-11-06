@@ -42,7 +42,7 @@ function readMatch(file,id){
   res.end();
  });
  app.server.listen(0,'127.0.0.1');await once(app.server,'listening');const base=`http://127.0.0.1:${app.server.address().port}`;
- browser=await chromium.launch({channel:process.env.BROWSER_CHANNEL||'chrome',headless:true});report.browser=browser.version();
+ browser=await chromium.launch({channel:process.env.BROWSER_CHANNEL||'chrome',headless:true,args:process.env.CI?['--enable-unsafe-swiftshader']:[]});report.browser=browser.version();
  async function open({width=1460,height=940,reducedMotion='no-preference',id=record.id,source}={}){
   const context=await browser.newContext({viewport:{width,height},reducedMotion});const page=await context.newPage();page.setDefaultTimeout(20000);
   page.on('pageerror',e=>report.errors.push(e.stack));page.on('websocket',()=>report.errors.push('Replay opened a game WebSocket'));
@@ -65,8 +65,8 @@ function readMatch(file,id){
  }
  const publicDraw=steps.find(e=>e.type==='draw'&&e.index>=0),blind=steps.find(e=>e.type==='draw'&&e.index===-1),build=steps.find(e=>e.type==='build');assert.ok(publicDraw&&blind&&build);
  const page=await open();await page.waitForFunction(()=>game&&board3D&&document.getElementById('replayProgress').hidden);
- assert.equal(await page.locator('#replayControls').evaluate(n=>n.parentElement.id),'gameSidebar');
- assert.equal(await page.locator('#replayNext').isVisible(),true,'desktop replay transport remains visible in the sidebar');
+ assert.equal(await page.locator('#replayControls').evaluate(n=>n.parentElement.tagName),'BODY');
+ assert.equal(await page.locator('#replayNext').isVisible(),true,'desktop replay transport remains visible over the map');
  const seek=async(p,n)=>{await p.locator('#replaySeek').evaluate((input,n)=>{input.value=n;input.dispatchEvent(new Event('input',{bubbles:true}));},n);};
  assert.equal(await page.locator('#replayViewer,#replaySecretsOpen,#replaySecrets,#replayStats,#replayMilestones,#replayNextBuild,#replayEvent,#replayMarket').count(),0);
  assert.equal(await page.locator('#scores .player-avatar').count(),4);assert.equal(await page.locator('#scores .player-avatar.is-bot').count(),3);
@@ -94,11 +94,26 @@ function readMatch(file,id){
  const stable=await initial.elementHandle();await page.locator('#replayNext').click();assert.equal(await stable.evaluate(n=>n.isConnected),true,'unchanged rows are not recreated');
  await page.screenshot({path:path.join(out,'desktop.png')});
  report.tests.push('Normal player avatars and market; one destination list; stable history DOM; visible/blind/rival draws with hand count on landing, renewal, construction, pause, seek and 4× speed');
+ // Reusing event IDs from the just-finished live game must not hide replay cards.
+ await page.locator('#scores [data-player="0"] .player-avatar').click();
+ for(const speed of ['0.5','1','2','4','8']){
+  await page.locator('#replaySpeed').selectOption(speed);await seek(page,publicDraw.step-1);
+  await page.evaluate(ids=>{ids.forEach(id=>handledDrawEvents.add(id));replayEffects=[];},steps.filter(e=>e.type==='draw'&&e.seat===0).map(e=>e.id));
+  await page.locator('#replayPlay').click();
+  await page.waitForFunction(n=>Number(document.getElementById('replaySeek').value)>=n,blind.step);
+  await page.waitForFunction(()=>drawPresentations.size===0);
+  assert.ok((await page.evaluate(()=>replayEffects.filter(e=>e.type==='draw').length))>=2,`both own draws animate at ${speed}x despite live receipts`);
+  assert.equal(await page.locator('#handCount').innerText(),`${await page.evaluate(()=>game.hand.length)} cartas`);
+  assert.equal(await page.locator('#hand .is-arriving').count(),0);
+  if(await page.locator('#replayPlay').getAttribute('aria-label')==='Pausar')await page.locator('#replayPlay').click();
+  assert.equal(await page.locator('.draw-flight,.market-refresh-layer').count(),0);
+ }
+ report.tests.push('Continuous 0.5/1/2/4/8x replay ignores live draw receipts and always settles the recorded hand');
  await page.setViewportSize({width:390,height:844});await page.waitForTimeout(100);
- await page.locator('#replayDock > summary').click();await seek(page,publicDraw.step-1);await page.locator('#replayNext').click();
+ await seek(page,publicDraw.step-1);await page.locator('#replayNext').click();
  assert.equal(await page.locator('#market').isVisible(),true);assert.equal(await page.locator('#replayControls').evaluate(n=>n.parentElement.tagName),'BODY');
  assert.ok(await page.locator('#replayControls').evaluate(n=>{const r=n.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;}));
- await page.locator('#replayDock > summary').click();await page.screenshot({path:path.join(out,'mobile.png')});
+ await page.screenshot({path:path.join(out,'mobile.png')});
  await page.locator('[data-panel="history"]').click();await page.screenshot({path:path.join(out,'mobile-history.png')});report.tests.push('Mobile reuses the live market, hand, player strip and history panels');
  await page.context().close();
  const reduced=await open({reducedMotion:'reduce'});await reduced.waitForFunction(()=>game&&document.getElementById('replayProgress').hidden);await seek(reduced,blind.step-1);await reduced.evaluate(()=>replayEffects=[]);await reduced.locator('#replayNext').click();await reduced.waitForTimeout(200);assert.ok(!(await reduced.evaluate(()=>replayEffects)).some(e=>e.type==='draw'));await reduced.context().close();report.tests.push('Reduced motion respects the existing preference');

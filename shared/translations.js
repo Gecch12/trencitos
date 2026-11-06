@@ -1219,4 +1219,52 @@ Object.assign(Translations, {
   "El acceso a tu cuenta requiere actualizar la app.": "Update the app to sign in to your account.",
   "Tu historial se guarda en el servidor. Vincula Google o Discord para acceder desde otros dispositivos; sin vincular, borrar los datos del navegador puede hacerte perder el acceso.": "Your history is saved on the server. Link Google or Discord to access it from other devices; without linking an account, clearing browser data may cause you to lose access."
 });
+Object.assign(Translations, {
+  "Mi estilo": "My style",
+  "Detalle no disponible para este registro.": "Details are unavailable for this record.",
+  "Recuento": "Score count",
+  "Ver recuento": "Watch count",
+  "Volver a resultados": "Back to results",
+  "Repetir": "Repeat",
+  "Saltar": "Skip",
+  "Bonificación": "Bonus",
+  "Puntuaciones recientes": "Recent scores",
+  "Últimas 20 partidas": "Last 20 games",
+  "Destinos completados": "Completed destinations",
+  "Destinos por partida": "Destinations per game",
+  "Promedio por partida": "Average per game",
+  "Victorias seguidas": "Winning streak",
+  "Comparación con Trencitos": "Comparison with Trencitos",
+  "Tu promedio": "Your average",
+  "Suma de puntos / {0} resultados finales válidos de jugadores con cuenta.": "Sum of points / {0} valid final results from account holders.",
+  "Puntuación central al ordenar los resultados; con dos valores centrales, se usa su media.": "The middle score in the ordered results; with two middle values, their mean is used.",
+  "Sin participaciones computables todavía. Solo mesas con al menos dos humanos originales; excluye práctica y Laboratorio.": "No eligible participations yet. Only tables that started with at least two humans; excludes practice and Laboratory.",
+  "Actualizado": "Updated",
+  "partidas": "games",
+  "{0} / {1} destinos × 100 = {2}%.": "{0} / {1} destinations × 100 = {2}%.",
+  "{0} puntos al terminar la partida.": "{0} points at the end of the game.",
+  "Promedio del porcentaje de destinos completados en cada partida. Cada partida pesa lo mismo. {0} partidas con datos válidos; se excluyen abandonos y registros sin destinos.": "Average of the destination completion percentages for each game. Every game has equal weight. {0} games with valid data; departures and records without destinations are excluded.",
+  "Comparación de resultados con los mismos filtros. {0} resultados y {1} jugadores. El percentil del récord requiere 30 resultados y 5 jugadores; el del promedio requiere 5 partidas propias y 5 jugadores con al menos 5 partidas.": "Comparison using the same filters. {0} results and {1} players. Record percentiles require 30 results and 5 players; average percentiles require 5 personal games and 5 players with at least 5 games each.",
+  "{0} completadas + {1} abandonos personales. {2} en curso, fuera del cálculo.": "{0} completed games + {1} personal departures. {2} ongoing games, excluded from the calculation.",
+  "{0} primeros puestos / {1} partidas × 100 = {2}. Incluye victorias compartidas; los abandonos cuentan como derrotas.": "{0} first-place finishes / {1} games × 100 = {2}. Includes shared wins; departures count as losses.",
+  "{0} puntos / {1} resultados finales válidos. Se excluyen abandonos.": "{0} points / {1} valid final results. Departures are excluded.",
+  "Mayor puntuación entre {0} resultados finales válidos.": "Highest score among {0} valid final results.",
+  "Mayor longitud entre {0} resultados finales válidos: un camino continuo propio, sin repetir vías ni usar préstamos de estaciones.": "Longest trail among {0} valid final results: a continuous path of your own trains, without reusing tracks or borrowing tracks through stations.",
+  "Victorias consecutivas desde la partida más reciente dentro de los filtros. Incluye victorias compartidas.": "Consecutive wins starting with the most recent game within the filters. Includes shared wins.",
+  "Partidas terminadas consecutivas sin abandono personal, desde la más reciente dentro de los filtros.": "Consecutive completed games without a personal departure, starting with the most recent game within the filters.",
+  "Máximo de 0 y 20 menos {0} abandonos penalizados en las últimas {1} participaciones computables (hasta 20). Solo mesas con al menos dos humanos originales; excluye práctica. Es independiente de los filtros; las reconexiones breves no restan.": "Maximum of 0 and 20 minus {0} penalized departures in the last {1} eligible participations (up to 20). Only tables that started with at least two humans; excludes practice. Independent of filters; brief reconnections do not reduce it.",
+  "Porcentaje de resultados con puntuación menor o igual a tu récord.": "Percentage of results with a score at or below your record.",
+  "Porcentaje de jugadores con promedio menor o igual al tuyo.": "Percentage of players with an average at or below yours."
+});
+Object.assign(Translations, {
+  "Chat": "Chat",
+  "Mensajes": "Messages",
+  "Escribir mensaje": "Write a message",
+  "Nuevos destinos": "New destinations",
+  "Volver al túnel": "Back to tunnel",
+  "Decisión pendiente · Suplemento: {0}": "Decision pending · Extra cost: {0}",
+  "Más controles": "More controls",
+  "Perspectiva del jugador": "Player perspective",
+  "Ver perspectiva de {0}": "View {0}'s perspective"
+});
 if (typeof module !== "undefined") module.exports = Translations;

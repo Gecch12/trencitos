@@ -1,0 +1,24 @@
+/* The finished game remains a table: only its map area hosts the results. */
+#overlay.postgame-results{inset:auto;left:var(--postgame-left);top:var(--postgame-top);width:var(--postgame-width);height:var(--postgame-height);padding:8px;background:transparent;backdrop-filter:none;z-index:12;align-items:center}
+#overlay.postgame-results .results-dialog{width:100%;max-width:100%;max-height:100%;margin:0;background:#fffcf5;border:1px solid #d4b98c;outline:0;box-shadow:0 8px 36px #132b4030}
+#overlay.postgame-results .results-scroll{min-height:0}.postgame-navigation{display:flex;gap:8px;align-items:center;margin:0 0 12px;flex-wrap:wrap}.postgame-navigation button,.recount-launch{display:inline-flex;align-items:center;gap:6px;min-height:40px}.postgame-navigation .shell-icon,.recount-launch .shell-icon{width:18px;height:18px}.postgame-navigation button[aria-current]{background:#193b49;color:#fff9e9}.postgame-results .result-actions{gap:8px}.postgame-results .result-actions button{min-height:42px}.recount-launch{margin:0 0 12px;background:#efe0bc;color:#193b49}
+#recountCounter{position:fixed;z-index:14;right:calc(100vw - var(--postgame-left) - var(--postgame-width));bottom:calc(100dvh - var(--postgame-top) - var(--postgame-height));width:270px;padding:14px;background:#fff9ecef;border:1px solid #c5ab73;border-radius:14px;box-shadow:0 4px 20px #122e4030;color:#193b49}.recount-heading{display:flex;gap:10px;align-items:center}.recount-heading>span{font-weight:bold;min-width:0;font-size:14px}.recount-heading small{display:block;font-weight:normal;font-size:10px;margin-top:3px}.recount-heading>strong{margin-left:auto;font-size:32px;text-align:right}.recount-heading>strong small{font-size:11px}.recount-caption{font-size:11px;min-height:15px;margin:8px 0;color:#587580}.recount-controls{display:flex;gap:6px}.recount-controls button,.recount-controls select{padding:7px;min-height:40px;font-size:12px}.recount-controls button:last-child{flex:1}.recount-controls select{max-width:64px;background:#fff;border:1px solid #c5ab73;border-radius:6px}#postgameReplayReturn{min-height:40px;background:#fff1cc;color:#193b49}.is-postgame #destinationSpotlight{display:none}.is-postgame #tableMapTools,.is-postgame .table-tools-right{visibility:hidden}.is-postgame #viewResults{visibility:hidden}
+@media(min-width:700px) and (min-height:601px),(min-width:1101px){
+ .game .sidebar #market{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:6px 0;--landscape-height:calc((var(--sidebar-width) - 48px)/3 * .7194)}
+ .game .sidebar #market .traincard,.game .sidebar #market .train-deck{position:relative;width:100%;height:var(--landscape-height);min-height:44px;aspect-ratio:278/200;max-width:none;padding:0;overflow:visible}
+ .game .sidebar #market .traincard>img,.game .sidebar #market .train-deck .deck-stack>img{position:absolute;width:71.94%;height:139%;left:14.03%;top:-19.5%;max-width:none;transform:rotate(90deg);object-fit:contain}
+ .game .sidebar #market .train-deck .deck-stack{position:absolute;inset:0;width:100%;height:100%}.game .sidebar #market .train-deck .deck-stack i{inset:2px}.game .sidebar #market .train-deck .train-deck-label{display:none}
+}
+@media(max-width:699px),(max-width:1100px) and (max-height:600px){
+ #recountCounter{left:var(--postgame-left);right:auto;width:var(--postgame-width);padding:8px 10px;border-radius:10px}.recount-heading>strong{font-size:25px}.recount-heading>strong small{display:inline;margin-left:4px}.recount-heading>span{font-size:12px}.recount-heading small{display:inline;margin-left:6px}.recount-caption{margin:3px 0;font-size:10px}.recount-controls button,.recount-controls select{min-height:40px}.recount-controls{margin-top:5px}.postgame-results .postgame-navigation button{font-size:11px;padding:7px;min-height:40px}.postgame-results .results-header h2{font-size:19px}.postgame-results .result-actions button{font-size:11px;padding:8px}.postgame-results .dialog{padding:10px}
+}
+@media(min-width:600px) and (max-height:600px){
+ #recountCounter{display:flex;align-items:center;gap:16px;padding:6px 10px}
+ .recount-heading{flex:1;min-width:0}.recount-heading>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .recount-heading>strong{font-size:22px;white-space:nowrap}.recount-caption{display:none}
+ .recount-controls{flex:1;margin:0}.recount-controls button{white-space:nowrap}
+}
+
+/* Navigation shares the table/header inset; session actions stay in the footer. */
+.postgame-navigation{padding:0 22px;flex-shrink:0}
+@media(max-width:699px){.postgame-navigation{padding:0 4px;gap:6px}.postgame-navigation button{flex:1;justify-content:center}.postgame-navigation button:first-child{background:#193b49;color:#fff9e9}}

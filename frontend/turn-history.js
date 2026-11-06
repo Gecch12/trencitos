@@ -92,6 +92,8 @@ const TurnHistory = (() => {
   }
   function render(row,context,{button=false}={}) {
     const node=document.createElement(button?'button':'div');node.className='turn-history-row';node.dataset.historyId=row.id;
+    const events=row.events.filter(visibleEvent);
+    if(events.length&&events.every(e=>['draw','pass','no_action','connected','disconnected','tickets_offer'].includes(e.type)))node.classList.add('history-compact');
     if(button)node.type='button';
     if(row.kind==='longest'){
       node.classList.add('history-system');

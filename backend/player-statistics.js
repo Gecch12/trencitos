@@ -23,6 +23,8 @@ function result(m,seat) {
 function summarize(rows) {
  const finished=rows.filter(r=>r.score), played=rows.filter(r=>r.score||r.abandoned), wins=played.filter(r=>r.win).length;
  const points=finished.map(r=>r.score.score), best=finished.reduce((best,r)=>!best||r.score.score>best.score.score?r:best,null);
+ const destinationRate = score => Array.isArray(score.tickets) && Number.isInteger(score.completed) && score.tickets.length > 0 && score.completed >= 0 && score.completed <= score.tickets.length ? 100 * score.completed / score.tickets.length : null;
+ const rates=finished.map(r=>destinationRate(r.score)).filter(n=>n!==null);
  const sum=key=>finished.reduce((total,r)=>total+(Number.isFinite(r.score[key])?r.score[key]:0),0);
  const recent=[...played].sort((a,b)=>participationEnd(b)-participationEnd(a));
  const streak=predicate=>{let n=0;for(const row of recent){if(!predicate(row))break;n++;}return n;};
@@ -30,7 +32,8 @@ function summarize(rows) {
   best:best?{score:best.score.score,matchId:best.match.id,map:best.match.map,date:end(best.match)}:null,
   components:{routes:sum('route'),destinations:sum('destination'),stations:sum('stations'),express:sum('express')},
   ticketsCompleted:sum('completed'),ticketsTotal:finished.reduce((n,r)=>n+(r.score.tickets?.length||0),0),longest:finished.length?Math.max(...finished.map(r=>r.score.longest||0)):null,expressCount:finished.filter(r=>r.score.express>0).length,
-  winStreak:streak(r=>r.win),completionStreak:streak(r=>!r.abandoned),trend:[...finished].sort((a,b)=>end(b.match)-end(a.match)).slice(0,20).reverse().map(r=>({score:r.score.score,date:end(r.match),map:r.match.map,mapId:r.match.mapRef.id,matchId:r.match.id}))};
+  destinationAverage:mean(rates),destinationSample:rates.length,
+  winStreak:streak(r=>r.win),completionStreak:streak(r=>!r.abandoned),trend:[...finished].sort((a,b)=>end(b.match)-end(a.match)).slice(0,20).reverse().map(r=>({score:r.score.score,destinationRate:destinationRate(r.score),completed:r.score.completed,tickets:r.score.tickets?.length??null,date:end(r.match),map:r.match.map,mapId:r.match.mapRef.id,matchId:r.match.id}))};
 }
 function commitment(rows) {
  // A cancelled/expired room is not evidence of an individual outcome.

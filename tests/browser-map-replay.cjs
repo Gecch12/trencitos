@@ -33,16 +33,18 @@ let app, browser;
       assert.equal(await page.locator('#replayViewer,#replaySecretsOpen').count(), 0);
       assert.equal(await page.locator('#scores [data-player]').count(),record.players.length);
       assert.ok((await page.evaluate(() => game.hand)).length > 0);
-      await page.locator('#replayDock > summary').click();
-      await page.locator('#replayGeneral').click();
-      assert.deepEqual(await page.evaluate(() => [game.hand, game.tickets]), [[], []]);
+      assert.equal(await page.locator('#replayGeneral').count(),0);
+      await page.locator('[data-replay-seat="1"]').click();
+      assert.equal(await page.evaluate(()=>seat),1);
+      assert.ok((await page.evaluate(()=>game.hand)).length>0);
+      if(await page.locator('#replayMore').isVisible())await page.locator('#replayMore').click();
       await page.locator('#replayLast').click(); await page.waitForFunction(() => game.phase === 'finished');
       assert.deepEqual(await page.evaluate(() => [...game.result].sort((a, b) => a.seat - b.seat).map(row => row.score)), record.scores.map(row => row.score));
       assert.ok(await page.evaluate(() => game.result.every(row => Array.isArray(row.details.destinations))));
       await page.locator('#replayFirst').click(); await page.waitForFunction(() => game.phase === 'initial');
       await page.locator('#replayLast').click(); await page.waitForFunction(() => game.phase === 'finished');
       await page.screenshot({ path: path.join(out, `${name}-${own ? 'participant' : 'public-mobile'}.png`), fullPage: true });
-      report.tests.push({ protocol: name, perspective: own ? 'participant with overview switch' : 'public with overview switch', steps: record.steps, seek: true, overviewWithoutHand: true });
+      report.tests.push({ protocol: name, perspective: own ? 'participant with player perspectives' : 'public with recorded player perspectives', steps: record.steps, seek: true, playerPerspective: true });
       await context.close();
     }
   }

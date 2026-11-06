@@ -26,7 +26,16 @@ function readArchive(file, archive) {
         read += n;
       }
     } finally { fs.closeSync(fd); }
-    match.frames = data.toString("utf8").split("\n").filter(Boolean).map(line => JSON.parse(line));
+    match.frames = [];
+    for (const [index, line] of data.toString("utf8").split("\n").entries()) {
+      if (!line) continue;
+      try { match.frames.push(JSON.parse(line)); }
+      catch (error) {
+        if (!(error instanceof SyntaxError)) throw error;
+        // Identify the damaged replay without exposing the parser's excerpt.
+        throw Object.assign(Error(`JSON inválido en repetición: ${target}; línea ${index + 1}.`), { code: "INVALID_REPLAY_JSON" });
+      }
+    }
     if (match.frames.length !== frameStore.count)
       throw Object.assign(Error(`Repetición incompleta: ${target}; se esperaban ${frameStore.count} pasos y hay ${match.frames.length}.`), { code: "INCOMPLETE_REPLAY" });
     matches[id] = match;

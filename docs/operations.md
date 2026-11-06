@@ -116,6 +116,11 @@ creación/unión, bots, visibilidad y espectadores. Guarda capturas e informe
 producción. La prueba adicional del recorrido OAuth/API/SQL local utiliza
 `node tests/helpers/identity-preview.js` (puertos 3141/3142, proveedor simulado).
 
+`node tests/browser-profile-style.cjs` comprueba el selector visual y los avatares
+del perfil con estado de archivo aislado, teclado y scroll táctil. Guarda capturas
+en `.qa/profile-style/` (o `QA_OUT`). La regeneración de miniaturas y su contrato
+están en [Personalización](profile-social-statistics.md#personalización).
+
 Verificación reproducible del tablero y los vagones:
 
 ```sh
@@ -157,10 +162,20 @@ está en [historial/replay](history-replay.md).
 
 Si el arranque indica que no se pudo leer el estado ni su copia, el error muestra
 la causa de cada lectura. Una repetición incompleta identifica el `.jsonl` y los
-bytes o pasos esperados/disponibles. Conserva el conjunto antes de repararlo:
+bytes o pasos esperados/disponibles; un JSON inválido dentro de una repetición
+identifica ese `.jsonl` y su línea, sin mostrar contenido privado. El manifiesto
+y su `.bak` pueden ser JSON válidos y fallar al leer la misma grabación compartida.
+Conserva el conjunto antes de repararlo:
 no se debe vaciar el estado ni reducir sus contadores para forzar el arranque.
 Una recuperación parcial debe verificar los hashes disponibles, conservar el
 estado válido de la sala y señalar explícitamente el salto en la grabación.
+Cuando faltan diferencias intermedias, solo un snapshot completo verificado
+permite reanudar la reproducción. Si se prepara una copia derivada con otra
+secuencia/cadena, conserva los originales íntegros y la procedencia de cada paso;
+su nueva auditoría valida esa copia, no certifica los movimientos ausentes.
+El replay muestra `recovery.notice` como texto cuando un registro parcial
+incluye ese aviso. El arranque habitual sigue rechazando corrupción; no aplica
+una reparación parcial automáticamente.
 
 El estado de cada partida usa su propio `schemaVersion:1` con referencias exactas
 de mapa y reglamento. La carga valida y migra copias de los formatos legados antes

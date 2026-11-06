@@ -45,7 +45,7 @@ test("native WebSocket and HTTP share a durable guest identity without leaking p
   assert.ok(!JSON.stringify(replay).includes(token)); assert.ok(!JSON.stringify(replay).includes(lobby.token));
   assert.equal((await fetch(base + "/api/history/" + id + "/audit", { headers: headers(other) })).status, 404);
 });
-test("distribution bundles public files, uses HTTPS and disables native debugging", () => {
+test("distribution bundles public files, uses HTTPS and disables native debugging", async () => {
   const config = mobileConfig("android", undefined, "beta");
   assert.equal(config.server.url, undefined); assert.equal(config.server.cleartext, false);
   assert.equal(config.android.webContentsDebuggingEnabled, false); assert.equal(config.ios.webContentsDebuggingEnabled, false);
@@ -55,6 +55,9 @@ test("distribution bundles public files, uses HTTPS and disables native debuggin
   assert.match(html, /Content-Security-Policy/); assert.match(html, /https:\/\/example.com wss:\/\/example.com/);
   assert.match(fs.readFileSync(path.join(output, "mobile-runtime.js"), "utf8"), /https:\/\/example.com/);
   assert.ok(fs.existsSync(path.join(output, "vendor/three.module.js")));
+  assert.ok(fs.existsSync(path.join(output, "profile-style.js")));
+  const { WAGON_STYLES } = await import('../frontend/wagon-models.mjs');
+  for (const { model } of WAGON_STYLES) assert.equal(fs.readFileSync(path.join(output, `assets/wagons/${model}.png`)).subarray(1, 4).toString(), 'PNG');
   for (const privateFile of ["backend", "server.js", ".env", ".private", "package.json"]) assert.equal(fs.existsSync(path.join(output, privateFile)), false);
   const manifest = JSON.parse(fs.readFileSync(path.join(output, "manifest.webmanifest"), "utf8"));
   for (const icon of manifest.icons) assert.ok(fs.readFileSync(path.join(output, icon.src)).subarray(1, 4).equals(Buffer.from("PNG")));

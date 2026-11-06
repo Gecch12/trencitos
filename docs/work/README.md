@@ -35,6 +35,7 @@ Orden de trabajo acordado:
 
 Para después:
 
+- [Pendientes sociales, competitivos y de análisis](social-competitive-followups.md).
 - [Preparación comercial y personalización](commerce.md).
 - [Sets de ambientes](ambiences.md).
 - [Materiales personalizables](materials.md), ampliación del acabado 3D existente.
@@ -42,6 +43,8 @@ Para después:
 - [Verificación pendiente de la beta](quality.md).
 
 Mejoras solicitadas del juego:
+
+- [Resumen visual y cierre con recuentos](summary-postgame-experience.md).
 
 - [Continuidad móvil, cuenta y skill de publicación](mobile-continuity.md).
 

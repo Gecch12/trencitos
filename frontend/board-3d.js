@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import { createWagonRenderer } from './wagon-renderer.js';
 import { wagonRouteAppearances, wagonStyle } from './wagon-models.mjs';
+import { createScoreMedals } from './score-medals.js';
 import { createTunnelBoard } from './tunnel-board.js';
 
 // A presentation adapter only. No transport, rule engine or hidden game state.
@@ -19,6 +20,7 @@ export function createBoard3D({ container, map, network, onFailure }) {
   container.prepend(renderer.domElement);
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 5000);
+  const scoreMedals=createScoreMedals({scene,camera,container});
   const textureCanvas = document.createElement('canvas');
   const textureScale = Math.min(2, 2048 / Math.max(map.bounds.width, map.bounds.height));
   textureCanvas.width = Math.ceil(map.bounds.width * textureScale); textureCanvas.height = Math.ceil(map.bounds.height * textureScale);
@@ -158,6 +160,7 @@ export function createBoard3D({ container, map, network, onFailure }) {
   const ownership = ribbons(11.5,.02), connections = ribbons(17,.06), gold = ribbons(18,.07), halo = ribbons(25,.04);
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   const targets = new Map(), animations = new Map();
+  let constructionPausedAt=null;
   let boardKey = '', pieceCount = 0, stationCount = 0, modelCounts = {}, bandCount = 0;
   let spotlightRoutes = [], borrowedRoutes = [], completedRoutes = [], freeCells = 0;
   let selection = { route: null, city: null };
@@ -177,6 +180,7 @@ export function createBoard3D({ container, map, network, onFailure }) {
   function bindAnimation(animation) {
     animation.parts = [];
     for (const {mesh,first,count,cell} of targets.get(animation.key) || []) {
+      if(animation.cells&&!animation.cells.includes(cell))continue;
       for (let i = first; i < first + count; i++) {
         const matrix = new THREE.Matrix4(); mesh.getMatrixAt(i,matrix);
         animation.parts.push({mesh,index:i,base:matrix,cell});
@@ -215,9 +219,9 @@ export function createBoard3D({ container, map, network, onFailure }) {
     return !!shadingTransition;
   }
   function update({ routes, players, visualSeed = '', hiddenRoute = null, highlight = null, spotlight = null,
-    selectedRoute = null, selectedCity = null, routeColors = {}, preview = null, transitionMs = spotlight?.transitionMs || 0 }) {
+    selectedRoute = null, selectedCity = null, routeColors = {}, preview = null, recount = null, transitionMs = spotlight?.transitionMs || 0 }) {
     // Only public board fields and the local client's authorized path selection.
-    const key = JSON.stringify({ routes, players, visualSeed, hiddenRoute, highlight, spotlight, selectedRoute, selectedCity, routeColors, preview });
+    const key = JSON.stringify({ routes, players, visualSeed, hiddenRoute, highlight, spotlight, selectedRoute, selectedCity, routeColors, preview, recount });
     if (key === boardKey || disposed) return;
     const nextLayout = JSON.stringify({ routes, players, visualSeed, hiddenRoute, highlight, selectedRoute, selectedCity, routeColors });
     const duration = Math.max(0, Math.min(1000, transitionMs));
@@ -263,6 +267,7 @@ export function createBoard3D({ container, map, network, onFailure }) {
         const appearances = wagonRouteAppearances(wagonStyle(player.color,player.wagon).model,`${visualSeed}:${owner}:${route.id}`,geometry.cells.length);
         for (const [index,cell] of geometry.cells.entries()) {
           target(`route:${route.id}`, index, () => {
+            if(recount?.hidden.includes(route.id)&&!recount.visible[route.id]?.includes(index))return;
             const piece = wagons.draw(cell, player, faded, appearances[index]);
             if (piece.model === 'passenger') passengerAppearances.push({route:route.id,index,variant:piece.variant,cast:piece.cast});
             modelCounts[piece.model] = (modelCounts[piece.model] || 0) + 1; pieceCount++;
@@ -276,7 +281,11 @@ export function createBoard3D({ container, map, network, onFailure }) {
           geometry.cells.forEach((cell, i) => { ghost.draw(cell, player, faded, appearances[i]); previewCount++; });
         }
       }
-      if(complete.has(route.id)){gold.set(route.id,'#ffd766',.9,borrowedRoutes.includes(route.id));halo.set(route.id,'#ffbd39',.3,borrowedRoutes.includes(route.id));}
+      if(recount&&litRoutes.has(route.id)){
+        const active=spotlight.activeRoutes?.includes(route.id);
+        connections.set(route.id,active?'#ffcf58':'#9bcfc6',active ? .95 : .65,borrowedRoutes.includes(route.id));
+      }
+      else if(complete.has(route.id)){gold.set(route.id,'#ffd766',.9,borrowedRoutes.includes(route.id));halo.set(route.id,'#ffbd39',.3,borrowedRoutes.includes(route.id));}
       else if (litRoutes.has(route.id) && route.id !== hiddenRoute) connections.set(route.id,spotlight?.completedRoutes&&!spotlight.activeRoutes?.includes(route.id)?'#7cd7e4':'#ffe08a',.7,borrowedRoutes.includes(route.id));
       else if (route.id === selectedRoute) connections.set(route.id,'#eeb84a',.65);
     }
@@ -307,17 +316,18 @@ export function createBoard3D({ container, map, network, onFailure }) {
     }
     invalidate();
   }
-  function animateConstruction(event, onComplete, {delay=0,duration=500,hideDuringDelay=false,liftFirst=false}={}) {
+  function animateConstruction(event, onComplete, {delay=0,duration=500,hideDuringDelay=false,liftFirst=false,cells=null,simultaneous=false}={}) {
     const key = event.routeId !== undefined ? `route:${event.routeId}` : `city:${event.city}`;
     if (disposed || !targets.has(key)) return false;
-    const animation = {key,started:performance.now(),onComplete,maxLift:0,delay,duration,hideDuringDelay,liftFirst,visible:!hideDuringDelay};
+    const animation = {key,started:performance.now(),onComplete,maxLift:0,delay,duration,hideDuringDelay,liftFirst,cells,simultaneous,visible:!hideDuringDelay};
     bindAnimation(animation); animations.set(key,animation); invalidate(); return true;
   }
   const animatedMatrix = new THREE.Matrix4(), hiddenScale = new THREE.Vector3(0, 0, 0);
   function advanceAnimations(now) {
     const callbacks = [];
+    if(constructionPausedAt!==null)return callbacks;
     for (const animation of animations.values()) {
-      const elapsed = now - animation.started - animation.delay, stagger = Math.min(animation.duration * .16,animation.lastCell * animation.duration * .036);
+      const elapsed = now - animation.started - animation.delay, stagger = animation.simultaneous?0:Math.min(animation.duration * .16,animation.lastCell * animation.duration * .036);
       animation.maxLift = 0;
       animation.visible = !animation.hideDuringDelay || elapsed >= 0;
       for (const part of animation.parts) {
@@ -360,10 +370,10 @@ export function createBoard3D({ container, map, network, onFailure }) {
     const callbacks = advanceAnimations(now), cardsMoving = tunnelBoard.advance(now), shadingMoving = advanceShading(now), start = performance.now();
     const pulse=reducedMotion.matches?1:.78+.22*Math.sin(now/650);
     gold.mesh.material.opacity=pulse;halo.mesh.material.opacity=pulse*.8;
-    renderer.render(scene, camera); draws++;
+    scoreMedals.layout();renderer.render(scene, camera); draws++;
     samples.push(performance.now() - start); if (samples.length > 240) samples.shift();
     callbacks.forEach(callback => callback());
-    if (animations.size || cardsMoving || shadingMoving || completedRoutes.length&&!reducedMotion.matches) invalidate();
+    if ((animations.size && constructionPausedAt===null) || cardsMoving || shadingMoving || completedRoutes.length&&!reducedMotion.matches) invalidate();
   }
   function visibility() { if (document.hidden) cancelAnimations(); else invalidate(); }
   document.addEventListener('visibilitychange', visibility);
@@ -385,18 +395,18 @@ export function createBoard3D({ container, map, network, onFailure }) {
     else invalidate();
   }
   return {
-    resize, update, animateConstruction, cancelAnimations, cancelConstruction, setTunnelCards: tunnelBoard.update,
+    resize, update, animateConstruction, cancelAnimations, cancelConstruction, pauseConstruction(paused){if(paused&&constructionPausedAt===null)constructionPausedAt=performance.now();else if(!paused&&constructionPausedAt!==null){for(const a of animations.values())a.started+=performance.now()-constructionPausedAt;constructionPausedAt=null;invalidate();}}, setScoreMedals(values,area){scoreMedals.update(values,area);invalidate();}, setTunnelCards: tunnelBoard.update,
     project(x, y, z = 0) {
       const p = new THREE.Vector3(x, -y, z).project(camera);
       return { x: (p.x + 1) * container.clientWidth / 2, y: (1 - p.y) * container.clientHeight / 2 };
     },
-    stats() { return { selection: {...selection}, freeCells, previewWagons: previewCount, tunnelCards: tunnelBoard.stats(), ownershipBands: bandCount, spotlightRoutes: [...spotlightRoutes], completedRoutes:[...completedRoutes], goldOpacity:gold.mesh.material.opacity, borrowedRoutes: [...borrowedRoutes],
+    stats() { return { medals:scoreMedals.stats(), selection: {...selection}, freeCells, previewWagons: previewCount, tunnelCards: tunnelBoard.stats(), ownershipBands: bandCount, spotlightRoutes: [...spotlightRoutes], completedRoutes:[...completedRoutes], goldOpacity:gold.mesh.material.opacity, borrowedRoutes: [...borrowedRoutes],
       ground: { cells: slotFaces.count, edges: slotEdges.count, tunnelMarks: tunnelMarks.count, ferryMarks: ferryMarks.count },
       spotlightStrength, shadingStrength, shadingAnimating: !!shadingTransition,
       animations: [...animations.values()].map(a=>({key:a.key,maxLift:a.maxLift,visible:a.visible})), revision: THREE.REVISION, draws, wagons: pieceCount, models: { ...modelCounts }, passengers: passengerAppearances.map(p=>({...p})), stations: stationCount, samples: [...samples], calls: renderer.info.render.calls,
       triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, pixelRatio: renderer.getPixelRatio() }; },
     dispose() {
-      disposed = true; shadingTransition = null; animations.clear(); cancelAnimationFrame(frame); tunnelBoard.dispose();
+      scoreMedals.dispose();disposed = true; shadingTransition = null; animations.clear(); cancelAnimationFrame(frame); tunnelBoard.dispose();
       document.removeEventListener('visibilitychange', visibility);
       reducedMotion.removeEventListener('change',invalidate);
       renderer.domElement.removeEventListener('webglcontextlost', lost);

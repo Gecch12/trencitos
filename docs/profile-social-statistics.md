@@ -5,7 +5,7 @@ Contrato del checkout; entrega y configuración verificadas en
 
 ## Identidad y cuenta
 
-El perfil abre **Resumen → Historial → Personalización → Amigos → Cuenta**.
+El perfil abre **Resumen → Historial → Mi estilo → Amigos → Cuenta**.
 `game_profiles.id` conserva la identidad del juego; `auth_user_id` pertenece a
 Supabase Auth. El username, el nombre visible y el proveedor de acceso no sustituyen
 esa identidad. No se fusionan perfiles por texto enviado por el cliente.
@@ -54,6 +54,26 @@ El servidor resuelve disponibilidad. Ambos colores deben ser distintos. Seleccio
 un color dentro de una sala no cambia automáticamente la preferencia del perfil.
 Galería: `person` y `capybara`; ambos son válidos en la migración y API. Sin cuenta,
 las preferencias se guardan en el dispositivo.
+
+«Mi estilo» usa un selector visual para cada preferencia: miniatura del modelo real,
+nombre del color, tipo de vagón y marca de selección. La lista tiene scroll vertical,
+teclado (flechas, Inicio/Fin, búsqueda por letras, Enter/Espacio y Escape) y vuelve a
+la opción elegida al abrir. En móvil se presenta como panel inferior. La segunda
+preferencia incluye «Sin preferencia»; cada lista deshabilita el color elegido en
+la otra. La API mantiene la validación autoritativa de colores distintos.
+
+Los avatares Básico y Capibara se previsualizan dentro de una ficha circular con
+fondo del primer color, borde crema y contorno fino. Cambiar ese color actualiza
+ambas opciones; «Guardar preferencias» confirma la elección y actualiza también
+la ficha de la cabecera del perfil. Salir sin guardar descarta el borrador, y un
+error conserva la identidad confirmada. En partida se sigue usando el color
+realmente asignado por el servidor.
+
+El componente [profile-style.js](../frontend/profile-style.js) usa PNG estáticos
+en `frontend/assets/wagons/`, incluidos en el paquete móvil. Se regeneran desde
+los mismos modelos/renderizador del tablero con
+`node scripts/wagon-thumbnails.cjs`; al cambiar modelos debe regenerarse el catálogo.
+El selector no crea contextos WebGL ni mantiene animaciones por opción.
 
 El capibara es una ilustración original generada con el tool integrado `imagegen`,
 fondo transparente, cabeza/hocico grandes, cuerpo ovalado sin brazos ni piernas.
@@ -116,9 +136,39 @@ activas se muestran aparte. Primer lugar usa ganador oficial o desempate guardad
 Porcentaje = victorias / jugadas: salir no mejora el porcentaje. Récord, suma y
 promedio usan solo puntuaciones finales válidas; no suman puntos parciales ni el
 resultado del bot tras abandono. Datos antiguos sin responsabilidad individual
-no generan sanciones. Hay desglose de puntos, billetes, Express, mejor red, rachas
-y evolución reciente (requiere fijar mapa, reglas, cantidad y modo). Mostrar muestra y período; ausencia de datos no es un cero
-inventado de rendimiento.
+no generan sanciones. Ausencia de datos se representa con «—» o «Sin datos».
+
+El resumen usa `profile-summary.js` y la iconografía propia: cuatro indicadores
+(jugadas, victorias con porcentaje, puntos por partida y récord), gráficos de las
+últimas 20 puntuaciones y porcentajes de destinos, camino más largo en vagones,
+rachas y Compromiso compacto. Los gráficos admiten cualquier filtro; ya no hay
+un bloque que pida fijar todas las condiciones. Los filtros visibles determinan
+si se comparan mapas o reglas distintos. La navegación del perfil permanece
+fija al desplazar el contenido en escritorio y tablet; «Mi estilo» sustituye
+la etiqueta larga de personalización.
+
+**Destinos completados** es la media aritmética de los porcentajes de cada partida:
+`media(100 × completados / billetes conservados al finalizar)`. Cada partida tiene
+el mismo peso: 4/4 y 0/4 dan 50%; 4/4 y 0/8 también dan 50%. Solo entran resultados
+finales válidos con cantidad de completados entera entre 0 y el tamaño de la mano
+de destinos, y al menos un billete. No se inventan ceros para registros incompletos,
+partidas activas o abandonos. `destinationSample` indica la muestra del promedio;
+`trend[].destinationRate` conserva el valor por partida o null. La línea discontinua
+del gráfico representa la media de toda la muestra filtrada, aunque solo se dibujen
+los últimos 20 resultados.
+
+«Destinos» abrevia **billetes de destino**; «rutas» son tramos físicos entre ciudades.
+**Camino más largo** muestra el máximo continuo propio registrado, sin repetir vías
+ni contar préstamos de estaciones. No se presentan totales acumulados de puntos,
+billetes, categorías ni bonificaciones Express en el resumen; los campos anteriores
+siguen en la API por compatibilidad. Cada indicador y punto del gráfico ofrece
+explicación, muestra y condiciones mediante hover, tap o foco/teclado. Escape,
+segundo tap o tocar fuera cierran la ayuda. El desglose exacto de una partida sigue
+disponible en resultados e historial.
+
+Estas estadísticas describen rendimiento; no calculan una clasificación de habilidad.
+Ese frente y el chat funcional están en [pendientes](work/social-competitive-followups.md).
+La entrega visual tiene [ficha y evidencia propias](work/summary-postgame-experience.md).
 
 En el proyecto de estado, `trencitos_player_results` materializa una fila por
 partida/puesto mediante trigger transaccional de metadatos. La migración puede

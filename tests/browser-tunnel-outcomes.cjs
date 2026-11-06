@@ -22,6 +22,7 @@ const report={checks:[],errors:[]};let browser;
  for(const [index,kind] of ['zero','mixed','wild','decline','insufficient','timeout'].entries()) {
   const room=tunnelRoom('QATOU'+index,kind==='insufficient'?'decline':kind==='wild'?'wild':kind==='zero'?'zero':'color',true);
   room.game.players[1].tickets=[E.TICKETS[2]];
+  if(kind==='mixed')room.game.players[0].tickets=[E.TICKETS[0]];
   room.practice=false;room.visibility='public';room.maxPlayers=4;app.rooms.set(room.code,room);
   const route=room.game.routes.find(r=>r.tunnel&&r.color==='gray'&&r.n===2),original=[...room.game.players[0].hand];
   const cells=room.game.routes.reduce((sum,r)=>sum+r.n,0);
@@ -41,7 +42,7 @@ const report={checks:[],errors:[]};let browser;
   }
   await actor.locator('#confirmBuild').click();
   await Promise.all(clients.map(p=>p.waitForFunction(()=>game.sharedTunnel?.stage==='reveal')));
-  if(kind==='timeout')room.game.pending.turnRemaining=900;
+  if(kind==='timeout')room.game.pending.turnRemaining=1800;
   const reserved={...room.game.pending.base};
   for(const p of clients) {
    assert.ok(await p.evaluate(id=>board3D.stats().spotlightRoutes.includes(id),route.id));
@@ -62,14 +63,30 @@ const report={checks:[],errors:[]};let browser;
     assert.equal(await actor.evaluate(()=>game.turnDeadline),deadline);
     await actor.locator('input[name="tunnelPayment"][value="1"]').check();
     assert.equal(await actor.locator('[data-tunnel-payment="total"] .payment-icons').getAttribute('aria-label'),'2 de color blanco + 2 comodines');
+    await actor.locator('#minimizeTunnel').click();
+    assert.equal(await actor.locator('#overlay').isVisible(),false);assert.equal(await actor.locator('#returnTunnel').isVisible(),true);
+    assert.equal(await actor.evaluate(()=>game.turnDeadline),deadline);
+    const selectedPayment=await actor.evaluate(()=>tunnelDecisionView.payment);assert.equal(selectedPayment,1);
+    const beforeCamera=await actor.evaluate(()=>({...mapCenter}));await actor.locator('#mapscroll').focus();await actor.keyboard.press('ArrowRight');
+    assert.notDeepEqual(await actor.evaluate(()=>({...mapCenter})),beforeCamera);
+    await actor.locator('#viewRoutes').click();assert.equal(await actor.locator('#ticketMap').isVisible(),true);
+    await actor.evaluate(()=>render());assert.equal(await actor.locator('#ticketMap').isVisible(),true);
+    await actor.locator('#closeRoutes').click();assert.equal(await actor.locator('#overlay').isVisible(),false);
+    await actor.waitForTimeout(300);assert.equal(await actor.evaluate(()=>game.turnDeadline),deadline);
+    await actor.screenshot({path:path.join(out,'decision-map-desktop.png')});
+    await actor.locator('#returnTunnel').click();assert.equal(await actor.locator('input[name="tunnelPayment"][value="1"]').isChecked(),true);
     await actor.screenshot({path:path.join(out,'decision-desktop.png')});
     for(const [width,height] of [[390,844],[844,390]]) {
      await actor.setViewportSize({width,height});
      const sizes=await actor.locator('#dialog').evaluate(el=>({client:el.clientWidth,scroll:el.scrollWidth}));assert.ok(sizes.scroll<=sizes.client+1);
+     await actor.locator('#minimizeTunnel').click();assert.equal(await actor.locator('#returnTunnel').isVisible(),true);
+     await actor.screenshot({path:path.join(out,`decision-map-${width}.png`)});
+     await actor.locator('#returnTunnel').click();assert.equal(await actor.locator('input[name="tunnelPayment"][value="1"]').isChecked(),true);
      await actor.locator('#acceptTunnel').scrollIntoViewIfNeeded();await actor.screenshot({path:path.join(out,`decision-${width}.png`)});
     }
     await actor.setViewportSize({width:1440,height:900});await actor.locator('#dialog').evaluate(el=>el.scrollTop=0);
    }
+   if(kind==='timeout'){await actor.locator('#minimizeTunnel').click();assert.equal(await actor.locator('#returnTunnel').isVisible(),true);}
    if(kind==='insufficient')assert.equal(await actor.locator('#acceptTunnel').isDisabled(),true);
    if(kind==='decline')assert.equal(await actor.locator('#acceptTunnel').isEnabled(),true);
    if(kind==='decline'||kind==='insufficient')await actor.locator('#declineTunnel').click();
@@ -77,6 +94,7 @@ const report={checks:[],errors:[]};let browser;
   }
   await Promise.all(clients.map(p=>p.waitForFunction(()=>game.sharedTunnel?.stage==='result')));
   const built=['zero','mixed','wild'].includes(kind),until=room.game.pending.until,receipt={...room.game.pending};
+  assert.equal(await actor.locator('#returnTunnel').isVisible(),false);
   assert.equal(until-receipt.resultStartedAt,3000);assert.equal(room.game.current,0);
   for(const p of clients) {
    assert.equal(await p.locator('#overlay').isVisible(),p===actor);

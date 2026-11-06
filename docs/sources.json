@@ -309,7 +309,12 @@
     "tests/browser-replay-analysis.cjs",
     "tests/replay-stream.test.js",
     "backend/native-client.js",
-    "frontend/connection.js"
+    "frontend/connection.js",
+    "frontend/postgame.js",
+    "frontend/postgame.css",
+    "frontend/score-recount.js",
+    "frontend/score-medals.js",
+    "tests/browser-postgame-summary.cjs"
   ],
   "work/table-controls.md": [
     "shared/game-timing.js",
@@ -619,6 +624,10 @@
     "backend/account-seats.js",
     "backend/match-archive.js",
     "frontend/profile-ui.js",
+    "frontend/profile-style.js",
+    "frontend/assets/wagons/",
+    "scripts/wagon-thumbnails.cjs",
+    "tests/browser-profile-style.cjs",
     "frontend/profile.css",
     "frontend/account-ui.js",
     "frontend/privacy.html",
@@ -627,6 +636,26 @@
     "supabase/007_statistics.sql",
     "supabase/008_statistics_cron.sql",
     "tests/profile-social.test.js",
-    "tests/browser-profile-social.cjs"
+    "tests/browser-profile-social.cjs",
+    "frontend/profile-summary.js",
+    "tests/summary-recount.test.js"
+  ],
+  "work/summary-postgame-experience.md": [
+    "backend/player-statistics.js",
+    "frontend/profile-summary.js",
+    "frontend/postgame.js",
+    "frontend/postgame.css",
+    "frontend/score-recount.js",
+    "frontend/score-medals.js",
+    "tests/summary-recount.test.js",
+    "tests/browser-postgame-summary.cjs",
+    "frontend/app.js",
+    "frontend/index.html",
+    "frontend/table.css",
+    "frontend/turn-history.js",
+    "frontend/replay-ui.js",
+    "frontend/replay.css",
+    "tests/browser-replay-analysis.cjs",
+    "tests/browser-tunnel-outcomes.cjs"
   ]
 }

@@ -7,23 +7,75 @@ html.replay-loading-mode #home,html.replay-loading-mode #shellPage { visibility:
 .loading-train span:nth-child(2) { animation-delay:100ms; }.loading-train span:nth-child(3) { animation-delay:200ms; }
 @keyframes replay-train { 50% { transform:translateY(-5px); } }
 body.is-replaying .game { top:var(--top-height); }
-body.is-replaying .replay-controls { position:relative; z-index:5; padding:0; flex:none; border:1px solid #d1d2c4; border-radius:10px; background:#fffcf5; font-size:12px; }
-.replay-controls summary { cursor:pointer; padding:9px 10px; }.replay-controls summary output { float:right; font-variant-numeric:tabular-nums; }
-.replay-body { padding:0 9px 9px; }
-.replay-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-.replay-top a { color:#345d66; }.replay-top button { width:32px; min-height:30px; padding:2px; color:#345d66; background:#e7eeea; }
-.replay-top button[aria-pressed="true"] { outline:2px solid #397c86; }
-.replay-transport { gap:3px; display:flex; margin:5px 0 3px; }.replay-transport button { min-width:30px; min-height:34px; flex:1; padding:2px; }
-.replay-transport select { width:auto; min-width:52px; padding:3px; margin:0; }
-#replaySeek { display:block; width:100%; min-height:22px; accent-color:#397c86; }
-#replayProgress { display:block; color:#61757a; }#replayProgress[hidden]{display:none}
+#replayControls[hidden]{display:none!important}
+body.is-replaying .replay-controls{position:fixed;z-index:20;top:12px;right:calc(var(--sidebar-width) + 28px);width:min(430px,calc(100vw - var(--sidebar-width) - 96px));border:1px solid #c2cdbf;border-radius:12px;background:#fffcf5f5;color:#244d59;font-size:12px;box-shadow:0 4px 18px #173d4320}
+.replay-controls summary{display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px 12px;list-style:none;min-height:34px}
+.replay-controls summary::-webkit-details-marker{display:none}
+.replay-controls summary output{margin-left:auto;font-variant-numeric:tabular-nums;font-size:11px}
+.replay-chevron{font-size:18px;line-height:1;transform:rotate(180deg)}
+.replay-controls details[open] .replay-chevron{transform:none}
+.replay-body{display:grid;grid-template-columns:1fr;padding:0 10px 8px;gap:3px}
+.replay-transport{display:flex;align-items:center;gap:5px}
+.replay-transport button{flex:1;min-width:36px;min-height:40px;padding:4px;font-size:19px;color:#244d59;background:#e7eeea}
+.replay-transport select{min-width:58px;width:64px;min-height:40px;padding:5px;margin:0;font-size:12px}
+.replay-transport #replayMore{display:none}.replay-transport .shell-icon{width:20px;height:20px}
+#replaySeek{display:block;width:100%;min-height:24px;margin:0;accent-color:#397c86;cursor:pointer}
+.replay-context{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.replay-context>a{margin-left:auto;color:#345d66}
+.replay-context #postgameReplayReturn{position:static;margin-left:auto;font-size:12px;padding:6px 10px;flex:none}
+#replayPlayers{display:flex;align-items:center;gap:5px;min-width:0;overflow-x:auto;padding:3px}
+#replayPlayers button{display:grid;place-items:center;flex:none;width:40px;height:40px;min-height:40px;padding:3px;background:transparent;border:1px solid transparent;border-radius:50%}
+#replayPlayers button[aria-pressed=true]{background:#f5dfaa;border-color:#9c7935;box-shadow:0 0 0 1px #9c7935}
+#replayPlayers .player-avatar{width:30px;height:30px;margin:0;display:grid;place-items:center;border-radius:50%;border:1px solid #9daea9;overflow:hidden}
+#replayPlayers .player-avatar{background:var(--replay-color,#e5e8e5)}
+#replayPlayers .player-avatar img{width:100%;height:100%;object-fit:cover}
+#replayPlayers svg{width:24px;height:24px}
+#replayProgress{display:block;color:#61757a}#replayProgress[hidden]{display:none}
+body.is-replaying.is-postgame #tableMapTools,body.is-replaying.is-postgame .table-tools-right{visibility:visible}
 body.is-replaying .game .players-panel { min-height:0; }
 body.is-replaying .scorebadge[aria-pressed="true"] { outline:2px solid #397c86; outline-offset:1px; }
 body.is-replaying #market button:disabled { opacity:1; cursor:default; }
 #historyEntries .replay-history-row { display:block; width:100%; text-align:left; padding:7px 9px; font-size:12px; line-height:1.4; color:#2c4d57; background:transparent; border:0; border-radius:5px; min-height:30px; }
 #historyEntries .replay-history-row.is-future { opacity:.43; }#historyEntries .replay-history-row.is-current { background:#f4dba6; color:#3f4435; box-shadow:inset 3px 0 #c78b32; }
-@media(max-width:1100px),(max-height:600px){
- body.is-replaying .replay-controls { position:fixed; top:calc(var(--compact-players-height,90px) + 12px); right:8px; left:auto; width:min(290px,calc(100vw - 70px)); z-index:32; box-shadow:0 5px 20px #1234; }
- .replay-transport button,.replay-transport select { min-height:44px; }
+@media(max-width:699px),(max-width:1100px) and (max-height:600px){
+ body.is-playing.is-replaying{--replay-hand-height:82px;--replay-market-height:72px;--table-dock:calc(var(--replay-hand-height) + var(--replay-height,160px) + env(safe-area-inset-bottom))}
+ body.is-replaying .replay-controls{top:auto;bottom:calc(var(--replay-hand-height) + env(safe-area-inset-bottom));left:6px;right:6px;width:auto;border-radius:10px;box-shadow:none}
+ .replay-controls summary{padding:3px 10px;min-height:28px}.replay-body{gap:2px;padding:0 8px 5px}
+ #replaySeek{grid-row:1;min-height:24px}
+ .replay-transport{grid-row:2;justify-content:flex-start;flex-wrap:wrap}
+ .replay-transport button{flex:0 0 44px;min-height:44px}
+ .replay-transport .replay-extra{display:none}.replay-controls.has-more .replay-extra{display:block}
+ .replay-transport #replayMore{display:block;margin-left:auto}
+ .replay-controls.has-more .replay-transport #replayFirst{order:5}.replay-controls.has-more .replay-transport #replayLast{order:6}.replay-controls.has-more .replay-transport #replaySpeed{order:7}
+ .replay-context{grid-row:3}#replayPlayers button{width:40px;height:40px}
+ body.is-replaying .game #compactHud{left:0;right:0;max-width:none;margin:0;bottom:0;height:calc(var(--replay-hand-height) + env(safe-area-inset-bottom));display:block}
+ body.is-replaying .game #compactHand{height:var(--replay-hand-height);padding-top:3px}
+ body.is-replaying .game #compactMarket{position:fixed;top:var(--table-top);left:6px;right:6px;height:var(--replay-market-height);border-radius:9px;background:#fffcf5;padding:4px 8px}
+ body.is-replaying .game #compactMarket .market-toolbar{display:none}
+ body.is-replaying .game #compactMarket .draw-status{display:none}
+ body.is-replaying .game #compactMarket #market{justify-content:center;padding-top:0;height:60px}
+ body.is-replaying .game .compact-players{top:calc(var(--table-top) + var(--replay-market-height) + 7px)}
+ body.is-replaying .game .board-status-actions{display:none}
+ body.is-replaying .game #drawtickets{display:none}
+ body.is-replaying .game .compact-panel{bottom:calc(var(--table-dock) + 8px);max-height:calc(100dvh - var(--table-dock) - var(--table-top) - 16px)}
+ body.is-replaying .table-tools-left,body.is-replaying .table-tools-right{bottom:calc(var(--table-dock) + 8px)}
+}
+@media(min-width:600px) and (max-width:1100px) and (max-height:600px){
+ body.is-playing.is-replaying{--replay-market-height:64px;--replay-hand-height:68px;--table-players:60px}
+ body.is-replaying .game #compactMarket{right:52%;left:58px;top:6px}
+ body.is-replaying .game .compact-players{top:6px;left:51%;right:8px;width:auto;max-width:none}
+ body.is-replaying .game .compact-players .scorebadge{height:58px}
+ body.is-replaying .game .compact-players .player-heading{height:20px}
+ body.is-replaying .game .compact-players .player-metrics{margin-top:0;display:flex;justify-content:space-around}
+ body.is-replaying .game .compact-players .player-metric{flex-direction:row;gap:3px}
+ body.is-replaying .game .compact-players .player-metric strong{font-size:13px}
+ body.is-replaying .game .compact-players .player-avatar{width:20px;height:20px;flex-basis:20px}
+ body.is-replaying .game .compact-players .turn-banner{height:18px;min-height:18px}
+ .replay-controls summary{min-height:28px;padding:0 10px;font-size:11px}
+ .replay-controls details[open] summary{position:absolute;right:0;top:0;width:40px;justify-content:center;padding:0}
+ .replay-controls details[open] summary strong,.replay-controls details[open] summary output{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ .replay-controls details[open] .replay-body{padding-top:5px}
+ .replay-controls details[open] #replaySeek{width:calc(100% - 32px)}
+ .replay-body{grid-template-columns:auto 1fr;column-gap:12px}.replay-context{grid-column:2;grid-row:2}#replaySeek{min-height:16px}.replay-transport{grid-column:1;grid-row:2}#replaySeek{grid-column:1/-1}
 }
 @media(prefers-reduced-motion:reduce){.loading-train span{animation:none;}}
