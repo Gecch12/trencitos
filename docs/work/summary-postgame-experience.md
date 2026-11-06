@@ -108,6 +108,12 @@ habitual:
 - `git diff --check` y `node scripts/check-docs.js --base HEAD`: correctos.
   Logs de esta ejecución en `.qa/table-refinements/` (ignorados por Git).
 
+Al preparar la publicación, `browser-table-ui.cjs` detectó que «Nuevos destinos»
+medía 36 px en escritorio. Se ajustó a 44 px sin alterar la disposición 2 × 3;
+el recorrido completo pasó en doce tamaños/orientaciones, con `CI=true` y sin
+errores de navegador. Evidencia antes/después en `.qa/table-release-2026-11-06/`.
+Los paquetes se regeneran con esa corrección y CI debe aprobar la revisión final.
+
 ## Siguiente paso
 
 Ángel autorizó la entrega completa mediante `trencitos-publicar`: Render, Android
