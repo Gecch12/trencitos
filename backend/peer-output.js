@@ -1,10 +1,13 @@
 "use strict";
+const StateStream = require('../shared/state-stream');
 
 // Accept only already-authorized, detached messages AFTER durable commit. Cache
 // advancement here cannot suppress a recovery snapshot after a failed write.
 function createPeerOutput({ write, frame, live, schedule = queueMicrotask }) {
   let pending = [], scheduled = false, definition = null;
   const previous = new Map();
+  const stream = StateStream.writer();
+  let streamScope = null;
   function flush() {
     scheduled = false;
     const batch = pending; pending = [];
@@ -20,19 +23,29 @@ function createPeerOutput({ write, frame, live, schedule = queueMicrotask }) {
     }
     write(Buffer.concat(frames));
   }
-  function send(serialized, compact = false) {
+  function send(serialized, compact = false, statePatches = false) {
     if (!live()) return;
     let data = serialized;
     if (compact) {
       const value = JSON.parse(data);
+      if (value.type === 'lobby') {
+        const scope = JSON.stringify([value.code, value.seat, !!value.spectator, value.matchId]);
+        if (scope !== streamScope) { stream.reset(); streamScope = scope; }
+      }
+      if (['room_closed', 'session_replaced'].includes(value.type)) { stream.reset(); streamScope = null; }
       if (["lobby", "storage", "directory"].includes(value.type)) {
         if (previous.get(value.type) === data) return;
         previous.set(value.type, data);
+        if (value.type === 'storage') stream.reset();
       }
       if (value.type === "state" && value.definition) {
         const key = JSON.stringify(value.definition);
         if (definition === key) { delete value.definition; data = JSON.stringify(value); }
         else definition = key;
+      }
+      if (value.type === 'state') {
+        if (statePatches) data = stream.write(value);
+        else stream.reset();
       }
     }
     pending.push({data,compact});

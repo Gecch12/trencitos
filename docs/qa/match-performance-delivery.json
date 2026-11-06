@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-06",
+  "migration": {
+    "file": "supabase/009_room_transactions.sql",
+    "sha256": "39fc21f01e3cb23c36f7b608285f53694a801daea182f7a2d774c70dcd7e6ef3",
+    "applied": true,
+    "verifiedAt": "2026-11-06T19:55:49.851372Z",
+    "beforeNewServer": {
+      "roomMode": false,
+      "legacyRooms": 3,
+      "isolatedRooms": 0,
+      "rls": true,
+      "anonymousRead": false,
+      "authenticatedRead": false,
+      "anonymousSave": false,
+      "authenticatedRecovery": false,
+      "serviceRoleSave": true
+    }
+  },
+  "backendCI": {
+    "commit": "bc206c349143af5cb6f07cb33181bc5bc285b7cf",
+    "url": "https://github.com/Gecch12/trencitos/actions/runs/42281367334",
+    "conclusion": "success"
+  },
+  "candidate": "15636fb86e28f354eda0bca9b2bd1d4ffd327b74",
+  "published": true,
+  "deploy": {
+    "id": "dep-dbn396bl550s73fblaeg",
+    "status": "Live",
+    "liveAt": "2026-11-06T20:12:50Z",
+    "commit": "15636fb86e28f354eda0bca9b2bd1d4ffd327b74"
+  },
+  "finalCI": {
+    "url": "https://github.com/Gecch12/trencitos/actions/runs/42283725508",
+    "conclusion": "success",
+    "nodeTests": 736
+  },
+  "recovery": {
+    "sameMatch": true,
+    "handBefore": 5,
+    "drawCountBefore": 1,
+    "handAfterRejoin": 5,
+    "drawCountAfterRejoin": 1,
+    "handAfterSecondDraw": 6,
+    "duplicate": false
+  },
+  "healthAfterCleanup": {
+    "ok": true,
+    "rooms": 3,
+    "mode": "room",
+    "pausedRooms": 0
+  },
+  "databaseExecution": {
+    "source": "extensions.pg_stat_statements, aggregate since collection began; not matched per action",
+    "at": "2026-11-06T20:24:00Z",
+    "checkpoint": {
+      "calls": 7099,
+      "meanMs": 32.46,
+      "maxMs": 502.08
+    },
+    "room": {
+      "calls": 77,
+      "meanMs": 17.58,
+      "maxMs": 142.86
+    }
+  },
+  "regions": {
+    "render": "Oregon (US West)",
+    "supabase": "us-west-2 (Oregon)"
+  }
+}

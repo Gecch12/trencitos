@@ -34,8 +34,11 @@ de HTTP, UI, Supabase ni métricas; la aplicación coordina y los adaptadores mi
 
 Revisión de commits y contratos completada antes de editar código. Las mediciones
 del 2026-11-05 corresponden a `891b2d7` y no acreditan rendimiento de esta base.
-Fase 0 publicada y medida en `5a57127`; evidencia en su ficha. Fase 1 implementada
-en `43e375e`; su CI agotó el límite durante Chrome, sin publicar esa versión
-aislada. Fases 2–4 implementadas y verificadas con suite Node/Chrome de cartas;
-falta CI remoto conjunto, migración, publicación y comparación. No cerrar una fase
-solo por preparar código ni confundir validación con publicación.
+Fase 0 publicada y medida en `5a57127`; fases 1–4 publicadas en `15636fb`
+tras CI completo (736 Node y todos los recorridos Chrome). SQL 009 activo,
+continuidad de partidas e independencia de dos salas verificadas en producción.
+La comparación redujo captura, ejecución, RPC y espera visual; la mediana
+clic→confirmación de 566 ms todavía supera la meta inicial. La fase 1 continúa
+con un hito adicional de transporte incremental definido a partir de esta
+medición. Las demás fichas conservan evidencia y límites. No confundir menos
+bytes o pruebas simuladas con una mejora productiva aún no medida.

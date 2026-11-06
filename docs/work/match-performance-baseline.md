@@ -78,3 +78,8 @@ Prioridades: eliminar trabajo repetido del historial, limitar captura/guardado
 a la sala, retirar el giro obligatorio tras la confirmación y mantener privacidad,
 durabilidad y controles ejecutables. La siguiente comparación debe conservar
 este método y registrar el commit; no se ha alcanzado aún la meta de latencia.
+
+Referencia complementaria antes de actualizar: ocho ping/pong de aplicación
+por el WebSocket productivo, con tres salas y sin juego, dieron 235–244 ms.
+Incluyen despacho/captura del servidor; no son propagación de red pura. Se
+conservan en el mismo JSON para comparar el recorrido de conexión después.

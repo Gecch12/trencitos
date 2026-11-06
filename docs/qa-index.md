@@ -40,3 +40,8 @@ iteraciones. Pruebas pendientes en dispositivos reales y despliegue se siguen en
 - [Continuidad móvil y cuenta · 2026-11-05](qa/mobile-continuity/verification.json):
   pruebas locales, compilaciones y capturas; [CI y entrega](production.md)
   verificados después. Google real pendiente de prueba en el teléfono.
+
+
+La entrega de rendimiento `15636fb` conserva [migración, CI y continuidad](qa/match-performance-delivery.json),
+[comparación de 16 robos](qa/match-performance-comparison.json) y [cuatro pares en dos salas](qa/match-performance-concurrency.json).
+El ajuste posterior del transporte permanece en [su ficha](work/match-performance-work.md).

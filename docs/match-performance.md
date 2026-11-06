@@ -37,6 +37,13 @@ esperar persistencia en paralelo. Operaciones de pertenencia y ciclo de vida usa
 una barrera; archivo y servidores sin esa capacidad conservan la ruta anterior.
 Las [reglas de arquitectura](architecture-rules.md) fijan límites y verificaciones.
 
+El transporte puede negociar deltas de la vista autorizada (`statePatches:1`),
+con secuencia propia y snapshot al reconectar. Solo avanza la base después del
+commit; no calcula diferencias contra estado privado del dominio. Se conserva
+una vista por conexión: menos tráfico a cambio de esa memoria acotada. Una
+reducción de bytes debe contrastarse con latencia productiva; no demuestra por
+sí sola una causa específica del proxy o de TCP.
+
 ## Método
 
 Medir cada duración con reloj monotónico del mismo proceso. El cliente registra

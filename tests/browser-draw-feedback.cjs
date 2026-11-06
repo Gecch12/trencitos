@@ -211,7 +211,7 @@ async function close(f){await f.context.close();f.rival.close();await app.drain(
     for(const message of messages){
      const single={data:JSON.stringify(message)};
      if(message.type==='ack')setTimeout(()=>receive(single),180);
-     else {receive(single);if(message.type==='state'){
+     else {receive(single);if(['state','state_patch'].includes(message.type)){
       const second=document.querySelector('#market [data-market-index="1"]');
       drawAudit.states.push({hand:game.hand.length,count:document.getElementById('handCount').textContent,
        secondPending:second?.getAttribute('aria-busy')==='true'&&!second.querySelector('img')});

@@ -395,7 +395,7 @@ function connect() {
     lastDrawId = null;
     lastEffectId = null;
     status(I18n.t("● Conectado"));
-    send({type:'list_rooms',compactMessages:2});
+    send({type:'list_rooms',compactMessages:2,statePatches:1});
     if (desiredWatch) send({type:'spectate',code:desiredWatch});
     else if (desiredRoom) await joinDesiredRoom(true);
   };
@@ -563,12 +563,19 @@ function connect() {
       return;
     }
   };
+  const stateStream = StateStream.reader(), connection = sock;
+  const receiveWire = message => {
+    let decoded;
+    try { decoded = stateStream.read(message); }
+    catch { connection.close(); return false; }
+    receive(decoded); return true;
+  };
   sock.onmessage = event => {
     let message;
     try { message=JSON.parse(event.data); } catch { return; }
     if(message?.type==='batch'&&Array.isArray(message.messages)){
-      for(const item of message.messages)if(item&&typeof item==='object')receive(item);
-    }else if(message&&typeof message==='object')receive(message);
+      for(const item of message.messages)if(item&&typeof item==='object'&&!receiveWire(item))break;
+    }else if(message&&typeof message==='object')receiveWire(message);
   };
   sock.onclose = () => {
     cancelRoomColor();

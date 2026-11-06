@@ -6,9 +6,12 @@ const out=path.resolve(process.env.QA_OUT||'docs/qa/south-america-release/transp
  await page.goto(`${base}/?room=830101#recover=${token}`);await page.waitForFunction(()=>game&&board3D);
  const route=await page.evaluate(()=>game.routes.find(r=>!r.tunnel&&!GameUI.construction(game,seat,{routeId:r.id}).reason).id);
  await page.locator(`#board [data-route-id="${route}"]`).focus();await page.keyboard.press('Enter');await page.locator('#startBuild').click();await page.locator('#confirmBuild').click();await page.waitForFunction(id=>game.routes.find(r=>r.id===id).owner===0&&!pendingAction,route);
- assert.ok(frames.some(f=>f.type==='batch'&&f.messages.some(m=>m.type==='state')&&f.messages.some(m=>m.type==='ack')));
+ assert.ok(frames.some(f=>f.type==='batch'&&f.messages.some(m=>m.type==='state_patch')&&f.messages.some(m=>m.type==='ack')),'negotiated delta and ACK share a frame');
  const prior=await page.evaluate(()=>({hand:game.hand,owned:game.routes.map(r=>r.owner),map:game.mapRef}));
  await page.reload();await page.waitForFunction(()=>game&&board3D);assert.deepEqual(await page.evaluate(()=>({hand:game.hand,owned:game.routes.map(r=>r.owner),map:game.mapRef})),prior);assert.equal(await page.evaluate(()=>game.players.some(p=>'hand'in p||'tickets'in p)),false);
+ await page.evaluate(()=>{window.gapSocket=sock;window.gapGame=game;sock.onmessage({data:JSON.stringify({type:'state_patch',baseSequence:-1,stateSequence:0,changes:[]})});});
+ await page.waitForFunction(()=>sock!==window.gapSocket&&sock?.readyState===WebSocket.OPEN&&game&&game!==window.gapGame&&!game.storagePaused);
+ assert.deepEqual(await page.evaluate(()=>({hand:game.hand,owned:game.routes.map(r=>r.owner),map:game.mapRef})),prior,'a sequence gap reconnects without applying a speculative view');
  await page.waitForFunction(()=>!constructionBusy());await page.screenshot({path:path.join(out,'reconnected.png')});assert.deepEqual(errors,[]);
- const report={at:new Date().toISOString(),browser:browser.version(),envelopeFrames:frames.filter(f=>f.type==='batch').length,acceptedConstruction:true,ackClearsPending:true,reconnect:true,privateView:true,errors,passed:true};fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
+ const report={at:new Date().toISOString(),browser:browser.version(),envelopeFrames:frames.filter(f=>f.type==='batch').length,acceptedConstruction:true,ackClearsPending:true,reconnect:true,sequenceGapRecovery:true,privateView:true,errors,passed:true};fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
  }finally{await browser.close();await require('../backend/server').shutdown();}})().catch(e=>{console.error(e);process.exitCode=1});

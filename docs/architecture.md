@@ -1074,6 +1074,16 @@ se reciben juntos, evitando la demora entre frames observada tras el proxy. La
 versión 1 sigue deduplicando sin envoltorio; clientes sin negociación conservan
 el protocolo original. Ningún mensaje se agrupa antes de aceptar el commit.
 
+La capacidad adicional `statePatches:1` negocia snapshots/deltas mediante
+`shared/state-stream.js`. `peer-output` compara exclusivamente DTOs autorizados
+ya confirmados y elige delta solo si ocupa menos que el snapshot. Conserva una
+vista anterior por conexión; no una caché de estados globales ni de otros puestos.
+Un cambio de sala/puesto/partida o del estado de almacenamiento reinicia la base.
+La secuencia de transporte es independiente de la revisión de juego: también
+hay vistas de reloj con la misma revisión. El lector mantiene su base separada
+de la vista mutable de la UI; un hueco de secuencia cierra/reconecta para recibir
+un snapshot. Servidores/clientes sin la capacidad siguen usando estados completos.
+
 
 ## Presentación de robos y entrada por cuenta
 

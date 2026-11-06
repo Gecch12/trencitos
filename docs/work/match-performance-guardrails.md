@@ -1,5 +1,5 @@
 ---
-{"id":"match-performance-guardrails","status":"active","parent":"match-performance-architecture","depends_on":["match-performance-isolation","match-performance-presentation"],"branch":"main","delivery":"worktree","updated":"2026-11-06"}
+{"id":"match-performance-guardrails","status":"active","parent":"match-performance-architecture","depends_on":["match-performance-isolation","match-performance-presentation"],"branch":"main","delivery":"released","updated":"2026-11-06"}
 ---
 # Prevenir regresiones de arquitectura y respuesta
 
@@ -13,9 +13,9 @@ CI; no depender de recordar un skill en cada implementación.
 - [x] Gate de dependencias dominio/aplicación/consultas y tiempo/azar explícitos,
   incluyendo puentes puros permitidos. Casos negativos demuestran el rechazo.
 - [x] Contrato del repositorio/unidad de trabajo y criterios de entrega documentados.
-- [ ] CI de aislamiento entre salas, rollback, reintento, recuperación, privacidad
+- [x] CI de aislamiento entre salas, rollback, reintento, recuperación, privacidad
   y presentación; comparación productiva y procedimiento de migración/regreso.
-- [ ] Revisar el resultado conjunto y dejar explícitos los límites: compatibilidad
+- [x] Revisar el resultado conjunto y dejar explícitos los límites: compatibilidad
   legada, muestra pequeña y protección administrativa de la rama.
 
 Los checks Node/Chrome usan fallos controlados para comprobar corrección; no
@@ -33,3 +33,12 @@ Consulta de GitHub del 2026-11-06: `main.protected=false`. Los checks se ejecuta
 en CI, pero la rama no impide un push directo. Exigir PR/CI mediante protección
 cambiaría el flujo actual de trabajo en main; requiere acordar ese cambio de
 flujo, y no se presenta como configurado.
+
+
+Entrega `15636fb`: 736/736 Node y todos los recorridos Chrome en
+[CI completo](https://github.com/Gecch12/trencitos/actions/runs/42283725508),
+[Render Live y recuperación](../qa/match-performance-delivery.json),
+[comparación real](../qa/match-performance-comparison.json) y
+[dos salas](../qa/match-performance-concurrency.json). El hito adicional de
+transporte de fase 1 debe pasar esos mismos controles antes de publicarse.
+La revisión conjunta final permanece abierta hasta medir ese ajuste.

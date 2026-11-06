@@ -1,6 +1,19 @@
 # Producción
 
-## Versión actual · 2026-11-06, 13:21 (Lima)
+## Versión web actual · 2026-11-06, 15:12 (Lima)
+
+Código `15636fb86e28f354eda0bca9b2bd1d4ffd327b74`, [Render Live](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbn396bl550s73fblaeg).
+Incluye diagnóstico, menor trabajo por jugada, transacciones/recuperación por sala,
+cartas confirmadas sin esperar al giro y controles DDD/CQRS en CI. SQL 009 aplicado
+con permisos verificados antes del código. [CI](https://github.com/Gecch12/trencitos/actions/runs/42283725508):
+736 Node y todos los recorridos Chrome. [Entrega y continuidad](qa/match-performance-delivery.json),
+[comparación](qa/match-performance-comparison.json) y [concurrencia](qa/match-performance-concurrency.json).
+Las salas propias de QA se cerraron; tres salas anteriores conservadas y ninguna
+pausada. La [iniciativa](work/match-performance-architecture.md) continúa midiendo
+el ajuste incremental del transporte. Los binarios móviles mantienen la entrega
+13:21 descrita abajo; esta publicación es de web/servidor.
+
+## Entrega anterior · 2026-11-06, 13:21 (Lima)
 
 - Código `51cb1eaa973ab0aeabd659f457f0b49b9556efb8`, Trencitos **0.7.0-beta**.
   Lateral compacto, chat plegable deshabilitado, mercado 2 × 3 con «Nuevos

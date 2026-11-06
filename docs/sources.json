@@ -7,7 +7,11 @@
     "backend/supabase-store.js",
     "tests/runtime-observation.test.js",
     "backend/partitioned-queue.js",
-    "supabase/009_room_transactions.sql"
+    "supabase/009_room_transactions.sql",
+    "backend/peer-output.js",
+    "shared/state-stream.js",
+    "tests/state-stream.test.js",
+    "tests/browser-transport.cjs"
   ],
   "work/match-performance-baseline.md": [
     "backend/durable-queue.js",
@@ -153,7 +157,8 @@
     "frontend/destination-map.css",
     "backend/native-client.js",
     "frontend/connection.js",
-    "frontend/service-worker.js"
+    "frontend/service-worker.js",
+    "shared/state-stream.js"
   ],
   "domain.md": [
     "game/application/automatic-play.js",
@@ -708,5 +713,15 @@
     "game/queries/",
     ".github/workflows/ci.yml",
     "AGENTS.md"
+  ],
+  "work/match-performance-work.md": [
+    "shared/replay-state.js",
+    "shared/state-stream.js",
+    "backend/peer-output.js",
+    "game/queries/authorized-views.js",
+    "frontend/app.js",
+    "tests/state-stream.test.js",
+    "tests/peer-output.test.js",
+    "tests/browser-transport.cjs"
   ]
 }

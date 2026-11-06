@@ -356,7 +356,7 @@ function createPeer(socket) {
     lastSeen: Date.now(),
     send(obj) {
       const data = JSON.stringify(obj);
-      const deliver = () => output.send(data, this.compactMessages);
+      const deliver = () => output.send(data, this.compactMessages, this.statePatches);
       if (durable) durable.defer(deliver); else deliver();
     },
     close(disconnectedAt = Date.now()) {
@@ -519,7 +519,7 @@ function onMessage(peer, msg) {
     peer.send({ type: "pong" });
     return;
   }
-  if (msg.type === "list_rooms") { peer.compactMessages = [1,2].includes(msg.compactMessages) ? msg.compactMessages : 0; peer.directory = true; sendDirectory(); return; }
+  if (msg.type === "list_rooms") { peer.compactMessages = [1,2].includes(msg.compactMessages) ? msg.compactMessages : 0; peer.statePatches = msg.statePatches === 1; peer.directory = true; sendDirectory(); return; }
   if (msg.type === "spectate") {
     if (peer.room) return deny(peer, "Sal de tu sala antes de observar otra partida.");
     const code = String(msg.code || "").trim().toUpperCase(), r = rooms.get(code);

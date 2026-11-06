@@ -1,5 +1,5 @@
 ---
-{"id":"match-performance-isolation","status":"active","parent":"match-performance-architecture","depends_on":["match-performance-baseline"],"branch":"main","delivery":"worktree","updated":"2026-11-06"}
+{"id":"match-performance-isolation","status":"done","parent":"match-performance-architecture","depends_on":["match-performance-baseline"],"branch":"main","delivery":"released","updated":"2026-11-06"}
 ---
 # Guardado independiente por partida
 
@@ -35,11 +35,21 @@ incertidumbre de una sala no pausa las otras; un conflicto de escritor sí pausa
 el proceso. La ruta anterior permanece para servidores sin la capacidad nueva.
 
 Pruebas deterministas de cola, SQL y servidor verifican independencia, rollback,
-respuesta perdida, recuperación y duplicados. Suite completa y Chrome de cartas correctos; evidencia conjunta en
-[guardrails](match-performance-guardrails.md). Pendientes: CI remoto,
-migración 009 y validación productiva. No se ha aplicado SQL ni publicado esta fase.
+respuesta perdida, recuperación y duplicados. El [CI completo de 15636fb](https://github.com/Gecch12/trencitos/actions/runs/42283725508)
+pasó 736 pruebas Node y todos los recorridos Chrome. SQL 009 aplicado antes
+que el servidor, con permisos de roles comprobados; Render Live a las 15:12 Lima.
+[Registro de entrega](../qa/match-performance-delivery.json).
 
-Revisión del borde de caducidad: salas pausadas no entran en la limpieza global;
-la práctica cancela sus temporizadores y no se elimina al reconectar mientras
-el guardado siga incierto. Treinta comprobaciones de práctica, recuperación y
-servidor remoto pasan tras este ajuste; el CI del commit final se repite.
+Una partida iniciada con el checkpoint anterior recuperó la misma identidad,
+cinco cartas y un robo usado. Su segundo robo dejó seis cartas sin duplicar.
+El servidor reporta `persistenceMode:room`. Cuatro pares de comandos simultáneos
+en dos salas propias tuvieron esperas de cola de 0,035–0,116 ms, mientras sus
+RPC tardaban 99–305 ms: la sala B no esperó a la persistencia de A en la cola.
+[Datos](../qa/match-performance-concurrency.json). Es concurrencia acotada, no
+capacidad certificada ni fallo inyectado en producción. Las salas de prueba se
+cerraron: tres salas previas conservadas, salud correcta y ninguna pausada.
+
+Salas pausadas quedan fuera de limpieza global/caducidad de práctica; se cancelan
+sus temporizadores y se conservan al reconectar hasta resolver el guardado.
+El procedimiento de regreso al protocolo anterior está documentado y probado
+con SQL aislado; no se provocó un rollback de despliegue ni una caída productiva.

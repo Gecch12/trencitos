@@ -27,3 +27,26 @@ sus 20 minutos tras una instalación de Chrome de más de diez minutos
 ([ejecución](https://github.com/Gecch12/trencitos/actions/runs/42277663209)).
 No se publicó ese commit aislado. El siguiente CI valida conjuntamente fases 1–4
 con límite de 30 minutos y todas las pruebas; sigue pendiente la comparación.
+
+## Ajuste adicional tras medir la entrega
+
+`15636fb` está publicado. En 16 robos, captura mediana baja de 9,14 a 0,81 ms,
+ejecución de 26,09 a 14,74 ms y RPC de 159,87 a 109,47 ms. Clic→estado todavía
+es 566,45 ms de mediana (antes 624,55). No se atribuye la diferencia residual
+a Render ni a la red sin medirla. La vista repite rutas e historial: mediana
+25.795 caracteres por mensaje, hasta 33.567. Evidencia provisional en
+[comparación](../qa/match-performance-comparison.json).
+
+Siguiente hito, definido antes de implementarlo: protocolo incremental optativo
+de vistas ya autorizadas, después del commit. Conservar snapshot completo en
+conexión nueva, cambio de sala/puesto y recuperación; secuencia de transporte
+independiente de la revisión de juego, que puede repetirse en vistas de reloj.
+Cliente anterior recibe el protocolo anterior. Un hueco de secuencia obliga a
+reconectar, nunca aplicar un delta sobre otro estado. La caché no comparte vistas
+entre jugadores y se mantiene separada de objetos que modifica la UI.
+
+Aceptación: reconstrucción exacta con adiciones/eliminaciones/arrays, privacidad,
+rollback sin adelantar caché, sala nueva con revisión menor, dos estados antes
+del ACK, reconexión y suite Chrome. Publicar solo tras CI y repetir las 16
+interacciones para comprobar el beneficio real, sin prometer que menos bytes
+eliminen el coste de SQL o el RTT.

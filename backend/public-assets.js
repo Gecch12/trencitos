@@ -71,6 +71,7 @@ const ASSETS = Object.freeze({
   "/account-ui.js": ["frontend/account-ui.js", "text/javascript; charset=utf-8"],
   "/translations.js": ["shared/translations.js", "text/javascript; charset=utf-8"],
   "/replay-state.js": ["shared/replay-state.js", "text/javascript; charset=utf-8"],
+  "/state-stream.js": ["shared/state-stream.js", "text/javascript; charset=utf-8"],
   "/replay-ui.js": ["frontend/replay-ui.js", "text/javascript; charset=utf-8"],
   "/replay.css": ["frontend/replay.css", "text/css; charset=utf-8"],
   "/history-ui.js": ["frontend/history-ui.js", "text/javascript; charset=utf-8"],
