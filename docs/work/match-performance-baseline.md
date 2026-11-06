@@ -47,3 +47,9 @@ del juego ni conexión a Supabase. Verifican commit antes de entrega/diagnóstic
 rollback, scopes asíncronos, lotes, reintento y que el observador no revierta una
 jugada. Comprobador documental y `git diff --check` correctos. Pendientes CI,
 publicación y nueva medición productiva; no hay todavía una mejora medida.
+
+CI de `f86ac0f`: 726/727 comprobaciones Node correctas. El caso de recuperación
+exigía preparar y guardar la respuesta en menos de 100 ms; se corrige para
+comprobar el presupuesto restaurado descontando como máximo el tiempo real de
+esa petición. Conserva la comprobación de recuperación y no altera el reloj del
+producto. Repetir el CI completo antes de desplegar.

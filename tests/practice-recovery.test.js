@@ -27,12 +27,17 @@ for(const kind of ['legacy-practice','solo-bots']) test(kind+' survives a real s
   const budget=saved.game.initialDeadline-paused;
   const next=await start(),intruder=await connect(next.port);peers.push(intruder);
   intruder.send({type:'join',code:lobby.code,token:'wrong'});assert.equal((await intruder.next('error')).code,'INVALID_TOKEN');
-  const returning=await connect(next.port);peers.push(returning);returning.send({type:'join',code:lobby.code,token:lobby.token});
+  const returning=await connect(next.port);peers.push(returning);const rejoinStarted=performance.now();returning.send({type:'join',code:lobby.code,token:lobby.token});
   assert.equal((await returning.next('lobby')).practice,kind==='legacy-practice');
   const restored=(await returning.next('state')).game;
   assert.deepEqual(restored.initial,saved.game.players[0].pending);assert.deepEqual(restored.hand,saved.game.players[0].hand);
   assert.equal(restored.current,saved.game.current);assert.equal(restored.phase,saved.game.phase);
-  assert.ok(Math.abs((restored.initialDeadline-restored.serverNow)-budget)<100);
+  // Resume preserves the paused budget; preparing/persisting the reply consumes
+  // real time. Bound that consumption by this request, not an arbitrary 100 ms
+  // machine-speed requirement on a shared CI runner.
+  const elapsed=performance.now()-rejoinStarted,remaining=restored.initialDeadline-restored.serverNow;
+  assert.ok(remaining<=budget+2 && remaining>=budget-elapsed-2,
+    `budget=${budget}, remaining=${remaining}, rejoin elapsed=${elapsed}`);
   returning.send({type:kind==='legacy-practice'?'leave_test':'leave'});await returning.next('room_closed');
   assert.equal(loadState(file).rooms.some(room=>room.code===lobby.code),false);
 });
