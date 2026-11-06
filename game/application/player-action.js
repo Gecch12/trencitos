@@ -29,7 +29,7 @@ function createPlayerActionHandler({ engine, stageRoom, storagePaused, now, rand
       room.revision = (room.revision || 0) + 1;
       stageRoom(room, true);
     }
-    if (storagePaused()) return reject("STORAGE_PAUSED");
+    if (storagePaused(room)) return reject("STORAGE_PAUSED");
     if (member.autopilot) return reject("AUTOPILOT_ACTIVE");
 
     // Private choices validate their own pending choice/offer in the engine.

@@ -88,8 +88,8 @@ Las pruebas automáticas usan una simulación de la Data API; estos pasos valida
 
 1. Abre `https://TU-SERVICIO.onrender.com/healthz`. Debe devolver 200 y `{"ok":true,"storage":"supabase",…}`.
 2. En dos navegadores crea y comienza una sala **normal**, no una sala de pruebas. Conserva los enlaces privados de recuperación.
-3. Elige destinos y roba dos cartas rápidamente. Comprueba movimiento al clic y envío de la segunda petición sin esperar el primer ACK (`drawPipelineVersion:1`). Una carta oculta espera fuera de la mano, revela el color recibido y se incorpora una sola vez con su imagen cargada. Una visible puede incorporarse provisionalmente; un rechazo la retira. Mide por separado clic → color reconocible → llegada a la mano, además de confirmación del servidor.
-4. Desde Supabase, verifica que `ferrovia_checkpoint.version` aumenta. No compartas el contenido de `rooms`: incluye manos, mazo y destinos secretos.
+3. Elige destinos y roba dos cartas rápidamente. Comprueba movimiento al clic y envío de la segunda petición sin esperar el primer ACK (`drawPipelineVersion:1`). Una carta oculta muestra su color y se incorpora una sola vez al recibir el estado confirmado, sin esperar al vuelo. El hueco de la visible elegida queda neutro y deshabilitado hasta su reposición; un rechazo deshace la presentación provisional. Mide por separado clic → color reconocible → llegada a la mano, además de confirmación del servidor.
+4. Desde Supabase, verifica la versión de la sala en `trencitos_rooms` si health indica `persistenceMode:room`; en modo anterior aumenta `ferrovia_checkpoint.version`. No compartas el JSON: incluye manos, mazo y destinos secretos.
 5. Reinicia manualmente el servicio en Render. Reconecta los navegadores dentro de los 120 segundos posteriores al arranque de una partida multijugador: mismo código, puesto, mano, rutas y elección pendiente. Los contadores conservan el tiempo pendiente, descontando el tiempo jugado, no el de caída.
 6. Repite con dos o tres salas simultáneas. Incluye una práctica o sala iniciada con un humano y bots: se conserva pausada 24 h y también debe sobrevivir al reinicio, con sus elecciones y tiempo restantes.
 7. Verifica que `/.env`, `/supabase-store.js`, `/room-state.json` y `/supabase/001_active_games.sql` respondan 404.
@@ -97,7 +97,7 @@ Las pruebas automáticas usan una simulación de la Data API; estos pasos valida
 ## Recuperación y límites
 
 - **Error al arrancar:** revisa Project URL, secret key, migración, Data API y si Supabase está pausado. El servidor no reemplaza un fallo de lectura por una lista vacía.
-- **Partida pausada por guardado:** resuelve la conectividad/credencial, reinicia Render y reconecta. Si la respuesta se perdió pero la escritura llegó, se recupera el estado de la base, no se sobrescribe con memoria antigua. La repetición de una acción conserva su ID para evitar robar dos veces.
+- **Partida pausada por guardado:** con SQL 009 y un fallo limitado a la sala, resuelve la conectividad y pulsa Reintentar: se releen estado y recibos de esa sala. Si el aviso exige reiniciar (conflicto de escritor, operación global o protocolo anterior), reinicia Render y reconecta. Si la respuesta se perdió pero la escritura llegó, se recupera el estado de la base, no se sobrescribe con memoria antigua. La repetición de una acción conserva su ID para evitar robar dos veces.
 - **Otro servidor tomó control:** no ejecutes dos servicios/preview/local con el mismo proyecto. El nuevo proceso invalida al anterior para impedir dos autoridades sobre una partida. No es una arquitectura multi-instancia.
 - **Todos se fueron:** una partida multijugador se cierra tras 120 segundos sin jugadores conectados; una sala sin empezar conserva 60 segundos y una partida de un humano con bots admite 24 horas. El cierre no atribuye por sí mismo una sanción: se aplica la política de [Compromiso](profile-social-statistics.md). Una caída del proceso con jugadores activos se recupera desde el checkpoint, sin contar el tiempo de caída.
 - **Retención:** el checkpoint contiene las salas vigentes, con caducidad de 24 horas. El archivo histórico separado conserva pasos/resultados sin caducidad automática: [contrato](history-replay.md). Vigilar tamaño de base y backups; no ofrece recuperación punto en el tiempo.
@@ -112,3 +112,30 @@ estado. Discord requiere su aplicación/proveedor, Manual Linking y la variable
 `AUTH_DISCORD_ENABLED=true`. El orden, ventanas y evidencia pendiente están en
 [perfil y estadísticas](profile-social-statistics.md) y [su ficha](work/profile-social-statistics.md).
 No iniciar un escritor local contra producción para probar esta entrega.
+
+## Transacciones por sala (SQL 009)
+
+Aplicar [009_room_transactions.sql](../supabase/009_room_transactions.sql) en el
+proyecto de **estado**, después de 001–007 y antes del código que anuncia esta
+capacidad. Es aditiva: conserva checkpoint, salas e historial. No arrancar un
+segundo servidor para probarla. La evidencia de aplicación y commit Live vive en
+[Producción](production.md); tener el archivo en Git no acredita su aplicación.
+
+1. CI completo del código y pruebas SQL deben estar aprobados. Ejecutar el archivo
+   completo, en su transacción; no copiar secretos ni JSON de partidas a informes.
+2. Publicar el commit validado. El arranque reclama autoridad, activa las filas
+   por sala y persiste las salas vigentes/caducadas mediante el flujo normal.
+3. Verificar `/healthz?timings=1`: `persistenceMode:room`, `pausedRooms:0`; comprobar
+   dos salas propias y sus recibos sin inyectar fallos en producción.
+4. Para volver de versión, desplegar un commit anterior validado: su reclamación
+   reconstruye el checkpoint completo desde las filas actuales. No borrar filas
+   ni revertir tablas manualmente. El nuevo escritor cerca al anterior.
+
+`trencitos_rooms` y sus RPC no son accesibles a `anon`/`authenticated`; solo usa
+el servicio servidor existente. El estado y sus frames se confirman juntos.
+Un timeout no autoriza sobrescribir SQL con el rollback de memoria: Reintentar
+lee la versión durable y conserva sus recibos, luego confirma relojes/vistas.
+Una incertidumbre de sala pausa esa mesa; un cambio de escritor pausa todo el
+proceso. Las operaciones globales siguen usando una barrera y pueden esperar
+otras mesas. Mantener observación de RPC/CPU/memoria: esta migración no elimina
+latencia de red ni bloqueos de otros disparadores SQL.

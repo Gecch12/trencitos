@@ -3,7 +3,7 @@
 ---
 # Guardado independiente por partida
 
-Diseño previo a la implementación de la fase 2. Una cola por sala necesita una
+Fase 2, diseñada antes de modificar el código. Una cola por sala necesita una
 unidad SQL por sala: mantener el checkpoint global bajo `FOR UPDATE` conservaría
 el bloqueo entre mesas aunque Node lanzara varias peticiones.
 
@@ -28,5 +28,13 @@ el bloqueo entre mesas aunque Node lanzara varias peticiones.
 
 ## Evidencia y siguiente paso
 
-Contrato preparado durante la validación de fase 0. Aún no implementado ni
-publicado. Conservar la ruta anterior hasta completar comprobaciones y migración.
+Implementados scheduler por sala, rollback/outbox/archivo con alcance, versiones
+SQL independientes, barrera de ciclo de vida y directorio de vistas confirmadas.
+La recuperación relee la sala durable y sus recibos antes de reanudar. Una
+incertidumbre de una sala no pausa las otras; un conflicto de escritor sí pausa
+el proceso. La ruta anterior permanece para servidores sin la capacidad nueva.
+
+Pruebas deterministas de cola, SQL y servidor verifican independencia, rollback,
+respuesta perdida, recuperación y duplicados. Suite completa y Chrome de cartas correctos; evidencia conjunta en
+[guardrails](match-performance-guardrails.md). Pendientes: CI remoto,
+migración 009 y validación productiva. No se ha aplicado SQL ni publicado esta fase.

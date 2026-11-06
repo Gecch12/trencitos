@@ -38,7 +38,7 @@ function createDurableQueue({capture,restore,commit,onFailure,measure=()=>{},now
     running=false;for(const resolve of idleWaiters.splice(0))resolve();
   }
   return {
-    run(job,kind='other',observe){if(!['draw','build','bot','other'].includes(kind))kind='other';return new Promise(resolve=>{jobs.push({job,kind,observe,resolve,enqueued:now()});if(!running){running=true;queueMicrotask(drain);}});},
+    run(job,kind='other',observe,enqueued=now()){if(!['draw','build','bot','other'].includes(kind))kind='other';return new Promise(resolve=>{jobs.push({job,kind,observe,resolve,enqueued});if(!running){running=true;queueMicrotask(drain);}});},
     dirty(){if(!mutating)throw Error('Durable writes require a serialized mutation.');transaction.dirty=true;},
     defer(deliver){if(mutating)transaction.outbox.push(deliver);else deliver();},
     get mutating(){return mutating;},

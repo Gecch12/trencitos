@@ -33,6 +33,7 @@ const { createMultiplayerController, shiftDeadlines, GRACE_MS, soloWithBots, rec
 const { hashToken, loadState } = require("./room-store");
 const { createSupabaseStore } = require("./supabase-store");
 const { createDurableQueue } = require("./durable-queue");
+const { createPartitionedQueue } = require("./partitioned-queue");
 const { createAccountAuth } = require("./account-auth");
 const { createAccountSeats } = require("./account-seats");
 const Directory = require("./room-directory");
@@ -84,18 +85,20 @@ const projections = observed(createLegacyAuthorizedViews(), { lobby: 'lobbyView'
 const archive=observed(createMatchArchive({remote:remoteStore,saved:initialState?.archive,projections}), { capture: 'history' });
 if (!remoteStore) restoreLoaded(Array.isArray(initialState)?initialState:initialState.rooms);
 let storageFailureAt = null;
+const pausedRooms = new Set();
+const storageBlocked = room => storageFailureAt !== null || pausedRooms.has(room?.code ?? durable?.transaction?.key);
 const committed = new WeakMap();
 for (const r of rooms.values()) committed.set(r, snapshot(r));
-function captureRuntime() {
-  return { failureAt: storageFailureAt, archivePending:archive.snapshot(),
-    rooms: [...rooms.values()].map(r => ({ room: r, data: { ...r, commitment: structuredClone(r.commitment), game: r.game ? structuredClone(r.game) : null },
+function captureRuntime(key=null) {
+  return { failureAt: storageFailureAt, archivePending:archive.snapshot(key),
+    rooms: [...rooms.values()].filter(r=>key===null||r.code===key).map(r => ({ room: r, data: { ...r, commitment: structuredClone(r.commitment), game: r.game ? structuredClone(r.game) : null },
       members: r.members.map(member => ({ member, data: { ...member, actionIds: [...(member.actionIds || [])], actionReceipts: structuredClone(member.actionReceipts || []) } })) })),
-    peers: [...peers].map(peer => ({ peer, room: peer.room, watching: peer.watching, seat: peer.seat, token: peer.token })) };
+    peers: [...peers].filter(peer=>key===null||peer.room?.code===key||peer.watching?.code===key).map(peer => ({ peer, room: peer.room, watching: peer.watching, seat: peer.seat, token: peer.token })) };
 }
-function restoreRuntime(saved) {
-  archive.rollback(saved.archivePending);
-  for (const r of rooms.values()) { clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r); }
-  rooms.clear();
+function restoreRuntime(saved,key=null) {
+  archive.rollback(saved.archivePending,key);
+  for (const r of rooms.values()) if(key===null||r.code===key) { clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r); }
+  if(key===null)rooms.clear();else rooms.delete(key);
   for (const { room, data, members } of saved.rooms) {
     for (const key of Object.keys(room)) delete room[key];
     Object.assign(room, data);
@@ -107,32 +110,82 @@ function restoreRuntime(saved) {
     watchRecording(room);
   }
   for (const { peer, room, watching, seat, token } of saved.peers) Object.assign(peer, { room, watching, seat, token });
-  storageFailureAt = saved.failureAt;
+  if(key===null)storageFailureAt = saved.failureAt;
 }
 const checkpoint = createCheckpointHandler({ repository: rooms,
-  committer: observed(remoteStore ? createRemoteCheckpointCommitter({ store: remoteStore, archive }) : createFileCheckpointCommitter({ file: STORE, archive }), { prepare: 'checkpointPrepare' }),
+  committer: observed(remoteStore ? createRemoteCheckpointCommitter({ store: remoteStore, archive, blocked: room => pausedRooms.has(room.code) }) : createFileCheckpointCommitter({ file: STORE, archive }), { prepare: 'checkpointPrepare' }),
   now: () => Date.now(), deferCommit: remoteStore ? () => durable.dirty() : null,
   onLocalCommit: () => { for (const room of rooms.values()) committed.set(room, snapshot(room)); },
-  onLocalFailure: restoreLocalCheckpoint,
+  onLocalFailure: restoreLocalCheckpoint, transaction: () => durable?.transaction,
 });
 const persist = checkpoint.persist;
-const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, restore: restoreRuntime,
+const queueOptions = { capture: captureRuntime, restore: restoreRuntime,
   commit: checkpoint.commit, measure: metrics.record, batchSize:16,
   scope: metrics.scope, spans: metrics.spans,
-  onFailure: error => {
+  onFailure: (error,key=null) => {
     console.error("Remote storage paused:", error.code || "INTERNAL");
-    storageFailureAt ??= Date.now();
-    for (const r of rooms.values()) { clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r); }
-    for (const peer of peers) {
-      peer.send({ type: "storage", paused: true, requiresRestart: true });
-      peer.send({ type: "error", code: "STORAGE_FAILED", message: "No se pudo confirmar el guardado. La partida está pausada; reinicia el servidor y reconecta para recuperar el estado guardado." });
+    if(key===null||error.code==='STORE_CONFLICT')storageFailureAt ??= Date.now();else pausedRooms.add(key);
+    for (const r of rooms.values()) if(storageBlocked(r)) { clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r); }
+    for (const peer of peers) if(storageFailureAt!==null||peer.room?.code===key||peer.watching?.code===key) {
+      const requiresRestart=storageFailureAt!==null||!remoteStore.perRoom;
+      peer.send({ type: "storage", paused: true, requiresRestart });
+      peer.send({ type: "error", code: "STORAGE_FAILED", message: requiresRestart ? "No se pudo confirmar el guardado. La partida está pausada; reinicia el servidor y reconecta para recuperar el estado guardado." : "No se pudo confirmar el guardado. Reintenta para recuperar esta partida desde el estado guardado." });
       if (peer.room?.game) peer.send(projections.state(peer.room, peer.seat, { storagePaused: true, includeEarlyFinish: false }));
     }
   },
-}) : null;
-const dispatch = (job, kind, observe) => stopping ? undefined : durable ? durable.run(() => { if (!stopping) job(); }, kind, observe) : job();
+};
+const serialQueue = remoteStore ? createDurableQueue(queueOptions) : null;
+const roomQueue = remoteStore ? createPartitionedQueue(queueOptions) : null;
+const activeQueue = () => remoteStore?.perRoom ? roomQueue : serialQueue;
+const durable = remoteStore ? {
+  run: (...args) => activeQueue().run(...args), dirty: () => activeQueue().dirty(),
+  defer: work => activeQueue().defer(work), idle: () => activeQueue().idle(),
+  get mutating() { return activeQueue().mutating; }, get transaction() { return activeQueue().transaction; },
+} : null;
+const dispatch = (job, kind, observe, key=null) => stopping ? undefined : durable ? durable.run(() => { if (!stopping) job(); }, kind, observe, remoteStore.perRoom?key:undefined) : job();
+const dispatchRoom = (job, room, kind='other') => dispatch(job,kind,undefined,room.code);
+const recoveringRooms=new Set();
+async function recoverRoom(peer){
+  const room=peer.room,key=room?.code;
+  if(!key||room.members[peer.seat]?.ws!==peer||!pausedRooms.has(key)||recoveringRooms.has(key))return;
+  recoveringRooms.add(key);
+  try {
+    const restored=await roomQueue.exclusive(key,async()=>{
+      const saved=await remoteStore.readRoom(key),record=saved.room;
+      if(record){
+        const game=record.game?Engine.restoreState(record.game):null;
+        if(game&&game.players.length!==record.members.length)throw Error('Invalid recovered seats');
+        const next={...record,game,mapRef:roomMapReference({...record,game})};
+        const elapsed=Math.max(0,Date.now()-(record.savedAt||Date.now()));
+        shiftDeadlines(next.game,elapsed);Commitment.shift(next,elapsed);
+        next.members=record.members.map((member,i)=>{
+          const connection=room.members[i]?.ws;
+          const owns=connection&&!connection.closed&&member.tokenHash===hashToken(connection.token||'');
+          return {...member,ws:owns?connection:null,...owns?{token:connection.token}:{},
+            ...(member.disconnectedAt!=null?{disconnectedAt:member.disconnectedAt+elapsed}:{})};
+        });
+        if(rooms.get(key)!==room)throw Error('Room changed during recovery');
+        for(const field of Object.keys(room))delete room[field];Object.assign(room,next);
+        watchRecording(room);
+      }
+      archive.rollback([],key);remoteStore.acceptRecovery(key,saved);
+      return record!==null;
+    });
+    await dispatchRoom(()=>{
+      if(rooms.get(key)!==room)return;
+      pausedRooms.delete(key);
+      if(restored){sendRoom(room);return;}
+      // A lost response may have committed removal. Do not manufacture another
+      // abandonment frame from the rolled-back runtime candidate.
+      for(const member of room.members)if(member.ws){member.ws.send({type:'room_closed'});member.ws.room=null;member.ws.seat=-1;}
+      for(const watcher of peers)if(watcher.watching===room){watcher.watching=null;watcher.send({type:'room_closed'});}
+      rooms.delete(key);persist(room);sendDirectory(room);
+    },room);
+  }catch(error){queueOptions.onFailure(error,key);}
+  finally{recoveringRooms.delete(key);}
+}
 const sendRoom = createRoomStager({ repository: rooms, engine: Engine, history: archive, checkpoint,
-  now: () => Date.now(), storagePaused: () => storageFailureAt !== null,
+  now: () => Date.now(), storagePaused: storageBlocked,
   watchRoom: watchRecording, reconcileRoom: room => room.practice ? practice.reconcile(room) : multiplayer.reconcile(room), queueViews: queueRoomViews,
   scheduleRoom: room => {
     if (room.practice) practice.sync(room);
@@ -142,16 +195,16 @@ const sendRoom = createRoomStager({ repository: rooms, engine: Engine, history: 
   queueDirectory: sendDirectory,
 });
 const submitPlayerAction = createPlayerActionHandler({ engine: observed(Engine, { action: 'action' }), stageRoom: sendRoom,
-  storagePaused: () => storageFailureAt !== null, now: () => Date.now(), random: max => crypto.randomInt(max), fingerprintAction });
+  storagePaused: storageBlocked, now: () => Date.now(), random: max => crypto.randomInt(max), fingerprintAction });
 const automaticPlay = createLegacyAutomaticPlay({ stageRoom: sendRoom });
 const botPlanner = require("./bot-planner").createBotPlanner({measure:metrics.record});
-const runBot = require("./bot-runner").createBotRunner({planner:botPlanner,dispatch:job=>dispatch(job,'bot'),automaticPlay,active:()=>!stopping,stageRoom:sendRoom,engine:Engine,
+const runBot = require("./bot-runner").createBotRunner({planner:botPlanner,dispatch:(job,room)=>dispatchRoom(job,room,'bot'),automaticPlay,active:()=>!stopping,stageRoom:sendRoom,engine:Engine,
   schedule:room=>{if(room.practice)practice.sync(room);else{roomBots.sync(room);multiplayer.sync(room);}},
   onError:()=>console.error("Bot planning deferred; room will retry.")});
-const practice = createPracticeController({ rooms, sendRoom, automaticPlay, runBot, dispatch, blocked:()=>storageFailureAt!==null, onRemove: room => { clocks.cancel(room); archive.capture(room,"Práctica cerrada."); return persist(); } });
-const clocks = createGameClock({ rooms, sendRoom, automaticPlay, runBot, dispatch, canTick: r => storageFailureAt === null && (r.practice ? r.practicePausedAt == null && !!r.members[0]?.ws && !r.members[0].ws.closed : r.emptySince == null) });
-const multiplayer = createMultiplayerController({ rooms, sendRoom, automaticPlay, runBot, removeRoom, dispatch, blocked: () => storageFailureAt !== null });
-const roomBots = createRoomBots({ rooms, sendRoom, automaticPlay, runBot, dispatch, blocked: () => storageFailureAt !== null });
+const practice = createPracticeController({ rooms, sendRoom, automaticPlay, runBot, dispatch:dispatchRoom, blocked:storageBlocked, onRemove: room => { clocks.cancel(room); archive.capture(room,"Práctica cerrada."); return persist(); } });
+const clocks = createGameClock({ rooms, sendRoom, automaticPlay, runBot, dispatch:dispatchRoom, canTick: r => !storageBlocked(r) && (r.practice ? r.practicePausedAt == null && !!r.members[0]?.ws && !r.members[0].ws.closed : r.emptySince == null) });
+const multiplayer = createMultiplayerController({ rooms, sendRoom, automaticPlay, runBot, removeRoom, dispatch, blocked:storageBlocked });
+const roomBots = createRoomBots({ rooms, sendRoom, automaticPlay, runBot, dispatch:dispatchRoom, blocked:storageBlocked });
 function snapshot(r) {
   return { commitment: structuredClone(r.commitment), emptySince:r.emptySince, archiveHash:r.archiveHash,matchId:r.matchId,archiveSeq:r.archiveSeq,archiveFull:r.archiveFull,archiveStartedAt:r.archiveStartedAt,archiveClosedAt:r.archiveClosedAt,_archiveState:r._archiveState,_archiveIdentity:r._archiveIdentity, game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
     hostSeat: r.hostSeat, practicePausedAt:r.practicePausedAt, visibility: r.visibility, maxPlayers: r.maxPlayers, mapRef: r.mapRef ? {...r.mapRef} : undefined, timing: r.timing ? {...r.timing} : undefined,
@@ -198,7 +251,7 @@ function removeRoom(r, message = "La sala ya no existe.") {
     peer.watching = null; peer.send({ type: "room_closed", message });
   }
   persist();
-  sendDirectory();
+  sendDirectory(r);
 }
 const APP_ROUTES = new Set(["/rooms", "/play", "/more", "/profile", "/replay"]);
 const nativeClient = require("./native-client");
@@ -268,7 +321,7 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === "/healthz") {
     const ok = storageReady && storageFailureAt === null && !stopping;
     res.writeHead(ok ? 200 : 503, { "Content-Type": "application/json" });
-    return res.end(JSON.stringify({ ok, storage: backend, rooms: rooms.size, mobileProtocolVersion: 1, ...(url.searchParams.get("timings")==="1"?{timingsMs:metrics.summary(),runtime:processMetrics.snapshot(),diagnosticsVersion:1}:{}) }));
+    return res.end(JSON.stringify({ ok, storage: backend, rooms: rooms.size, mobileProtocolVersion: 1, ...(url.searchParams.get("timings")==="1"?{timingsMs:metrics.summary(),runtime:processMetrics.snapshot(),diagnosticsVersion:1,persistenceMode:remoteStore?.perRoom?'room':'checkpoint',pausedRooms:pausedRooms.size}:{}) }));
   }
   servePublicAsset(url.pathname, res);
 });
@@ -365,8 +418,15 @@ function createPeer(socket) {
         const kind = message?.type === "action" ? message.action?.type === "draw_train" ? "draw" :
           ["claim", "station", "pay_tunnel"].includes(message.action?.type) ? "build" : "other" : "other";
         const traceId = typeof message?.traceId === 'string' && /^[\w-]{8,80}$/.test(message.traceId) ? message.traceId : null;
-        dispatch(() => { if (!peer.closed) onMessage(peer, message); }, kind,
-          traceId ? timing => { if (!peer.closed) peer.send({ type: 'timing', id: traceId, timing }); } : undefined);
+        if(message?.type==='retry_save'&&remoteStore?.perRoom&&storageFailureAt===null&&pausedRooms.has(peer.room?.code)){
+          void recoverRoom(peer);continue;
+        }
+        const expectedRoom = message?.type === 'action' ? peer.room : null;
+        dispatch(() => {
+          if(peer.closed)return;
+          if(expectedRoom && peer.room!==expectedRoom)return deny(peer,'Tu sala cambió. Reconecta antes de repetir la acción.','STALE_SESSION');
+          onMessage(peer,message);
+        }, kind, traceId ? timing => { if (!peer.closed) peer.send({ type: 'timing', id: traceId, timing }); } : undefined, expectedRoom?.code??null);
       } catch (e) {
         peer.send({ type: "error", message: "Mensaje mal formado." });
       }
@@ -406,21 +466,35 @@ function queueRoomViews(r) {
   r.members.forEach((m, i) => {
     if (!m.ws || m.ws.closed) return;
     m.ws.send(projections.lobby(r, i, { token: m.ws.token || m.token }));
-    m.ws.send({ type: "storage", paused: storageFailureAt !== null, requiresRestart: !!remoteStore });
-    if (r.game) m.ws.send(projections.state(r, i, { storagePaused: storageFailureAt !== null }));
+    m.ws.send({ type: "storage", paused: storageBlocked(r), requiresRestart: !!remoteStore && (!remoteStore.perRoom || storageFailureAt!==null) });
+    if (r.game) m.ws.send(projections.state(r, i, { storagePaused: storageBlocked(r) }));
   });
   for (const peer of peers) if (peer.watching === r) sendSpectator(peer, r);
 }
-function sendDirectory() {
-  const message = { type: "directory", rooms: storageFailureAt === null ? Directory.listRooms(rooms) : [], unavailable: storageFailureAt !== null };
-  for (const peer of peers) if (peer.directory) peer.send(message);
+const directorySnapshot = new Map();
+function sendDirectory(changedRoom) {
+  if(!remoteStore?.perRoom){
+    const message={type:'directory',rooms:storageFailureAt===null?Directory.listRooms(rooms):[],unavailable:storageFailureAt!==null};
+    for(const peer of peers)if(peer.directory)peer.send(message);
+    return;
+  }
+  // Capture only this transaction's candidate. Publish it into the directory
+  // cache after its commit; never inspect another room's in-flight mutation.
+  const entries = changedRoom ? Directory.listRooms(new Map(rooms.has(changedRoom.code)&&!storageBlocked(changedRoom)?[[changedRoom.code,changedRoom]]:[])) :
+    Directory.listRooms(new Map([...rooms].filter(([,room])=>!storageBlocked(room))));
+  durable.defer(()=>{
+    if(changedRoom){directorySnapshot.delete(changedRoom.code);if(entries[0])directorySnapshot.set(changedRoom.code,entries[0]);}
+    else {directorySnapshot.clear();for(const entry of entries)directorySnapshot.set(entry.code,entry);}
+    const message={type:'directory',rooms:storageFailureAt===null?[...directorySnapshot.values()]:[],unavailable:storageFailureAt!==null};
+    for(const peer of peers)if(peer.directory)peer.send(message);
+  });
 }
 function sendSpectator(peer, r) {
   if (!Directory.isPublic(r) || !r.game) {
     peer.watching = null; peer.send({ type: "room_closed", message: "Esta partida ya no está disponible para observar." }); return;
   }
   peer.send(projections.lobby(r, -1));
-  peer.send(projections.state(r, -1, { storagePaused: storageFailureAt !== null }));
+  peer.send(projections.state(r, -1, { storagePaused: storageBlocked(r) }));
 }
 function deny(peer, msg, code) {
   peer.send({ type: "error", message: msg, code });
@@ -457,7 +531,11 @@ function onMessage(peer, msg) {
     if (msg.type === "leave") { peer.watching = null; peer.send({ type: "room_closed" }); return; }
     return deny(peer, "Estás observando. No puedes modificar la partida.", "SPECTATOR_READ_ONLY");
   }
-  if (msg.type === "retry_save" && peer.room && storageFailureAt !== null) {
+  if(msg.type==='leave'&&remoteStore?.perRoom&&pausedRooms.has(peer.room?.code)){
+    const member=peer.room.members[peer.seat];if(member?.ws===peer)member.ws=null;
+    peer.room=null;peer.seat=-1;peer.send({type:'room_closed',preserveIdentity:true});return;
+  }
+  if (msg.type === "retry_save" && peer.room && storageBlocked(peer.room)) {
     if (remoteStore) return deny(peer, "El guardado remoto requiere reiniciar el servidor y reconectar para recuperar el checkpoint.", "STORAGE_FAILED");
     const elapsed = Date.now() - storageFailureAt;
     const absenceTimes = new Map();
@@ -482,7 +560,7 @@ function onMessage(peer, msg) {
     }
     return;
   }
-  if (storageFailureAt !== null && !["join", "leave"].includes(msg.type))
+  if (storageBlocked(peer.room) && !["join", "leave"].includes(msg.type))
     return deny(peer, "Partida pausada: no se pudo guardar. Reintenta el guardado.", "STORAGE_FAILED");
   if (["create", "create_test"].includes(msg.type) && !peer.room) {
     let mapRef;
@@ -524,7 +602,7 @@ function onMessage(peer, msg) {
     if (!LobbyUI.isJoinCode(code)) return deny(peer, "Introduce un código de sala válido.", "INVALID_CODE");
     if (!r || (r.practice && practice.expired(r)))
       return deny(peer, "La sala ya no existe. Puedes crear una partida nueva.", "ROOM_NOT_FOUND");
-    if (!r.practice && storageFailureAt === null) multiplayer.reconcile(r);
+    if (!r.practice && !storageBlocked(r)) multiplayer.reconcile(r);
     if (rooms.get(code) !== r) return deny(peer, "La partida fue abandonada.", "ROOM_NOT_FOUND");
     if (msg.token) {
       const tokenHash = typeof msg.token === "string" ? hashToken(msg.token) : "";

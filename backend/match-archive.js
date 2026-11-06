@@ -68,8 +68,11 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null,engine=Eng
     for(const [id,{match,frames}]of pending){const old=target.matches[id];next.matches[id]={...match,frames:[...(old?.frames||[]),...frames.filter(f=>f.seq>=(old?.frames.length||0))]};}
     return next;
   }
-  function rollback(savedPending){pending=new Map(savedPending);}
-  const snapshot=()=>[...pending].map(([id,value])=>[id,{...value,frames:[...value.frames]}]);
+  function rollback(savedPending,code=null){
+    if(code===null)pending=new Map(savedPending);
+    else { for(const [id,value] of pending)if(value.match?.code===code)pending.delete(id);for(const [id,value] of savedPending)pending.set(id,value); }
+  }
+  const snapshot=(code=null)=>[...pending].filter(([,value])=>code===null||value.match?.code===code).map(([id,value])=>[id,{...value,frames:[...value.frames]}]);
   function claim(guestId,accountId) {
     if(!guestId||!accountId)return;
     if(remote) return remote.claimGuest(guestId,accountId);
@@ -89,6 +92,6 @@ function createMatchArchive({saved={matches:{},claims:{}},remote=null,engine=Eng
     }
   }
   const queries=createHistoryQueries({repository:{records,frames:(id,steps)=>remote.readFrames(id,steps),iterateFrames:(id,steps)=>remote.iterateFrames(id,steps)}});
-  return {records,bootstrap,capture,claim,list:queries.list,replay:queries.replay,replayStream:queries.replayStream,snapshot,rollback,get pending(){return [...pending.values()]},get state(){return state},prepare:()=>applyPending(state),commit(next){if(next)state=next;pending.clear();},restore(next){state=next;pending.clear();}};
+  return {records,bootstrap,capture,claim,list:queries.list,replay:queries.replay,replayStream:queries.replayStream,snapshot,rollback,get pending(){return [...pending.values()]},get state(){return state},prepare:()=>applyPending(state),commit(next,accepted){if(next)state=next;if(accepted){for(const entry of accepted)pending.delete(entry.match.id);}else pending.clear();},restore(next){state=next;pending.clear();}};
 }
 module.exports={createMatchArchive,safePublic,participant,frameHash};

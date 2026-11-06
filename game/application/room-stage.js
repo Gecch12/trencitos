@@ -9,11 +9,11 @@ function createRoomStager({ repository, engine, history, checkpoint, now, storag
     watchRoom(room);
     if (repository.get(room.code) !== room) return;
     if (!automatic) room.updated = now();
-    if (!storagePaused()) reconcileRoom(room);
+    if (!storagePaused(room)) reconcileRoom(room);
     if (repository.get(room.code) !== room) return;
     if (room.game) engine.normalize(room.game, now());
     room.savedAt = now();
-    if (!storagePaused()) {
+    if (!storagePaused(room)) {
       history.capture(room);
       checkpoint.persist(room);
     }
@@ -21,8 +21,8 @@ function createRoomStager({ repository, engine, history, checkpoint, now, storag
     // paused. Publish that recovery view, never the failed candidate state.
     queueViews(room);
     scheduleRoom(room);
-    queueDirectory();
-    return !storagePaused();
+    queueDirectory(room);
+    return !storagePaused(room);
   };
 }
 

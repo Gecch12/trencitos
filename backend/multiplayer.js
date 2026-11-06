@@ -54,7 +54,7 @@ function createMultiplayerController({ rooms, sendRoom, removeRoom,
     member.reclaimSerial = room.game.current === seat ? room.game.turnSerial : -1;
   }
   function reconcile(room) {
-    if (!live(room) || blocked()) return;
+    if (!live(room) || blocked(room)) return;
     const time = now();
     room.hostSeat ??= 0;
     for (const member of room.members) {
@@ -99,7 +99,7 @@ function createMultiplayerController({ rooms, sendRoom, removeRoom,
   }
   function sync(room) {
     cancel(room);
-    if (!live(room) || blocked()) return;
+    if (!live(room) || blocked(room)) return;
     const state = { lifecycle: null, bot: null }; active.set(room, state);
     const deadlines = room.emptySince != null ? [room.emptySince + reconnectGrace(room)]
       : room.members.flatMap(m => !m.bot && !connected(m) && (!room.game || room.members[room.hostSeat] === m) ? [m.disconnectedAt + GRACE_MS] : []);
@@ -111,8 +111,8 @@ function createMultiplayerController({ rooms, sendRoom, removeRoom,
     if (!room.game || room.emptySince != null || !room.members[room.game.current]?.autopilot ||
       ["initial", "finished", "closing"].includes(room.game.phase) || room.game.turnWaiting || Engine.tunnelBusy(room.game)) return;
     state.bot = setTimer(() => {
-      if (!live(room) || blocked() || room.emptySince != null) return;
-      const eligible=()=>live(room)&&!blocked()&&room.emptySince==null&&!!room.members[room.game.current]?.autopilot;
+      if (!live(room) || blocked(room) || room.emptySince != null) return;
+      const eligible=()=>live(room)&&!blocked(room)&&room.emptySince==null&&!!room.members[room.game.current]?.autopilot;
       if(runBot)runBot(room,"playReplacement",eligible);else dispatch(()=>{if(eligible())automaticPlay.playReplacement(room);});
     }, Math.max(250,(room.game.construction?.until||0)-now()));
     state.bot.unref?.();

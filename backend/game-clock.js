@@ -25,7 +25,7 @@ function createGameClock({ rooms, sendRoom, dispatch = job => job(), canTick = (
       if (rooms.get(room.code) !== room || !canTick(room)) return;
       automaticPlay.expire(room);
       sync(room);
-    }), Math.max(0, deadline - now()));
+    }, room), Math.max(0, deadline - now()));
     timer.unref?.();
     active.set(room, { deadline, timer });
   }

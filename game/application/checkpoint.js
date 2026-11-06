@@ -4,19 +4,23 @@
 // A checkpoint commits all rooms and history together. With deferCommit, persist
 // only marks the serialized job dirty; its outer queue calls commit before delivery.
 function createCheckpointHandler({ repository, committer, now, deferCommit,
-  onLocalCommit, onLocalFailure }) {
-  let dirtyCodes = new Set(), allDirty = false;
+  onLocalCommit, onLocalFailure, transaction = () => null }) {
+  const fallback = { dirtyCodes:new Set(), allDirty:false };
+  const current = () => { const tx=transaction();if(!tx)return fallback;return tx.checkpoint ||= {dirtyCodes:new Set(),allDirty:false}; };
   function stampRooms() {
-    for (const room of repository.values()) room.savedAt = now();
+    const key=transaction()?.key;
+    for (const room of repository.values()) if(key==null||room.code===key)room.savedAt = now();
   }
   function commit() {
-    const batch = committer.prepare(repository, allDirty ? null : dirtyCodes);
+    const state=current();
+    const batch = committer.prepare(repository, state.allDirty ? null : state.dirtyCodes, transaction()?.key??null);
     const result=committer.commit(batch);
-    dirtyCodes=new Set();allDirty=false;
+    state.dirtyCodes=new Set();state.allDirty=false;
     return result;
   }
   function persist(room) {
-    if(room)dirtyCodes.add(room.code);else allDirty=true;
+    const state=current();
+    if(room)state.dirtyCodes.add(room.code);else state.allDirty=true;
     if (deferCommit) {
       stampRooms();
       deferCommit();

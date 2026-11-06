@@ -7,7 +7,7 @@ function createRoomBots({ rooms, sendRoom, dispatch, blocked, setTimer = setTime
   now = Date.now, runBot, automaticPlay = createLegacyAutomaticPlay({ stageRoom: sendRoom }) }) {
   const timers = new Map();
   const live = room => rooms.get(room.code) === room && !room.practice && room.game &&
-    !blocked() && room.emptySince == null && room.members.some(m => !m.bot && m.ws && !m.ws.closed);
+    !blocked(room) && room.emptySince == null && room.members.some(m => !m.bot && m.ws && !m.ws.closed);
   function cancel(room) { clearTimer(timers.get(room)); timers.delete(room); }
   function sync(room) {
     if (!live(room) || !automaticPlay.permanentSeats(room).length) { cancel(room); return; }
@@ -16,7 +16,7 @@ function createRoomBots({ rooms, sendRoom, dispatch, blocked, setTimer = setTime
       timers.delete(room);
       if (!live(room)) return;
       if (runBot) runBot(room,"playPermanentBots",()=>live(room));
-      else dispatch(()=>{if(live(room))automaticPlay.playPermanentBots(room);});
+      else dispatch(()=>{if(live(room))automaticPlay.playPermanentBots(room);},room);
     }, Math.max(250,(room.game.construction?.until||0)-now()));
     timer.unref?.(); timers.set(room, timer);
   }

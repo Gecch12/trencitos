@@ -15,7 +15,7 @@ function createBotRunner({planner,dispatch,automaticPlay,stageRoom,engine,schedu
     if(!active()||!eligible()||JSON.stringify(room.game)!==fingerprint)return;
     const choose=(g,seat)=>{if(!actions.has(seat))throw Error('Unplanned bot seat');return actions.get(seat);};
     createLegacyAutomaticPlay({stageRoom,engine,policies:{chooseBotAction:choose,chooseReplacementAction:choose}})[method](room);
-   });
+   },room);
   }catch(error){onError(error);}
   finally{pending.delete(room);if(active()&&eligible())schedule(room);}
  };

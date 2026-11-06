@@ -31,9 +31,11 @@ elegir una carta futura distinta con una intención antigua.
   compartido y no mezclar consultas estadísticas con comandos de juego.
 - Presentación: respuesta al clic, reposición y revelado sin adelantar secretos.
 
-El puerto actual de repositorio usa la colección de salas y un committer global.
-Es una separación parcial; no es todavía persistencia independiente por partida.
-La cola global sigue siendo la base hasta validar su sustitución.
+El puerto de repositorio usa la colección de salas y un committer con alcance por
+sala. SQL 009 negocia `roomTransactions:1`: comandos de partidas distintas pueden
+esperar persistencia en paralelo. Operaciones de pertenencia y ciclo de vida usan
+una barrera; archivo y servidores sin esa capacidad conservan la ruta anterior.
+Las [reglas de arquitectura](architecture-rules.md) fijan límites y verificaciones.
 
 ## Método
 

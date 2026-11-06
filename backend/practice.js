@@ -56,7 +56,7 @@ function createPracticeController({
     if (state.deadline !== null) return;
     room.practicePausedAt ??= at;
     state.deadline = room.practicePausedAt + ABSENCE_MS;
-    state.expiry = setTimer(() => dispatch(() => remove(room)), Math.max(0, state.deadline - now()));
+    state.expiry = setTimer(() => dispatch(() => remove(room),room), Math.max(0, state.deadline - now()));
     state.expiry.unref?.();
   }
   function reconcile(room) {
@@ -74,7 +74,7 @@ function createPracticeController({
     if (!live(room)) return;
     reconcile(room);
     const state = runtime(room);
-    if(blocked()){cancelBot(state);return;}
+    if(blocked(room)){cancelBot(state);return;}
     if (!connected(room)) return disconnected(room);
     if (state.deadline !== null) {
       clearTimer(state.expiry);
@@ -87,9 +87,9 @@ function createPracticeController({
     if (state.bot !== null) return;
     state.bot = setTimer(() => {
       state.bot = null;
-      if (!live(room) || blocked() || !connected(room)) return;
-      if(runBot)runBot(room,"playPracticeBots",()=>live(room)&&!blocked()&&connected(room));
-      else dispatch(()=>{if(live(room)&&!blocked()&&connected(room))automaticPlay.playPracticeBots(room);});
+      if (!live(room) || blocked(room) || !connected(room)) return;
+      if(runBot)runBot(room,"playPracticeBots",()=>live(room)&&!blocked(room)&&connected(room));
+      else dispatch(()=>{if(live(room)&&!blocked(room)&&connected(room))automaticPlay.playPracticeBots(room);},room);
     }, Math.max(250 + random(101),(room.game.construction?.until||0)-now()));
     state.bot.unref?.();
   }
