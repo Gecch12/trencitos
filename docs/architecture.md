@@ -1041,6 +1041,13 @@ exactamente el mismo juego e identidad/conectividad, reutiliza esa captura y evi
 recalcular vistas privadas y diff. Su memo es runtime y participa en rollback;
 no se incorpora a frames ni se publica.
 
+Las proyecciones autorizadas ya poseen sus objetos: la redacción pública y el
+envoltorio de grabación reutilizan esas copias. `ReplayState.diff` recorre una vez
+cada árbol JSON; no serializa de nuevo cada subárbol en todos sus niveles. Se
+conservan reemplazos de arrays, append de diario, rutas de patches y hashes del
+archivo existente. La [fase de trabajo por jugada](work/match-performance-work.md)
+conserva la validación y comparación de esta reducción de trabajo.
+
 El protocolo compacto 2 agrupa mensajes consecutivos en un único frame JSON
 `{type:"batch",messages:[...]}`. El navegador los aplica en orden: estado y ACK
 se reciben juntos, evitando la demora entre frames observada tras el proxy. La

@@ -1,7 +1,9 @@
 "use strict";
 
 function safePublic(view) {
-  const result = structuredClone(view);
+  return redactPublic(structuredClone(view));
+}
+function redactPublic(result) {
   // Scores are public; private ticket identities and borrowed station routes are not.
   if (result.result) for (const row of result.result) {
     row.tickets = [];row.individualTickets = [];row.stationRoutes = [];
@@ -22,7 +24,8 @@ function assertSeat(room, seat) {
 function createAuthorizedViews({ engine, now, isPublic, capacity, normalizeTiming }) {
   function match(game, seat) {
     const view = engine.view(game, seat, { now: now() });
-    return seat === -1 ? safePublic(view) : view;
+    // engine.view already returns an owned projection; redact that owned value.
+    return seat === -1 ? redactPublic(view) : view;
   }
   function lobby(room, seat, { token } = {}) {
     assertSeat(room, seat);
@@ -56,8 +59,8 @@ function createAuthorizedViews({ engine, now, isPublic, capacity, normalizeTimin
       delete view.serverNow;
       return view;
     });
-    return structuredClone({ definition: engine.definition(room.game), views, members: room.members.map(m => ({ ...publicIdentity(m), name: m.name, color: m.color,
-      bot: !!m.bot, autopilot: !!m.autopilot, connected: connected(m) })) });
+    return { definition: engine.definition(room.game), views, members: room.members.map(m => ({ ...publicIdentity(m), name: m.name, color: m.color,
+      bot: !!m.bot, autopilot: !!m.autopilot, connected: connected(m) })) };
   }
   return { lobby, state, recording };
 }

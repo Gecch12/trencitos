@@ -2,7 +2,11 @@
 // Version 1 recordings store outcomes, not instructions to rerun randomness.
 const ReplayState = (() => {
   function diff(before, after, path = [], changes = []) {
-    if (JSON.stringify(before) === JSON.stringify(after)) return changes;
+    if (before === after) return changes;
+    // Recordings are JSON values. Walk each subtree once instead of serializing
+    // that subtree again at every depth (game plus every authorized perspective).
+    if ((!before || typeof before !== 'object') && (!after || typeof after !== 'object') &&
+        JSON.stringify(before) === JSON.stringify(after)) return changes;
     const appendJournal=Array.isArray(before)&&Array.isArray(after)&&after.length>before.length&&
       (['journal','turnHistory'].includes(path.at(-1))||path.includes('turnHistory')&&path.at(-1)==='events');
     if (!before || !after || typeof before !== 'object' || typeof after !== 'object' || (Array.isArray(before)!==Array.isArray(after)) || (Array.isArray(before)&&before.length!==after.length&&!appendJournal)) {
