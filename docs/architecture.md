@@ -308,19 +308,21 @@ El lobby anuncia `drawFeedbackVersion:1` y `drawPipelineVersion:1`.
 `frontend/draw-intent.js` conserva una elección sobre la vista pública/propia,
 sin modificar `game.hand`, mazos ni reglas. El clic inicia recogida y sonido;
 `drawPresentations` sigue el vuelo y `inflightDraws` los comandos pendientes.
-`renderHand` incorpora cada carta al aterrizar: las visibles pueden sumarse
-provisionalmente con punto y `aria-busy`; las ocultas esperan su color real fuera
-de la mano. No hay grupos anónimos en ella. El contador propio sigue esta
-presentación; pagos, turnos y reglas consumen exclusivamente el estado autorizado.
+`renderHand` incorpora las cartas confirmadas en cuanto recibe el estado. Las
+visibles pueden sumarse provisionalmente con punto y `aria-busy`; las ocultas
+esperan el color real sin crear grupos anónimos. El hueco visible reservado es
+neutro, deshabilitado y sin imagen: nunca muestra anticipadamente la siguiente
+carta. Pagos, turnos y reglas consumen exclusivamente el estado autorizado.
 
 La recogida dura 150 ms y el recorrido propio apunta a 520 ms desde su inicio,
 con separación mínima de 110 ms entre inicios de dos cartas. Una carta oculta
 avanza parte del recorrido mientras espera el guardado; después de 850 ms muestra
-«Robando carta». Al recibir el color, lo decodifica, gira durante 180 ms y termina
-un tramo final de al menos 190 ms. Reserva el hueco de ese color y desplaza
-los grupos existentes de la mano en 230 ms, conservando sus nodos. Si la respuesta es lenta, el tiempo total crece: la
-animación no garantiza ocultar toda la latencia. Movimiento reducido usa recogida
-de 40 ms, fundido de 100 ms y giro instantáneo. Los vuelos confirmados de otros
+«Robando carta». En vivo, al recibir el color cambia la imagen inmediatamente y
+actualiza la mano; el vuelo continúa sin retener información. El giro de 180 ms
+se conserva para replay. Los grupos de la mano se desplazan en 230 ms conservando
+sus nodos; los nuevos ya son visibles al inicio en vivo. Si la respuesta tarda,
+la confirmación también: la animación no elimina red ni persistencia. Movimiento
+reducido usa recogida de 40 ms y fundido de 100 ms. Los vuelos confirmados de otros
 jugadores duran 680 ms, con pausa de lectura y separación de 320 ms. Los robos
 privados rivales conservan el reverso.
 
@@ -426,7 +428,7 @@ se propagan al despachador.
 servidor. Coordina preparación, solicitud de checkpoint y vistas por puertos
 separados. `false` indica almacenamiento pausado; `true` puede ser solo
 preparación pendiente de commit remoto. El resultado se envía por `peer.send`
-dentro del `dispatch` existente: su outbox espera el commit global y descarta la
+dentro del `dispatch` existente: su outbox espera el commit de su transacción y descarta la
 respuesta si falla. La aceptación del caso de uso nunca sustituye esa confirmación.
 Autenticación, límites de solicitudes y autorización de espectadores siguen en
 transporte. Detalle y trabajo pendiente en [fase 3](work/modular-platform-application.md).
@@ -463,7 +465,7 @@ un lector compatible o una migración explícita.
 Un duplicado no renueva su posición en la ventana. Al aceptar un comando nuevo
 se descartan juntos IDs y huellas que salen de los 128; un ID fuera de esa ventana
 se trata como solicitud nueva y debe pasar los controles actuales. La confirmación
-sigue siendo del checkpoint completo: la serialización local/remota incluye las
+sigue siendo durable y atómica por transacción: la serialización incluye las
 huellas y los snapshots de rollback las copian. Un fallo restaura revisión,
 recibos e historial juntos. Los formatos JSON/RPC existentes admiten este campo
 opcional sin cambiar su versión. Las vistas de lobby/partida y los frames de
@@ -513,13 +515,14 @@ captura/guardado y conserva las vistas de recuperación.
 un committer para preparar y confirmar el lote. En archivo es síncrono: tras
 confirmar se recuerda el estado para rollback; un fallo restaura ese estado y
 marca pausa antes de construir las vistas. En remoto, `persist()` solo marca la
-transacción como modificada. Al terminar el trabajo síncrono, la cola global
-invoca `checkpoint.commit()` una vez, con todos los cambios acumulados.
+transacción como modificada. Al terminar el trabajo síncrono, la cola invoca
+`checkpoint.commit()` con el conjunto sucio de esa transacción. Con SQL 009,
+`AsyncLocalStorage` conserva alcance y metadatos independientes por sala.
 
 | Puerto implementado | Contrato de transición |
 | --- | --- |
 | `repository.get(code)`, `repository.values()` | El `Map` de salas existente satisface el puerto; conserva identidad mutable y búsqueda por código. Todavía no es el repositorio objetivo por `matchId`. |
-| `committer.prepare(repository)` | Produce `{rooms, archive}` sin escribir ni aceptar historial. Copia los DTOs persistibles de sala, incluidos revisión y recibos; incluye las prácticas; excluye sockets y tokens de puesto sin hash. |
+| `committer.prepare(repository, dirtyCodes, scope)` | Produce `{rooms, archive}` sin escribir ni aceptar historial. Copia los DTOs persistibles de sala, incluidos revisión y recibos; incluye las prácticas; excluye sockets y tokens de puesto sin hash. |
 | `committer.commit(batch)` | Guarda conjuntamente sala e historial y solo después acepta el historial pendiente. Es síncrono para archivo; devuelve promesa para remoto. |
 | `queueViews`, `queueDirectory` | El transporte obtiene DTOs de las consultas autorizadas y serializa los mensajes. `peer.send` los entrega en archivo o los retiene en el outbox remoto hasta el commit. |
 
@@ -530,13 +533,14 @@ siendo el manifiesto/prefijo JSONL local y la RPC atómica remota. `saveRooms` y
 `store.save` siguen disponibles como entradas compatibles; el nuevo adaptador
 utiliza `saveCheckpoint` con DTOs preparados.
 
-La preparación y confirmación de un lote pertenecen a la misma operación
-serializada; no se intercalan nuevas mutaciones de aplicación. Supabase mantiene
-ID de commit, reintento del mismo cuerpo y exclusión de escritores. Un error
-remoto restaura runtime/historial y descarta el outbox; un error de entrega tras
-confirmar no revierte datos guardados. No se introducen escrituras por partida
-en paralelo. Los snapshots de rollback, sesiones y envío efectivo aún viven en servidor/cola;
-las proyecciones se consultan mediante el módulo común descrito a continuación.
+La preparación y confirmación pertenecen a la misma operación ordenada por sala.
+Con SQL 009, partidas distintas pueden esperar sus escrituras en paralelo. Cada
+rollback restaura únicamente su agregado, sesiones y archivo pendiente, y acepta
+solo sus frames confirmados. Las operaciones de ciclo de vida usan una barrera
+que espera las salas anteriores y precede a las siguientes. Supabase mantiene ID
+idempotente y exclusión de escritor. Un error descarta el outbox de la operación;
+un fallo de entrega posterior no revierte datos guardados. El directorio publica
+vistas confirmadas, sin leer el candidato de otra sala que aún esté guardando.
 
 ## Consultas autorizadas
 
@@ -842,9 +846,10 @@ Alcance y pruebas en
 - Supabase se usa desde Node con clave secreta, sin acceso del navegador a la
   tabla de checkpoint. RLS y permisos están definidos en SQL. Auth es un módulo
   independiente y utiliza la clave publicable y el token del propio usuario.
-- Una instancia reclama la autoridad del checkpoint. La cola remota serializa
-  cambios y retiene confirmaciones hasta guardar. Un fallo incierto pausa y
-  requiere recuperar el checkpoint, sin sobrescribirlo con memoria antigua.
+- Una instancia reclama la autoridad del almacenamiento. La cola remota ordena
+  cada sala y retiene confirmaciones hasta guardar. SQL 009 permite recuperar
+  solo la sala incierta leyendo estado/versión/recibos durables; un conflicto de
+  escritor o fallo de una operación global requiere reiniciar y reconectar.
 
 Las reglas de juego están en [dominio](domain.md); procedimientos y validaciones
 están en [operación](operations.md). Revisa esos límites al cambiar transporte,
@@ -1021,11 +1026,13 @@ El dominio no importa instrumentación. `process-metrics.js` observa CPU, memori
 GC y bucle con muestreo acotado. El diagnóstico privado y sus límites están en
 [Operación](operations.md) y [el contrato de medición](match-performance.md).
 
-La cola sigue ordenando mutaciones de un único escritor. Acumula hasta 16 trabajos
-que ya estaban esperando y confirma sus efectos e historial en una sola transacción;
-no añade un temporizador para formar lotes ni adelanta ACKs. Un error revierte el
-lote completo. Esto reduce viajes consecutivos a la base entre salas; no convierte
-el servidor en múltiples escritores ni promete escala horizontal.
+`partitioned-queue.js` ordena acciones, relojes y propuestas de bot por sala.
+Cada sala tiene rollback, outbox y commit propios. Altas/bajas/sesiones usan una
+barrera global. SQL 009 bloquea de forma compartida la autoridad del escritor y
+exclusiva las filas afectadas, ordenadas por código; reclamar otro escritor toma
+el bloqueo exclusivo. El modo anterior acumula hasta 16 trabajos en una cola
+global. Ninguno adelanta ACKs ni introduce múltiples escritores; no es escalado
+horizontal. Locks adicionales del archivo o estadísticas pueden añadir espera.
 
 `createCheckpointHandler` identifica salas modificadas. El committer remoto conserva
 DTOs ya confirmados y clona únicamente los juegos cambiados; bajas se transmiten
@@ -1035,6 +1042,16 @@ reclamar el checkpoint; sin esa capacidad se conserva la RPC completa anterior.
 La RPC incremental combina salas modificadas, bajas y un `savedAt` común con el
 checkpoint actual, y utiliza la misma confirmación atómica con archivo, versión,
 lease del escritor e ID idempotente. No expone tablas ni RPC a roles de navegador.
+
+SQL 009 anuncia además `roomTransactions:1`. `trencitos_claim_rooms` activa filas
+versionadas por sala; `trencitos_save_rooms` confirma estado, recibos y archivo
+juntos. El último ID/huella por fila resuelve una respuesta perdida sin una tabla
+ilimitada de recibos. Tombstones conservan versión durante la vida del escritor.
+`trencitos_read_room` permite recuperar la verdad durable de la sala pausada;
+la reanudación persiste los plazos ajustados antes de publicar. Al reclamar con
+un servidor antiguo, `ferrovia_claim_checkpoint` reconstruye el checkpoint desde
+las filas actuales y desactiva el modo por sala. Procedimiento en
+[despliegue](RENDER_SUPABASE.md#transacciones-por-sala-sql-009).
 
 El observador del motor captura el resultado una vez. Si el staging posterior ve
 exactamente el mismo juego e identidad/conectividad, reutiliza esa captura y evita
@@ -1060,8 +1077,8 @@ el protocolo original. Ningún mensaje se agrupa antes de aceptar el commit.
 `draw-intent.js` limita la preselección cuando una reposición visible puede renovar
 la mesa. La autoridad continúa en `player-action.js`, que invalida dependencias
 tras `market_refresh`. `app.js` solapa el recorrido oculto con la confirmación,
-conserva nodos por color y anima su nueva posición; el color real se decodifica
-antes del giro y la entrada a la mano. La renovación registra historial público
+conserva nodos por color y anima su nueva posición; la mano y el color real se
+actualizan al recibir la confirmación sin esperar el giro en vivo. La renovación registra historial público
 y su animación espera el vuelo causante en cada navegador.
 
 `account-ui.js` resuelve el puesto de la cuenta antes del primer join a una sala.
@@ -1073,7 +1090,8 @@ no reclama repetidamente el puesto. El retorno de Google conserva la sala desead
 ## Historial de turnos y progreso en vivo
 
 [match-journal.js](../backend/match-journal.js) conserva hechos del motor,
-contexto del turno y proyección por puesto. La captura de archivo reconcilia
+y contexto del turno. [turn-history.js](../game/queries/turn-history.js) proyecta
+por puesto sin importar el registrador de comandos. La captura de archivo reconcilia
 conexiones/control antes de generar las vistas, usando el mismo checkpoint.
 Las consultas no mutan ese registro. Las simulaciones hipotéticas del bot se
 marcan en un `WeakSet` para omitir el diario y sus cálculos; esa exclusión no es

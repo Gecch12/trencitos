@@ -22,5 +22,8 @@ de bots ni se elimina historia para obtener una cifra menor. La RPC sigue siendo
 la suma de red y SQL; esta entrega no atribuye su coste al trigger estadístico.
 
 Validación de código: 30 comprobaciones de proyecciones, privacidad, archivo,
-patches y replay correctas. No son mediciones de rendimiento productivo. Sigue
-pendiente el CI completo y la entrega/comparación en Render.
+patches y replay correctas. No son mediciones de rendimiento productivo. El CI de `43e375e` pasó Node y los primeros recorridos Chrome, pero agotó
+sus 20 minutos tras una instalación de Chrome de más de diez minutos
+([ejecución](https://github.com/Gecch12/trencitos/actions/runs/42277663209)).
+No se publicó ese commit aislado. El siguiente CI valida conjuntamente fases 1–4
+con límite de 30 minutos y todas las pruebas; sigue pendiente la comparación.

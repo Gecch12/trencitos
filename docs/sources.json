@@ -1,6 +1,22 @@
 {
-  "match-performance.md": ["backend/durable-queue.js", "backend/runtime-metrics.js", "backend/process-metrics.js", "backend/server.js", "backend/supabase-store.js", "tests/runtime-observation.test.js"],
-  "work/match-performance-baseline.md": ["backend/durable-queue.js", "backend/runtime-metrics.js", "backend/process-metrics.js", "backend/server.js", "backend/supabase-store.js", "tests/runtime-observation.test.js"],
+  "match-performance.md": [
+    "backend/durable-queue.js",
+    "backend/runtime-metrics.js",
+    "backend/process-metrics.js",
+    "backend/server.js",
+    "backend/supabase-store.js",
+    "tests/runtime-observation.test.js",
+    "backend/partitioned-queue.js",
+    "supabase/009_room_transactions.sql"
+  ],
+  "work/match-performance-baseline.md": [
+    "backend/durable-queue.js",
+    "backend/runtime-metrics.js",
+    "backend/process-metrics.js",
+    "backend/server.js",
+    "backend/supabase-store.js",
+    "tests/runtime-observation.test.js"
+  ],
   "work/board-first-mobile.md": [
     "frontend/table.css",
     "frontend/responsive.css",
@@ -191,7 +207,8 @@
     "shared/data.js",
     "frontend/index.html",
     "game/compat/match-state.js",
-    "supabase/005_checkpoint_delta.sql"
+    "supabase/005_checkpoint_delta.sql",
+    "supabase/009_room_transactions.sql"
   ],
   "work/board-3d.md": [
     "frontend/map-layout.js",
@@ -659,5 +676,37 @@
     "frontend/replay.css",
     "tests/browser-replay-analysis.cjs",
     "tests/browser-tunnel-outcomes.cjs"
+  ],
+  "architecture-rules.md": [
+    "scripts/check-architecture.js",
+    "tests/architecture-boundaries.test.js",
+    "game/domain/",
+    "game/application/",
+    "game/queries/",
+    ".github/workflows/ci.yml",
+    "AGENTS.md"
+  ],
+  "work/match-performance-isolation.md": [
+    "backend/partitioned-queue.js",
+    "backend/server.js",
+    "backend/supabase-store.js",
+    "game/infrastructure/checkpoint-committer.js",
+    "supabase/009_room_transactions.sql",
+    "tests/room-isolation-server.test.js",
+    "tests/room-transactions-sql.test.js"
+  ],
+  "work/match-performance-presentation.md": [
+    "frontend/app.js",
+    "frontend/game.css",
+    "tests/browser-draw-feedback.cjs"
+  ],
+  "work/match-performance-guardrails.md": [
+    "scripts/check-architecture.js",
+    "tests/architecture-boundaries.test.js",
+    "game/domain/",
+    "game/application/",
+    "game/queries/",
+    ".github/workflows/ci.yml",
+    "AGENTS.md"
   ]
 }

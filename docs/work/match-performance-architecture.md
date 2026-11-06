@@ -34,5 +34,8 @@ de HTTP, UI, Supabase ni métricas; la aplicación coordina y los adaptadores mi
 
 Revisión de commits y contratos completada antes de editar código. Las mediciones
 del 2026-11-05 corresponden a `891b2d7` y no acreditan rendimiento de esta base.
-Completar la fase 0 y actualizar esta ficha al avanzar; no cerrar una fase solo
-por preparar código ni confundir validación con publicación.
+Fase 0 publicada y medida en `5a57127`; evidencia en su ficha. Fase 1 implementada
+en `43e375e`; su CI agotó el límite durante Chrome, sin publicar esa versión
+aislada. Fases 2–4 implementadas y verificadas con suite Node/Chrome de cartas;
+falta CI remoto conjunto, migración, publicación y comparación. No cerrar una fase
+solo por preparar código ni confundir validación con publicación.

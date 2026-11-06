@@ -1,7 +1,7 @@
 "use strict";
 const { createReplayAnalysis } = require("./replay-analysis");
 const Replay = require("../../shared/replay-state");
-const Journal = require("../../backend/match-journal");
+const Journal = require("./turn-history");
 const { historyEntryView } = require("./match-view");
 const { checkRecordedDefinition, requireRecordedDefinition } = require("../compat/replay-definition");
 

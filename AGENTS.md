@@ -21,6 +21,10 @@ locales antes de asumir que algo está integrado o publicado.
   `STATE_FILE` propios con `STATE_BACKEND=file`; no copies configuración de
   producción. Un segundo servidor Supabase puede invalidar al primero.
 - Verifica el cambio con las pruebas pertinentes y `node scripts/check-docs.js`.
+  Ejecuta también `node scripts/check-architecture.js`. Los contratos obligatorios
+  de dominio, consultas, repositorio, latencia y entrega están en
+  [reglas de arquitectura](docs/architecture-rules.md); no añadas excepciones al
+  comprobador para hacer pasar una dependencia sin justificar el cambio de diseño.
   Para revisar impacto documental: `node scripts/check-docs.js --base HEAD`.
   Las auditorías de QA registran una ejecución histórica, no una garantía actual.
 - Publicar en `main` activa CI. Render está configurado para esperar sus checks,

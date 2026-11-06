@@ -9,6 +9,7 @@ No cargues todos los documentos ni todos los informes de QA al iniciar un chat.
 | Historial, replay, invitados e idiomas | [Contrato de historial](history-replay.md) |
 | Conceptos, reglas, privacidad y variantes | [Dominio](domain.md) |
 | Ejecutar, probar y aislar entornos | [Operación](operations.md) |
+| Límites obligatorios y comprobaciones de DDD/CQRS | [Reglas de arquitectura](architecture-rules.md) |
 | Contratos de latencia, atribución y medición | [Rendimiento de partidas](match-performance.md) |
 | Ejecutar Android e iOS con Capacitor | [Pruebas móviles](mobile-development.md) |
 | Prioridades, avance y próximo paso | [Trabajo](work/README.md) |

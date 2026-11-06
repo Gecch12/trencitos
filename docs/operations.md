@@ -258,7 +258,7 @@ los ACK para comprobar que dos estados recibidos antes correlacionen sus colores
 sin duplicados; cubre espera prolongada y servidores sin la capacidad nueva.
 Escribe métricas y capturas en `.qa/draw-feedback/` (otro destino con `QA_OUT`).
 `frameMs` observa el primer frame del movimiento, `confirmationMs` mide el ACK,
-`colorRecognizableMs` el color decodificado con el giro prácticamente terminado,
+`colorRecognizableMs` el color reconocible (inmediato en vivo, giro terminado en replay),
 y `handArrivalMs` el frame de incorporación con imágenes cargadas. Las últimas
 dos mediciones sustituyen al antiguo criterio de reversos presentes en la mano.
 Se usa `requestAnimationFrame`, no una captura física de pantalla ni una medida
@@ -272,3 +272,19 @@ La entrega de [perfiles y estadísticas](profile-social-statistics.md#configurac
 requiere migración 006 en Auth, 007/008 en estado y configuración externa de Discord
 y Cron antes de habilitarlos. El avatar y las nuevas vistas forman parte de los
 activos web y del paquete móvil; no requieren un servidor de imágenes adicional.
+
+### Alcance de las transacciones y recuperación
+
+El diagnóstico incluye `persistenceMode` (`room` o `checkpoint`) y el número de
+`pausedRooms`; no publica sus códigos. En modo por sala, las acciones/bots/relojes
+se ordenan por agregado; el ciclo de vida conserva una barrera. El procedimiento
+de activación y regreso está en [SQL 009](RENDER_SUPABASE.md#transacciones-por-sala-sql-009).
+Una sala incierta se recupera desde SQL mediante Reintentar; no repetir el
+checkpoint en memoria. El cliente conserva el ID del comando. Conflicto de
+escritor o fallo global sigue requiriendo reinicio/reconexión.
+
+`node scripts/check-architecture.js` comprueba límites del dominio, aplicación
+y consultas; CI también ejecuta casos negativos, aislamiento de dos salas,
+rollback y pérdida de respuesta. Son verificaciones deterministas de corrección,
+no benchmarks de Render. Las [reglas de entrega](architecture-rules.md) aplican
+a cada cambio sin requerir invocar un skill.
