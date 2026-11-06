@@ -4,7 +4,7 @@ const { serializableRoom, validateRooms } = require("./room-store");
 
 // Server-only Data API client. A single atomic checkpoint is deliberately
 // sufficient for a private server with a handful of simultaneous rooms.
-function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000 }) {
+function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000, span = (_name, work) => work() }) {
   let base;
   try { base = new URL(url); } catch { throw new Error("SUPABASE_URL inválida."); }
   if (base.protocol !== "https:" || base.username || base.password || base.search || base.hash || base.pathname !== "/")
@@ -22,12 +22,15 @@ function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000 })
   async function rpc(name, body, requestTimeout = timeout) {
     // Reuse the exact commit ID after a lost response: SQL makes retries
     // idempotent. Never print provider bodies, request headers or credentials.
+    const checkpoint = name.startsWith('ferrovia_save_checkpoint');
+    const requestBody = checkpoint ? span('checkpointJSON', () => JSON.stringify(body)) : JSON.stringify(body);
+    const request = async () => {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const response = await fetchImpl(new URL(`/rest/v1/rpc/${name}`, base), {
           method: "POST", redirect: "error", signal: AbortSignal.timeout(requestTimeout),
           headers: { apikey: secret, "Content-Type": "application/json" },
-          body: JSON.stringify(body),
+          body: requestBody,
         });
         if (!response.ok) {
           const details = await response.json().catch(() => ({}));
@@ -41,6 +44,8 @@ function createSupabaseStore({ url, secret, fetchImpl = fetch, timeout = 5000 })
         if (error.code || attempt === 1) throw error.code ? error : failure("STORE_UNCERTAIN");
       }
     }
+    };
+    return checkpoint ? span('checkpointRPC', request) : request();
   }
   async function saveCheckpoint({ rooms: data, archive, roomDelta }) {
     if (fenced || version === null) throw failure("STORE_CONFLICT");

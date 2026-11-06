@@ -214,6 +214,27 @@ competencia entre simulaciones y servidores durante QA.
 
 ### Medidas de comandos
 
+Contrato, límites de atribución y aceptación en [Rendimiento de partidas](match-performance.md).
+El diagnóstico versión 1 añade `capture`, `action`, `history`, `recordingViews`,
+`lobbyView`, `stateView`, `checkpointPrepare`, `checkpointJSON` y `checkpointRPC`.
+Son spans anidados: acción puede incluir historial y vistas, y commit incluye
+preparación/JSON/RPC; no se suman como tiempos exclusivos. `mutation` conserva
+su significado histórico, incluida la captura de rollback.
+
+Un mensaje WebSocket puede incluir `traceId` (`[\w-]`, 8–80 caracteres). Después
+de completar su lote, solo esa conexión recibe `{type:'timing',id,timing}`.
+El resultado tiene espera y ejecución de la operación, tamaño y costes del lote,
+spans anidados y `outcome`; `committed` indica que el lote terminó, no que la
+acción fuera legal (el ACK/error conserva esa verdad). No contiene datos del juego.
+No se almacena el ID en métricas públicas ni en el checkpoint. Los clientes
+anteriores y los mensajes sin `traceId` conservan su protocolo.
+
+`/healthz?timings=1` añade `diagnosticsVersion:1` y `runtime`: CPU de proceso
+muestreada cada cinco segundos, RSS/heap/external en bytes, utilización y demora
+del bucle. CPU puede superar 100 % al usar varios hilos; no equivale al porcentaje
+del plan contratado. La demora tiene resolución de 20 ms. `gc` agrega duración
+de pausas observadas, no memoria recuperada. El health ordinario no cambia.
+
 `/healthz?timings=1` añade `timingsMs` con hasta 256 muestras por fase (cola,
 mutación, commit, entrega, total, cálculo/espera de bots). Cada grupo ofrece
 cantidad, mediana, p95 y máximo en milisegundos. No contiene identidades,

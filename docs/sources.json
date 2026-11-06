@@ -1,4 +1,6 @@
 {
+  "match-performance.md": ["backend/durable-queue.js", "backend/runtime-metrics.js", "backend/process-metrics.js", "backend/server.js", "backend/supabase-store.js", "tests/runtime-observation.test.js"],
+  "work/match-performance-baseline.md": ["backend/durable-queue.js", "backend/runtime-metrics.js", "backend/process-metrics.js", "backend/server.js", "backend/supabase-store.js", "tests/runtime-observation.test.js"],
   "work/board-first-mobile.md": [
     "frontend/table.css",
     "frontend/responsive.css",

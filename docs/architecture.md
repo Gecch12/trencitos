@@ -1013,6 +1013,14 @@ que ya no la solicita.
 
 ## Checkpoints incrementales y agrupación de comandos
 
+La [iniciativa de rendimiento](work/match-performance-architecture.md) instrumenta
+esta base antes de sustituirla. La composición de `backend/server.js` envuelve
+puertos de acción, vistas, historial y committer con `runtime-metrics.span`;
+`AsyncLocalStorage` mantiene spans de cada lote a través del guardado asíncrono.
+El dominio no importa instrumentación. `process-metrics.js` observa CPU, memoria,
+GC y bucle con muestreo acotado. El diagnóstico privado y sus límites están en
+[Operación](operations.md) y [el contrato de medición](match-performance.md).
+
 La cola sigue ordenando mutaciones de un único escritor. Acumula hasta 16 trabajos
 que ya estaban esperando y confirma sus efectos e historial en una sola transacción;
 no añade un temporizador para formar lotes ni adelanta ACKs. Un error revierte el

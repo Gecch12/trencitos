@@ -6,6 +6,13 @@ const Engine = require("./engine");
 const Commitment = require("./commitment");
 const { createPeerOutput } = require("./peer-output");
 const metrics = require("./runtime-metrics").createRuntimeMetrics();
+const processMetrics = require("./process-metrics").createProcessMetrics({ record: metrics.record });
+// Instrument adapters at composition; domain/application code has no telemetry dependency.
+function observed(target, methods) {
+  const wrapped = Object.create(target);
+  for (const [method, name] of Object.entries(methods)) wrapped[method] = (...args) => metrics.span(name, () => target[method](...args));
+  return wrapped;
+}
 const { servePublicAsset } = require("./public-assets");
 const { createPlayerActionHandler } = require("../game/application/player-action");
 const { fingerprintAction } = require("../game/infrastructure/command-fingerprint");
@@ -38,7 +45,7 @@ const backend = process.env.STATE_BACKEND || "file";
 if (!["file", "supabase"].includes(backend)) throw new Error("STATE_BACKEND debe ser file o supabase.");
 if (process.env.RENDER === "true" && backend !== "supabase")
   throw new Error("Render requiere STATE_BACKEND=supabase; no se guardarán partidas en su disco efímero.");
-const remoteStore = backend === "supabase" ? createSupabaseStore({ url: process.env.SUPABASE_URL, secret: process.env.SUPABASE_SECRET_KEY }) : null;
+const remoteStore = backend === "supabase" ? createSupabaseStore({ url: process.env.SUPABASE_URL, secret: process.env.SUPABASE_SECRET_KEY, span: metrics.span }) : null;
 let storageReady = !remoteStore, stopping = false;
 const TTL = 24 * 60 * 60 * 1000,
   rooms = new Map(),
@@ -73,8 +80,8 @@ function restoreLoaded(data) {
   for(const r of live)rooms.set(r.code,r);
 }
 const initialState=remoteStore?null:loadState(STORE);
-const projections = createLegacyAuthorizedViews();
-const archive=createMatchArchive({remote:remoteStore,saved:initialState?.archive,projections});
+const projections = observed(createLegacyAuthorizedViews(), { lobby: 'lobbyView', state: 'stateView', recording: 'recordingViews' });
+const archive=observed(createMatchArchive({remote:remoteStore,saved:initialState?.archive,projections}), { capture: 'history' });
 if (!remoteStore) restoreLoaded(Array.isArray(initialState)?initialState:initialState.rooms);
 let storageFailureAt = null;
 const committed = new WeakMap();
@@ -103,7 +110,7 @@ function restoreRuntime(saved) {
   storageFailureAt = saved.failureAt;
 }
 const checkpoint = createCheckpointHandler({ repository: rooms,
-  committer: remoteStore ? createRemoteCheckpointCommitter({ store: remoteStore, archive }) : createFileCheckpointCommitter({ file: STORE, archive }),
+  committer: observed(remoteStore ? createRemoteCheckpointCommitter({ store: remoteStore, archive }) : createFileCheckpointCommitter({ file: STORE, archive }), { prepare: 'checkpointPrepare' }),
   now: () => Date.now(), deferCommit: remoteStore ? () => durable.dirty() : null,
   onLocalCommit: () => { for (const room of rooms.values()) committed.set(room, snapshot(room)); },
   onLocalFailure: restoreLocalCheckpoint,
@@ -111,6 +118,7 @@ const checkpoint = createCheckpointHandler({ repository: rooms,
 const persist = checkpoint.persist;
 const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, restore: restoreRuntime,
   commit: checkpoint.commit, measure: metrics.record, batchSize:16,
+  scope: metrics.scope, spans: metrics.spans,
   onFailure: error => {
     console.error("Remote storage paused:", error.code || "INTERNAL");
     storageFailureAt ??= Date.now();
@@ -122,7 +130,7 @@ const durable = remoteStore ? createDurableQueue({ capture: captureRuntime, rest
     }
   },
 }) : null;
-const dispatch = (job, kind) => stopping ? undefined : durable ? durable.run(() => { if (!stopping) job(); }, kind) : job();
+const dispatch = (job, kind, observe) => stopping ? undefined : durable ? durable.run(() => { if (!stopping) job(); }, kind, observe) : job();
 const sendRoom = createRoomStager({ repository: rooms, engine: Engine, history: archive, checkpoint,
   now: () => Date.now(), storagePaused: () => storageFailureAt !== null,
   watchRoom: watchRecording, reconcileRoom: room => room.practice ? practice.reconcile(room) : multiplayer.reconcile(room), queueViews: queueRoomViews,
@@ -133,7 +141,7 @@ const sendRoom = createRoomStager({ repository: rooms, engine: Engine, history: 
   },
   queueDirectory: sendDirectory,
 });
-const submitPlayerAction = createPlayerActionHandler({ engine: Engine, stageRoom: sendRoom,
+const submitPlayerAction = createPlayerActionHandler({ engine: observed(Engine, { action: 'action' }), stageRoom: sendRoom,
   storagePaused: () => storageFailureAt !== null, now: () => Date.now(), random: max => crypto.randomInt(max), fingerprintAction });
 const automaticPlay = createLegacyAutomaticPlay({ stageRoom: sendRoom });
 const botPlanner = require("./bot-planner").createBotPlanner({measure:metrics.record});
@@ -260,7 +268,7 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === "/healthz") {
     const ok = storageReady && storageFailureAt === null && !stopping;
     res.writeHead(ok ? 200 : 503, { "Content-Type": "application/json" });
-    return res.end(JSON.stringify({ ok, storage: backend, rooms: rooms.size, mobileProtocolVersion: 1, ...(url.searchParams.get("timings")==="1"?{timingsMs:metrics.summary()}:{}) }));
+    return res.end(JSON.stringify({ ok, storage: backend, rooms: rooms.size, mobileProtocolVersion: 1, ...(url.searchParams.get("timings")==="1"?{timingsMs:metrics.summary(),runtime:processMetrics.snapshot(),diagnosticsVersion:1}:{}) }));
   }
   servePublicAsset(url.pathname, res);
 });
@@ -356,7 +364,9 @@ function createPeer(socket) {
         const message = JSON.parse(pay.toString("utf8"));
         const kind = message?.type === "action" ? message.action?.type === "draw_train" ? "draw" :
           ["claim", "station", "pay_tunnel"].includes(message.action?.type) ? "build" : "other" : "other";
-        dispatch(() => { if (!peer.closed) onMessage(peer, message); }, kind);
+        const traceId = typeof message?.traceId === 'string' && /^[\w-]{8,80}$/.test(message.traceId) ? message.traceId : null;
+        dispatch(() => { if (!peer.closed) onMessage(peer, message); }, kind,
+          traceId ? timing => { if (!peer.closed) peer.send({ type: 'timing', id: traceId, timing }); } : undefined);
       } catch (e) {
         peer.send({ type: "error", message: "Mensaje mal formado." });
       }
@@ -759,6 +769,7 @@ const multiplayerHeartbeat = setInterval(() => {
 multiplayerHeartbeat.unref();
 server.on("close", () => {
   stopping = true;
+  processMetrics.close();
   clearInterval(heartbeat);
   clearInterval(multiplayerHeartbeat);
   practice.close();

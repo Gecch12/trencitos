@@ -5,6 +5,9 @@ genera la lista de estados y relaciones; este índice no mantiene otra copia.
 
 Iniciativa acordada:
 
+- [Arquitectura y respuesta de partidas](match-performance-architecture.md):
+  medición, trabajo por jugada, independencia entre mesas y prevención de regresiones.
+  Inicio en [referencia de latencia y contratos](match-performance-baseline.md).
 - [Beta gratuita en teléfonos](mobile-beta.md): APK compartible, iPhone desde
   Xcode y web instalada, conectados al servidor por Internet.
 - [Android e iOS con Capacitor](mobile-capacitor.md): apps de desarrollo para
