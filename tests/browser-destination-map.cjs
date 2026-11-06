@@ -254,7 +254,7 @@ let browser;
   assert.match(await chooser.locator('.keep').first().getAttribute('aria-label'), /^Keep /);
   await chooser.screenshot({ path: path.join(out, 'new-english.png') });
   report.checks.push('New offers start dark; unshaded toggle survives concurrent reroute and reopen with choices/zoom/deadline; reload defaults dark and English toggle works');
-  await chooser.locator('#minimizeTickets').click(); await chooser.locator('[data-panel="destinations"]').click(); await chooser.locator('#viewRoutes').click();
+  await chooser.locator('#minimizeTickets').click(); if(await chooser.locator('[data-panel="destinations"]').isVisible())await chooser.locator('[data-panel="destinations"]').click(); await chooser.locator('#viewRoutes').click();
   await overview(chooser, [0], .5);
   assert.equal(await chooser.locator('#ticketMapShade').count(), 0);
   assert.equal(await chooser.locator('#ticketTrainReserve').isVisible(), true);
@@ -290,7 +290,7 @@ let browser;
   assert.equal(await observer.locator('#viewTunnel').count(), 0);
   assert.equal(await spectator.locator('#viewTunnel').count(), 0);
   // Other optional dialogs remain usable and are not replaced by tunnel stages.
-  await observer.locator('[data-panel="destinations"]').click();
+  if(await observer.locator('[data-panel="destinations"]').isVisible())await observer.locator('[data-panel="destinations"]').click();
   await observer.locator('#viewRoutes').click();
   await observer.waitForFunction(() => !!ticketMapView);
   assert.equal(await observer.locator('#dialog.ticket-dialog').count(), 1);

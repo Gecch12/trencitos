@@ -5,7 +5,7 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 const source = fs.readFileSync(require.resolve("../frontend/app.js"), "utf8");
 
-test("table controls start natively hidden and activate on all layouts; practice stays conditional", () => {
+test("compact table controls follow the viewport; practice stays conditional", () => {
   const html = fs.readFileSync(require.resolve("../frontend/index.html"), "utf8");
   for (const id of ["compactHud", "compactPlayers"]) assert.match(html, new RegExp(`id="${id}"[^>]*\\shidden[\\s>]`));
   for (const practiceMode of [true, false]) {
@@ -15,8 +15,8 @@ test("table controls start natively hidden and activate on all layouts; practice
     for (const compact of [false, true, false, true]) {
       context.compactMedia.matches = compact;
       context.syncCompactControls();
-      assert.equal(nodes.compactHud.hidden, false);
-      assert.equal(nodes.compactPlayers.hidden, false);
+      assert.equal(nodes.compactHud.hidden, !compact);
+      assert.equal(nodes.compactPlayers.hidden, !compact);
       assert.equal(nodes.compactPractice.hidden, !practiceMode);
     }
   }

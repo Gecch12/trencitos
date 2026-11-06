@@ -2299,7 +2299,7 @@ function closeOptionalDialog() {
   $("overlay").classList.add("hidden");
   hoveredDestination = null;
   if (returningToMap) setCompactPanel("map");
-  const returnTarget = returningToMap ? document.querySelector('[data-panel="destinations"]')
+  const returnTarget = returningToMap && compactMedia.matches ? document.querySelector('[data-panel="destinations"]')
     : dialogReturnFocus?.isConnected ? dialogReturnFocus : $(closingResults ? "viewResults" : "viewRoutes");
   returnTarget.focus({ preventScroll: true });
   dialogReturnFocus = null;
@@ -3236,7 +3236,9 @@ function renderPracticeControls() {
 }
 
 // Reparent existing controls rather than duplicate state/listeners on rotation.
-const compactMedia = matchMedia("(max-width: 1100px), (max-height: 600px)");
+// Phones retain the compact table, including landscape. Tablets and desktops
+// keep the permanent sidebar and hand/destination dock. Keep table.css in sync.
+const compactMedia = matchMedia("(max-width: 699px), (max-width: 1100px) and (max-height: 600px)");
 let compactPanel = "map", compactPlayer = null, compactHistoryTop = 0;
 const compactSections = {
   destinations: [document.querySelector(".dockdestinations")],
@@ -3245,20 +3247,42 @@ const compactSections = {
 };
 const compactHand = document.querySelector(".dockmain"), compactPlayers = document.querySelector(".players-panel"), turnBanner = $("turnBanner");
 let announcedTurn = null, tablePanelTrigger = null, historyCamera = null;
-$("compactMarket").append(document.querySelector(".game .sidepanel"));
-$("compactHand").append(compactHand);
-$("compactPlayers").append(compactPlayers);
-$("tableMapTools").prepend($("drawtickets"));
-$("tableMapTools").prepend($("toggleDestinations"));
-document.querySelector('.game-menu').append($("expandboard"));
+const marketPanel = document.querySelector(".game .sidepanel");
+const tableHomes = new Map([
+  marketPanel, compactHand, compactPlayers, turnBanner,
+  $("drawtickets"), $("toggleDestinations"), $("expandboard"),
+  ...Object.values(compactSections).flat(),
+].map(node => {
+  const anchor = document.createComment("table-control-home");
+  node.before(anchor);
+  return [node, anchor];
+}));
 try { $("compactPlayers").classList.toggle('is-expanded', localStorage.getItem('rr-table-player-details') === 'true'); } catch {}
 function syncCompactControls() {
-  // All viewports share the same controls and authoritative state.
-  $("compactHud").hidden = $("compactPlayers").hidden = false;
+  $("compactHud").hidden = $("compactPlayers").hidden = !compactMedia.matches;
   $("compactPractice").classList.toggle("hidden", !practiceMode);
+}
+function syncTableLayout() {
+  const historyTop = $("history").scrollTop, ticketTop = $("ticketList").scrollTop;
+  const focus = document.activeElement;
+  for (const [node, anchor] of tableHomes) if (node.previousSibling !== anchor) anchor.after(node);
+  if (compactMedia.matches) {
+    $("compactMarket").append(marketPanel);
+    $("compactHand").append(compactHand);
+    $("compactPlayers").append(compactPlayers);
+    $("tableMapTools").prepend($("drawtickets"));
+    $("tableMapTools").prepend($("toggleDestinations"));
+    document.querySelector('.game-menu').append($("expandboard"));
+  }
+  setCompactPanel();
+  $("history").scrollTop = historyTop;
+  $("ticketList").scrollTop = ticketTop;
+  if (focus?.isConnected && focus.getClientRects().length) focus.focus({preventScroll:true});
+  layoutHand();
 }
 function setCompactPanel(next = compactPanel) {
   if (next === "cards") next = "map"; // The market is always on the table.
+  if (!compactMedia.matches && ["history", "destinations"].includes(next)) next = "map";
   if (next !== "map" && !compactSections[next]) return;
   if (next !== "map") clearTableFocus();
   syncCompactControls();
@@ -3266,7 +3290,12 @@ function setCompactPanel(next = compactPanel) {
   const followHistory = historyFollowing;
   if ($("history").clientHeight) compactHistoryTop = $("history").scrollTop;
   compactPanel = next;
-  for (const node of Object.values(compactSections).flat()) if (node.parentElement !== $("tablePanelHome")) $("tablePanelHome").append(node);
+  for (const [section, nodes] of Object.entries(compactSections)) for (const node of nodes) {
+    if (!compactMedia.matches && ["history", "destinations"].includes(section)) {
+      const anchor = tableHomes.get(node);
+      if (node.previousSibling !== anchor) anchor.after(node);
+    } else if (node.parentElement !== $("tablePanelHome")) $("tablePanelHome").append(node);
+  }
   const open = next !== "map";
   if (open) $("tablePanelContent").append(...compactSections[next]);
   $("compactPanel").classList.toggle("hidden", !open);
@@ -3302,8 +3331,8 @@ function updateCompactStatus() {
   turnBanner.classList.toggle("is-mine", state.mine);
   const activeBadge = $("scores").querySelector(`[data-player="${game.current}"]`);
   const hasTurn = activeBadge && ["play", "tunnel"].includes(game.phase);
-  turnBanner.classList.toggle("is-global", !hasTurn);
-  (hasTurn ? activeBadge : $("compactPlayers")).append(turnBanner);
+  turnBanner.classList.toggle("is-global", compactMedia.matches && !hasTurn);
+  (compactMedia.matches ? hasTurn ? activeBadge : $("compactPlayers") : $("game")).append(turnBanner);
   turnBanner.setAttribute('aria-label', [state.title, state.hint].filter(Boolean).join(' · '));
   $("compactClock").dataset.clock = state.clock || "";
   $("compactClock").classList.toggle("hidden", !state.clock);
@@ -3411,8 +3440,8 @@ $("compactPractice").onclick = () => {
   const open = $("practiceControls").classList.toggle("is-open");
   $("compactPractice").setAttribute("aria-expanded", String(open));
 };
-compactMedia.addEventListener("change", () => setCompactPanel());
-setCompactPanel();
+compactMedia.addEventListener("change", syncTableLayout);
+syncTableLayout();
 
 // Pointer capture supports mouse, touch and pen without dragging the stop button.
 let practiceDrag = null;
@@ -3452,6 +3481,15 @@ window.addEventListener("resize", () => {
 });
 
 function mapSafeArea(rect, forCamera = false) {
+  if (!compactMedia.matches) {
+    const sidebar = $("gameSidebar").getBoundingClientRect(), dock = $("handdock").getBoundingClientRect();
+    const banner = turnBanner.getBoundingClientRect();
+    return TableUI.cameraArea({width:rect.width,height:rect.height}, {
+      top: Math.max(8, $("boardStatusActions").getBoundingClientRect().bottom - rect.top + 8),
+      bottom: Math.min(dock.top, banner.top) - rect.top - 8,
+      left: 8, right: Math.max(8, rect.right - sidebar.left + 8), forCamera,
+    });
+  }
   const panel = $("compactPanel").getBoundingClientRect(), hud = $("compactHud").getBoundingClientRect();
   const players = $("compactPlayers").getBoundingClientRect();
   return TableUI.cameraArea({width:rect.width,height:rect.height}, {

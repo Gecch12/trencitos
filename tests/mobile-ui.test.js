@@ -177,7 +177,7 @@ test("destination overview includes only kept tickets and their completed privat
   assert.deepEqual(UI.destinationSpotlightSelection(game, null, true).endpoints, ["A", "B", "C", "H"]);
 });
 
-test("closing routes clears transient preview, restores the destination icon and preserves explicit overview at every width", () => {
+test("closing routes restores the mobile icon or the permanent table control and preserves overview", () => {
   for (const mobile of [true, false]) {
     let focused = null, updated = 0, disposed = 0;
     const hidden = new Set();
@@ -197,7 +197,7 @@ test("closing routes clears transient preview, restores the destination icon and
     assert.equal(context.hoveredDestination, null);
     assert.equal(context.allDestinationsVisible, true);
     assert.equal(context.compactPanel, "map");
-    assert.equal(focused, "destinations");
+    assert.equal(focused, mobile ? "destinations" : "row");
     assert.equal(context.dialogReturnFocus, null);
     assert.equal(hidden.has("hidden"), true);
     assert.equal(updated, 1);

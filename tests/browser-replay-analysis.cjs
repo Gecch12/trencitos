@@ -65,6 +65,8 @@ function readMatch(file,id){
  }
  const publicDraw=steps.find(e=>e.type==='draw'&&e.index>=0),blind=steps.find(e=>e.type==='draw'&&e.index===-1),build=steps.find(e=>e.type==='build');assert.ok(publicDraw&&blind&&build);
  const page=await open();await page.waitForFunction(()=>game&&board3D&&document.getElementById('replayProgress').hidden);
+ assert.equal(await page.locator('#replayControls').evaluate(n=>n.parentElement.id),'gameSidebar');
+ assert.equal(await page.locator('#replayNext').isVisible(),true,'desktop replay transport remains visible in the sidebar');
  const seek=async(p,n)=>{await p.locator('#replaySeek').evaluate((input,n)=>{input.value=n;input.dispatchEvent(new Event('input',{bubbles:true}));},n);};
  assert.equal(await page.locator('#replayViewer,#replaySecretsOpen,#replaySecrets,#replayStats,#replayMilestones,#replayNextBuild,#replayEvent,#replayMarket').count(),0);
  assert.equal(await page.locator('#scores .player-avatar').count(),4);assert.equal(await page.locator('#scores .player-avatar.is-bot').count(),3);

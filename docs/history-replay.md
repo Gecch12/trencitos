@@ -283,8 +283,10 @@ perspectiva/acción, hitos, estadísticas adicionales ni enlaces de auditoría. 
 vista general conserva el tablero y el historial completo, sin asignar una mano
 propia al observador.
 
-El mercado y la mano usan la franja permanente compartida por móvil y escritorio.
-Reproducir un robo o renovación mantiene esa disposición. Las animaciones comparten
+La repetición usa la distribución de la mesa en vivo: mercado y mano en la franja
+móvil; mercado e historial en el lateral y mano/destinos abajo en tablet/escritorio.
+El transporte del replay se coloca en el lateral cuando está disponible y flota
+en móvil. Reproducir un robo o renovación mantiene esa disposición. Las animaciones comparten
 `prepareEffects`, `playEffects`, `animateCardFlight`, `prepareMarketRefresh` y
 `animateConstruction` con el juego. Sus tiempos siguen la velocidad seleccionada;
 las cartas del puesto observado entran al contador cuando aterrizan. Pausar,

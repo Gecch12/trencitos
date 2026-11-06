@@ -1,7 +1,7 @@
 /* Board-first touch layout. Panels reuse the same controls/state as desktop. */
 .compact-hud, .compact-panel, .compact-players, .compact-player-detail { display: none; }
 
-@media (max-width: 1100px), (max-height: 600px) {
+@media (max-width: 699px), (max-width: 1100px) and (max-height: 600px) {
   body.is-playing { --top-height: 0px; --compact-bottom: calc(182px + env(safe-area-inset-bottom)); --compact-players-height: 90px; }
   .top, .is-playing .top { padding: env(safe-area-inset-top) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left)); height: var(--top-height, 54px); gap: 8px; }
   .top .brand { gap: 7px; min-width: 0; }
@@ -198,7 +198,7 @@
   .ticket-deadline button { min-height: 30px; padding: 4px 7px; }
   .ticket-options .ticket-options-hint { display: none; }
 }
-@media (min-width: 700px) and (max-height: 500px) {
+@media (min-width: 700px) and (max-width: 1100px) and (max-height: 500px) {
   body.is-playing { --top-height: calc(42px + env(safe-area-inset-top)); --compact-bottom: calc(146px + env(safe-area-inset-bottom)); --compact-players-height: 84px; }
   .compact-players { left: auto; width: 44%; }
   .game .boardtools, .game[data-compact-panel]:not([data-compact-panel="map"]) .boardtools { top: 6px; right: calc(44% + 12px); }

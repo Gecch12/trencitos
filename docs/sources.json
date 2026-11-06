@@ -1,6 +1,7 @@
 {
   "work/board-first-mobile.md": [
     "frontend/table.css",
+    "frontend/responsive.css",
     "frontend/table-ui.js",
     "frontend/app.js",
     "frontend/index.html",
@@ -11,7 +12,8 @@
     "frontend/ticket-map.js",
     "frontend/board-3d.js",
     "game/queries/live-score.js",
-    "tests/browser-table-refinement.cjs"
+    "tests/browser-table-refinement.cjs",
+    "tests/browser-replay-analysis.cjs"
   ],
   "mobile-development.md": [
     "capacitor.config.js",

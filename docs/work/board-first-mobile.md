@@ -1,14 +1,64 @@
 ---
-{"id":"board-first-mobile","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-04"}
+{"id":"board-first-mobile","status":"validated","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-05"}
 ---
 # Mesa compacta con prioridad al mapa
 
-Ángel aprobó implementar la propuesta discutida con Moti a partir de sus capturas
-de Colonist: mapa protagonista, controles por iconos y detalles bajo demanda.
-Alcance: web adaptable compartida por móvil, tablet y escritorio. El chat se
-reserva como panel de próxima implementación, sin transporte ni envío.
+Alcance corregido por Ángel el 2026-11-05: conservar el mapa actual y la mesa
+móvil; recuperar la distribución de tablet/escritorio con historial, robos y
+jugadores laterales y mano/destinos abajo. La entrega original generalizó la mesa
+compacta a todos los tamaños; los apartados históricos siguientes registran esa
+implementación, no una autorización para volver a unificar las distribuciones.
+El chat continúa como panel de próxima implementación, sin transporte ni envío.
 
-## Aceptación
+## Recuperación de tablet y escritorio · 2026-11-05
+
+- [x] Reubicar controles existentes mediante sus anclas, sin duplicar estado.
+- [x] Recuperar paneles permanentes, botón de nuevos destinos en robos y reloj
+  sobre la mano; conservar mejoras de historial, puntos y confirmación.
+- [x] Conservar la mesa móvil, incluido teléfono horizontal, y el renderer del mapa.
+- [x] Completar regresión de rotación, robos, destinos, historial y replay.
+- [x] Revisar capturas y registrar evidencia final y límites de entrega.
+
+Trabajo local sobre `ad3ed98`, en `main`, sin cambios previos ni otros chats
+activos sobre los mismos archivos. Evidencia en `.qa/table-restoration/`.
+Validación con Chrome y HTTP/WebSocket locales aislados, sin servicios de
+producción. El fallo/latencia de persistencia de robos usa un doble local:
+
+- `node-suite.log`: **719/719 pruebas**, sin fallos ni omitidas, 161,6 s.
+- `layouts/report.json`: once tamaños, de 320×568 a 1920×1080, más regreso a
+  móvil. Cinco jugadores y nueve colores; panel lateral y dock comprobados por
+  posición, botones de robo de 44 px, sin controles duplicados. La misma instancia
+  de Three.js y canvas sobrevive a cada cambio; abrir paneles no altera su cámara.
+- `preservation.json`: posiciones/tamaños de cartas, mano y área del mapa móvil
+  idénticos a la captura previa (320×568, 390×844, 430×932 y 844×390).
+  SHA-256 de `board-3d.js`, `map-layout.js`, `board-camera.js` y `ticket-map.js`
+  sin cambios respecto de la base.
+- `refinement/`: cinco grupos, incluyendo consulta de recorridos, animación del
+  historial y retorno a cámara, confirmación/cancelación de nuevos destinos,
+  pellizco real emulado y capturas con cuatro jugadores.
+- `cards/`: cuatro grupos; robos visibles/ocultos para actor/rival/espectador,
+  renovación, pagos, redimensionado y reconexión.
+- `destinations/`: siete grupos; elecciones iniciales/nuevas, rotación, mapas
+  alternativos, túneles y conservación de selección y zoom.
+- `continuity/`: cuatro grupos; resaltado, zoom y centro sobreviven al cambio
+  móvil/tablet/escritorio y a cancelar/confirmar destinos; reanudación y resultados.
+- `replay/`: cinco grupos; carga progresiva, transporte visible en el lateral de
+  escritorio, paso/reproducción/velocidad, cartas y cambio a móvil.
+- `draw-feedback/`: dieciséis grupos; robos rápidos y animaciones, ACK tardío,
+  fallo de guardado simulado, reconexión y cancelación geométrica al redimensionar.
+- Cero errores de consola en los informes finales; sintaxis, `git diff --check`
+  y comprobador documental normal/`--base HEAD` correctos. Se revisaron capturas
+  finales de escritorio, tablet, móvil y replay. Durante el ajuste se corrigieron
+  iconos sobredimensionados, recorte del bono, falta de espacio para cinco jugadores
+  y transporte del replay plegado en escritorio; las comprobaciones finales pasan.
+
+Ángel solicitó la publicación completa con `trencitos-publicar`. Se prepara
+la entrega desde `main`: Android 0.7.0 build 5 e iOS 0.7.0 build 6, con los
+identificadores y firmas existentes. Siguiente paso: comprobar CI de la revisión,
+Render Live, Release del APK e instalación física; registrar cada resultado en
+[producción](../production.md). La validación anterior corresponde al navegador.
+
+## Aceptación de la entrega original
 
 - [x] Sustituir navegación inferior y sidebar por mercado/mano permanentes,
   jugadores compactos arriba y accesos flotantes a historial, chat y destinos.
@@ -21,7 +71,7 @@ reserva como panel de próxima implementación, sin transporte ni envío.
 
 ## Implementación
 
-[table.css](../../frontend/table.css) define el diseño compartido y se carga
+[table.css](../../frontend/table.css) define las variantes de la mesa y se carga
 después del CSS anterior. [table-ui.js](../../frontend/table-ui.js) conserva
 cálculos de presentación puros; [app.js](../../frontend/app.js) reutiliza los
 controles existentes mediante cambio de contenedor, sin duplicar listeners.

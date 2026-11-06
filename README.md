@@ -152,8 +152,13 @@ El mapa se mueve arrastrando y se acerca con rueda o pellizco. **Ver mapa comple
 restaura el encuadre; con el mapa enfocado, las flechas desplazan, `+`/`−`
 cambian el zoom e **Inicio** centra. El zoom permite de 25 % a 600 %.
 
-La mesa comparte controles en móvil, tablet y escritorio, sin scroll de página.
-Los jugadores muestran avatar y nombre arriba, y tres columnas de puntos públicos,
+La mesa comparte controles y estado, con distribuciones distintas y sin scroll de
+página. En escritorio, el lateral derecho contiene historial, robos y jugadores;
+la franja inferior contiene la mano y los destinos. Tablet conserva estos paneles
+permanentes: en vertical la franja inferior ocupa el ancho disponible y en
+horizontal deja sitio al lateral. El mapa mantiene su renderizado y gestos.
+
+En móvil, los jugadores muestran avatar y nombre arriba, y tres columnas de puntos públicos,
 cartas en mano y vagones disponibles debajo. El reloj forma un pie continuo en
 la tarjeta activa. **Detalles de jugadores** amplía solo las estaciones; el detalle
 individual identifica también destinos conservados y longitud del camino más largo.
@@ -161,11 +166,13 @@ El bono provisional **+10** permanece separado; tocarlo resalta su recorrido exa
 Tocar tu jugador permite consultar el desglose privado. Al finalizar se muestran
 los puntos finales.
 
-El mercado reúne cinco cartas con separación constante y el mazo al extremo
+En móvil, el mercado reúne cinco cartas con separación constante y el mazo al extremo
 derecho, con dorsos apilados horizontalmente. La mano queda separada por un pequeño
 espacio y agrupa colores con contadores. Las áreas de robo siguen midiendo al menos
 44 px; tras el primero aparece **Roba una carta más**. Los iconos del mapa permiten
-consultar destinos o **robar nuevos destinos**: este último pide confirmación y solo
+consultar destinos o **robar nuevos destinos**. En tablet y escritorio, el mercado
+dispone las cinco cartas y el mazo en dos filas de tres; el botón para robar destinos
+está en su cabecera y los destinos propios junto a la mano. **Robar nuevos destinos** pide confirmación y solo
 está disponible cuando la acción es legal. Abrir/cancelar no revela billetes ni
 gasta el turno; confirmar envía el comando y obliga a conservar el mínimo indicado.
 El chat muestra «Próximamente», con escritura/envío deshabilitados.
@@ -173,7 +180,8 @@ El chat muestra «Próximamente», con escritura/envío deshabilitados.
 Los paneles temporales se superponen sin reencuadrar el mapa. El icono **i** abre
 una ficha de puntos y última ronda según la definición de la partida. Las existencias
 de los mazos se consultan en el mercado y en los controles respectivos. El engranaje
-agrupa ajustes, incluida pantalla completa. **Última ronda** conserva el aviso ámbar.
+agrupa ajustes; pantalla completa está dentro del menú móvil y en los controles
+laterales de tablet/escritorio. **Última ronda** conserva el aviso ámbar.
 
 El historial conserva scroll, barra y aviso **Nuevos ↓**. Una ocupación se presenta
 como **Ocupó** y su botón **Ver** enfoca el tramo, oscurece el entorno y eleva los
@@ -431,8 +439,10 @@ Si falla el guardado remoto, no hay fallback al disco efímero: se pausa y no se
 
 - Mapa continuo de fondo, zoom 25%–300%, arrastre a cualquier escala y pantalla completa conservando los controles.
 - Etiquetas de ciudades reforzadas, rutas coloreadas con mayor contraste y selección visible.
-- Jugadores compactos arriba, con avatar, puntos públicos, recursos y estaciones ampliables.
-- Mano y mercado siempre visibles; destinos e historial por iconos, con scroll independiente y construcción contextual.
+- Mesa adaptable con distribuciones separadas para móvil y tablet/escritorio,
+  descritas en [Mapa y selección de destinos](#mapa-y-selección-de-destinos-escritorio).
+- Mano y mercado siempre visibles; historial y destinos permanentes en pantallas
+  grandes y por iconos en móvil, con scroll independiente y construcción contextual.
 - Botón **Invitar** durante partidas multijugador; las salas con bots siguen siendo privadas para su creador.
 - Descripción explícita del coste de cada ruta, incluidos los requisitos de comodines de los ferris.
 - Botón para pasar cuando se agotan cartas y destinos; el servidor comprueba que no quede otra acción legal.

@@ -7,7 +7,7 @@ const ReplayUI = (() => {
   async function open({id,load,show,decorateRow=()=>{},cancelEffects=()=>{}}) {
     dispose?.();
     const t=I18n.t,controls=$('replayControls'),controller=new AbortController();
-    const compact=matchMedia('(max-width:1100px), (max-height:600px)');
+    const compact=matchMedia('(max-width: 699px), (max-width: 1100px) and (max-height: 600px)');
     let data,step=0,viewer=0,timer=null,playing=false,speed=1,indexed=0,playCursor,indexCursor,ready=false,failed=false;
     let lastView=null,lastCity=null,historyDirty=true,lastHistoryStep=-1;
     const rows=new Map(),nodes=new Map(),eventSteps=new Map(),fallbackRows=[];
@@ -18,7 +18,7 @@ const ReplayUI = (() => {
     loader.oncancel=e=>e.preventDefault();if(!loader.open)loader.showModal();
     function stop(){playing=false;clearTimeout(timer);timer=null;cancelEffects();if($('replayPlay')){$('replayPlay').textContent='▶';$('replayPlay').setAttribute('aria-label',t('Reproducir'));}}
     const visibility=()=>{if(document.hidden)stop();};
-    const place=()=>{if(!ready)return;document.body.append(controls);$('replayDock').open=false;};
+    const place=()=>{if(!ready)return;if(compact.matches)document.body.append(controls);else $('gameSidebar').prepend(controls);$('replayDock').open=!compact.matches;};
     dispose=()=>{stop();controller.abort();compact.removeEventListener('change',place);document.removeEventListener('visibilitychange',visibility);};
     function updateControls(){
       $('replaySeek').max=data.frames.length-1;$('replaySeek').value=step;

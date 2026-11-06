@@ -267,8 +267,15 @@ guardado restaura también estos ajustes. UI 9 expone `timing` y la duración
 de cada oferta para las barras. Los plazos los calcula solo el motor.
 
 El menú flotante y los steppers reutilizan el mismo estado en escritorio y
-móvil. La mesa compartida de `table.css` mantiene jugadores arriba y mercado/mano
-abajo; `TableUI.cameraArea` reserva sus límites y los márgenes seguros. `tableFocus` coordina la consulta visual del historial y del camino más largo, restaura cámara y cancela su animación ante construcciones reales. `confirmDestinationDraw` revalida la acción al confirmar; abrir/cancelar no envía comandos. Los iconos
+móvil. `game.css` conserva la mesa lateral y el dock de mano/destinos;
+`table.css` limita la distribución compacta a teléfonos (ancho hasta 699 px,
+o hasta 1100 px con alto hasta 600 px para horizontal). Tablet/escritorio mantienen
+historial, mercado y jugadores en el lateral; tablet vertical extiende el dock
+inferior. `syncTableLayout` devuelve los nodos a anclas estables o los mueve a sus
+contenedores móviles, sin duplicar listeners ni estado. `TableUI.cameraArea`
+reserva el espacio de los paneles permanentes; abrir paneles temporales no cambia
+la cámara. Three.js, geometría, materiales y gestos permanecen compartidos.
+`tableFocus` coordina la consulta visual del historial y del camino más largo, restaura cámara y cancela su animación ante construcciones reales. `confirmDestinationDraw` revalida la acción al confirmar; abrir/cancelar no envía comandos. Los iconos
 y paneles temporales se superponen sin cambiar el encuadre. Los controles se
 reubican en `app.js`, conservando sus listeners y el estado autorizado. Los sonidos de pluma son locales y la firma
 se reproduce una vez al confirmar el ACK del comando de selección.
@@ -284,7 +291,9 @@ provisional se presenta aparte; el desglose privado se abre desde el propio juga
 No se reciben manos rivales para contar cartas. `playerAvatar` y
 los estilos comunes de `.player-avatar` mantienen las proporciones del símbolo
 en historial, resultados y clasificación, aunque cambie el círculo. La fila
-compacta identifica al jugador mediante avatar, color y nombre; debajo ordena puntos, cartas y vagones. El reloj comparte el contorno de la tarjeta activa.
+compacta identifica al jugador mediante avatar, color y nombre; debajo ordena puntos, cartas y vagones. En móvil el reloj comparte el contorno de la tarjeta activa;
+en tablet/escritorio aparece en la cabecera de la mano, con jugadores en filas
+laterales y estaciones visibles.
 
 `GameUI.urgentClock` selecciona el plazo propio activo bajo cinco segundos;
 `updateClockSound` lo consulta una vez por actualización, fuera del recorrido
