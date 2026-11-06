@@ -1,12 +1,12 @@
 ---
-{"id":"summary-postgame-experience","status":"validated","parent":null,"depends_on":["profile-social-statistics"],"branch":"main","delivery":"worktree","updated":"2026-11-06"}
+{"id":"summary-postgame-experience","status":"validated","parent":null,"depends_on":["profile-social-statistics"],"branch":"main","delivery":"released","updated":"2026-11-06"}
 ---
 # Resumen visual y cierre con recuentos
 
 Implementación autorizada por Ángel tras la revisión Moti del 2026-11-06.
 Alcance: resumen del perfil, cierre integrado en el tablero, recuentos opcionales
-y cartas de robo horizontales en escritorio/tablet. Trabajo local sobre `main`;
-no implica publicación en Git, Render ni dispositivos.
+y cartas de robo horizontales en escritorio/tablet. Publicado desde `main` en
+`51cb1ea`; la entrega verificada se registra en [Producción](../production.md).
 
 ## Hitos y aceptación
 
@@ -65,7 +65,8 @@ Verificación del 2026-11-06:
 ## Refinamiento de mesa, túneles y repetición · 2026-11-06
 
 Ángel autorizó implementar la revisión Moti completa. Se conservan todos los
-cambios locales previos; no se publica ni se reinicia el servidor de su partida.
+cambios locales previos; durante la implementación no se reinició el servidor
+de su partida. La publicación posterior se registra al final de esta ficha.
 
 - [x] Lateral con historial compacto, títulos visibles redundantes retirados,
   chat plegable inicialmente cerrado y compositor deshabilitado sin anuncio.
@@ -112,12 +113,15 @@ Al preparar la publicación, `browser-table-ui.cjs` detectó que «Nuevos destin
 medía 36 px en escritorio. Se ajustó a 44 px sin alterar la disposición 2 × 3;
 el recorrido completo pasó en doce tamaños/orientaciones, con `CI=true` y sin
 errores de navegador. Evidencia antes/después en `.qa/table-release-2026-11-06/`.
-Los paquetes se regeneran con esa corrección y CI debe aprobar la revisión final.
+Los paquetes se regeneraron con esa corrección. El CI de `51cb1ea` pasó completo:
+723/723 pruebas Node y todos los recorridos Chrome, incluidos los tres nuevos de
+personalización, cierre y repetición. [Resultado](../qa/postgame-release-2026-11-06/ci-result.json).
 
 ## Siguiente paso
 
-Ángel autorizó la entrega completa mediante `trencitos-publicar`: Render, Android
-0.7.0 build 6 e iPhone 0.7.0 build 7. Se prepara la revisión conjunta validada,
-incluido «Mi estilo» y el diagnóstico seguro de archivos de repetición; la salud,
-revisión Live, Release e instalación se registrarán en [Producción](../production.md)
-al verificarlos. El iPhone físico está emparejado; no se abrirá una partida.
+Entrega completa autorizada mediante `trencitos-publicar` y verificada:
+Render Live, Android 0.7.0 build 6 publicado e iPhone 0.7.0 build 7 instalado.
+La revisión conjunta incluye «Mi estilo» y el diagnóstico seguro de grabaciones;
+salud, revisión Live, Release e instalación constan en [Producción](../production.md).
+Ángel evalúa el juego en su iPhone; no se abrió una partida en el dispositivo.
+La ficha conserva `validated` mientras la dependencia de perfil siga abierta.

@@ -20,6 +20,7 @@ El resultado de una ejecución nueva se registra en su ficha de trabajo.
 | Historial, replay, invitados e idiomas | [Ficha y pruebas remotas](work/history-replay.md) |
 | Lobby y colores | [Lobby QA](lobby-qa.md) |
 | Resultados y zoom | [Resultados QA](results-qa.md) |
+| Resumen, mesa y repetición · 2026-11-06 | [Regresión y alcance](work/summary-postgame-experience.md), [CI de la entrega](qa/postgame-release-2026-11-06/ci-result.json) y [publicación verificada](production.md) |
 | Layout adaptable | [Responsive QA](responsive-qa.md) |
 | Gestos táctiles | [Mobile touch QA](mobile-touch-qa.md) |
 | Presentación y controles | [Controles QA](presentation-controls-qa.md) |

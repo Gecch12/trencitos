@@ -1,5 +1,5 @@
 ---
-{"id":"profile-social-statistics","status":"validated","parent":null,"depends_on":["identity","history-replay"],"branch":"main","delivery":"worktree","updated":"2026-11-06"}
+{"id":"profile-social-statistics","status":"validated","parent":null,"depends_on":["identity","history-replay"],"branch":"main","delivery":"released","updated":"2026-11-06"}
 ---
 # Perfil, estadísticas y relaciones entre jugadores
 
@@ -120,12 +120,12 @@ incluido el recorrido de perfiles, 719 pruebas Node y todos los navegadores.
 también pasó localmente con CPU de Chrome ralentizada seis veces mediante CDP.
 Los ajustes de pruebas no modificaron código ni recursos de la aplicación.
 
-## Ampliación local · Mi estilo · 2026-11-06
+## Ampliación · Mi estilo · 2026-11-06
 
 Ángel aprobó implementar el selector con scroll y miniaturas de vagones, y los
-avatares circulares con el primer color. Esta ampliación está validada en el
-checkout de `main`, sin commit ni publicación; las entregas anteriores descritas
-arriba conservan su evidencia histórica. Se preservaron los cambios locales de
+avatares circulares con el primer color. Esta ampliación se publicó desde
+`51cb1ea`; las entregas anteriores descritas arriba conservan su evidencia
+histórica. Se preservaron los cambios locales de
 Resumen, cierre de partida e historial que ya estaban presentes.
 
 - [x] Primer/segundo color con miniaturas estáticas de los 20 modelos reales,
@@ -156,6 +156,8 @@ Evidencia del cambio:
   correctos. Los avisos de impacto de los otros cambios del checkout se mantienen
   separados de esta evidencia; no se acredita una ejecución completa de CI.
 
-Siguiente paso: cuando se autorice la entrega, publicar la ampliación junto con
-la revisión acordada del checkout y comprobar CI/despliegue. Contrato y regeneración
-de recursos en [Personalización](../profile-social-statistics.md#personalización).
+Entrega posterior: CI completo de `51cb1ea` aprobado, incluido el recorrido nuevo;
+Render Live, Android build 6 publicado e iPhone build 7 instalado, según
+[Producción](../production.md). La evaluación de uso y OAuth nativo real sigue
+a cargo de Ángel. Contrato y regeneración de recursos en
+[Personalización](../profile-social-statistics.md#personalización).

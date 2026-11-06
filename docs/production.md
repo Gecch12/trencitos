@@ -1,6 +1,43 @@
 # Producción
 
-## Versión actual · 2026-11-05, 20:01 (Lima)
+## Versión actual · 2026-11-06, 13:21 (Lima)
+
+- Código `51cb1eaa973ab0aeabd659f457f0b49b9556efb8`, Trencitos **0.7.0-beta**.
+  Lateral compacto, chat plegable deshabilitado, mercado 2 × 3 con «Nuevos
+  destinos» arriba, consulta del mapa durante el túnel, recuento más lento y
+  repetible, resultados y replay adaptables, cartas visibles hasta 8×. Incluye
+  el resumen visual, «Mi estilo» y diagnóstico seguro de grabaciones dañadas.
+  [Alcance y regresión](work/summary-postgame-experience.md),
+  [personalización](work/profile-social-statistics.md) y
+  [diagnóstico](work/history-replay.md).
+- [CI completo](https://github.com/Gecch12/trencitos/actions/runs/42267756859):
+  `completed/success`, **723/723 pruebas Node** y todos los recorridos Chrome,
+  incluidos los nuevos de personalización, recuentos y cartas a cada velocidad.
+  [Resultado](qa/postgame-release-2026-11-06/ci-result.json).
+- [Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbn1ktpsrm7s739g70s0):
+  **Live** a las 13:21:29 Lima, despliegue manual de 49,5 s, Node 26.13.0.
+  [Captura](qa/postgame-release-2026-11-06/render-live.jpg).
+  [HTTP](qa/postgame-release-2026-11-06/production-http.json): salud 200/Supabase,
+  dos salas, Google y Discord habilitados, **92 recursos idénticos** al checkout
+  y cuatro rutas privadas con 404. Sin migraciones ni cambios de configuración
+  o credenciales; no se copiaron las reparaciones de datos locales a producción.
+- [Android 0.7.0 build 6](https://github.com/Gecch12/trencitos/releases/tag/v0.7.0-mobile-beta-build6):
+  mismo identificador y firma, APK y checksum publicados; descarga anónima
+  verificada por SHA-256. [Paquete](qa/postgame-release-2026-11-06/android-package.json),
+  [Release](qa/postgame-release-2026-11-06/android-release.json).
+- iPhone 17 Pro Max: **0.7.0 build 7** instalado sobre `com.trencitos.beta`;
+  versión/build confirmados en el dispositivo, sin desinstalar ni abrir el juego.
+  [Paquete](qa/postgame-release-2026-11-06/ios-package.json),
+  [instalación](qa/postgame-release-2026-11-06/ios-install.json).
+  Firma personal vigente hasta el 11 de noviembre; no se publicó en App Store.
+
+Los dos paquetes incluyen 91 recursos de aplicación contrastados con la revisión,
+backend HTTPS de producción y depuración web desactivada. La prueba de juego en
+el iPhone queda a cargo de Ángel. La integración Git automática de Render sigue
+[pendiente](work/continuous-delivery.md); se publicó manualmente tras CI.
+El commit documental de cierre registra la entrega sin cambiar sus binarios.
+
+## Entrega anterior · 2026-11-05, 20:01 (Lima)
 
 - Código `a1a005426e10cb987aaa9cb3fdc17adcad3b8da7`, Trencitos **0.7.0-beta**.
   Recupera la mesa de tablet/escritorio: historial, robos y jugadores laterales;

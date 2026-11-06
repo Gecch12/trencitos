@@ -1,0 +1,684 @@
+{
+  "checkedAt": "2026-11-06T18:22:41.983Z",
+  "commit": "51cb1eaa973ab0aeabd659f457f0b49b9556efb8",
+  "health": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "storage": "supabase",
+      "rooms": 2,
+      "mobileProtocolVersion": 1
+    }
+  },
+  "auth": {
+    "enabled": true,
+    "providers": [
+      "google",
+      "discord"
+    ]
+  },
+  "assets": [
+    {
+      "url": "/profile-style.js",
+      "source": "frontend/profile-style.js",
+      "status": 200,
+      "sha256": "633151116f76f8f4c3598aa0001030c916590bd2396cbe8807ce134ad252324f",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/passenger.png",
+      "source": "frontend/assets/wagons/passenger.png",
+      "status": 200,
+      "sha256": "6117dbf17162bb66665ba9595b24f91bfb40719ca35a98e3dac23fe7955e6c5b",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/tanker.png",
+      "source": "frontend/assets/wagons/tanker.png",
+      "status": 200,
+      "sha256": "7f2e9a426c8881dc5eeaa09231764ef561df09cd609ceabe33a05df02d84b650",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/alfalfa.png",
+      "source": "frontend/assets/wagons/alfalfa.png",
+      "status": 200,
+      "sha256": "902f009138762e417f935e9adf0b9115a49148effbf987c6c010798946a8aba5",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/grain.png",
+      "source": "frontend/assets/wagons/grain.png",
+      "status": 200,
+      "sha256": "de559cc76dd1190d1ed46330bab18b56903b6568d526c075fd0bd36d311cb474",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/goods.png",
+      "source": "frontend/assets/wagons/goods.png",
+      "status": 200,
+      "sha256": "a3e43841febc807abdcabfcdc874895ea0fac0f8b27ce76307de1531359a6205",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/timber.png",
+      "source": "frontend/assets/wagons/timber.png",
+      "status": 200,
+      "sha256": "fbd61a6341aa0a088e4e764fecd9f50cc82ede7c2cfb518bb297095aeda61fde",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/auto-carrier.png",
+      "source": "frontend/assets/wagons/auto-carrier.png",
+      "status": 200,
+      "sha256": "d9be173a75a2d117c44e95280a8ccaff8533af854f2c0d94fb8564082a031691",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/coal.png",
+      "source": "frontend/assets/wagons/coal.png",
+      "status": 200,
+      "sha256": "9ed7a9359279d614b8d00b86cf95a91bec0217c271ce6f71862cbc7fce7915a1",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/stone.png",
+      "source": "frontend/assets/wagons/stone.png",
+      "status": 200,
+      "sha256": "6c143e1864e532d712867cfbc97ed37173f2d122ff409483b3bedfd9675b0b80",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/mail.png",
+      "source": "frontend/assets/wagons/mail.png",
+      "status": 200,
+      "sha256": "e7653d22ebb81e14faba9d82e755695a7dfd87698b2fea870516ca1ebb1f9660",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/steel.png",
+      "source": "frontend/assets/wagons/steel.png",
+      "status": 200,
+      "sha256": "fe1f76c74d4bc3a295964f9c9c9f5590b6a1be833f2f31649af598431417c498",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/crane.png",
+      "source": "frontend/assets/wagons/crane.png",
+      "status": 200,
+      "sha256": "51025aae12a7fe89bca28bb09262965e1f564bdedc9568bd5b83c35e041906c6",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/wine.png",
+      "source": "frontend/assets/wagons/wine.png",
+      "status": 200,
+      "sha256": "cf921d58eb4c14bb6fbe020ae4a83fc6f50377843c532ba35c28377acab7a043",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/tractors.png",
+      "source": "frontend/assets/wagons/tractors.png",
+      "status": 200,
+      "sha256": "084d5bd5bb813e0b6ce422ccea8e4d2586eb24066d8dfa7ddc801d6f9f212b03",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/cement.png",
+      "source": "frontend/assets/wagons/cement.png",
+      "status": 200,
+      "sha256": "6ed51a9fc8294f3ac55b8c82a5d4af4719b1a1f66b96e77ef8cc3fea0ae30446",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/fruit.png",
+      "source": "frontend/assets/wagons/fruit.png",
+      "status": 200,
+      "sha256": "16c40bcc1deb1cb903154024d1107719fcda599cffac97746f195cfa3198547a",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/flowers.png",
+      "source": "frontend/assets/wagons/flowers.png",
+      "status": 200,
+      "sha256": "3b2fbe3e4b30d1d76b4e6866d09846d6bc2d045e8595480e50b4e62cc32471ba",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/boat.png",
+      "source": "frontend/assets/wagons/boat.png",
+      "status": 200,
+      "sha256": "6b3f4965adf59c5ed707a3280ce78fa7a561317d44b926b3254d1bd961a7eec6",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/dwelling.png",
+      "source": "frontend/assets/wagons/dwelling.png",
+      "status": 200,
+      "sha256": "8886fa1399fd384c13e404ab4bda5dbae382e0f99de80024e83b59b4aad65359",
+      "matches": true
+    },
+    {
+      "url": "/assets/wagons/circus.png",
+      "source": "frontend/assets/wagons/circus.png",
+      "status": 200,
+      "sha256": "51a04c37cf3f8d8d7fcbb607e15dd80c3654dbff5f9792c86ec8beb681751bd5",
+      "matches": true
+    },
+    {
+      "url": "/profile-rules.js",
+      "source": "shared/profile-rules.js",
+      "status": 200,
+      "sha256": "3418ddd91c3e1e6bda34619872d3574b4cbee79e05835c6cfd311637827ae7a8",
+      "matches": true
+    },
+    {
+      "url": "/profile-summary.js",
+      "source": "frontend/profile-summary.js",
+      "status": 200,
+      "sha256": "4f46bcc1eb233912b7a286316039b72ff77e0da5847aeb929b070c6f626000bc",
+      "matches": true
+    },
+    {
+      "url": "/postgame.js",
+      "source": "frontend/postgame.js",
+      "status": 200,
+      "sha256": "70773e1d198aae128388f649b08310f5640eed0aab2aef9fce508acba01785dd",
+      "matches": true
+    },
+    {
+      "url": "/score-recount.js",
+      "source": "frontend/score-recount.js",
+      "status": 200,
+      "sha256": "2bdfa8281066e2d4bc1375b84b357ad3671a2be73c77779f5b7199bb88f73413",
+      "matches": true
+    },
+    {
+      "url": "/score-medals.js",
+      "source": "frontend/score-medals.js",
+      "status": 200,
+      "sha256": "a2cdf312b1a43ea0ad994eb8c33745d2f4d7e8b4160f759987dfb8bca81ac1c4",
+      "matches": true
+    },
+    {
+      "url": "/postgame.css",
+      "source": "frontend/postgame.css",
+      "status": 200,
+      "sha256": "3bbe14924d38a6802ef2955168bb040e8475f627d609d503d4df7102dd56613b",
+      "matches": true
+    },
+    {
+      "url": "/profile-ui.js",
+      "source": "frontend/profile-ui.js",
+      "status": 200,
+      "sha256": "8538595e06dfb549d28db3958d346f1d169b5ea3637eaf38013ac79aaa4443f5",
+      "matches": true
+    },
+    {
+      "url": "/profile.css",
+      "source": "frontend/profile.css",
+      "status": 200,
+      "sha256": "1143d56d261329d6662fd251dfd4e21939d8737a181d484bee2b31538cc31ef0",
+      "matches": true
+    },
+    {
+      "url": "/assets/avatars/capybara.png",
+      "source": "frontend/assets/avatars/capybara.png",
+      "status": 200,
+      "sha256": "4ef5a44e2162f6be0a18bd44a5c757e65d13e55c8931f03e649ddd1770fbec70",
+      "matches": true
+    },
+    {
+      "url": "/turn-history.js",
+      "source": "frontend/turn-history.js",
+      "status": 200,
+      "sha256": "a47ce661e9e57bfebd5421fd37a4ef634d5c97fdbc71d5d32d7353332bf1a89a",
+      "matches": true
+    },
+    {
+      "url": "/",
+      "source": "frontend/index.html",
+      "status": 200,
+      "sha256": "3db4c13671c1ce5057fe07de363d69845ad6f660eaa833247e7f43863b564ed6",
+      "matches": true
+    },
+    {
+      "url": "/index.html",
+      "source": "frontend/index.html",
+      "status": 200,
+      "sha256": "3db4c13671c1ce5057fe07de363d69845ad6f660eaa833247e7f43863b564ed6",
+      "matches": true
+    },
+    {
+      "url": "/privacy.html",
+      "source": "frontend/privacy.html",
+      "status": 200,
+      "sha256": "ae9fd264107a9159a48454bf33dfc87b2109425d4bf54169fbcf508d9b61b78b",
+      "matches": true
+    },
+    {
+      "url": "/privacy.css",
+      "source": "frontend/privacy.css",
+      "status": 200,
+      "sha256": "18ec0a1416f764be1826e29915ec5979ecf9d904e1b46abf5c6f18fd208c1829",
+      "matches": true
+    },
+    {
+      "url": "/board-3d.js",
+      "source": "frontend/board-3d.js",
+      "status": 200,
+      "sha256": "b3dcbaa149ee113731112f3c91977ab0616116f9fbb24f44a1b46019f9c97870",
+      "matches": true
+    },
+    {
+      "url": "/ticket-map.js",
+      "source": "frontend/ticket-map.js",
+      "status": 200,
+      "sha256": "72ca5defa0415d09e478729eb59836850f6000f709d37cf247f87289f01d8e40",
+      "matches": true
+    },
+    {
+      "url": "/tunnel-board.js",
+      "source": "frontend/tunnel-board.js",
+      "status": 200,
+      "sha256": "9d01b02172cf2da6f625ff9d85fe72e8f6e170bbd1a85a8a8c8ead97cc996f2b",
+      "matches": true
+    },
+    {
+      "url": "/destination-planner.js",
+      "source": "frontend/destination-planner.js",
+      "status": 200,
+      "sha256": "b9463856245bfac7b2eafd426f80bd0bd8883817c5dca8ab124e6d9e6b908280",
+      "matches": true
+    },
+    {
+      "url": "/destination-map.css",
+      "source": "frontend/destination-map.css",
+      "status": 200,
+      "sha256": "f414d65f1011834d3b70f0bb56ae7768024983a2c59938bdb958132c33616769",
+      "matches": true
+    },
+    {
+      "url": "/wagon-renderer.js",
+      "source": "frontend/wagon-renderer.js",
+      "status": 200,
+      "sha256": "4c23125f0699fb919b6b667b1e34c0a7e7fa5ef7b2fa72cb22fb61ef65d3c701",
+      "matches": true
+    },
+    {
+      "url": "/wagon-preview.js",
+      "source": "frontend/wagon-preview.js",
+      "status": 200,
+      "sha256": "c267d887ea4e90261b9ae7c5e21ef7f3ba2958ca210dfee25edeb0baeafb1996",
+      "matches": true
+    },
+    {
+      "url": "/wagon-models.mjs",
+      "source": "frontend/wagon-models.mjs",
+      "status": 200,
+      "sha256": "76933f1b087917849e9150e490a44c4804185b60a048bbb178888ea7afacdeca",
+      "matches": true
+    },
+    {
+      "url": "/board-camera.js",
+      "source": "frontend/board-camera.js",
+      "status": 200,
+      "sha256": "f97b8a79a1687529857b71d182dbe24c3dfac74ec24f8848c3b3c6cfa73ed583",
+      "matches": true
+    },
+    {
+      "url": "/board-3d.css",
+      "source": "frontend/board-3d.css",
+      "status": 200,
+      "sha256": "3eb8561981dbe1d2b93b2dff7f2f809518e53e9bf509b1903f831b9d1412ac36",
+      "matches": true
+    },
+    {
+      "url": "/vendor/three.module.js",
+      "source": "node_modules/three/build/three.module.js",
+      "status": 200,
+      "sha256": "104f56145899722094556490d787aae0617cc2fc3382f31df02d724ea1aee341",
+      "matches": true
+    },
+    {
+      "url": "/vendor/three.core.js",
+      "source": "node_modules/three/build/three.core.js",
+      "status": 200,
+      "sha256": "613e370f76638fdef83926642bf256dc9615684922de1ce1f63a8583e5d78578",
+      "matches": true
+    },
+    {
+      "url": "/app.js",
+      "source": "frontend/app.js",
+      "status": 200,
+      "sha256": "cb2f0ca018df6b559d4c3b87510ceeaba0d7f86b00795673a981b4913b369083",
+      "matches": true
+    },
+    {
+      "url": "/connection.js",
+      "source": "frontend/connection.js",
+      "status": 200,
+      "sha256": "0064ea0c9bfc307a1b6f65d21366ac147f85c6e2df7763b8c88470dc0ca6c695",
+      "matches": true
+    },
+    {
+      "url": "/mobile-runtime.js",
+      "source": "frontend/mobile-runtime.js",
+      "status": 200,
+      "sha256": "db587611cec7d732c686206e496755dd5ccd5265d743eb90c676e27229281b9e",
+      "matches": true
+    },
+    {
+      "url": "/manifest.webmanifest",
+      "source": "frontend/manifest.webmanifest",
+      "status": 200,
+      "sha256": "43760e890b9aae06a9b4bb103b39cfa0352d8c11a50710a7ed9687dfee874dd4",
+      "matches": true
+    },
+    {
+      "url": "/pwa.js",
+      "source": "frontend/pwa.js",
+      "status": 200,
+      "sha256": "68bdec898b2c15a1e84c1c4c71c68dcf908dd5cd84cc511a85ea3cc4d2765ef1",
+      "matches": true
+    },
+    {
+      "url": "/service-worker.js",
+      "source": "frontend/service-worker.js",
+      "status": 200,
+      "sha256": "f46bd6ef8a8f14a5f68499b0837d93787b1555b8cd82c2681ca83112a93ae97e",
+      "matches": true
+    },
+    {
+      "url": "/offline.html",
+      "source": "frontend/offline.html",
+      "status": 200,
+      "sha256": "40aba360c5f157d0a620c434a4cbb17a744074bafe6247a4b35cc89b3a4dbbcd",
+      "matches": true
+    },
+    {
+      "url": "/offline.css",
+      "source": "frontend/offline.css",
+      "status": 200,
+      "sha256": "f98eb5fd138fd31199e334287b1f06b80b2bd67fe58ad53cf1ebad65ff12e3c3",
+      "matches": true
+    },
+    {
+      "url": "/offline.js",
+      "source": "frontend/offline.js",
+      "status": 200,
+      "sha256": "5787080d24e47abd45daafdf66337af1b21d0d95bb87b2d5ffbebf4094b2a13a",
+      "matches": true
+    },
+    {
+      "url": "/assets/icons/app-180.png",
+      "source": "frontend/assets/icons/app-180.png",
+      "status": 200,
+      "sha256": "f9f9866dc04c0cbd63bec0aa6d28555642a7c07aa488ce49a8f46e34219de1d5",
+      "matches": true
+    },
+    {
+      "url": "/assets/icons/app-192.png",
+      "source": "frontend/assets/icons/app-192.png",
+      "status": 200,
+      "sha256": "e4f846078162ec9e21cd2eccaf3d02b2f401b98119f29d4f8ed82d4b140f1dcd",
+      "matches": true
+    },
+    {
+      "url": "/assets/icons/app-512.png",
+      "source": "frontend/assets/icons/app-512.png",
+      "status": 200,
+      "sha256": "d426f5e26a8bf9204bce9972678bf08f6f0ad38fe1839c8e39496858a9f6b82f",
+      "matches": true
+    },
+    {
+      "url": "/mobile-bridge.js",
+      "source": "frontend/mobile-bridge.js",
+      "status": 200,
+      "sha256": "89ac9b70fafe4e78b32602198f15bdd96229abdaec9ea3db6ca4cfb41f2cc55d",
+      "matches": true
+    },
+    {
+      "url": "/style.css",
+      "source": "frontend/style.css",
+      "status": 200,
+      "sha256": "62de270f0dd5e866c2fbd51fdaaee59b363896f1bb052d4225ec6e0a9460e4fc",
+      "matches": true
+    },
+    {
+      "url": "/maps/europe-v1.js",
+      "source": "shared/maps/europe-v1.js",
+      "status": 200,
+      "sha256": "e6a0157567de5aa336bf6f3f7211e2a5adb323dbb160a71f34841f5d6a9778df",
+      "matches": true
+    },
+    {
+      "url": "/maps/europe-legacy-v1.js",
+      "source": "shared/maps/europe-legacy-v1.js",
+      "status": 200,
+      "sha256": "a98444a488518e1793cc411fc37e7a11e219eba800a740768b5b623063e11f89",
+      "matches": true
+    },
+    {
+      "url": "/data.js",
+      "source": "shared/data.js",
+      "status": 200,
+      "sha256": "64b9d729450313c6732927327297931c889a52bf4e8afa35caa03dfc746e8049",
+      "matches": true
+    },
+    {
+      "url": "/layouts/europe-v1.js",
+      "source": "frontend/layouts/europe-v1.js",
+      "status": 200,
+      "sha256": "78651811510606cdafae1fea86996fe849f18bfc27c53c50f117f41ade71d997",
+      "matches": true
+    },
+    {
+      "url": "/layouts/laboratory-v1.js",
+      "source": "frontend/layouts/laboratory-v1.js",
+      "status": 200,
+      "sha256": "0f56fcb9f7b4d6b3c55e20c356e7cf40c85e2a0a920c20fb4299440c3db01636",
+      "matches": true
+    },
+    {
+      "url": "/layouts/south-america-v3.3-beta.js",
+      "source": "frontend/layouts/south-america-v3.3-beta.js",
+      "status": 200,
+      "sha256": "afcde2a060a2e27c3605d388e62530bc599e6ca1f5298232949d276799f4b3e6",
+      "matches": true
+    },
+    {
+      "url": "/map-options.js",
+      "source": "shared/map-options.js",
+      "status": 200,
+      "sha256": "966f36fdd24011396df367a592f8d35ff61de80809f17981d4652ab1d14ccb15",
+      "matches": true
+    },
+    {
+      "url": "/match-presentation.js",
+      "source": "frontend/match-presentation.js",
+      "status": 200,
+      "sha256": "2a30243fb0d5d8129533b1fbdd591deef12e02188ba0c6696e4b315878e128ef",
+      "matches": true
+    },
+    {
+      "url": "/map-layout.js",
+      "source": "frontend/map-layout.js",
+      "status": 200,
+      "sha256": "6d39438384b6a54afe49e667e8657c17708b3c7a38d2c15de8e3fd2281b15b45",
+      "matches": true
+    },
+    {
+      "url": "/game-timing.js",
+      "source": "shared/game-timing.js",
+      "status": 200,
+      "sha256": "61997ba9c378dfa1eec5b353bb2e3a82dcbd649b81d461149ed4a56953b8d556",
+      "matches": true
+    },
+    {
+      "url": "/game-ui.js",
+      "source": "frontend/game-ui.js",
+      "status": 200,
+      "sha256": "227105d2e4b4df1f4447b513b9febd4a3c5005229db7f7fe52975d75f073a12e",
+      "matches": true
+    },
+    {
+      "url": "/table-ui.js",
+      "source": "frontend/table-ui.js",
+      "status": 200,
+      "sha256": "862a250885480ede51ef41cadcdac0b4bc2ce484b9885d5e3576f944fe03218a",
+      "matches": true
+    },
+    {
+      "url": "/table.css",
+      "source": "frontend/table.css",
+      "status": 200,
+      "sha256": "5dcdc488e8b66139ede20e59eab524fac00864f7d9c4735af5bfee594d3eaa1d",
+      "matches": true
+    },
+    {
+      "url": "/draw-intent.js",
+      "source": "frontend/draw-intent.js",
+      "status": 200,
+      "sha256": "12ac9e0f3e543e8a82727b2ba52fe8e8e55f2cd94df7c43befcc8707308f9353",
+      "matches": true
+    },
+    {
+      "url": "/game.css",
+      "source": "frontend/game.css",
+      "status": 200,
+      "sha256": "0f3c85ca88015afacc1463f0fb321c2ca4f4b97e59e5204b830346724a8b5b60",
+      "matches": true
+    },
+    {
+      "url": "/responsive.css",
+      "source": "frontend/responsive.css",
+      "status": 200,
+      "sha256": "8b9a629fb89eac46ed17461ff97705aa8b59508baee587463c20f75805a45e35",
+      "matches": true
+    },
+    {
+      "url": "/lobby.css",
+      "source": "frontend/lobby.css",
+      "status": 200,
+      "sha256": "4b2797dc3e18e5e27600c35ea45c6a4a3b4cd674f8e0d1c81ba48cd415cdc463",
+      "matches": true
+    },
+    {
+      "url": "/lobby-ui.js",
+      "source": "shared/lobby-ui.js",
+      "status": 200,
+      "sha256": "ba2322515a273768d10ee79529b43beee0d8bfd98188f543051ccc6ee848a1d7",
+      "matches": true
+    },
+    {
+      "url": "/account-ui.js",
+      "source": "frontend/account-ui.js",
+      "status": 200,
+      "sha256": "aadc23d840ebd3ef70bf5520cd7e50b7ed54c07f2a5760b604ffa91186f38405",
+      "matches": true
+    },
+    {
+      "url": "/translations.js",
+      "source": "shared/translations.js",
+      "status": 200,
+      "sha256": "146b33e9ae9b032545cdbb94fea7528c6835960c6c357d4f07cfae2cbcbfa2ed",
+      "matches": true
+    },
+    {
+      "url": "/replay-state.js",
+      "source": "shared/replay-state.js",
+      "status": 200,
+      "sha256": "92198f6898c814123dd611b96aaa13bf0db5ac1b2a3b06962f14e2e37c4dec67",
+      "matches": true
+    },
+    {
+      "url": "/replay-ui.js",
+      "source": "frontend/replay-ui.js",
+      "status": 200,
+      "sha256": "309dd2a939bc9ee0c5ba078f17037bec375af3f1ff68d5f31c11bd2106787710",
+      "matches": true
+    },
+    {
+      "url": "/replay.css",
+      "source": "frontend/replay.css",
+      "status": 200,
+      "sha256": "f57e45a7cb5c40238bc59fe18b70b3826a5a2505c63f21ce928049184068bc29",
+      "matches": true
+    },
+    {
+      "url": "/history-ui.js",
+      "source": "frontend/history-ui.js",
+      "status": 200,
+      "sha256": "73ac54c5837ebc6525997e28a79ad305aff624579401781d460c1c483218f80a",
+      "matches": true
+    },
+    {
+      "url": "/i18n.js",
+      "source": "shared/i18n.js",
+      "status": 200,
+      "sha256": "82e525ebb1bc1c477a9f74b6052432721cd0954c976a035f3e6c5a9023dc50f9",
+      "matches": true
+    },
+    {
+      "url": "/room-map-picker.js",
+      "source": "frontend/room-map-picker.js",
+      "status": 200,
+      "sha256": "ed53ffe4a72f0cce0d2af280d06ff2046696eba81763e93a808e1ca2f27354aa",
+      "matches": true
+    },
+    {
+      "url": "/room-setup.css",
+      "source": "frontend/room-setup.css",
+      "status": 200,
+      "sha256": "5028a9ffc430d87bdc26266a8f59d3bbe3f23c4001a152a8d09841fd367a4d24",
+      "matches": true
+    },
+    {
+      "url": "/shell.js",
+      "source": "frontend/shell.js",
+      "status": 200,
+      "sha256": "2772889816ce24bac7fa9b81baf08cbbf15031c5341f4d5302d60cece34b7e6a",
+      "matches": true
+    },
+    {
+      "url": "/shell.css",
+      "source": "frontend/shell.css",
+      "status": 200,
+      "sha256": "dc6075ae4764481ade76fc3f1191d617f1ca0cbbca0d362352d7c14a00d39019",
+      "matches": true
+    },
+    {
+      "url": "/shell-icons.js",
+      "source": "frontend/shell-icons.js",
+      "status": 200,
+      "sha256": "4f9e20882b3ab8c129daec0e476c173de90a6b506c5a4eb822c3d5f2b45e4b2e",
+      "matches": true
+    },
+    {
+      "url": "/wagon-people.mjs",
+      "source": "frontend/wagon-people.mjs",
+      "status": 200,
+      "sha256": "24ea91ca163ec1fd5ae6af32379a117f2ee7e5dac6dab799f843e8cb006da189",
+      "matches": true
+    }
+  ],
+  "privatePaths": [
+    {
+      "url": "/.env",
+      "status": 404
+    },
+    {
+      "url": "/backend/room-store.js",
+      "status": 404
+    },
+    {
+      "url": "/room-state.json",
+      "status": 404
+    },
+    {
+      "url": "/supabase/001_active_games.sql",
+      "status": 404
+    }
+  ]
+}

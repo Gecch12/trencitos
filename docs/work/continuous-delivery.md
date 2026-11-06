@@ -1,5 +1,5 @@
 ---
-{"id":"continuous-delivery","status":"blocked","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-04"}
+{"id":"continuous-delivery","status":"blocked","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-06"}
 ---
 # Pruebas en GitHub y publicación automática
 
@@ -31,14 +31,17 @@ temporales; el caso remoto de cartas emplea un doble local de Supabase.
 En CI, Chrome usa SwiftShader explícito para WebGL sin GPU. Los informes y
 capturas se guardan en `.qa/ci/` y en el artefacto `browser-evidence`.
 
-La ampliación local del 2026-11-06 añade `browser-profile-style.cjs` al workflow,
+La ampliación del 2026-11-06 añade `browser-profile-style.cjs` al workflow,
 con capturas en `.qa/ci/profile-style/`: selector visual, teclado, scroll táctil y
-guardado de avatares. Validación local en [la ficha de perfil](profile-social-statistics.md);
-el paso nuevo aún no se ha ejecutado en GitHub. La entrega de mesa añade también
+guardado de avatares. Validación local en [la ficha de perfil](profile-social-statistics.md).
+La entrega de mesa añade también
 `browser-postgame-summary.cjs` y `browser-replay-analysis.cjs`: recuentos, regreso
 integrado y cartas a todas las velocidades, con evidencia en `.qa/ci/` y
 SwiftShader explícito. Ambos recorridos pasaron localmente con `CI=true` antes
-del push; la ejecución remota de esta revisión se registra al terminar la entrega.
+del push. El [run de `51cb1ea`](https://github.com/Gecch12/trencitos/actions/runs/42267756859)
+terminó `success`: 723/723 pruebas Node y todos los recorridos Chrome, incluidos
+los tres pasos nuevos. Render se publicó manualmente después de este resultado;
+la [entrega](../production.md) no acredita que se resolviera el acceso Git automático.
 
 ## Primera validación
 

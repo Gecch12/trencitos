@@ -55,9 +55,10 @@ Validación con Node **22.16.0**:
   idénticas y el respaldo conserva los hashes originales.
 
 Evidencia, captura y scripts en `.qa/state-recovery-2026-11-06/`, excluidos de Git.
-Documentación y `git diff --check` correctos. Estos cambios son locales y no
-forman parte de la entrega publicada que figura abajo. Siguiente paso: ejecutar
-`npm start`; conservar el respaldo para investigar el origen de la corrupción.
+Documentación y `git diff --check` correctos. El diagnóstico seguro del cargador
+se publicó posteriormente con `51cb1ea`, según [Producción](../production.md).
+La recuperación de los archivos permanece local y no se copió a producción.
+Conservar el respaldo para investigar el origen de la corrupción.
 
 ## Reparación local del arranque · 2026-11-03
 
