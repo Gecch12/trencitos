@@ -299,3 +299,15 @@ test('practice bots cannot advance while durable history is unavailable',()=>{
  controller.sync(room);clock.tick(1000);assert.equal(room.game.initialDone,0);
  blocked=false;controller.sync(room);clock.tick(250);assert.equal(room.game.initialDone,3);controller.close();
 });
+
+test('storage pause cancels expiry and prevents a rejoin from removing uncertain practice state',()=>{
+ let blocked=false;
+ const {clock,room,rooms,controller,disconnect}=setup(()=>0,{blocked:r=>blocked&&r===room});
+ disconnect();assert.equal(clock.timers.size,1);
+ blocked=true;controller.sync(room);
+ assert.equal(clock.timers.size,0);
+ clock.tick(ABSENCE_MS+1);
+ assert.equal(controller.expired(room),false);controller.remove(room);
+ assert.ok(rooms.has(room.code));
+ blocked=false;assert.equal(controller.expired(room),true);assert.equal(rooms.has(room.code),false);
+});

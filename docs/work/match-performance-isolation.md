@@ -38,3 +38,8 @@ Pruebas deterministas de cola, SQL y servidor verifican independencia, rollback,
 respuesta perdida, recuperación y duplicados. Suite completa y Chrome de cartas correctos; evidencia conjunta en
 [guardrails](match-performance-guardrails.md). Pendientes: CI remoto,
 migración 009 y validación productiva. No se ha aplicado SQL ni publicado esta fase.
+
+Revisión del borde de caducidad: salas pausadas no entran en la limpieza global;
+la práctica cancela sus temporizadores y no se elimina al reconectar mientras
+el guardado siga incierto. Treinta comprobaciones de práctica, recuperación y
+servidor remoto pasan tras este ajuste; el CI del commit final se repite.

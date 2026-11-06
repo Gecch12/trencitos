@@ -1048,7 +1048,8 @@ versionadas por sala; `trencitos_save_rooms` confirma estado, recibos y archivo
 juntos. El último ID/huella por fila resuelve una respuesta perdida sin una tabla
 ilimitada de recibos. Tombstones conservan versión durante la vida del escritor.
 `trencitos_read_room` permite recuperar la verdad durable de la sala pausada;
-la reanudación persiste los plazos ajustados antes de publicar. Al reclamar con
+la reanudación persiste los plazos ajustados antes de publicar. Una sala pausada
+queda excluida de caducidad y la práctica cancela sus temporizadores hasta recuperar. Al reclamar con
 un servidor antiguo, `ferrovia_claim_checkpoint` reconstruye el checkpoint desde
 las filas actuales y desactiva el modo por sala. Procedimiento en
 [despliegue](RENDER_SUPABASE.md#transacciones-por-sala-sql-009).

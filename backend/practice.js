@@ -30,14 +30,17 @@ function createPracticeController({
     if (state.bot !== null) clearTimer(state.bot);
     state.bot = null;
   }
-  function remove(room) {
+  function cancel(room) {
     const state = active.get(room);
     if (state) {
       cancelBot(state);
       if (state.expiry !== null) clearTimer(state.expiry);
       active.delete(room);
     }
-    if (!live(room)) return;
+  }
+  function remove(room) {
+    if (!live(room) || blocked(room)) return;
+    cancel(room);
     rooms.delete(room.code);
     if(onRemove(room)===false){rooms.set(room.code,room);return;}
     room.members.forEach((member) => {
@@ -50,7 +53,7 @@ function createPracticeController({
     });
   }
   function disconnected(room, at = now()) {
-    if (!live(room) || connected(room)) return;
+    if (!live(room) || connected(room) || blocked(room)) return;
     const state = runtime(room);
     cancelBot(state);
     if (state.deadline !== null) return;
@@ -60,7 +63,7 @@ function createPracticeController({
     state.expiry.unref?.();
   }
   function reconcile(room) {
-    if (!live(room)) return;
+    if (!live(room) || blocked(room)) return;
     if (!connected(room)) return disconnected(room);
     if (room.practicePausedAt != null) {
       shiftDeadlines(room.game, Math.max(0, now() - room.practicePausedAt));
@@ -72,9 +75,9 @@ function createPracticeController({
   }
   function sync(room) {
     if (!live(room)) return;
+    if (blocked(room)) { cancel(room); return; }
     reconcile(room);
     const state = runtime(room);
-    if(blocked(room)){cancelBot(state);return;}
     if (!connected(room)) return disconnected(room);
     if (state.deadline !== null) {
       clearTimer(state.expiry);
@@ -99,6 +102,7 @@ function createPracticeController({
     automaticPlay.finishPractice(room);
   }
   function expired(room) {
+    if (blocked(room)) return false;
     const deadline = room.practicePausedAt == null ? null : room.practicePausedAt + ABSENCE_MS;
     if (deadline !== null && deadline !== undefined && now() >= deadline) {
       remove(room);
@@ -113,7 +117,7 @@ function createPracticeController({
     }
     active.clear();
   }
-  return { sync, reconcile, disconnected, finish, remove, expired, close };
+  return { sync, reconcile, disconnected, finish, remove, expired, cancel, close };
 }
 
 module.exports = { createPracticeController, ABSENCE_MS };

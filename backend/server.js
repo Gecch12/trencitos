@@ -125,7 +125,7 @@ const queueOptions = { capture: captureRuntime, restore: restoreRuntime,
   onFailure: (error,key=null) => {
     console.error("Remote storage paused:", error.code || "INTERNAL");
     if(key===null||error.code==='STORE_CONFLICT')storageFailureAt ??= Date.now();else pausedRooms.add(key);
-    for (const r of rooms.values()) if(storageBlocked(r)) { clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r); }
+    for (const r of rooms.values()) if(storageBlocked(r)) { clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r); practice.cancel(r); }
     for (const peer of peers) if(storageFailureAt!==null||peer.room?.code===key||peer.watching?.code===key) {
       const requiresRestart=storageFailureAt!==null||!remoteStore.perRoom;
       peer.send({ type: "storage", paused: true, requiresRestart });
@@ -859,7 +859,7 @@ const cleanup = setInterval(
   () => dispatch(() => {
     if (storageFailureAt !== null) return;
     for (const [key, r] of rooms)
-      if (!r.practice && Date.now() - r.updated > TTL) {
+      if (!r.practice && !storageBlocked(r) && Date.now() - r.updated > TTL) {
         removeRoom(r, "La sala caducó tras 24 horas sin actividad.");
       }
   }),
