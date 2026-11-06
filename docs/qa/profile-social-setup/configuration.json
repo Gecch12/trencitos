@@ -43,7 +43,10 @@
     "providerEnabled": true,
     "manualLinking": true,
     "callback": "https://xnvskxwbibrxhozgcube.supabase.co/auth/v1/callback",
-    "realOAuthVerified": false
+    "realOAuthVerified": true,
+    "verification": "User completed real Discord consent; account UI returned with Google and Discord connected.",
+    "verifiedAt": "2026-11-06T00:30:30.628188+00:00",
+    "nativeOAuthVerified": false
   },
   "render": {
     "discordFlagSaved": true,

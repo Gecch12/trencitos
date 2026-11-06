@@ -86,11 +86,11 @@ de Cuenta, color de sala y retorno offline para el contrato vigente, y se corrig
 la altura de resultados móviles trasladando el acceso al perfil al avatar.
 `browser-profile-social.cjs` queda incluido en CI con proveedor simulado.
 
-Render y APK publicados; detalles y límites de la validación externa en
-[Producción](../production.md). La comprobación real de Discord llegó al selector
-de cuenta del proveedor y requiere renovar la sesión de Ángel; todavía no acredita
-consentimiento ni vinculación completada. La instalación en iPhone espera que
-el dispositivo vuelva a estar disponible. El primer cron programado sigue pendiente.
+Render y APK publicados; iPhone actualizado y versión/build verificados en el
+dispositivo. Ángel renovó su sesión de Discord y autorizó Trencitos; el retorno
+real muestra Google y Discord conectados en el perfil existente. No se desconectó
+Google como prueba. Detalles y límites en [Producción](../production.md).
+Quedan para comprobación de uso el OAuth nativo y el primer cron programado.
 
 ## Ajuste de la prueba en CI
 

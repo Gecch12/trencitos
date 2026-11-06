@@ -23,18 +23,22 @@
   mismo identificador y firma, APK y checksum con descarga anónima verificada.
   [Paquete](qa/profile-social-setup/android-package.json),
   [Release](qa/profile-social-setup/android-release.json).
-- iPhone: **0.7.0 build 5** compilado y firmado; instalación pendiente de reconexión
-  del dispositivo. [Paquete](qa/profile-social-setup/ios-package.json).
+- iPhone 17 Pro Max: **0.7.0 build 5** instalado sobre `com.trencitos.beta`,
+  sin desinstalar ni abrir partidas. Versión/build consultados después de instalar.
+  [Paquete](qa/profile-social-setup/ios-package.json),
+  [instalación verificada](qa/profile-social-setup/ios-install.json).
+  La firma personal actual vence el 11 de noviembre; no se publicó en App Store.
 
 Resumen verificado en Chrome con la cuenta existente: conserva el historial y
 muestra métricas personales y el corte global al incluir todos los modos, sin
 errores de consola. Captura local privada en
 `.qa/profile-social-release/production-overview.png`.
 
-La redirección real de Discord llega al selector de cuenta; el proveedor pide
-renovar la sesión de Ángel antes de consentir la vinculación. Esa comprobación y
-el acceso nativo real siguen pendientes; no quedan certificados por el proveedor
-simulado. La integración Git automática de Render continúa
+Ángel completó el acceso y consentimiento real de Discord; al regresar, Cuenta
+mostró Google y Discord conectados en su perfil. No se desvinculó Google como
+prueba. El acceso OAuth nativo y la experiencia de juego en el iPhone quedan para
+la prueba de uso; no se certifican mediante el proveedor simulado.
+La integración Git automática de Render continúa
 [pendiente](work/continuous-delivery.md). Los paquetes se generaron en `66c0299`;
 las dos revisiones posteriores solo cambiaron pruebas y documentación. El commit
 documental de cierre no cambia los binarios ni requiere otro despliegue.
