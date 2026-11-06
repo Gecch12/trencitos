@@ -635,3 +635,16 @@ Safari/iOS o Android físico; permanecen en [calidad](work/quality.md).
 La documentación de esta entrega puede avanzar respecto al commit ejecutable;
 los commits que solo registran evidencia usan `[skip render]` para evitar otro
 reinicio ([mecanismo de Render](https://render.com/docs/deploys#skipping-an-auto-deploy)).
+
+
+## Diagnóstico y referencia de latencia · 2026-11-06
+
+Instrumentación de fase 0 publicada desde `5a57127fd3c7c481ee805d8e4b5f12ad09b784d7`,
+[CI aprobado](https://github.com/Gecch12/trencitos/actions/runs/42274484220) y
+[Render Live](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbn2ad2fngtc73asu9r0)
+a las 14:07 Lima. Diagnóstico v1 disponible, con trazas privadas de operaciones
+y métricas acotadas del proceso. Sin cambios SQL en esta entrega.
+
+La [ficha de referencia](work/match-performance-baseline.md) conserva condiciones,
+resultados, límites y limpieza de cuatro altas de bots y 16 robos. No son una
+prueba de carga ni una promesa de latencia; orientan las fases siguientes.
