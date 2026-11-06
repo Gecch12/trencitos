@@ -1,6 +1,39 @@
 # Producción
 
-## Versión actual · 2026-11-05, 19:19 (Lima)
+## Versión actual · 2026-11-05, 20:01 (Lima)
+
+- Código `a1a005426e10cb987aaa9cb3fdc17adcad3b8da7`, Trencitos **0.7.0-beta**.
+  Recupera la mesa de tablet/escritorio: historial, robos y jugadores laterales;
+  mano y destinos abajo. Conserva la mesa móvil y el mapa actual.
+  [Alcance y regresión](work/board-first-mobile.md),
+  [captura de escritorio](qa/table-restoration-release/desktop-layout.png) y
+  [preservación del mapa y geometría móvil](qa/table-restoration-release/preservation.json).
+- [CI completo](https://github.com/Gecch12/trencitos/actions/runs/42139909490):
+  `completed/success`, 719/719 pruebas Node y todos los recorridos Chrome.
+  [Resultado de la revisión](qa/table-restoration-release/ci-result.json).
+- [Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbmidas9v7es73acdspg):
+  **Live** a las 20:01:58 Lima, despliegue manual de 1 min 32 s, Node 26.13.0.
+  [Captura](qa/table-restoration-release/render-live.jpg).
+  [HTTP](qa/table-restoration-release/production-http.json): salud 200/Supabase,
+  dos salas, Google y Discord habilitados, once recursos idénticos al checkout.
+  Sin migraciones ni cambios de configuración o credenciales.
+- [Android 0.7.0 build 5](https://github.com/Gecch12/trencitos/releases/tag/v0.7.0-mobile-beta-build5):
+  mismo identificador y firma, APK y checksum publicados; descarga anónima
+  verificada por SHA-256. [Paquete](qa/table-restoration-release/android-package.json),
+  [Release](qa/table-restoration-release/android-release.json).
+- iPhone 17 Pro Max: **0.7.0 build 6** instalado sobre `com.trencitos.beta`;
+  versión/build confirmados en el dispositivo, sin desinstalar ni abrir el juego.
+  [Paquete](qa/table-restoration-release/ios-package.json),
+  [instalación](qa/table-restoration-release/ios-install.json).
+  Firma personal vigente hasta el 11 de noviembre; no se publicó en App Store.
+
+Los dos paquetes incluyen 63 recursos de aplicación contrastados con la revisión,
+backend HTTPS de producción y depuración web desactivada. La prueba de juego en
+el iPhone queda a cargo de Ángel. La integración Git automática de Render sigue
+[pendiente](work/continuous-delivery.md); se publicó manualmente tras CI.
+El commit documental de cierre registra la entrega sin cambiar sus binarios.
+
+## Entrega anterior · 2026-11-05, 19:19 (Lima)
 
 - Código `2d100e350ef683f7e1d46a1d96cbc5f62389be56`, Trencitos **0.7.0-beta**.
   Perfiles y usernames, personalización/capibara, Compromiso, estadísticas, amigos

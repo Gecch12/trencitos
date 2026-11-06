@@ -1,0 +1,68 @@
+{
+  "base": "ad3ed98",
+  "mobileGeometry": [
+    {
+      "width": 320,
+      "height": 568,
+      "identical": [
+        "cards",
+        "hand",
+        "safe"
+      ]
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "identical": [
+        "cards",
+        "hand",
+        "safe"
+      ]
+    },
+    {
+      "width": 430,
+      "height": 932,
+      "identical": [
+        "cards",
+        "hand",
+        "safe"
+      ]
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "identical": [
+        "cards",
+        "hand",
+        "safe"
+      ]
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "identical": [
+        "cards",
+        "hand",
+        "safe"
+      ]
+    }
+  ],
+  "unchangedMapFiles": [
+    {
+      "file": "frontend/board-3d.js",
+      "sha256": "3daded76fa3c390d4de0d34571627d08b14e88ffb235da5e8f46892e5bffbf8b"
+    },
+    {
+      "file": "frontend/map-layout.js",
+      "sha256": "6d39438384b6a54afe49e667e8657c17708b3c7a38d2c15de8e3fd2281b15b45"
+    },
+    {
+      "file": "frontend/board-camera.js",
+      "sha256": "f97b8a79a1687529857b71d182dbe24c3dfac74ec24f8848c3b3c6cfa73ed583"
+    },
+    {
+      "file": "frontend/ticket-map.js",
+      "sha256": "72ca5defa0415d09e478729eb59836850f6000f709d37cf247f87289f01d8e40"
+    }
+  ]
+}

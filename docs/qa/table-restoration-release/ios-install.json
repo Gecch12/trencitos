@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-11-06T00:54:56.273757+00:00",
+  "deviceModel": "iPhone 17 Pro Max",
+  "bundleIdentifier": "com.trencitos.beta",
+  "version": "0.7.0",
+  "build": "6",
+  "previousBuild": "5",
+  "installed": true,
+  "verifiedOnDevice": true,
+  "uninstalled": false,
+  "gameLaunched": false,
+  "sourceCommit": "a1a005426e10cb987aaa9cb3fdc17adcad3b8da7"
+}

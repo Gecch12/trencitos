@@ -1,5 +1,5 @@
 ---
-{"id":"board-first-mobile","status":"validated","parent":null,"depends_on":[],"branch":"main","delivery":"integrated","updated":"2026-11-05"}
+{"id":"board-first-mobile","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-05"}
 ---
 # Mesa compacta con prioridad al mapa
 
@@ -18,6 +18,7 @@ El chat continúa como panel de próxima implementación, sin transporte ni env�
 - [x] Conservar la mesa móvil, incluido teléfono horizontal, y el renderer del mapa.
 - [x] Completar regresión de rotación, robos, destinos, historial y replay.
 - [x] Revisar capturas y registrar evidencia final y límites de entrega.
+- [x] Publicar la recuperación en Render, entregar APK e instalar iPhone.
 
 Trabajo local sobre `ad3ed98`, en `main`, sin cambios previos ni otros chats
 activos sobre los mismos archivos. Evidencia en `.qa/table-restoration/`.
@@ -52,11 +53,15 @@ producción. El fallo/latencia de persistencia de robos usa un doble local:
   iconos sobredimensionados, recorte del bono, falta de espacio para cinco jugadores
   y transporte del replay plegado en escritorio; las comprobaciones finales pasan.
 
-Ángel solicitó la publicación completa con `trencitos-publicar`. Se prepara
-la entrega desde `main`: Android 0.7.0 build 5 e iOS 0.7.0 build 6, con los
-identificadores y firmas existentes. Siguiente paso: comprobar CI de la revisión,
-Render Live, Release del APK e instalación física; registrar cada resultado en
-[producción](../production.md). La validación anterior corresponde al navegador.
+Ángel solicitó la publicación completa con `trencitos-publicar`. La revisión
+`a1a0054` pasó CI completo (719/719 Node y todos los recorridos Chrome), quedó
+Live en Render y se entregó como Android 0.7.0 build 5 e iOS 0.7.0 build 6.
+APK descargado sin autenticación y contrastado por hash; iPhone actualizado y
+consultado después de instalar, sin desinstalar ni abrir el juego. Los paquetes
+conservan identificadores y firmas, y sus 63 recursos coinciden con la revisión.
+[Registro y evidencia de entrega](../production.md). Siguiente paso de uso:
+Ángel revisa la experiencia en sus dispositivos; esa evaluación no se sustituye
+por las pruebas automatizadas ni por la comprobación de instalación.
 
 ## Aceptación de la entrega original
 

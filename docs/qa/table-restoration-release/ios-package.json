@@ -1,0 +1,13 @@
+{
+  "CFBundleIdentifier": "com.trencitos.beta",
+  "CFBundleDisplayName": "Trencitos",
+  "CFBundleShortVersionString": "0.7.0",
+  "CFBundleVersion": "6",
+  "signatureVerified": true,
+  "profileExpiresAt": "2026-11-11T15:30:30Z",
+  "sourceAssetsMatch": true,
+  "checkedAssets": 63,
+  "backend": "https://trencitos-swamp.onrender.com",
+  "webDebugging": false,
+  "sourceCommit": "a1a005426e10cb987aaa9cb3fdc17adcad3b8da7"
+}

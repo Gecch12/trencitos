@@ -1,0 +1,99 @@
+{
+  "checkedAt": "2026-11-06T01:02:53.467Z",
+  "commit": "a1a005426e10cb987aaa9cb3fdc17adcad3b8da7",
+  "health": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "storage": "supabase",
+      "rooms": 2,
+      "mobileProtocolVersion": 1
+    }
+  },
+  "auth": {
+    "enabled": true,
+    "providers": [
+      "google",
+      "discord"
+    ]
+  },
+  "assets": [
+    {
+      "url": "/",
+      "source": "frontend/index.html",
+      "status": 200,
+      "sha256": "7aa05962732e00252f98478533f39a52a0fad944e4a230eb1f70a67929dd0295",
+      "matches": true
+    },
+    {
+      "url": "/app.js",
+      "source": "frontend/app.js",
+      "status": 200,
+      "sha256": "27061dc422abec6e67abd308050ac38d39bb4bc7c4ff36900508c8302fafc649",
+      "matches": true
+    },
+    {
+      "url": "/replay-ui.js",
+      "source": "frontend/replay-ui.js",
+      "status": 200,
+      "sha256": "3709325ce66fe64e0e02dc0de9b511b20f00882352dcc034d571df3d50680274",
+      "matches": true
+    },
+    {
+      "url": "/responsive.css",
+      "source": "frontend/responsive.css",
+      "status": 200,
+      "sha256": "8b9a629fb89eac46ed17461ff97705aa8b59508baee587463c20f75805a45e35",
+      "matches": true
+    },
+    {
+      "url": "/table.css",
+      "source": "frontend/table.css",
+      "status": 200,
+      "sha256": "24f36fe89f43617fcf965008ccfe4de908b3a777132782fd8993215a02564550",
+      "matches": true
+    },
+    {
+      "url": "/board-3d.js",
+      "source": "frontend/board-3d.js",
+      "status": 200,
+      "sha256": "3daded76fa3c390d4de0d34571627d08b14e88ffb235da5e8f46892e5bffbf8b",
+      "matches": true
+    },
+    {
+      "url": "/map-layout.js",
+      "source": "frontend/map-layout.js",
+      "status": 200,
+      "sha256": "6d39438384b6a54afe49e667e8657c17708b3c7a38d2c15de8e3fd2281b15b45",
+      "matches": true
+    },
+    {
+      "url": "/board-camera.js",
+      "source": "frontend/board-camera.js",
+      "status": 200,
+      "sha256": "f97b8a79a1687529857b71d182dbe24c3dfac74ec24f8848c3b3c6cfa73ed583",
+      "matches": true
+    },
+    {
+      "url": "/ticket-map.js",
+      "source": "frontend/ticket-map.js",
+      "status": 200,
+      "sha256": "72ca5defa0415d09e478729eb59836850f6000f709d37cf247f87289f01d8e40",
+      "matches": true
+    },
+    {
+      "url": "/profile-ui.js",
+      "source": "frontend/profile-ui.js",
+      "status": 200,
+      "sha256": "31a64a6c62ccc875d0736563f5b87d604b67e3bdddbbebea6a3230e8d1eb8b41",
+      "matches": true
+    },
+    {
+      "url": "/mobile-bridge.js",
+      "source": "frontend/mobile-bridge.js",
+      "status": 200,
+      "sha256": "89ac9b70fafe4e78b32602198f15bdd96229abdaec9ea3db6ca4cfb41f2cc55d",
+      "matches": true
+    }
+  ]
+}
