@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-11-06T00:22:16.468Z",
+  "commit": "2d100e350ef683f7e1d46a1d96cbc5f62389be56",
+  "tag": "v0.7.0-mobile-beta-build4",
+  "url": "https://github.com/Gecch12/trencitos/releases/tag/v0.7.0-mobile-beta-build4",
+  "isPrerelease": true,
+  "assets": [
+    {
+      "name": "trencitos-0.7.0-beta.apk",
+      "url": "https://github.com/Gecch12/trencitos/releases/download/v0.7.0-mobile-beta-build4/trencitos-0.7.0-beta.apk",
+      "size": 4567844,
+      "sha256": "7c6be51e3dbd0ca8f72d83e211a66abde013627e5789d337930afe022522d6ad",
+      "anonymousDownloadMatches": true
+    },
+    {
+      "name": "trencitos-0.7.0-beta.apk.sha256",
+      "url": "https://github.com/Gecch12/trencitos/releases/download/v0.7.0-mobile-beta-build4/trencitos-0.7.0-beta.apk.sha256",
+      "size": 91,
+      "sha256": "08714a227fb5137a00eb519f76c05c54351da95578dfc0137c8de4a8c9f06d73",
+      "anonymousDownloadMatches": true
+    }
+  ]
+}

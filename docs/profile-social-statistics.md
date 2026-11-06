@@ -1,6 +1,6 @@
 # Perfil, Compromiso y relaciones
 
-Contrato del checkout; entrega y configuración pendiente en
+Contrato del checkout; entrega y configuración verificadas en
 [la ficha de trabajo](work/profile-social-statistics.md). No acredita despliegue.
 
 ## Identidad y cuenta

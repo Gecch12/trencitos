@@ -1,0 +1,13 @@
+{
+  "applicationId": "com.trencitos.beta",
+  "versionName": "0.7.0",
+  "versionCode": 4,
+  "sha256": "7c6be51e3dbd0ca8f72d83e211a66abde013627e5789d337930afe022522d6ad",
+  "certificateSha256": "e3c0f136bfb7d8493e248f99bc8810b48fcb48c9ed3b415bedb0212ddd68be29",
+  "sourceAssetsMatch": true,
+  "backend": "https://trencitos-swamp.onrender.com",
+  "webDebugging": false,
+  "sourceCommit": "2d100e350ef683f7e1d46a1d96cbc5f62389be56",
+  "builtFrom": "66c0299c75acbd0c3f561fab1d183b9ae673d167",
+  "applicationSourcesUnchangedInSourceCommit": true
+}

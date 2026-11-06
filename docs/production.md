@@ -1,6 +1,45 @@
 # Producción
 
-## Versión actual · 2026-11-05, 12:45 (Lima)
+## Versión actual · 2026-11-05, 19:19 (Lima)
+
+- Código `2d100e350ef683f7e1d46a1d96cbc5f62389be56`, Trencitos **0.7.0-beta**.
+  Perfiles y usernames, personalización/capibara, Compromiso, estadísticas, amigos
+  y mesas habituales. [Alcance](work/profile-social-statistics.md).
+- [CI completo](https://github.com/Gecch12/trencitos/actions/runs/42134951114):
+  `completed/success`, 719/719 pruebas Node y todos los recorridos Chrome,
+  incluido Google/Discord simulado, perfiles y relaciones. Hubo dos intentos
+  fallidos del recorrido nuevo antes de ajustar su interacción entre ventanas;
+  [evidencia y diagnóstico](work/profile-social-statistics.md#ajuste-de-la-prueba-en-ci).
+- [Render](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbmhq0uc6qcc73egqsc0):
+  **Live** a las 19:19:55 Lima, despliegue manual de 40,6 s, Node 26.13.0.
+  [Captura](qa/profile-social-setup/render-live.png).
+  [HTTP](qa/profile-social-setup/production-http.json): salud 200/Supabase, dos
+  salas, Google y Discord habilitados, once recursos idénticos al checkout.
+- Supabase: migraciones 006/007/008 aplicadas, proyección inicial y permisos
+  verificados. Cron diario **03:15 Lima**, activo; carga inicial ejecutada,
+  primera ejecución programada todavía no observada.
+  [Configuración y hashes](qa/profile-social-setup/configuration.json).
+- [Android 0.7.0 build 4](https://github.com/Gecch12/trencitos/releases/tag/v0.7.0-mobile-beta-build4):
+  mismo identificador y firma, APK y checksum con descarga anónima verificada.
+  [Paquete](qa/profile-social-setup/android-package.json),
+  [Release](qa/profile-social-setup/android-release.json).
+- iPhone: **0.7.0 build 5** compilado y firmado; instalación pendiente de reconexión
+  del dispositivo. [Paquete](qa/profile-social-setup/ios-package.json).
+
+Resumen verificado en Chrome con la cuenta existente: conserva el historial y
+muestra métricas personales y el corte global al incluir todos los modos, sin
+errores de consola. Captura local privada en
+`.qa/profile-social-release/production-overview.png`.
+
+La redirección real de Discord llega al selector de cuenta; el proveedor pide
+renovar la sesión de Ángel antes de consentir la vinculación. Esa comprobación y
+el acceso nativo real siguen pendientes; no quedan certificados por el proveedor
+simulado. La integración Git automática de Render continúa
+[pendiente](work/continuous-delivery.md). Los paquetes se generaron en `66c0299`;
+las dos revisiones posteriores solo cambiaron pruebas y documentación. El commit
+documental de cierre no cambia los binarios ni requiere otro despliegue.
+
+## Entrega anterior · 2026-11-05, 12:45 (Lima)
 
 - Código `891b2d709d6c0daa8d5242ba33f905523f615d0a`, publicado desde `main`.
   Recuperación de partidas con bots, cuenta nativa segura, zoom limitado al mapa,

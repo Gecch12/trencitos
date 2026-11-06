@@ -181,7 +181,7 @@ desinstalar elimina la identidad local; conservar el enlace de recuperación.
 
 ### Android: generar y entregar el APK
 
-La [beta 0.6.1 build 3 publicada](https://github.com/Gecch12/trencitos/releases/tag/v0.6.1-mobile-beta-build3)
+La [beta 0.7.0 build 4 publicada](https://github.com/Gecch12/trencitos/releases/tag/v0.7.0-mobile-beta-build4)
 incluye el APK listo para compartir y su hash; no es necesario compilar para
 instalar esa versión. Para generar una actualización:
 
@@ -200,7 +200,7 @@ Enviar a los amigos únicamente el APK o su enlace de descarga. Deben abrirlo
 en Android y autorizar «Instalar aplicaciones desconocidas» para el navegador
 o gestor que utilicen si Android lo solicita. No requiere Google Play ni pagar
 una membresía. Las actualizaciones se instalan encima con la misma firma.
-El juego necesita Internet y depende de la disponibilidad del servidor gratuito.
+El juego necesita Internet y depende de la disponibilidad del servidor de producción.
 
 ### iPhone: instalación personal gratuita
 

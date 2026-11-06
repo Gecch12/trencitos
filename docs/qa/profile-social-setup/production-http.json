@@ -1,0 +1,99 @@
+{
+  "checkedAt": "2026-11-06T00:20:32.157Z",
+  "commit": "2d100e350ef683f7e1d46a1d96cbc5f62389be56",
+  "health": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "storage": "supabase",
+      "rooms": 2,
+      "mobileProtocolVersion": 1
+    }
+  },
+  "auth": {
+    "enabled": true,
+    "providers": [
+      "google",
+      "discord"
+    ]
+  },
+  "assets": [
+    {
+      "url": "/",
+      "source": "frontend/index.html",
+      "status": 200,
+      "sha256": "7aa05962732e00252f98478533f39a52a0fad944e4a230eb1f70a67929dd0295",
+      "matches": true
+    },
+    {
+      "url": "/app.js",
+      "source": "frontend/app.js",
+      "status": 200,
+      "sha256": "b69c15aaf33a6c4bbe1ed2ce1c1221936ea7254f3503c407461eb0ba58c2b3ea",
+      "matches": true
+    },
+    {
+      "url": "/account-ui.js",
+      "source": "frontend/account-ui.js",
+      "status": 200,
+      "sha256": "aadc23d840ebd3ef70bf5520cd7e50b7ed54c07f2a5760b604ffa91186f38405",
+      "matches": true
+    },
+    {
+      "url": "/profile-ui.js",
+      "source": "frontend/profile-ui.js",
+      "status": 200,
+      "sha256": "31a64a6c62ccc875d0736563f5b87d604b67e3bdddbbebea6a3230e8d1eb8b41",
+      "matches": true
+    },
+    {
+      "url": "/profile.css",
+      "source": "frontend/profile.css",
+      "status": 200,
+      "sha256": "1ed4ad6d5e48247a915e7c1c87efe7466395bb3a2bdb32e07fae7f4b622b042f",
+      "matches": true
+    },
+    {
+      "url": "/connection.js",
+      "source": "frontend/connection.js",
+      "status": 200,
+      "sha256": "0064ea0c9bfc307a1b6f65d21366ac147f85c6e2df7763b8c88470dc0ca6c695",
+      "matches": true
+    },
+    {
+      "url": "/mobile-bridge.js",
+      "source": "frontend/mobile-bridge.js",
+      "status": 200,
+      "sha256": "89ac9b70fafe4e78b32602198f15bdd96229abdaec9ea3db6ca4cfb41f2cc55d",
+      "matches": true
+    },
+    {
+      "url": "/table.css",
+      "source": "frontend/table.css",
+      "status": 200,
+      "sha256": "45e69213447563ad766aac43efb5f6b295283b6076a9e1bfb381af382b08db85",
+      "matches": true
+    },
+    {
+      "url": "/game.css",
+      "source": "frontend/game.css",
+      "status": 200,
+      "sha256": "0f3c85ca88015afacc1463f0fb321c2ca4f4b97e59e5204b830346724a8b5b60",
+      "matches": true
+    },
+    {
+      "url": "/shell.css",
+      "source": "frontend/shell.css",
+      "status": 200,
+      "sha256": "dc6075ae4764481ade76fc3f1191d617f1ca0cbbca0d362352d7c14a00d39019",
+      "matches": true
+    },
+    {
+      "url": "/assets/avatars/capybara.png",
+      "source": "frontend/assets/avatars/capybara.png",
+      "status": 200,
+      "sha256": "4ef5a44e2162f6be0a18bd44a5c757e65d13e55c8931f03e649ddd1770fbec70",
+      "matches": true
+    }
+  ]
+}

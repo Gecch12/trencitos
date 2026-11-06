@@ -47,6 +47,9 @@
   },
   "render": {
     "discordFlagSaved": true,
-    "deployed": false
+    "deployed": true,
+    "commit": "2d100e350ef683f7e1d46a1d96cbc5f62389be56",
+    "deploy": "dep-dbmhq0uc6qcc73egqsc0",
+    "liveAt": "2026-11-06T00:19:55Z"
   }
 }
