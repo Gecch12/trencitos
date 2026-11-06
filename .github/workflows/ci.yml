@@ -38,6 +38,10 @@ jobs:
         run: npm run test:ci
       - name: Install Chrome for browser checks
         run: npx playwright install --with-deps chrome
+      - name: Check profiles, social features and identity linking
+        env:
+          QA_OUT: .qa/ci/profile-social
+        run: node tests/browser-profile-social.cjs
       - name: Check installable web and offline privacy
         run: node tests/browser-pwa.cjs
       - name: Check two-client lobby
@@ -68,10 +72,6 @@ jobs:
         env:
           QA_OUT: .qa/ci/mobile-continuity
         run: node tests/browser-mobile-continuity.cjs
-      - name: Check profiles, social features and identity linking
-        env:
-          QA_OUT: .qa/ci/profile-social
-        run: node tests/browser-profile-social.cjs
       - name: Keep browser evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

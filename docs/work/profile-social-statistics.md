@@ -100,3 +100,12 @@ de depender de `requestAnimationFrame` en dos páginas con WebGL por software.
 Se conservan todas las aserciones. El caso anterior también pasó localmente con
 `CI=true`; por tanto, no se afirma reproducción local determinista del fallo.
 La nueva revisión requiere otra ejecución completa de CI antes de publicar.
+
+El segundo intento `880a3de` superó la espera inicial, pero agotó la localización
+del primer billete. No confirmó la hipótesis de que bastara cambiar el sondeo.
+El recorrido activa la ventana que está operando, espera los billetes de ambos
+jugadores y marca sus checkboxes explícitos; conserva trazas de escritorio/móvil
+y captura el estado de ambas páginas ante un fallo. La selección y todos los
+checks posteriores pasan localmente con `CI=true`. Este recorrido se ejecuta
+ahora primero entre los navegadores para detectar antes cualquier fallo; las
+demás pruebas y la exigencia de CI completo se mantienen.
