@@ -42,3 +42,8 @@ Entrega `15636fb`: 736/736 Node y todos los recorridos Chrome en
 [dos salas](../qa/match-performance-concurrency.json). El hito adicional de
 transporte de fase 1 debe pasar esos mismos controles antes de publicarse.
 La revisión conjunta final permanece abierta hasta medir ese ajuste.
+
+El recorrido Chrome de transporte queda además incorporado explícitamente en
+CI: delta y ACK juntos, construcción, vista privada y snapshot nuevo después de
+recarga o de una secuencia inválida. Así protege implementaciones futuras sin
+depender de recordar una prueba manual o invocar un skill.

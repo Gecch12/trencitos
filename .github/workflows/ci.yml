@@ -62,6 +62,10 @@ jobs:
         env:
           QA_OUT: .qa/ci/lobby
         run: node tests/browser-room-setup.cjs
+      - name: Check incremental state and snapshot recovery
+        env:
+          QA_OUT: .qa/ci/transport
+        run: node tests/browser-transport.cjs
       - name: Check immediate draw feedback and recovery
         env:
           QA_OUT: .qa/ci/draw-feedback

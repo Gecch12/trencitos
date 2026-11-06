@@ -50,3 +50,9 @@ rollback sin adelantar caché, sala nueva con revisión menor, dos estados antes
 del ACK, reconexión y suite Chrome. Publicar solo tras CI y repetir las 16
 interacciones para comprobar el beneficio real, sin prometer que menos bytes
 eliminen el coste de SQL o el RTT.
+
+Implementación incremental `271516e`: 741/741 Node correctas, 16 recorridos de
+cartas y el recorrido de transporte Chrome correctos, incluida recuperación
+real de una nueva vista tras una secuencia inválida en el entorno aislado.
+El recorrido de transporte se añade a CI; falta su ejecución remota conjunta
+y la comparación posterior a publicación. La producción continúa en `15636fb`.
