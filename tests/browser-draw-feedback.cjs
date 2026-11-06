@@ -79,6 +79,12 @@ async function clicks(f,first,second){
  assert.equal(await f.page.evaluate(()=>game.hand.length),f.before,'unconfirmed hand is unchanged');
  assert.equal(api.state.rooms.find(r=>r.code===f.room.code).game.players[0].hand.length,f.before,'no premature durable change');
  const choices=[first,...(second===undefined?[]:[second])];
+ for(const index of choices.filter(index=>index>=0)){
+  const slot=f.page.locator(`#market [data-market-index="${index}"]`);
+  assert.equal(await slot.getAttribute('aria-busy'),'true');
+  assert.equal(await slot.locator('img').count(),0,'pending replacement reveals no card face');
+  assert.equal(await slot.isEnabled(),false);
+ }
  const pipeline=await f.page.evaluate(()=>drawPipelineSupported);
  assert.equal(await f.page.evaluate(()=>drawAudit.sent.length),pipeline?choices.length:1,'second intent crosses the socket before first persistence/ACK');
  assert.equal(await f.page.locator('#hand .suit-back').count(),0,'unknown cards never occupy the hand');
@@ -102,6 +108,7 @@ async function clicks(f,first,second){
 async function done(f,count){
  release();release=null;
  await f.page.waitForFunction(n=>!pendingAction&&!queuedDraw&&game.hand.length===n,f.before+count);
+ assert.equal(await f.page.evaluate(()=>displayedHand().length),f.before+count,'live confirmed hand does not wait for a flight');
  await f.page.waitForFunction(()=>cardFlights.size===0);await f.page.evaluate(()=>new Promise(requestAnimationFrame));await app.drain();
  assert.equal(f.room.game.players[0].hand.length,f.before+count);
  assert.equal(api.state.rooms.find(r=>r.code===f.room.code).game.players[0].hand.length,f.before+count);
@@ -238,7 +245,7 @@ async function close(f){await f.context.close();f.rival.close();await app.drain(
   await f.page.waitForFunction(()=>cardFlights.size===0);
   await f.page.evaluate(()=>new Promise(requestAnimationFrame));await recordTimings(f);
   assert.equal(await f.page.evaluate(()=>drawAudit.sounds.filter(s=>s==='card').length),1);
-  await close(f);report.checks.push('Blind card flips to a decoded color, lands once, and does not wait for delayed ACK');
+  await close(f);report.checks.push('Blind card reveals its confirmed color immediately, lands once, and does not wait for delayed ACK');
  }
  {
   const f=await open('QADR08');await clicks(f,-1,1);

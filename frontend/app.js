@@ -879,6 +879,9 @@ function displayedHandCount(index) {
 }
 function displayedHand() {
   const hand = [...game.hand];
+  // Live ownership is visible as soon as the authoritative state arrives.
+  // Replay retains its narrative flight/arrival sequence.
+  if (!replayMode) return hand;
   for (const draw of drawPresentations.values()) {
     if (draw.event && !draw.landed && !draw.cancelled) {
       const index = hand.indexOf(draw.event.color);if (index >= 0) hand.splice(index, 1);
@@ -930,7 +933,7 @@ function renderHand() {
       const frames = old ? [
         {transform:`translate(${old.x-rect.x}px,${old.y-rect.y}px) scale(${old.width/rect.width},${old.height/rect.height})`},
         {transform:'none'},
-      ] : [{opacity:0,transform:'translateY(8px) scale(.94)'},{opacity:1,transform:'none'}];
+      ] : [{opacity:replayMode?0:1,transform:'translateY(8px) scale(.94)'},{opacity:1,transform:'none'}];
       card._layoutMotion = card.animate(frames,{duration:230/(replayMode?replaySpeed:1),easing:'cubic-bezier(.2,.7,.2,1)'});
     }
   }
@@ -1023,10 +1026,9 @@ function render() {
   $("initialStatusText").textContent = I18n.t`${game.initialReadyCount}/${game.players.length} listos · ${game.players[seat]?.initialReady ? I18n.t("Puedes explorar el mapa mientras esperas") : I18n.t("Todos eligen a la vez")}`;
   $("viewResults").classList.toggle("hidden", game.phase !== "finished");
   if (game.phase === "closing") $("roundStatus").innerHTML = I18n.t('Últimos billetes <span data-clock="closing"></span>');
-  renderHand();
   $("ticketTotal").textContent = game.tickets.length;
   renderDestinations();
-  layoutHand();
+  renderHand();
   renderMarket();
   $("pendingTickets").classList.toggle("hidden", !game.ticketOffer);
   $("drawblind").title = I18n.t`Robar una carta oculta · ${game.deckCount} disponibles`;
@@ -1083,9 +1085,15 @@ function renderMarket() {
   const visibleCards = Array.from({ length: gameRules.trainCards.marketSize }, (_, i) => {
     const c = game.face[i];
     if (!c) { const empty = document.createElement("div"); empty.className = "empty-market-slot"; empty.setAttribute("aria-label", I18n.t("Sin carta disponible")); return empty; }
+    const reserved = [pendingDraw, queuedDraw].some(draw => draw?.intent.index === i && draw.intent.revision === game.revision);
+    if (reserved) {
+      const slot=document.createElement('button');slot.type='button';slot.disabled=true;
+      slot.className='traincard draw-reserved draw-pending-slot';slot.dataset.marketIndex=i;
+      slot.setAttribute('aria-label',I18n.t('Reposición pendiente'));slot.setAttribute('aria-busy','true');
+      return slot;
+    }
     const card = colorCard(c, null, () => act("draw_train", { index: i }), !drawAllowed(i));
     card.dataset.marketIndex = i;
-    card.classList.toggle("draw-reserved", [pendingDraw, queuedDraw].some(draw => draw?.intent.index === i && draw.intent.revision === game.revision));
     card.title = I18n.t`Robar ${N[c]}${c === "wild" ? I18n.t(" · Consume los dos robos; no puede ser tu segunda carta") : ""}`;
     card.setAttribute("aria-label", card.title);
     return card;
@@ -1552,7 +1560,7 @@ async function landDrawFeedback(draw) {
   const flight = draw.flight, color = draw.event?.color || draw.intent.color;
   if (!flight || !color || !flight.pickedUp || flight.landing || flight.resolving || !cardFlights.has(flight)) return;
   flight.resolving = true;
-  const reveal = draw.intent.index < 0;
+  const reveal = draw.intent.index < 0 && replayMode;
   const image = reveal ? document.createElement('img') : flight.img;
   image.src = cardImageSource(color);image.dataset.cardColor = color;image.alt = '';
   if (reveal) { image.className = 'draw-flight-front';flight.face.appendChild(image); }
@@ -1597,6 +1605,13 @@ function revealPendingDraw(receipts) {
         e.index === draw.intent.index && !handledDrawEvents.has(e.id)) : null;
     if (!event) continue;
     draw.event = event;handledDrawEvents.add(event.id);
+    if (!replayMode && draw.flight && event.color) {
+      // This value exists only after the server's durable confirmation. Updating
+      // the owned image immediately avoids waiting for pickup or a 180 ms flip.
+      draw.flight.img.src=cardImageSource(event.color);
+      draw.flight.img.dataset.cardColor=event.color;
+      draw.flight.node.dataset.revealedColor=event.color;
+    }
     if (handledDrawEvents.size > 128) handledDrawEvents.delete(handledDrawEvents.values().next().value);
     if (!draw.cancelled) landDrawFeedback(draw);
     if (draw.landed && draw.settled) drawPresentations.delete(draw.id);

@@ -154,6 +154,8 @@ const Translations = {
   "Puntos públicos": "Public points",
   "Comodín": "Wildcard",
   "Robando carta": "Drawing a card",
+  "Reposición pendiente": "Waiting for replacement",
+  "No se pudo confirmar el guardado. Reintenta para recuperar esta partida desde el estado guardado.": "The save could not be confirmed. Retry to recover this game from durable storage.",
   "Robando {0} carta(s)": "Drawing {0} card(s)",
   "{0} carta(s) pendiente(s) de confirmación": "{0} card(s) awaiting confirmation",
   "La mesa cambió. Elige tu segunda carta.": "The market changed. Choose your second card.",

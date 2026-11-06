@@ -236,7 +236,7 @@ body.is-playing {
 .draw-flight-waiting::after { content: attr(data-status); position: absolute; top: calc(100% + 7px); left: 50%; transform: translateX(-50%); padding: 4px 8px; border-radius: 6px; background: #173c4c; color: #fffaf0; font-size: 11px; white-space: nowrap; }
 .game .hand .traincard.is-pending .cardcount { border-color: #bd995c; }
 .game .hand .traincard.is-pending::after { content: ""; position: absolute; right: 5px; bottom: 5px; width: 7px; height: 7px; border-radius: 50%; background: #e5bf73; box-shadow: 0 0 0 2px #fffaf0; }
-.game #market .draw-reserved { opacity: .25; }
+.game #market .draw-pending-slot { opacity: 1; background: rgba(35,45,51,.12); border: 1px dashed rgba(35,45,51,.35); box-shadow: none; }
 .game .map-menu {
   position: absolute; z-index: 6; width: 270px; padding: 16px;
   background: #fffcf5; border: 1px solid #c2b793; border-radius: 12px;
