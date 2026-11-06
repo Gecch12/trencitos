@@ -204,9 +204,11 @@ crea metadatos, pasos y reclamaciones de invitados. La lectura usa
 metadatos/permisos y después páginas secuenciales de hasta 16 pasos.
 Se verifica la secuencia completa y se limita al cierre leído; una respuesta parcial
 no se presenta como replay válido. El plazo de lectura es 15 s por página, sin cambiar
-el plazo ni la autoridad de las escrituras. El RPC v2 guarda checkpoint y
-pasos en la misma transacción, valida secuencia y rechaza conflictos, conserva
-idempotencia y exclusión de escritores. RLS y permisos impiden acceso directo de
+el plazo ni la autoridad de las escrituras. La RPC de SQL 009 guarda la sala y
+sus pasos en la misma transacción, valida secuencia, rechaza conflictos y conserva
+idempotencia y exclusión de escritor. El protocolo anterior v2 mantiene esas
+garantías con checkpoint global para compatibilidad. Activación y regreso en
+[SQL 009](RENDER_SUPABASE.md#transacciones-por-sala-sql-009). RLS y permisos impiden acceso directo de
 `anon`/`authenticated`; solo Node utiliza las RPC con credenciales del servidor.
 Un fallo de guardado pausa también la práctica y sus bots: no se confirma una
 jugada cuyo historial no pudo conservarse. El cierre sella el archivo: desconexiones

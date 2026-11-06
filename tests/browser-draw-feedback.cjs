@@ -211,13 +211,18 @@ async function close(f){await f.context.close();f.rival.close();await app.drain(
     for(const message of messages){
      const single={data:JSON.stringify(message)};
      if(message.type==='ack')setTimeout(()=>receive(single),180);
-     else {receive(single);if(message.type==='state')drawAudit.states.push({hand:game.hand.length,count:document.getElementById('handCount').textContent});}
+     else {receive(single);if(message.type==='state'){
+      const second=document.querySelector('#market [data-market-index="1"]');
+      drawAudit.states.push({hand:game.hand.length,count:document.getElementById('handCount').textContent,
+       secondPending:second?.getAttribute('aria-busy')==='true'&&!second.querySelector('img')});
+     }}
     }
    };
   });
   await clicks(f,0,1);await done(f,2);
   const states=await f.page.evaluate(()=>drawAudit.states);
   assert.ok(states.some(s=>s.hand===f.before+1));
+  assert.ok(states.filter(s=>s.hand===f.before+1).every(s=>s.secondPending),'the second chosen slot stays neutral while the first state precedes its ACK');
   assert.ok(states.every(s=>Number(s.count.match(/\d+/)[0])<=f.before+2),'state before ACK never double counts a card');
   await close(f);report.checks.push('Delayed ACK keeps the same two-card hand through both authoritative states, without double counting');
  }

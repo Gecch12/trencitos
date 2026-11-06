@@ -312,7 +312,9 @@ sin modificar `game.hand`, mazos ni reglas. El clic inicia recogida y sonido;
 visibles pueden sumarse provisionalmente con punto y `aria-busy`; las ocultas
 esperan el color real sin crear grupos anónimos. El hueco visible reservado es
 neutro, deshabilitado y sin imagen: nunca muestra anticipadamente la siguiente
-carta. Pagos, turnos y reglas consumen exclusivamente el estado autorizado.
+carta. `DrawIntent.reservedIndexes` mantiene la segunda reserva si el primer
+estado llega antes del ACK y adapta su índice al agotarse el mazo. Pagos, turnos
+y reglas consumen exclusivamente el estado autorizado.
 
 La recogida dura 150 ms y el recorrido propio apunta a 520 ms desde su inicio,
 con separación mínima de 110 ms entre inicios de dos cartas. Una carta oculta

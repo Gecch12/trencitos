@@ -28,3 +28,8 @@ guardado, rechazo, reconexión, dos estados antes del ACK y móvil/movimiento re
 Docs y gate de 29 módulos correctos. Son pruebas aisladas, no latencia productiva.
 CI dispone de 30 minutos: la instalación de Chrome tardó más de diez minutos en
 una ejecución; se conserva la suite completa y el timeout sigue acotado.
+
+Consulta de GitHub del 2026-11-06: `main.protected=false`. Los checks se ejecutan
+en CI, pero la rama no impide un push directo. Exigir PR/CI mediante protección
+cambiaría el flujo actual de trabajo en main; requiere acordar ese cambio de
+flujo, y no se presenta como configurado.

@@ -139,7 +139,7 @@ con sala/puesto resueltos y sobre `{commandId, expectedRevision, action}`.
 Todavía consume el formato legado y `Engine`; no implementa el sobre objetivo
 ni los repositorios/committer completos. `stageRoom` enlaza con el guardado y
 publicación actuales, y su aceptación remota solo se transmite después del
-commit de la cola global. Contrato implementado en [arquitectura](../architecture.md)
+commit de la transacción durable. Contrato implementado en [arquitectura](../architecture.md)
 y avance en [fase 3](../work/modular-platform-application.md).
 
 El segundo corte añade `automatic-play.js` para vencimientos, bots permanentes,
@@ -219,20 +219,23 @@ Puertos objetivo para la plataforma modular:
   revisión, deduplicación y pasos/metadatos nuevos del historial.
 - Lectura de historial autorizada mantiene un puerto propio, pues sobrevive a la sala.
 
-No añadir `save()` separados a partida e historial ni una transacción por carta.
+No añadir `save()` separados a partida e historial ni un repositorio por carta.
 El adaptador inicial del repositorio puede resolver la partida dentro de `rooms`;
-`MatchCommitter` envuelve la infraestructura existente. El checkpoint actual es
-global: conservar su serialización global y autoridad de escritor mientras esa
-sea la unidad durable. Tener un repositorio por partida no permite escrituras
-concurrentes de checkpoints ni varias instancias activas.
+`MatchCommitter` envuelve la infraestructura existente. La transición original
+conservó la cola global mientras el checkpoint era la unidad durable. SQL 009
+cambia esa unidad a la sala: colas, versiones, rollback, archivo y recuperación
+quedan aislados conjuntamente. La autoridad sigue siendo de un solo proceso;
+esto no habilita varias instancias activas. La [evolución de rendimiento](../work/match-performance-architecture.md)
+registra esa decisión y su validación.
 
 Implementado en el tercer corte de fase 3: `createRoomStager` coordina preparación,
 solicitud de checkpoint y vistas encoladas; `createCheckpointHandler` usa
-`committer.prepare(repository)` / `committer.commit(batch)`. El repositorio
+`committer.prepare(repository, dirtyCodes, scope)` / `committer.commit(batch)`. El repositorio
 transitorio es el `Map` existente mediante `get(code)` / `values()`, no la búsqueda
 objetivo por `matchId`. Los adaptadores de archivo/remoto confirman conjuntamente
 DTOs de sala e historial, manteniendo sus formatos físicos. Archivo confirma de
-forma síncrona; remoto confirma una vez al final del trabajo en la cola global.
+forma síncrona; remoto confirma al final de la transacción de sala (o de la
+barrera de ciclo de vida). Sin SQL 009 conserva la cola global compatible.
 `stageRoom=true` sigue significando preparado, no confirmación remota. El outbox
 permanece en transporte/cola. Detalle en [arquitectura](../architecture.md).
 
@@ -263,8 +266,9 @@ sin conciliarlos con una vista actual. Formato y orden implementados en
 [arquitectura](../architecture.md).
 
 Supabase reintenta el mismo ID de commit, no vuelve a ejecutar el dominio ni
-sortear. Un resultado remoto incierto o pérdida de autoridad pausa el proceso
-y exige recuperar el checkpoint; no sobrescribirlo con memoria revertida.
+sortear. Un resultado remoto incierto pausa su sala con SQL 009; la pérdida de
+autoridad o una operación global pausada afectan al proceso. Recuperar desde
+SQL antes de reanudar; no sobrescribirlo con memoria revertida.
 En fallo de guardado se descartan notificaciones y se recuperan juntos estado,
 recibos e historial. Un fallo de entrega posterior al commit no revierte el juego.
 En archivo, conservar el manifiesto que confirma el prefijo de replay y su `.bak`.

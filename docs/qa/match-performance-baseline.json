@@ -4,7 +4,7 @@
   "deploy": "dep-dbn2ad2fngtc73asu9r0",
   "environment": "production, Chrome on owner's Mac in Lima, viewport 1728x907, reduced motion false",
   "method": "Own private room. Four bots added, three removed; game with one bot. Twelve individual draws and two rapid pairs (30 ms between clicks). Monotonic browser timestamps; private server trace per command. Values rounded to 0.01 ms. State received before UI handler; visible is first sampled frame with replacement or recognizable decoded hidden card. HTTP includes processing and is not pure network RTT.",
-  "columns": ["kind","index","feedback","state","visible","afterState","queue","capture","execution","commit","history","recording","rpc","handler","bytes"],
+  "columns": ["kind","index","feedback","state","visible","afterState","queue","capture","execution","commit","history","recording","rpc","handler","messageCharacters"],
   "rows": [
     ["add_bot",null,null,561.9,569.4,7.5,0.04,4.83,0.44,321.43,0.01,null,321.22,null,null],
     ["add_bot",null,null,379.1,389,9.9,0.04,7.23,0.24,134.39,0,null,134.26,null,null],
@@ -30,6 +30,6 @@
   "httpMs": [409.6,248.8,239.9,262.5,247.9,239.5,251.2,366.4],
   "processBefore": {"rss":79572992,"heapUsed":16232416,"cpuPercent":0.28},
   "processAfter": {"rss":121925632,"heapUsed":20870384,"cpuPercent":0.19},
-  "limits": "Small sequential sample, no concurrent-room load or capacity claim. Process readings are snapshots after quiet intervals, not CPU/memory peaks. One driver wait hit its 20 s limit between turns and was resumed with a 60 s bound; no rejected game commands. Hidden-card visibility uses the actual flip transform. No account identifiers, credentials, hands or decks retained.",
+  "limits": "Small sequential sample, no concurrent-room load or capacity claim. Process readings are snapshots after quiet intervals, not CPU/memory peaks. One driver wait hit its 20 s limit between turns and was resumed with a 60 s bound; no rejected game commands. Hidden-card visibility uses the actual flip transform. Message size is JavaScript string length, not compressed wire bytes. No account identifiers, credentials, hands or decks retained.",
   "errors": []
 }

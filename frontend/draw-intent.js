@@ -53,6 +53,17 @@ const DrawIntent = (() => {
       e.seat === first.seat && e.index === first.index);
     return queued && event && rebase(first, queued, view, event.id) ? [queued] : [];
   }
-  return { create, canQueue, confirmedEvent, rebase, pending };
+  function reservedIndexes(view, first, queued) {
+    const choices = pending(view, first, queued);
+    if (!choices.length) return [];
+    if (view.revision === first.revision) return choices.map(choice => choice.index).filter(index => index >= 0);
+    // The first authoritative state may arrive before its ACK. Keep the second
+    // choice's surviving slot reserved, including a shift caused by depletion.
+    const event = view.events.find(e => e.id > first.eventFloor && e.type === 'draw' &&
+      e.seat === first.seat && e.index === first.index);
+    const next = event && rebase(first, queued, view, event.id);
+    return next && next.index >= 0 ? [next.index] : [];
+  }
+  return { create, canQueue, confirmedEvent, rebase, pending, reservedIndexes };
 })();
 if (typeof module !== "undefined" && module.exports) module.exports = DrawIntent;

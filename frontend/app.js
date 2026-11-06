@@ -1082,10 +1082,11 @@ function renderMarket() {
   $("drawtickets").disabled = !canDrawDestinations();
   $("market").setAttribute("aria-label", I18n.t`${gameRules.trainCards.marketSize} cartas visibles y mazo oculto`);
   const blindDeck = $("drawblind");
+  const reservedIndexes = new Set(DrawIntent.reservedIndexes(game, pendingDraw?.intent, queuedDraw?.intent));
   const visibleCards = Array.from({ length: gameRules.trainCards.marketSize }, (_, i) => {
     const c = game.face[i];
     if (!c) { const empty = document.createElement("div"); empty.className = "empty-market-slot"; empty.setAttribute("aria-label", I18n.t("Sin carta disponible")); return empty; }
-    const reserved = [pendingDraw, queuedDraw].some(draw => draw?.intent.index === i && draw.intent.revision === game.revision);
+    const reserved = reservedIndexes.has(i);
     if (reserved) {
       const slot=document.createElement('button');slot.type='button';slot.disabled=true;
       slot.className='traincard draw-reserved draw-pending-slot';slot.dataset.marketIndex=i;

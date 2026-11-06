@@ -24,3 +24,9 @@ jugador en cuanto el servidor haya confirmado el resultado.
 
 Los 16 escenarios Chrome de corrección pasan con el estado confirmado visible
 sin esperar al vuelo y el hueco pendiente sin imagen. Falta comparación productiva.
+
+Borde de estado anterior al ACK: la prueba Chrome reprodujo la reaparición
+temporal de la segunda carta elegida. `reservedIndexes` conserva el hueco neutro
+según la vista confirmada, también si el agotamiento desplaza índices. Seis
+pruebas de intención y los 16 escenarios Chrome pasan después del ajuste;
+la aserción nueva falla con la implementación anterior. Se repite CI antes de publicar.

@@ -56,3 +56,14 @@ test('two visible wildcards require seeing a visible replacement before choosing
  const after=next(visible,{face:['wild','wild','yellow','green','blue']});
  assert.ok(Draw.create(after,0,3),'replacement settled: second choice is available');
 });
+
+test('pending market slots follow confirmed replacement, depletion and renewal before ACK',()=>{
+ const game=view(),first=Draw.create(game,0,0),queued=Draw.create(game,0,2);
+ assert.deepEqual(Draw.reservedIndexes(game,first,queued),[0,2]);
+ const after=next(first,{face:['red','blue','wild','green'],deckCount:0});
+ assert.deepEqual(Draw.reservedIndexes(after,first,queued),[1]);
+ assert.deepEqual(Draw.reservedIndexes(after,first,null),[]);
+ assert.deepEqual(Draw.reservedIndexes({...after,events:[...after.events,{id:2,type:'market_refresh'}]},first,queued),[]);
+ assert.deepEqual(Draw.reservedIndexes({...after,revision:12,turnSerial:8},first,queued),[]);
+ assert.deepEqual(Draw.reservedIndexes(game,null,null),[]);
+});
