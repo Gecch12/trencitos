@@ -29,7 +29,12 @@ const app=require('../backend/server');let browser;const errors=[];
  const tick=Date.now();await page.waitForFunction(()=>Number(document.getElementById('recountCounter').dataset.step)>=2);assert.ok(Date.now()-tick>=550,'normal count leaves time to follow each wagon');
  await page.locator('#recountSkip').click();
  for(let repeat=0;repeat<2;repeat++){
-  await page.locator('#recountAgain').click();assert.equal(await page.locator('#recountCounter').getAttribute('data-running'),'true');assert.equal(await page.locator('#recountCounter').getAttribute('data-total'),'0');
+  // Observe the restart in its click task. A later protocol read can already
+  // see the first wagon land on software-rendered CI browsers.
+  await page.locator('#recountAgain').evaluate(button=>button.addEventListener('click',()=>queueMicrotask(()=>{
+   const counter=document.getElementById('recountCounter');window.recountRestart={running:counter.dataset.running,total:counter.dataset.total};
+  }),{once:true}));
+  await page.locator('#recountAgain').click();assert.deepEqual(await page.evaluate(()=>window.recountRestart),{running:'true',total:'0'});
   assert.equal(await page.evaluate(()=>document.activeElement.id),'recountPause');await page.waitForFunction(()=>Number(document.getElementById('recountCounter').dataset.step)>=1);await page.locator('#recountSkip').click();
   assert.match(await page.locator('.recount-caption').innerText(),/Bonificación: \+0/);
  }

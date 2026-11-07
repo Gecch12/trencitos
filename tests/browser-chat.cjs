@@ -49,7 +49,10 @@ let browser,a;
  await b.locator('#tableChat .chat-route').first().waitFor();const before=JSON.stringify(app.rooms.get(code).game.routes.map(r=>r.owner));
  await b.locator('#tableChat .chat-route').nth(1).click();await b.waitForFunction(()=>tableFocus?.chat&&board3D.stats().spotlightRoutes.length===1);
  assert.equal(JSON.stringify(app.rooms.get(code).game.routes.map(r=>r.owner)),before);assert.equal(await b.evaluate(()=>board3D.stats().previewWagons),0);
- await shot(b,'route-highlight');await b.locator('#returnMapView').click();
+ // Screenshots can outlast the 3.5s temporary highlight on software WebGL.
+ // Verify expiry, then separately exercise the explicit return control.
+ await shot(b,'route-highlight');await b.waitForFunction(()=>tableFocus===null);
+ await b.locator('#tableChat .chat-route').nth(1).click();await b.locator('#returnMapView').click();
  assert.equal(await b.evaluate(()=>tableFocus),null);
  await b.locator('#tableChat > summary').click();await say(a,'Un mensaje con el chat cerrado','tableChatInput');await b.locator('#tableChat [data-chat-badge]:not([hidden])').waitFor();
  await b.locator('#tableChat > summary').click();await b.waitForFunction(()=>document.querySelector('#tableChat [data-chat-badge]').hidden).catch(async e=>{console.log('UNREAD',await b.evaluate(()=>{const log=document.querySelector('#tableChat .chat-messages'),root=document.querySelector('#tableChat .chat-body');return {top:log.scrollTop,height:log.scrollHeight,client:log.clientHeight,visible:root.getClientRects().length,badge:document.querySelector('#tableChat [data-chat-badge]').outerHTML,open:document.querySelector('#tableChat').open};}));await shot(b,'unread-failure');throw e;});

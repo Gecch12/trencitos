@@ -87,6 +87,14 @@ abajo continúa independiente de esta optimización.
 
 ## Ampliaciones previas
 
+La primera ejecución de la matriz en `832af96` detectó dependencias temporales
+en tres recorridos Chrome: lectura del contador después de aterrizar el primer
+vagón, captura que agotaba los 3,5 s del foco de chat y confirmación del clic de
+inicio mientras se preparaban dos tableros WebGL. Los recorridos observan ahora
+el reinicio dentro del evento, separan expiración y retorno manual del foco, y
+permiten 30 s para confirmar ese clic. Se conservan las aserciones funcionales.
+La nueva revisión requiere CI completo antes de publicar.
+
 La ampliación del 2026-11-06 añade `browser-profile-style.cjs` al workflow,
 con capturas en `.qa/ci/profile-style/`: selector visual, teclado, scroll táctil y
 guardado de avatares. Validación local en [la ficha de perfil](profile-social-statistics.md).
