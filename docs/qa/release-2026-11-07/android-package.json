@@ -1,0 +1,23 @@
+{
+  "applicationId": "com.trencitos.beta",
+  "versionName": "0.7.0",
+  "versionCode": 7,
+  "sha256": "3cb23f521800911b655e71567d3385b9bd8f27472934cabe6eec01e81652b0cb",
+  "certificateSha256": "e3c0f136bfb7d8493e248f99bc8810b48fcb48c9ed3b415bedb0212ddd68be29",
+  "signatureVerified": true,
+  "sourceAssetsMatch": true,
+  "checkedAssets": 93,
+  "backend": "https://trencitos-swamp.onrender.com",
+  "webDebugging": false,
+  "sourceCommit": "885e381d57399e128026927ecacf28b3a8ff730d",
+  "builtFromCommit": "832af9623946d5a34fc8f50c3e3f1c28ffa11106",
+  "runtimeUnchangedBetweenRevisions": true,
+  "revisionDifferences": [
+    "docs/work/continuous-delivery.md",
+    "tests/browser-chat.cjs",
+    "tests/browser-mobile-continuity.cjs",
+    "tests/browser-postgame-summary.cjs",
+    "tests/browser-profile-social.cjs"
+  ],
+  "checkedBundleFiles": 107
+}

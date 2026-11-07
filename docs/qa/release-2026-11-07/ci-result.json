@@ -1,0 +1,99 @@
+{
+  "sourceCommit": "885e381d57399e128026927ecacf28b3a8ff730d",
+  "url": "https://github.com/Gecch12/trencitos/actions/runs/42326200682",
+  "status": "completed",
+  "conclusion": "success",
+  "scope": "full",
+  "startedAt": "2026-11-07T01:50:40Z",
+  "completedAt": "2026-11-07T01:55:06Z",
+  "elapsedSeconds": 266,
+  "node": {
+    "tests": 765,
+    "pass": 765,
+    "fail": 0,
+    "durationMs": 152903.554112
+  },
+  "jobs": [
+    {
+      "name": "Scope, docs and architecture",
+      "conclusion": "success",
+      "startedAt": "2026-11-07T01:50:42Z",
+      "completedAt": "2026-11-07T01:50:52Z",
+      "durationSeconds": 10,
+      "checks": [
+        "Check CI selection and failure handling"
+      ]
+    },
+    {
+      "name": "Browser (replay)",
+      "conclusion": "success",
+      "startedAt": "2026-11-07T01:50:54Z",
+      "completedAt": "2026-11-07T01:53:40Z",
+      "durationSeconds": 166,
+      "checks": [
+        "Check postgame recounts and responsive replay",
+        "Check recorded hands at every playback speed",
+        "Check incremental state and snapshot recovery"
+      ]
+    },
+    {
+      "name": "Browser (identity)",
+      "conclusion": "success",
+      "startedAt": "2026-11-07T01:50:54Z",
+      "completedAt": "2026-11-07T01:54:07Z",
+      "durationSeconds": 193,
+      "checks": [
+        "Check profiles, social features and identity linking",
+        "Check visual wagon preferences and avatar previews",
+        "Check two-client lobby",
+        "Check automatic account seat recovery",
+        "Check mobile continuity, score tables and destination indicators"
+      ]
+    },
+    {
+      "name": "Full Node suite",
+      "conclusion": "success",
+      "startedAt": "2026-11-07T01:50:54Z",
+      "completedAt": "2026-11-07T01:53:40Z",
+      "durationSeconds": 166,
+      "checks": []
+    },
+    {
+      "name": "Browser (cards)",
+      "conclusion": "success",
+      "startedAt": "2026-11-07T01:50:55Z",
+      "completedAt": "2026-11-07T01:54:54Z",
+      "durationSeconds": 239,
+      "checks": [
+        "Check immediate draw feedback and recovery",
+        "Check public card motions and market history",
+        "Check bot blind draws stay private until replay"
+      ]
+    },
+    {
+      "name": "Browser (table)",
+      "conclusion": "success",
+      "startedAt": "2026-11-07T01:50:54Z",
+      "completedAt": "2026-11-07T01:54:25Z",
+      "durationSeconds": 211,
+      "checks": [
+        "Check room chat, moderation and map mentions",
+        "Check installable web and offline privacy",
+        "Check compact table and map space",
+        "Check route consultation, touch gestures and destination confirmation"
+      ]
+    },
+    {
+      "name": "Tests, docs and browser",
+      "conclusion": "success",
+      "startedAt": "2026-11-07T01:54:56Z",
+      "completedAt": "2026-11-07T01:55:05Z",
+      "durationSeconds": 9,
+      "checks": []
+    }
+  ],
+  "previousFailedRuns": [
+    42325367481,
+    42325752736
+  ]
+}

@@ -80,10 +80,12 @@ exactamente, cada uno en un solo grupo; no se volvieron a ejecutar navegadores.
 Skill instalado y copia canónica idénticos. Cambios locales sin push, ejecución
 remota, despliegue, Release ni compilación/instalación móvil.
 
-Próxima verificación del pipeline: cuando se autorice subir estos cambios,
-comprobar los cinco trabajos de pruebas y el check agregado; medir duración y
-verificar por separado un cierre documental. El bloqueo Git de Render descrito
-abajo continúa independiente de esta optimización.
+La [entrega `885e381`](../production.md) valida el reparto real: cinco trabajos
+de pruebas aprobados y check agregado correcto en 4 min 26 s; 765 Node y los
+15 recorridos Chrome. [Tiempos por trabajo](../qa/release-2026-11-07/ci-result.json).
+Android/iOS se prepararon durante la espera; Render, Release e instalación
+esperaron al resultado completo. El bloqueo Git de Render sigue independiente.
+La comprobación del cierre documental se registra junto al cierre de la entrega.
 
 ## Ampliaciones previas
 

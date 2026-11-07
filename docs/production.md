@@ -1,6 +1,46 @@
 # Producción
 
-## Versión web actual · 2026-11-06, 15:43 (Lima)
+## Entrega actual · 2026-11-06, 20:56 (Lima)
+
+Código `885e381d57399e128026927ecacf28b3a8ff730d`, Trencitos **0.7.0-beta**.
+Incluye «ROBAR», mazo de tres cartas del mismo tamaño que las visibles y apilado
+abajo/derecha sin bloque blanco ni salto en hover; chat con menciones, reacciones,
+moderación y silencio; refinamientos de mesa, destinos, sonido y resultados.
+Los robos ocultos de bots siguen anónimos en vivo y solo muestran colores en el
+replay cerrado, comprobado por el nuevo recorrido Chrome.
+
+- [CI completo](https://github.com/Gecch12/trencitos/actions/runs/42326200682):
+  **765/765 Node**, cuatro grupos Chrome y `Tests, docs and browser` aprobados.
+  [Evidencia](qa/release-2026-11-07/ci-result.json): 4 min 26 s de run; Node 152,9 s.
+  Dos revisiones previas descubrieron esperas frágiles y una prueba que aún exigía
+  la barra auxiliar retirada. Se corrigieron las pruebas y cada nueva revisión
+  ejecutó todo CI; ninguna revisión fallida se publicó.
+- [Render Live](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbn8a3mi0phs738anbt0),
+  despliegue manual de **39,9 s**, Live 20:56:06 Lima.
+  [Captura](qa/release-2026-11-07/render-live.jpg), [estado](qa/release-2026-11-07/render.json).
+  [HTTP](qa/release-2026-11-07/production-http.json): salud correcta/Supabase,
+  tres salas previas, **108 recursos idénticos** al checkout.
+  [Chat real](qa/release-2026-11-07/production-chat.json): entrega entre dos clientes,
+  recuperación del historial y deduplicación confirmadas; sala privada propia
+  cerrada al terminar. Sin migraciones, cambios de credenciales ni otras salas modificadas.
+- [Android 0.7.0 build 7](https://github.com/Gecch12/trencitos/releases/tag/v0.7.0-mobile-beta-build7):
+  APK firmado y checksum publicados; descarga anónima idéntica al paquete local.
+  [Paquete](qa/release-2026-11-07/android-package.json), [Release](qa/release-2026-11-07/android-release.json).
+- iPhone 17 Pro Max: **0.7.0 build 8** instalado sobre `com.trencitos.beta`;
+  versión y build comprobados en el dispositivo, sin desinstalar ni abrir el juego.
+  [Paquete](qa/release-2026-11-07/ios-package.json), [instalación](qa/release-2026-11-07/ios-install.json).
+  Instalación 5,14 s, comprobación 0,83 s; firma personal hasta el 11 de noviembre.
+
+Android compiló en [18,0 s](qa/release-2026-11-07/android-timing.json) e iOS en
+[20,8 s](qa/release-2026-11-07/ios-timing.json), con cachés existentes y sync
+secuencial. Ambos incluyen **107 archivos de interfaz** contrastados, HTTPS de
+producción y depuración web desactivada. Se compilaron desde `832af96` durante CI;
+los commits posteriores solo cambian pruebas y documentación, con igualdad del
+runtime verificada antes de distribuir. El cierre documental conserva estos binarios.
+La integración Git automática de Render sigue pendiente; Ángel evalúa el juego
+nativo instalado. No se realizó una nueva prueba de juego físico en el teléfono.
+
+## Entrega web anterior · 2026-11-06, 15:43 (Lima)
 
 Código `d4de3aededc4cdb96ba248996454d877cbc4c452`, [Render Live](https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbn3nj8n74is73ehu760).
 Añade deltas de vistas confirmadas y recuperación por snapshot, con compatibilidad

@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-11-07T01:53:15.150Z",
+  "status": 200,
+  "health": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 3,
+    "mobileProtocolVersion": 1
+  }
+}

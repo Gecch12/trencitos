@@ -1,0 +1,21 @@
+{
+  "CFBundleIdentifier": "com.trencitos.beta",
+  "CFBundleShortVersionString": "0.7.0",
+  "CFBundleVersion": "8",
+  "signatureVerified": true,
+  "profileExpiresAt": "2026-11-11T15:30:30Z",
+  "sourceAssetsMatch": true,
+  "checkedBundleFiles": 107,
+  "backend": "https://trencitos-swamp.onrender.com",
+  "webDebugging": false,
+  "sourceCommit": "885e381d57399e128026927ecacf28b3a8ff730d",
+  "builtFromCommit": "832af9623946d5a34fc8f50c3e3f1c28ffa11106",
+  "runtimeUnchangedBetweenRevisions": true,
+  "revisionDifferences": [
+    "docs/work/continuous-delivery.md",
+    "tests/browser-chat.cjs",
+    "tests/browser-mobile-continuity.cjs",
+    "tests/browser-postgame-summary.cjs",
+    "tests/browser-profile-social.cjs"
+  ]
+}

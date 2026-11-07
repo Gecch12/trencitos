@@ -1,0 +1,445 @@
+{
+  "checkedAt": "2026-11-07T01:56:44.511Z",
+  "sourceCommit": "885e381d57399e128026927ecacf28b3a8ff730d",
+  "health": {
+    "ok": true,
+    "storage": "supabase",
+    "rooms": 3,
+    "mobileProtocolVersion": 1
+  },
+  "checkedAssets": 108,
+  "assets": [
+    {
+      "url": "/",
+      "sha256": "51dc0d2746bf9ae03856a7b3b0e1f84c1b64f95e27ea065276fa2af20d3b7d0b"
+    },
+    {
+      "url": "/account-ui.js",
+      "sha256": "aadc23d840ebd3ef70bf5520cd7e50b7ed54c07f2a5760b604ffa91186f38405"
+    },
+    {
+      "url": "/app.js",
+      "sha256": "7b47ad194ff3548b1e981ee5e3c4e2023f62f288a6642ca8305fd41dd4a8311f"
+    },
+    {
+      "url": "/assets/avatars/capybara.png",
+      "sha256": "4ef5a44e2162f6be0a18bd44a5c757e65d13e55c8931f03e649ddd1770fbec70"
+    },
+    {
+      "url": "/assets/cards/back.svg",
+      "sha256": "57a07c6b1bd72c2f296e56ddce931c55baacfafda1159428bfb1fe300b092f16"
+    },
+    {
+      "url": "/assets/cards/black.svg",
+      "sha256": "3b3d8fd9914c47dac893b16d8f5425e6679ccd96fb1ae4ce9904c3b95a40e801"
+    },
+    {
+      "url": "/assets/cards/blue.svg",
+      "sha256": "a4d8eac92d9ea2bd116d4f76c6e82d0d89c3357e14241c0ada244163ba14626c"
+    },
+    {
+      "url": "/assets/cards/green.svg",
+      "sha256": "4d3e6bd1789d27bc9202950d37bf2bb451c2a17a3902c9199d158dbcb9bdc8ae"
+    },
+    {
+      "url": "/assets/cards/orange.svg",
+      "sha256": "d635e020280d8931c7c9fe98993cc720622df7bc64e6243d0f3e6abdfbc06712"
+    },
+    {
+      "url": "/assets/cards/purple.svg",
+      "sha256": "6bb73e9508e6e76b8aa81b87548ddf0167676d5b7cdc62e14be50788434100b3"
+    },
+    {
+      "url": "/assets/cards/red.svg",
+      "sha256": "e0178a5cc824edccdfbca6efb22ab39a59aad01ccd5c572055a41f895bcc6310"
+    },
+    {
+      "url": "/assets/cards/white.svg",
+      "sha256": "4c5f451be6f9bdb0794962d3f0bf4c0545e04b0a62932cf34451fb392eaba748"
+    },
+    {
+      "url": "/assets/cards/wild.svg",
+      "sha256": "bee750bee8438bd1282a3b7a4ea3c6f8af1bde4ca8f1956411e8840d7e20f339"
+    },
+    {
+      "url": "/assets/cards/yellow.svg",
+      "sha256": "9175064135e22c560679b3901e06be7eb5237d33f4c22db456ebecf3e5690f97"
+    },
+    {
+      "url": "/assets/favicon.svg",
+      "sha256": "f9b6d7bdbccc8b69b388b586509d398cbf3dfdd41d77ced7ec927d8160a4f7af"
+    },
+    {
+      "url": "/assets/icons/app-180.png",
+      "sha256": "f9f9866dc04c0cbd63bec0aa6d28555642a7c07aa488ce49a8f46e34219de1d5"
+    },
+    {
+      "url": "/assets/icons/app-192.png",
+      "sha256": "e4f846078162ec9e21cd2eccaf3d02b2f401b98119f29d4f8ed82d4b140f1dcd"
+    },
+    {
+      "url": "/assets/icons/app-512.png",
+      "sha256": "d426f5e26a8bf9204bce9972678bf08f6f0ad38fe1839c8e39496858a9f6b82f"
+    },
+    {
+      "url": "/assets/ticket.svg",
+      "sha256": "c797c64284fce0abdb9497af3a400bb70093495aea0be9ea248ee55f23d22ef7"
+    },
+    {
+      "url": "/assets/wagons/alfalfa.png",
+      "sha256": "902f009138762e417f935e9adf0b9115a49148effbf987c6c010798946a8aba5"
+    },
+    {
+      "url": "/assets/wagons/auto-carrier.png",
+      "sha256": "d9be173a75a2d117c44e95280a8ccaff8533af854f2c0d94fb8564082a031691"
+    },
+    {
+      "url": "/assets/wagons/boat.png",
+      "sha256": "6b3f4965adf59c5ed707a3280ce78fa7a561317d44b926b3254d1bd961a7eec6"
+    },
+    {
+      "url": "/assets/wagons/cement.png",
+      "sha256": "6ed51a9fc8294f3ac55b8c82a5d4af4719b1a1f66b96e77ef8cc3fea0ae30446"
+    },
+    {
+      "url": "/assets/wagons/circus.png",
+      "sha256": "51a04c37cf3f8d8d7fcbb607e15dd80c3654dbff5f9792c86ec8beb681751bd5"
+    },
+    {
+      "url": "/assets/wagons/coal.png",
+      "sha256": "9ed7a9359279d614b8d00b86cf95a91bec0217c271ce6f71862cbc7fce7915a1"
+    },
+    {
+      "url": "/assets/wagons/crane.png",
+      "sha256": "51025aae12a7fe89bca28bb09262965e1f564bdedc9568bd5b83c35e041906c6"
+    },
+    {
+      "url": "/assets/wagons/dwelling.png",
+      "sha256": "8886fa1399fd384c13e404ab4bda5dbae382e0f99de80024e83b59b4aad65359"
+    },
+    {
+      "url": "/assets/wagons/flowers.png",
+      "sha256": "3b2fbe3e4b30d1d76b4e6866d09846d6bc2d045e8595480e50b4e62cc32471ba"
+    },
+    {
+      "url": "/assets/wagons/fruit.png",
+      "sha256": "16c40bcc1deb1cb903154024d1107719fcda599cffac97746f195cfa3198547a"
+    },
+    {
+      "url": "/assets/wagons/goods.png",
+      "sha256": "a3e43841febc807abdcabfcdc874895ea0fac0f8b27ce76307de1531359a6205"
+    },
+    {
+      "url": "/assets/wagons/grain.png",
+      "sha256": "de559cc76dd1190d1ed46330bab18b56903b6568d526c075fd0bd36d311cb474"
+    },
+    {
+      "url": "/assets/wagons/mail.png",
+      "sha256": "e7653d22ebb81e14faba9d82e755695a7dfd87698b2fea870516ca1ebb1f9660"
+    },
+    {
+      "url": "/assets/wagons/passenger.png",
+      "sha256": "6117dbf17162bb66665ba9595b24f91bfb40719ca35a98e3dac23fe7955e6c5b"
+    },
+    {
+      "url": "/assets/wagons/steel.png",
+      "sha256": "fe1f76c74d4bc3a295964f9c9c9f5590b6a1be833f2f31649af598431417c498"
+    },
+    {
+      "url": "/assets/wagons/stone.png",
+      "sha256": "6c143e1864e532d712867cfbc97ed37173f2d122ff409483b3bedfd9675b0b80"
+    },
+    {
+      "url": "/assets/wagons/tanker.png",
+      "sha256": "7f2e9a426c8881dc5eeaa09231764ef561df09cd609ceabe33a05df02d84b650"
+    },
+    {
+      "url": "/assets/wagons/timber.png",
+      "sha256": "fbd61a6341aa0a088e4e764fecd9f50cc82ede7c2cfb518bb297095aeda61fde"
+    },
+    {
+      "url": "/assets/wagons/tractors.png",
+      "sha256": "084d5bd5bb813e0b6ce422ccea8e4d2586eb24066d8dfa7ddc801d6f9f212b03"
+    },
+    {
+      "url": "/assets/wagons/wine.png",
+      "sha256": "cf921d58eb4c14bb6fbe020ae4a83fc6f50377843c532ba35c28377acab7a043"
+    },
+    {
+      "url": "/board-3d.css",
+      "sha256": "3eb8561981dbe1d2b93b2dff7f2f809518e53e9bf509b1903f831b9d1412ac36"
+    },
+    {
+      "url": "/board-3d.js",
+      "sha256": "b3dcbaa149ee113731112f3c91977ab0616116f9fbb24f44a1b46019f9c97870"
+    },
+    {
+      "url": "/board-camera.js",
+      "sha256": "f97b8a79a1687529857b71d182dbe24c3dfac74ec24f8848c3b3c6cfa73ed583"
+    },
+    {
+      "url": "/chat-art.js",
+      "sha256": "b4fc9f555eff3f56cec0a50abbeb6d9d575a66b82cd38737895dedb0d618d619"
+    },
+    {
+      "url": "/connection.js",
+      "sha256": "0064ea0c9bfc307a1b6f65d21366ac147f85c6e2df7763b8c88470dc0ca6c695"
+    },
+    {
+      "url": "/data.js",
+      "sha256": "64b9d729450313c6732927327297931c889a52bf4e8afa35caa03dfc746e8049"
+    },
+    {
+      "url": "/destination-map.css",
+      "sha256": "f414d65f1011834d3b70f0bb56ae7768024983a2c59938bdb958132c33616769"
+    },
+    {
+      "url": "/destination-planner.js",
+      "sha256": "b9463856245bfac7b2eafd426f80bd0bd8883817c5dca8ab124e6d9e6b908280"
+    },
+    {
+      "url": "/draw-intent.js",
+      "sha256": "0332f52045f7a7c3f9bfe1ed05505b1de232805181d5be1e462519ade64a0431"
+    },
+    {
+      "url": "/game-timing.js",
+      "sha256": "8fb789fd3655363dc3e49fdef46629576a9aa9facbc4f7568f3de0ca8317ed8f"
+    },
+    {
+      "url": "/game-ui.js",
+      "sha256": "35746a92e1f84cb22ca231f719cbdcbd436d72cf656a762649b2f632a2c22041"
+    },
+    {
+      "url": "/game.css",
+      "sha256": "f8878dcaa14ade6e36775ec9ff665abd24d044106a3ad5c2ab4bdb6e90090a06"
+    },
+    {
+      "url": "/history-ui.js",
+      "sha256": "73ac54c5837ebc6525997e28a79ad305aff624579401781d460c1c483218f80a"
+    },
+    {
+      "url": "/i18n.js",
+      "sha256": "82e525ebb1bc1c477a9f74b6052432721cd0954c976a035f3e6c5a9023dc50f9"
+    },
+    {
+      "url": "/index.html",
+      "sha256": "51dc0d2746bf9ae03856a7b3b0e1f84c1b64f95e27ea065276fa2af20d3b7d0b"
+    },
+    {
+      "url": "/layouts/europe-v1.js",
+      "sha256": "78651811510606cdafae1fea86996fe849f18bfc27c53c50f117f41ade71d997"
+    },
+    {
+      "url": "/layouts/laboratory-v1.js",
+      "sha256": "0f56fcb9f7b4d6b3c55e20c356e7cf40c85e2a0a920c20fb4299440c3db01636"
+    },
+    {
+      "url": "/layouts/south-america-v3.3-beta.js",
+      "sha256": "afcde2a060a2e27c3605d388e62530bc599e6ca1f5298232949d276799f4b3e6"
+    },
+    {
+      "url": "/lobby-ui.js",
+      "sha256": "ba2322515a273768d10ee79529b43beee0d8bfd98188f543051ccc6ee848a1d7"
+    },
+    {
+      "url": "/lobby.css",
+      "sha256": "4b2797dc3e18e5e27600c35ea45c6a4a3b4cd674f8e0d1c81ba48cd415cdc463"
+    },
+    {
+      "url": "/manifest.webmanifest",
+      "sha256": "43760e890b9aae06a9b4bb103b39cfa0352d8c11a50710a7ed9687dfee874dd4"
+    },
+    {
+      "url": "/map-layout.js",
+      "sha256": "6d39438384b6a54afe49e667e8657c17708b3c7a38d2c15de8e3fd2281b15b45"
+    },
+    {
+      "url": "/map-options.js",
+      "sha256": "966f36fdd24011396df367a592f8d35ff61de80809f17981d4652ab1d14ccb15"
+    },
+    {
+      "url": "/maps/europe-legacy-v1.js",
+      "sha256": "a98444a488518e1793cc411fc37e7a11e219eba800a740768b5b623063e11f89"
+    },
+    {
+      "url": "/maps/europe-v1.js",
+      "sha256": "e6a0157567de5aa336bf6f3f7211e2a5adb323dbb160a71f34841f5d6a9778df"
+    },
+    {
+      "url": "/match-presentation.js",
+      "sha256": "2a30243fb0d5d8129533b1fbdd591deef12e02188ba0c6696e4b315878e128ef"
+    },
+    {
+      "url": "/mobile-bridge.js",
+      "sha256": "89ac9b70fafe4e78b32602198f15bdd96229abdaec9ea3db6ca4cfb41f2cc55d"
+    },
+    {
+      "url": "/mobile-runtime.js",
+      "sha256": "db587611cec7d732c686206e496755dd5ccd5265d743eb90c676e27229281b9e"
+    },
+    {
+      "url": "/offline.css",
+      "sha256": "f98eb5fd138fd31199e334287b1f06b80b2bd67fe58ad53cf1ebad65ff12e3c3"
+    },
+    {
+      "url": "/offline.html",
+      "sha256": "40aba360c5f157d0a620c434a4cbb17a744074bafe6247a4b35cc89b3a4dbbcd"
+    },
+    {
+      "url": "/offline.js",
+      "sha256": "5787080d24e47abd45daafdf66337af1b21d0d95bb87b2d5ffbebf4094b2a13a"
+    },
+    {
+      "url": "/postgame.css",
+      "sha256": "78c24f7167f89e2635f9abf742157a3a975160a8cbead4911931e5f2c43be6f6"
+    },
+    {
+      "url": "/postgame.js",
+      "sha256": "67ecf6fd7f99565c5b7954aec5a4930841c146b377cc15346df46eebece6faa7"
+    },
+    {
+      "url": "/privacy.css",
+      "sha256": "18ec0a1416f764be1826e29915ec5979ecf9d904e1b46abf5c6f18fd208c1829"
+    },
+    {
+      "url": "/privacy.html",
+      "sha256": "ae9fd264107a9159a48454bf33dfc87b2109425d4bf54169fbcf508d9b61b78b"
+    },
+    {
+      "url": "/profile-rules.js",
+      "sha256": "3418ddd91c3e1e6bda34619872d3574b4cbee79e05835c6cfd311637827ae7a8"
+    },
+    {
+      "url": "/profile-style.js",
+      "sha256": "633151116f76f8f4c3598aa0001030c916590bd2396cbe8807ce134ad252324f"
+    },
+    {
+      "url": "/profile-summary.js",
+      "sha256": "4f46bcc1eb233912b7a286316039b72ff77e0da5847aeb929b070c6f626000bc"
+    },
+    {
+      "url": "/profile-ui.js",
+      "sha256": "8538595e06dfb549d28db3958d346f1d169b5ea3637eaf38013ac79aaa4443f5"
+    },
+    {
+      "url": "/profile.css",
+      "sha256": "1143d56d261329d6662fd251dfd4e21939d8737a181d484bee2b31538cc31ef0"
+    },
+    {
+      "url": "/pwa.js",
+      "sha256": "68bdec898b2c15a1e84c1c4c71c68dcf908dd5cd84cc511a85ea3cc4d2765ef1"
+    },
+    {
+      "url": "/replay-state.js",
+      "sha256": "8caf1289260893c3b1b1aadd19227061e269c9f3be1ddb8644cd430ecc0eea4d"
+    },
+    {
+      "url": "/replay-ui.js",
+      "sha256": "309dd2a939bc9ee0c5ba078f17037bec375af3f1ff68d5f31c11bd2106787710"
+    },
+    {
+      "url": "/replay.css",
+      "sha256": "0bdef3d97f75a877fa36ade27f3a34d3980ba8c719f9a2f4e9f7602ec2bf561b"
+    },
+    {
+      "url": "/responsive.css",
+      "sha256": "8b9a629fb89eac46ed17461ff97705aa8b59508baee587463c20f75805a45e35"
+    },
+    {
+      "url": "/room-chat.css",
+      "sha256": "91100c06a29c77a376ba16d8e303294791d476697fbdf3a936820734079ebf60"
+    },
+    {
+      "url": "/room-chat.js",
+      "sha256": "2f6f326ae2a56ae6facdd92eca35ca41b433dc027cd21a09f03acef75512f57d"
+    },
+    {
+      "url": "/room-map-picker.js",
+      "sha256": "ed53ffe4a72f0cce0d2af280d06ff2046696eba81763e93a808e1ca2f27354aa"
+    },
+    {
+      "url": "/room-setup.css",
+      "sha256": "5028a9ffc430d87bdc26266a8f59d3bbe3f23c4001a152a8d09841fd367a4d24"
+    },
+    {
+      "url": "/score-medals.js",
+      "sha256": "fa6ef929aa55a626beb941c9df0fcc4292f2f168362a0ebf69a78519bf3e44e9"
+    },
+    {
+      "url": "/score-recount.js",
+      "sha256": "2bdfa8281066e2d4bc1375b84b357ad3671a2be73c77779f5b7199bb88f73413"
+    },
+    {
+      "url": "/service-worker.js",
+      "sha256": "f46bd6ef8a8f14a5f68499b0837d93787b1555b8cd82c2681ca83112a93ae97e"
+    },
+    {
+      "url": "/shell-icons.js",
+      "sha256": "0fdd9b06f19005b7723e085ae5d7355f7e67a668cdc3494ab2c323ef67f295b7"
+    },
+    {
+      "url": "/shell.css",
+      "sha256": "dc6075ae4764481ade76fc3f1191d617f1ca0cbbca0d362352d7c14a00d39019"
+    },
+    {
+      "url": "/shell.js",
+      "sha256": "2772889816ce24bac7fa9b81baf08cbbf15031c5341f4d5302d60cece34b7e6a"
+    },
+    {
+      "url": "/state-stream.js",
+      "sha256": "57f216e208aabfbca2981702a3242c90ef194b60d3477e088242627245d5e2f3"
+    },
+    {
+      "url": "/style.css",
+      "sha256": "62de270f0dd5e866c2fbd51fdaaee59b363896f1bb052d4225ec6e0a9460e4fc"
+    },
+    {
+      "url": "/table-ui.js",
+      "sha256": "862a250885480ede51ef41cadcdac0b4bc2ce484b9885d5e3576f944fe03218a"
+    },
+    {
+      "url": "/table.css",
+      "sha256": "67860b53dd5be0b17aad23f0ee8d33f1645bfba8eeedad49f555d0a384b59528"
+    },
+    {
+      "url": "/ticket-map.js",
+      "sha256": "72ca5defa0415d09e478729eb59836850f6000f709d37cf247f87289f01d8e40"
+    },
+    {
+      "url": "/translations.js",
+      "sha256": "8b8845e00c7ef2cdbe9e632fc6ee54607534dfa54c20b4db3d5044a9183827e6"
+    },
+    {
+      "url": "/tunnel-board.js",
+      "sha256": "9d01b02172cf2da6f625ff9d85fe72e8f6e170bbd1a85a8a8c8ead97cc996f2b"
+    },
+    {
+      "url": "/turn-history.js",
+      "sha256": "a47ce661e9e57bfebd5421fd37a4ef634d5c97fdbc71d5d32d7353332bf1a89a"
+    },
+    {
+      "url": "/vendor/three.core.js",
+      "sha256": "613e370f76638fdef83926642bf256dc9615684922de1ce1f63a8583e5d78578"
+    },
+    {
+      "url": "/vendor/three.module.js",
+      "sha256": "104f56145899722094556490d787aae0617cc2fc3382f31df02d724ea1aee341"
+    },
+    {
+      "url": "/wagon-models.mjs",
+      "sha256": "76933f1b087917849e9150e490a44c4804185b60a048bbb178888ea7afacdeca"
+    },
+    {
+      "url": "/wagon-people.mjs",
+      "sha256": "24ea91ca163ec1fd5ae6af32379a117f2ee7e5dac6dab799f843e8cb006da189"
+    },
+    {
+      "url": "/wagon-preview.js",
+      "sha256": "c267d887ea4e90261b9ae7c5e21ef7f3ba2958ca210dfee25edeb0baeafb1996"
+    },
+    {
+      "url": "/wagon-renderer.js",
+      "sha256": "4c23125f0699fb919b6b667b1e34c0a7e7fa5ef7b2fa72cb22fb61ef65d3c701"
+    }
+  ]
+}

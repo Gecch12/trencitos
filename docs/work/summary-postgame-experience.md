@@ -1,5 +1,5 @@
 ---
-{"id":"summary-postgame-experience","status":"validated","parent":null,"depends_on":["profile-social-statistics"],"branch":"main","delivery":"integrated","updated":"2026-11-06"}
+{"id":"summary-postgame-experience","status":"validated","parent":null,"depends_on":["profile-social-statistics"],"branch":"main","delivery":"released","updated":"2026-11-06"}
 ---
 # Resumen visual y cierre con recuentos
 
@@ -7,8 +7,8 @@ Implementación autorizada por Ángel tras la revisión Moti del 2026-11-06.
 Alcance: resumen del perfil, cierre integrado en el tablero, recuentos opcionales
 y cartas de robo horizontales en escritorio/tablet. Publicado desde `main` en
 `51cb1ea`; la entrega verificada se registra en [Producción](../production.md).
-La revisión posterior de los ocho puntos está validada localmente, sin publicación;
-su alcance y comprobaciones se registran al final de esta ficha.
+La revisión posterior de los ocho puntos y el mazo corregido se publicaron en
+`885e381`, con Android build 7 e iOS build 8; evidencia en [Producción](../production.md).
 
 ## Hitos y aceptación
 
@@ -328,3 +328,10 @@ documentación y arquitectura, impacto documental y `git diff --check` correctos
 
 Siguiente paso: recargar la web local y revisar el tamaño corregido. Sin
 despliegue ni actualización de aplicaciones nativas.
+
+## Entrega conjunta · 2026-11-06
+
+Publicado `885e381` en Render, APK build 7 e iPhone build 8, tras CI completo
+(765 Node y cuatro grupos Chrome). Incluye el mazo a tamaño completo, «ROBAR»
+y el control de privacidad de bots en vivo/replay. [Evidencia y límites](../production.md).
+Siguiente paso: evaluación de Ángel en la web y el teléfono actualizado.

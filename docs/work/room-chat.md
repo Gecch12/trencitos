@@ -1,11 +1,12 @@
 ---
-{"id":"room-chat","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"none","updated":"2026-11-06"}
+{"id":"room-chat","status":"done","parent":null,"depends_on":[],"branch":"main","delivery":"released","updated":"2026-11-06"}
 ---
 # Chat de mesa con moderación y referencias al mapa
 
 Implementación autorizada directamente en `main`, sobre cambios locales previos
 de CI, resultados y presentación. Contrato canónico: [chat de mesa](../room-chat.md).
-No incluye despliegue, reportes, sanciones automáticas, chat global, mensajes
+El desarrollo inicial no incluía despliegue; se publicó después en la entrega
+registrada al final. No incluye reportes, sanciones automáticas, chat global, mensajes
 privados, mensajes rápidos ni referencias a billetes de destino.
 
 ## Hitos y aceptación
@@ -62,7 +63,8 @@ ejecución. Permanece local en `main`, sin publicar.
 
 ## Siguiente paso
 
-El alcance local está completo. Cuando se solicite publicación, revisar el diff
-compartido, ejecutar el flujo de entrega y comprobar el chat contra el servidor
-publicado. El filtro léxico requiere ajustes con casos reales; no reemplaza la
-futura revisión humana de reportes.
+Publicado con `885e381` en web, Android build 7 e iPhone build 8, tras CI
+completo. La prueba real de producción confirmó entrega entre dos clientes,
+historial al reconectar y deduplicación; la sala privada propia se cerró al terminar.
+[Evidencia de publicación](../production.md). Siguiente paso: evaluar conversaciones
+reales y ajustar el filtro léxico; no reemplaza la futura revisión humana de reportes.

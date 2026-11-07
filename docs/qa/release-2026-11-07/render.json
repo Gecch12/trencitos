@@ -1,0 +1,11 @@
+{
+  "sourceCommit": "885e381d57399e128026927ecacf28b3a8ff730d",
+  "url": "https://dashboard.render.com/web/srv-dbim81vlk1mc73f4f900/deploys/dep-dbn8a3mi0phs738anbt0",
+  "status": "Deploy succeeded | Live",
+  "trigger": "Manual",
+  "durationSeconds": 39.9,
+  "startedAt": "2026-11-06T20:55:26-05:00",
+  "liveAt": "2026-11-06T20:56:06-05:00",
+  "databaseMigration": false,
+  "automaticGitIntegrationResolved": false
+}
