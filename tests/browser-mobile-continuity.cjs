@@ -43,13 +43,18 @@ fs.mkdirSync(out,{recursive:true});const report={checks:[],errors:[]};let browse
     const rows=await page.locator('.result-summary').evaluateAll(rows=>rows.map(row=>row.getBoundingClientRect().height));assert.ok(rows.every(h=>h<=58),JSON.stringify(rows));
     assert.equal(await page.locator('.results-table .score-icon-help').count(),5);
     if(width===390){
-      const track=page.locator('.score-scroll-track');assert.equal(await track.isVisible(),true);
-      await track.fill('60');await track.dispatchEvent('input');assert.ok(await page.locator('.results-table-scroll').evaluate(el=>el.scrollLeft>0));
+      assert.equal(await page.locator('.score-scroll-track').count(),0);
+      const scroller=page.locator('.results-table-scroll'),box=await scroller.boundingBox();
+      const session=await resultContext.newCDPSession(page),y=box.y+20,start=box.x+box.width-20;
+      await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:start,y}]});
+      for(const dx of [25,60,100,140])await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:start-dx,y}]});
+      await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await session.detach();
+      await page.waitForFunction(()=>document.querySelector('.results-table-scroll').scrollLeft>0);
     }
     await page.screenshot({path:path.join(out,'results-'+width+'.png')});
   }
   await page.setViewportSize({width:390,height:844});await page.locator('.score-icon-help').first().tap();assert.equal(await page.locator('#score-icon-tooltip').innerText(),'Puntuación total');
-  report.checks.push('Compact results keep totals beside players, provide tap help, and show a usable horizontal track on phone');
+  report.checks.push('Compact results keep totals beside players, provide tap help, and support direct horizontal touch scrolling without an auxiliary track');
   await page.locator('#dialog .dialog-close').click();await page.evaluate(()=>{resetToLobby();});
   const matches=[{id:'11111111-1111-4111-a111-111111111111',startedAt:Date.now(),closedAt:Date.now()+60000,complete:true,status:'completed',map:'Europa',mode:'Clásico',rank:1,ownSeat:0,players:[{name:'Ángel'},{name:'Bot'}],scores:[{seat:0,route:22,destination:20,stations:4,express:10,score:56,winner:true},{seat:1,route:20,destination:-5,stations:12,express:0,score:27}]}];
   await page.route('**/api/history',route=>route.fulfill({json:{matches:[...matches,{...matches[0],status:'active',id:'22222222-2222-4222-a222-222222222222'}]}}));

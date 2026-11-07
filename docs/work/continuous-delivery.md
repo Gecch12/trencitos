@@ -95,6 +95,11 @@ el reinicio dentro del evento, separan expiración y retorno manual del foco, y
 permiten 30 s para confirmar ese clic. Se conservan las aserciones funcionales.
 La nueva revisión requiere CI completo antes de publicar.
 
+El segundo run pasó mesa y replay, pero continuidad móvil aún exigía la barra
+auxiliar de resultados retirada por el diseño aprobado. Ese recorrido comprueba
+ahora la ausencia de la barra y un deslizamiento horizontal táctil real sobre
+la tabla. La prueba del historial conserva sus controles propios.
+
 La ampliación del 2026-11-06 añade `browser-profile-style.cjs` al workflow,
 con capturas en `.qa/ci/profile-style/`: selector visual, teclado, scroll táctil y
 guardado de avatares. Validación local en [la ficha de perfil](profile-social-statistics.md).
