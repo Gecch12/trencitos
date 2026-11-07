@@ -93,6 +93,16 @@ function readMatch(file,id){
  assert.equal(await initial.locator('.history-ticket-status.kept').count(),2);assert.equal(await initial.locator('.history-ticket-status.discarded').count(),2);assert.doesNotMatch(await initial.innerText(),/Ofrecidos|Conservados|Descartados|conservó|descartó/);
  const stable=await initial.elementHandle();await page.locator('#replayNext').click();assert.equal(await stable.evaluate(n=>n.isConnected),true,'unchanged rows are not recreated');
  await page.screenshot({path:path.join(out,'desktop.png')});
+ await seek(page,build.step);
+ const highlighted=await page.locator('#historyEntries .is-current').evaluateAll(rows=>rows.map(row=>{
+  const r=row.getBoundingClientRect(),s=getComputedStyle(row),avatar=row.querySelector('.history-avatar')?.getBoundingClientRect();
+  return {width:r.width,available:row.parentElement.clientWidth,radius:s.borderRadius,avatarInset:avatar?avatar.left-r.left:null,padding:s.paddingLeft};
+ }));
+ assert.ok(highlighted.some(row=>row.avatarInset!==null));
+ for(const row of highlighted){assert.ok(Math.abs(row.width-row.available)<1);assert.equal(row.radius,'0px');assert.ok(parseFloat(row.padding)>=10);if(row.avatarInset!==null)assert.ok(row.avatarInset>=10);}
+ await page.locator('#history').screenshot({path:path.join(out,'history-highlight.png')});
+ await page.locator('#replayLast').click();assert.equal(await page.locator('#replaySeek').evaluate(n=>n.value===n.max),true);
+ await page.locator('#replayControls').screenshot({path:path.join(out,'progress-complete.png')});
  report.tests.push('Normal player avatars and market; one destination list; stable history DOM; visible/blind/rival draws with hand count on landing, renewal, construction, pause, seek and 4× speed');
  // Reusing event IDs from the just-finished live game must not hide replay cards.
  await page.locator('#scores [data-player="0"] .player-avatar').click();

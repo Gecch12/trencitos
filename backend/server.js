@@ -39,6 +39,7 @@ const { createAccountSeats } = require("./account-seats");
 const Directory = require("./room-directory");
 const {selectMap,roomMapReference} = require("./room-map");
 const { createRoomBots } = require("./room-bots");
+const RoomChat = require('./room-chat');
 const PORT = Number(process.env.PORT || 3000),
   ROOT = path.resolve(__dirname, "..");
 const STORE = process.env.STATE_FILE || path.join(ROOT, "room-state.json");
@@ -91,7 +92,7 @@ const committed = new WeakMap();
 for (const r of rooms.values()) committed.set(r, snapshot(r));
 function captureRuntime(key=null) {
   return { failureAt: storageFailureAt, archivePending:archive.snapshot(key),
-    rooms: [...rooms.values()].filter(r=>key===null||r.code===key).map(r => ({ room: r, data: { ...r, commitment: structuredClone(r.commitment), game: r.game ? structuredClone(r.game) : null },
+    rooms: [...rooms.values()].filter(r=>key===null||r.code===key).map(r => ({ room: r, data: { ...r, chat:structuredClone(r.chat), commitment: structuredClone(r.commitment), game: r.game ? structuredClone(r.game) : null },
       members: r.members.map(member => ({ member, data: { ...member, actionIds: [...(member.actionIds || [])], actionReceipts: structuredClone(member.actionReceipts || []) } })) })),
     peers: [...peers].filter(peer=>key===null||peer.room?.code===key||peer.watching?.code===key).map(peer => ({ peer, room: peer.room, watching: peer.watching, seat: peer.seat, token: peer.token })) };
 }
@@ -119,6 +120,7 @@ const checkpoint = createCheckpointHandler({ repository: rooms,
   onLocalFailure: restoreLocalCheckpoint, transaction: () => durable?.transaction,
 });
 const persist = checkpoint.persist;
+const chat = RoomChat.createRoomChat({rooms,peers,persist,blocked:storageBlocked});
 const queueOptions = { capture: captureRuntime, restore: restoreRuntime,
   commit: checkpoint.commit, measure: metrics.record, batchSize:16,
   scope: metrics.scope, spans: metrics.spans,
@@ -177,8 +179,8 @@ async function recoverRoom(peer){
       if(restored){sendRoom(room);return;}
       // A lost response may have committed removal. Do not manufacture another
       // abandonment frame from the rolled-back runtime candidate.
-      for(const member of room.members)if(member.ws){member.ws.send({type:'room_closed'});member.ws.room=null;member.ws.seat=-1;}
-      for(const watcher of peers)if(watcher.watching===room){watcher.watching=null;watcher.send({type:'room_closed'});}
+      for(const member of room.members)if(member.ws){member.ws.send({type:'room_closed',deleted:true});member.ws.room=null;member.ws.seat=-1;}
+      for(const watcher of peers)if(watcher.watching===room){watcher.watching=null;watcher.send({type:'room_closed',deleted:true});}
       rooms.delete(key);persist(room);sendDirectory(room);
     },room);
   }catch(error){queueOptions.onFailure(error,key);}
@@ -206,10 +208,10 @@ const clocks = createGameClock({ rooms, sendRoom, automaticPlay, runBot, dispatc
 const multiplayer = createMultiplayerController({ rooms, sendRoom, automaticPlay, runBot, removeRoom, dispatch, blocked:storageBlocked });
 const roomBots = createRoomBots({ rooms, sendRoom, automaticPlay, runBot, dispatch:dispatchRoom, blocked:storageBlocked });
 function snapshot(r) {
-  return { commitment: structuredClone(r.commitment), emptySince:r.emptySince, archiveHash:r.archiveHash,matchId:r.matchId,archiveSeq:r.archiveSeq,archiveFull:r.archiveFull,archiveStartedAt:r.archiveStartedAt,archiveClosedAt:r.archiveClosedAt,_archiveState:r._archiveState,_archiveIdentity:r._archiveIdentity, game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
+  return { chat:structuredClone(r.chat), commitment: structuredClone(r.commitment), emptySince:r.emptySince, archiveHash:r.archiveHash,matchId:r.matchId,archiveSeq:r.archiveSeq,archiveFull:r.archiveFull,archiveStartedAt:r.archiveStartedAt,archiveClosedAt:r.archiveClosedAt,_archiveState:r._archiveState,_archiveIdentity:r._archiveIdentity, game: r.game ? structuredClone(r.game) : null, revision: r.revision || 0,
     hostSeat: r.hostSeat, practicePausedAt:r.practicePausedAt, visibility: r.visibility, maxPlayers: r.maxPlayers, mapRef: r.mapRef ? {...r.mapRef} : undefined, timing: r.timing ? {...r.timing} : undefined,
     members: r.members.map(m => ({ member: m, data: { token: m.token || m.ws?.token, tokenHash: m.tokenHash,
-      name: m.name, username:m.username, displayName:m.displayName, avatar:m.avatar, participation:structuredClone(m.participation), disconnectedAt:m.disconnectedAt, bot: m.bot, color: m.color, accountId: m.accountId, guestId:m.guestId, actionIds: [...(m.actionIds || [])], actionReceipts: structuredClone(m.actionReceipts || []), autopilot: m.autopilot, autopilotSince: m.autopilotSince, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
+      name: m.name, chatId:m.chatId, username:m.username, displayName:m.displayName, avatar:m.avatar, participation:structuredClone(m.participation), disconnectedAt:m.disconnectedAt, bot: m.bot, color: m.color, accountId: m.accountId, guestId:m.guestId, actionIds: [...(m.actionIds || [])], actionReceipts: structuredClone(m.actionReceipts || []), autopilot: m.autopilot, autopilotSince: m.autopilotSince, reclaim: m.reclaim, reclaimSerial: m.reclaimSerial } })) };
 }
 function restoreLocalCheckpoint(e) {
   console.error("Could not persist rooms:", e.message);
@@ -217,7 +219,7 @@ function restoreLocalCheckpoint(e) {
   for (const r of rooms.values()) {
     const saved = committed.get(r);
     if (saved) {
-      r.game = structuredClone(saved.game); r.revision = saved.revision; r.commitment=structuredClone(saved.commitment); r.emptySince=saved.emptySince;
+      r.game = structuredClone(saved.game); r.chat=structuredClone(saved.chat); r.revision = saved.revision; r.commitment=structuredClone(saved.commitment); r.emptySince=saved.emptySince;
       for(const key of ["archiveHash","matchId","archiveSeq","archiveFull","archiveStartedAt","archiveClosedAt","_archiveState","_archiveIdentity"])r[key]=saved[key];
       watchRecording(r);
       r.hostSeat = saved.hostSeat; r.practicePausedAt=saved.practicePausedAt; r.visibility = saved.visibility; r.maxPlayers = saved.maxPlayers; r.mapRef = saved.mapRef; r.timing = saved.timing;
@@ -245,10 +247,10 @@ function removeRoom(r, message = "La sala ya no existe.") {
   archive.capture(r,message);
   clocks.cancel(r); multiplayer.cancel(r); roomBots.cancel(r); rooms.delete(r.code);
   for (const m of r.members) if (m.ws) {
-    m.ws.send({ type: "room_closed", message }); m.ws.room = null; m.ws.seat = -1; m.ws = null;
+    m.ws.send({ type: "room_closed", message, deleted:true }); m.ws.room = null; m.ws.seat = -1; m.ws = null;
   }
   for (const peer of peers) if (peer.watching === r) {
-    peer.watching = null; peer.send({ type: "room_closed", message });
+    peer.watching = null; peer.send({ type: "room_closed", message, deleted:true });
   }
   persist();
   sendDirectory(r);
@@ -421,10 +423,10 @@ function createPeer(socket) {
         if(message?.type==='retry_save'&&remoteStore?.perRoom&&storageFailureAt===null&&pausedRooms.has(peer.room?.code)){
           void recoverRoom(peer);continue;
         }
-        const expectedRoom = message?.type === 'action' ? peer.room : null;
+        const expectedRoom = message?.type === 'action' ? peer.room : /^chat_/.test(message?.type) ? peer.room || peer.watching : null;
         dispatch(() => {
           if(peer.closed)return;
-          if(expectedRoom && peer.room!==expectedRoom)return deny(peer,'Tu sala cambió. Reconecta antes de repetir la acción.','STALE_SESSION');
+          if(expectedRoom && (peer.room||peer.watching)!==expectedRoom)return deny(peer,'Tu sala cambió. Reconecta antes de repetir la acción.','STALE_SESSION');
           onMessage(peer,message);
         }, kind, traceId ? timing => { if (!peer.closed) peer.send({ type: 'timing', id: traceId, timing }); } : undefined, expectedRoom?.code??null);
       } catch (e) {
@@ -453,6 +455,7 @@ function detachPeer(peer, disconnectedAt = Date.now()) {
   sendRoom(r);
 }
 function watchRecording(r) {
+  RoomChat.ensure(r);
   if(r.game) {
     let seen=r.game.eventSerial||0;
     Engine.observe(r.game,event=>{
@@ -466,6 +469,7 @@ function queueRoomViews(r) {
   r.members.forEach((m, i) => {
     if (!m.ws || m.ws.closed) return;
     m.ws.send(projections.lobby(r, i, { token: m.ws.token || m.token }));
+    m.ws.send(chat.context(r,m.ws));
     m.ws.send({ type: "storage", paused: storageBlocked(r), requiresRestart: !!remoteStore && (!remoteStore.perRoom || storageFailureAt!==null) });
     if (r.game) m.ws.send(projections.state(r, i, { storagePaused: storageBlocked(r) }));
   });
@@ -494,6 +498,7 @@ function sendSpectator(peer, r) {
     peer.watching = null; peer.send({ type: "room_closed", message: "Esta partida ya no está disponible para observar." }); return;
   }
   peer.send(projections.lobby(r, -1));
+  peer.send(chat.context(r,peer));
   peer.send(projections.state(r, -1, { storagePaused: storageBlocked(r) }));
 }
 function deny(peer, msg, code) {
@@ -520,6 +525,7 @@ function onMessage(peer, msg) {
     return;
   }
   if (msg.type === "list_rooms") { peer.compactMessages = [1,2].includes(msg.compactMessages) ? msg.compactMessages : 0; peer.statePatches = msg.statePatches === 1; peer.directory = true; sendDirectory(); return; }
+  if (typeof msg.type==='string' && msg.type.startsWith('chat_')) return chat.handle(peer,msg);
   if (msg.type === "spectate") {
     if (peer.room) return deny(peer, "Sal de tu sala antes de observar otra partida.");
     const code = String(msg.code || "").trim().toUpperCase(), r = rooms.get(code);
@@ -673,19 +679,22 @@ function onMessage(peer, msg) {
     return;
   }
   if (["leave", "abandon"].includes(msg.type) && !r.practice) {
-    if (soloWithBots(r)) return removeRoom(r, "Abandonaste la partida con bots.");
+    const finished = r.game?.phase === "finished";
+    if (soloWithBots(r)) return removeRoom(r, finished ? "" : "Abandonaste la partida con bots.");
     if (!r.game) multiplayer.removeSeat(r, peer.seat);
     else {
       const leavingSeat = peer.seat;
-      if (msg.type === "abandon") Commitment.abandon(r, leavingSeat);
-      r.members[peer.seat].autopilot = true;
-      r.members[peer.seat].autopilotSince ??= Date.now();
+      if (!finished && msg.type === "abandon") Commitment.abandon(r, leavingSeat);
+      if (!finished) {
+        r.members[peer.seat].autopilot = true;
+        r.members[peer.seat].autopilotSince ??= Date.now();
+      }
       r.members[peer.seat].reclaim = false;
       r.members[peer.seat].ws = null;
       r.members[peer.seat].disconnectedAt = Date.now();
       if (r.hostSeat === leavingSeat) r.hostSeat = r.members.findIndex(m => m.ws && !m.ws.closed);
       peer.room = null; peer.seat = -1;
-      peer.send({ type: "room_closed", preserveIdentity: msg.type !== "abandon", message: msg.type === "abandon" ? "Abandonaste definitivamente la partida. Puedes consultar sus resultados en tu historial." : "Saliste. Puedes recuperar tu puesto con tu enlace privado mientras la partida exista." });
+      peer.send({ type: "room_closed", preserveIdentity: finished || msg.type !== "abandon", message: finished ? "" : msg.type === "abandon" ? "Abandonaste definitivamente la partida. Puedes consultar sus resultados en tu historial." : "Saliste. Puedes recuperar tu puesto con tu enlace privado mientras la partida exista." });
     }
     if (rooms.has(r.code)) sendRoom(r);
     return;
@@ -765,7 +774,12 @@ function attach(peer, r, m) {
   }
 }
 function startRoomGame(r) {
-  const game = Engine.newRandomGame(r.members.map(m => m.name), Date.now(), crypto.randomInt, GameTiming.normalize(r.timing), {mapRef:roomMapReference(r)});
+  const now = Date.now();
+  const game = Engine.newRandomGame(r.members.map(m => m.name), now, crypto.randomInt, GameTiming.normalize(r.timing), {mapRef:roomMapReference(r)});
+  // Reserve the common opening cue before the full initial-choice allowance.
+  game.initialRevealAt = now + GameTiming.startMs;
+  game.initialDeadline += GameTiming.startMs;
+  game.turnDeadline = game.initialDeadline;
   game.players.forEach((player, i) => { player.color = r.members[i].color; });
   return game;
 }

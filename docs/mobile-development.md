@@ -252,3 +252,7 @@ El skill [trencitos-publicar](../skills/trencitos-publicar/SKILL.md) está insta
 para Ángel como `$trencitos-publicar`. Sigue las instrucciones de este documento
 y del despliegue; entrega la página de Release, verifica Render Live e instala
 sobre el iPhone conectado. Crear o modificar el skill no ejecuta una publicación.
+La [optimización de entrega](work/continuous-delivery.md) permite preparar paquetes
+mientras corre CI remoto; sincronizar Android e iOS sigue siendo secuencial porque
+ambos regeneran el mismo bundle y configuración. La distribución exige el CI
+completo de la revisión entregada, incluso si el último cierre fue documental.

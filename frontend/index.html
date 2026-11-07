@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="table.css" />
     <link rel="stylesheet" href="profile.css" />
     <link rel="stylesheet" href="postgame.css" />
+    <link rel="stylesheet" href="room-chat.css" />
   </head>
   <body>
     <a href="#lobby" class="skip-link">Saltar al contenido</a>
@@ -149,7 +150,7 @@
           </div>
           <footer class="room-start"><button id="start" class="shell-primary" type="button">Iniciar partida</button><span id="waitingHost" hidden>Esperando al anfitrión</span></footer>
         </section>
-        <aside id="roomChatPanel" class="room-chat-panel"><h2>Chat</h2><p class="chat-placeholder">Próximamente</p><div class="chat-compose"><input placeholder="Enviar un mensaje" aria-label="Chat, próximamente" disabled /><button type="button" aria-label="Enviar mensaje, próximamente" disabled data-icon="send"></button></div></aside>
+        <aside id="roomChatPanel" class="room-chat-panel" aria-label="Chat de la mesa"></aside>
       </section>
       <p id="lobbyError" class="shell-error" role="alert"></p>
     </main>
@@ -212,6 +213,21 @@
               </button>
               <button id="toggleDestinations" class="destination-toggle" type="button" aria-label="Resaltar mis destinos" aria-keyshortcuts="H" aria-pressed="false" title="Resaltar mis destinos (H)" disabled>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8c3 0 2 8 6 8h6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-dasharray="2 2"/><circle cx="5" cy="7" r="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="19" cy="16" r="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="5" cy="7" r="1" fill="currentColor"/><circle cx="19" cy="16" r="1" fill="currentColor"/></svg>
+                <svg class="destination-aura" viewBox="0 0 44 44" aria-hidden="true" focusable="false">
+                  <g class="destination-aura-corners">
+                    <path d="M0 13C-2 4 4-2 13 0C6 0 0 6 0 13Z"/>
+                    <path d="M44 13C46 4 40-2 31 0C38 0 44 6 44 13Z"/>
+                    <path d="M44 31C46 40 40 46 31 44C38 44 44 38 44 31Z"/>
+                    <path d="M0 31C-2 40 4 46 13 44C6 44 0 38 0 31Z"/>
+                  </g>
+                  <g class="destination-aura-edges">
+                    <path d="M11 0Q22-5 33 0Q22-1 11 0Z"/>
+                    <path d="M44 11Q49 22 44 33Q45 22 44 11Z"/>
+                    <path d="M33 44Q22 49 11 44Q22 45 33 44Z"/>
+                    <path d="M0 33Q-5 22 0 11Q-1 22 0 33Z"/>
+                  </g>
+                </svg>
+                <span id="destinationHint" class="destination-hint" role="status" hidden></span>
               </button>
           </div>
           <div id="boardStatusActions" class="board-status-actions">
@@ -225,7 +241,6 @@
           <div class="dockmain">
             <div class="dockheading">
               <span class="eyebrow">TU MANO <span id="handCount"></span></span>
-              <span class="docktip">Solo tú la ves</span>
             </div>
             <div id="hand" class="hand" aria-label="Tus cartas de tren"></div>
           </div>
@@ -247,16 +262,21 @@
         </section>
         <section class="sidepanel">
           <div class="sectiontitle market-toolbar">
+            <span class="eyebrow market-label">ROBAR</span>
+            <span id="drawstats" class="draw-status"></span>
             <button id="drawtickets" class="destination-deck" aria-label="Robar nuevos destinos" title="Nuevos destinos · Roba hasta 3 billetes y conserva al menos 1">
-              <span data-icon="ticket-add" aria-hidden="true"></span><span class="destination-deck-label">Nuevos destinos</span>
+              <span data-icon="ticket-add" aria-hidden="true"></span><span class="destination-deck-label">Destinos</span>
             </button>
           </div>
           <div id="market" class="market" aria-label="Cinco cartas visibles y mazo oculto">
             <button id="drawblind" class="train-deck" aria-label="Robar carta del mazo" title="Robar una carta oculta">
-              <span class="deck-stack" aria-hidden="true"><i></i><img src="assets/cards/back.svg" alt="" draggable="false"></span>
+              <span class="deck-stack" aria-hidden="true">
+                <img src="assets/cards/back.svg" alt="" draggable="false">
+                <img src="assets/cards/back.svg" alt="" draggable="false">
+                <img src="assets/cards/back.svg" alt="" draggable="false">
+              </span>
             </button>
           </div>
-          <span id="drawstats" class="draw-status"></span>
           <button id="pass" class="tertiary full hidden">Pasar turno (sin jugadas)</button>
         </section>
         <section class="players-panel" aria-label="Jugadores">
@@ -293,7 +313,7 @@
       </nav>
       <nav id="tableMapTools" class="table-tools table-tools-right" aria-label="Mapa y destinos">
         <button type="button" data-panel="destinations" data-icon="flag" aria-label="Tus destinos" title="Tus destinos" aria-controls="compactPanel" aria-expanded="false"><span id="destinationProgress" class="destination-progress" hidden></span></button>
-        <button id="resetMapView" type="button" data-icon="fullscreen" aria-label="Ver mapa completo" title="Ver mapa completo"></button>
+        <button id="resetMapView" type="button" data-icon="map-center" aria-label="Ver mapa completo" title="Ver mapa completo"></button>
         <button id="returnMapView" class="hidden" type="button" data-icon="back" aria-label="Volver a mi encuadre" title="Volver a mi encuadre"></button>
       </nav>
       <section id="turnBanner" class="turn-banner" aria-label="Turno actual">
@@ -302,7 +322,8 @@
       </section>
     </div>
     <div id="tunnelBoardNotice" class="tunnel-board-notice" hidden><span id="tunnelBoardStatus" role="status"></span><span id="tunnelDecisionReturn" hidden><strong data-clock="turn" data-clock-format="timer"></strong><button id="returnTunnel" type="button">Volver al túnel</button></span></div>
-    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"><span id="toastMessage"></span><button id="dismissToast" type="button" aria-label="Cerrar aviso" data-icon="close"></button></div>
+    <div id="gameStart" class="game-start hidden" role="status" aria-live="polite"><span data-icon="bell" aria-hidden="true"></span><strong>¡Comienza la partida!</strong></div>
     <div id="overlay" class="overlay hidden">
       <div class="dialog" id="dialog" role="dialog" aria-modal="true"></div>
     </div>
@@ -347,6 +368,8 @@
     <script src="mobile-bridge.js"></script>
     <script src="score-recount.js"></script>
     <script src="postgame.js"></script>
+    <script src="chat-art.js"></script>
+    <script src="room-chat.js"></script>
     <script src="app.js"></script>
     <script src="pwa.js"></script>
   </body>

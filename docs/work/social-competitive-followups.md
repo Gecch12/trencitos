@@ -16,15 +16,15 @@ y criterios de aceptación definidos.
   e incertidumbre inicial. Explicar cada cambio de nivel. Las estadísticas y
   percentiles actuales describen rendimiento, no son un rating competitivo.
   Algoritmo, condiciones de acceso y temporadas quedan por definir.
-- [ ] **Chat funcional de la mesa.** Definir mensajes durante y después de la
-  partida, mensajes rápidos/reacciones, silencio y alcance de conservación.
-  Actualmente solo hay un componente deshabilitado; hacerlo visible en el
-  lateral del cierre no incluye transporte ni envío. Considerar permisos de
-  participantes/espectadores, bloqueo y límites de frecuencia al diseñarlo.
-- [ ] **Compartir selecciones al terminar.** Referenciar destinos o tramos en
-  el chat para que otros participantes puedan abrirlos voluntariamente, sin
-  mover sus cámaras automáticamente. Depende del chat y de los permisos de
-  consulta; no amplía la información disponible durante una partida activa.
+- **Chat de la mesa y referencias a tramos.** Trabajo autorizado y separado en
+  [su ficha](room-chat.md). El usuario excluyó mensajes rápidos, privados y
+  referencias a billetes de destino; la consulta de un tramo es voluntaria y local.
+- [ ] **Reportes de abuso y revisión humana.** Ángel los pospuso expresamente el
+  2026-11-06 al aprobar el chat. Definir canal de reporte, identidad/autoridad de
+  revisores, evidencia y plazo de conservación, respuesta al reportante,
+  sanciones y revisión de errores. El filtro y el silencio personal de la primera
+  entrega no constituyen un sistema de reportes. No crear botones sin flujo real
+  ni sanciones graves automáticas basadas únicamente en coincidencias léxicas.
 - [ ] **Revancha coordinada.** Diseñar invitación y confirmaciones visibles,
   conservando la posibilidad de seguir explorando el resultado. La revancha
   actual continúa disponible; no introducir votaciones nuevas en el cierre
@@ -39,12 +39,14 @@ ubicación canónica en [Preparación comercial](commerce.md).
 
 ## Fuentes y evidencia
 
-Revisión documental y de código el 2026-11-06, sobre `main` sin cambios locales
-previos. Contratos existentes: [perfil y estadísticas](../profile-social-statistics.md),
+Registro inicial revisado el 2026-11-06; la ampliación del chat se realizó sobre
+`main` con cambios locales previos de otras entregas. Contratos existentes:
+[perfil y estadísticas](../profile-social-statistics.md),
 [historial y replay](../history-replay.md) y [mesa adaptable](board-first-mobile.md).
-Los componentes actuales están en `frontend/index.html` (chat deshabilitado),
+Los componentes actuales están en `frontend/room-chat.js` (chat),
 `backend/server.js` (revancha) y `backend/player-statistics.js` (estadísticas).
-No se ejecutaron pruebas funcionales ni se desplegaron cambios por este registro.
+La validación del chat vive en [su ficha](room-chat.md); este registro de pendientes
+no activa reportes, clasificación, revancha coordinada ni análisis automático.
 
 ## Siguiente paso
 

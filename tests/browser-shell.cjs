@@ -78,7 +78,7 @@ const save=()=>fs.writeFileSync(path.join(out,'shell-report.json'),JSON.stringif
     if(w===390)await shot(host,'waiting-mobile-players');
     await host.locator('button[data-room-tab="settings"]').click();assert.equal(await host.locator('#roomVisibility').isVisible(),true);
     if(w===390)await shot(host,'waiting-mobile-settings');
-    await host.locator('button[data-room-tab="chat"]').click();assert.equal(await host.locator('.chat-compose input').isDisabled(),true);
+    await host.locator('button[data-room-tab="chat"]').click();assert.equal(await host.locator('#roomChatInput').isDisabled(),false);
     await host.locator('button[data-room-tab="players"]').click();
    }
   }
@@ -93,9 +93,9 @@ const save=()=>fs.writeFileSync(path.join(out,'shell-report.json'),JSON.stringif
   await viewer.locator('#sessionControls summary').click();await viewer.locator('#leaveWatch').click();await viewer.waitForSelector('#roomsPage:visible');assert.equal(app.rooms.get(code).members.length,3);
   report.tests.push('Real public/private directory, create/join, independent host/guest, settings authorization, full room, durable bots, initial selection, spectator privacy/reload/exit');
   // A backend-confirmed profile write must close the modal only on success.
-  const account=await newPage();let stored={id:'test-account',initialized:true,nickname:'Cuenta QA',color:'#d9564a'},fail=false;
+  const account=await newPage();let stored={id:'test-account',initialized:true,nickname:'Cuenta QA',displayName:'Cuenta QA',username:'CuentaQA',color:'#d9564a'},fail=false;
   await account.route('**/api/account**',async route=>{const u=new URL(route.request().url());if(u.pathname==='/api/account/profile'){if(fail)return route.fulfill({status:500,json:{message:'Guardado de prueba rechazado'}});stored={...stored,...route.request().postDataJSON()};return route.fulfill({json:{profile:stored}});}return route.fulfill({json:u.pathname.endsWith('/rooms')?{rooms:[]}:{enabled:true,profile:stored}});});
-  await account.goto(base+'/profile');await account.waitForFunction(()=>document.querySelector('.profile-heading [data-username]').textContent==='Cuenta QA');await name(account,'Nuevo nombre');assert.equal(stored.nickname,'Nuevo nombre');await account.reload();await account.waitForFunction(()=>document.querySelector('.profile-heading [data-username]').textContent==='Nuevo nombre');
+  await account.goto(base+'/profile');await account.waitForFunction(()=>document.querySelector('.profile-heading [data-username]').textContent==='Cuenta QA');await name(account,'Nuevo nombre');assert.equal(stored.displayName,'Nuevo nombre');await account.reload();await account.waitForFunction(()=>document.querySelector('.profile-heading [data-username]').textContent==='Nuevo nombre');
   fail=true;await account.locator('#editProfile').click();await account.locator('#profileName').fill('No guardar');await account.locator('#saveProfile').click();await account.waitForFunction(()=>document.querySelector('#profileError').textContent.includes('rechazado'));assert.equal(await account.locator('#profileDialog').evaluate(el=>el.open),true);assert.equal(await account.locator('.profile-heading [data-username]').textContent(),'Nuevo nombre');
   report.tests.push('Profile API success/reload and failure keeps modal/name unchanged (HTTP double, no production account)');
   // Expected 500 for the deliberately rejected profile request above.

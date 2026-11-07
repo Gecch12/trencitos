@@ -69,7 +69,7 @@ test("muted sound blocks cards, construction and bells before creating any audio
   const sound = soundControls(new Map([["rr-muted", "true"]]));
   // Any attempted synthesis would fail: mute must return before reading these.
   sound.read('soundContext = { state: "running" }');
-  for (const effect of ["card", "build", "bell", "pen", "pen-undo", "pen-sign", "clock-tick", "clock-tock", "shuffle"]) sound.context.playSound(effect);
+  for (const effect of ["card", "build", "bell", "pen", "pen-undo", "pen-sign", "clock-tick", "clock-tock", "shuffle", "join", "bot-added", "start", "recount-land"]) sound.context.playSound(effect);
   assert.equal(sound.read("soundNodes.size"), 0);
   assert.equal(sound.resumes(), 0);
 });

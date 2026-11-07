@@ -7,6 +7,7 @@ No cargues todos los documentos ni todos los informes de QA al iniciar un chat.
 | --- | --- |
 | Qué hace cada componente; dónde cambiarlo | [Arquitectura](architecture.md) |
 | Historial, replay, invitados e idiomas | [Contrato de historial](history-replay.md) |
+| Chat, moderación, menciones y silencio personal | [Chat de la mesa](room-chat.md) |
 | Conceptos, reglas, privacidad y variantes | [Dominio](domain.md) |
 | Ejecutar, probar y aislar entornos | [Operación](operations.md) |
 | Límites obligatorios y comprobaciones de DDD/CQRS | [Reglas de arquitectura](architecture-rules.md) |

@@ -28,6 +28,7 @@ function projectMatch(game, seat, { now, tunnelCardMs, destinationDetails, refer
     spectator, uiVersion: 10, definitionVersion: 1, ...references, timing: game.timing || null, serverNow: now,
     turnDeadline: game.turnDeadline, turnSerial: game.turnSerial, turnWaiting: Boolean(game.turnWaiting),
     initialDeadline: game.initialDeadline, initialReadyCount: game.players.filter(p => !p.pending.length).length,
+    ...(Number.isFinite(game.initialRevealAt) ? { initialRevealAt: game.initialRevealAt } : {}),
     waitingDeadline: game.turnWaiting ? game.players[game.current].offer?.deadline : null,
     closingDeadline: game.phase === "closing" ? Math.max(...game.players.map(p => p.offer?.deadline || 0)) : null,
     events: (game.events || []).map(event => {

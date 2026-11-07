@@ -12,6 +12,7 @@ const ShellIcons = (() => {
     lock: '<rect x="6" y="14" width="20" height="15" rx="3"/><path d="M10 14V9a6 6 0 0 1 12 0v5m-6 6v4"/>',
     refresh: '<path d="M26 12a11 11 0 0 0-20-2M6 20a11 11 0 0 0 20 2M26 4v8h-8M6 28v-8h8"/>',
     fullscreen: '<path d="M12 4H4v8m16-8h8v8M4 20v8h8m16-8v8h-8"/>',
+    'map-center': '<circle cx="16" cy="16" r="9"/><path d="M16 2v7m0 14v7M2 16h7m14 0h7"/><circle class="icon-accent" cx="16" cy="16" r="2"/>',
     exit: '<path d="M14 4H5v24h9m5-20 8 8-8 8m-8-8h16"/>',
     rooms: '<rect x="6" y="4" width="20" height="21" rx="6"/><path d="M6 15h20M12 4v11M20 4v11M11 25l-3 4m13-4 3 4"/><circle cx="11" cy="20" r="1"/><circle cx="21" cy="20" r="1"/>',
     play: '<path d="M10 7v18l17-9Z"/><path class="icon-accent" d="M4 4v24"/>',

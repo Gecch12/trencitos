@@ -49,11 +49,11 @@ function writeDurable(file, data) {
 
 function serializableRoom(room) {
   const { code, updated, game, hostSeat = 0, revision = 0, emptySince, savedAt, rematchCode, visibility = "private", maxPlayers = 5, timing, mapRef } = room;
-  return { code, updated, game, hostSeat, revision, emptySince, savedAt, rematchCode, visibility, maxPlayers, timing, mapRef, commitment:room.commitment,
+  return { code, updated, game, hostSeat, revision, emptySince, savedAt, rematchCode, visibility, maxPlayers, timing, mapRef, commitment:room.commitment, chat:room.chat,
     ...(room.practice ? {practice:true,practicePausedAt:room.practicePausedAt} : {}),
     matchId:room.matchId,archiveHash:room.archiveHash,archiveSeq:room.archiveSeq,archiveFull:room.archiveFull,archiveStartedAt:room.archiveStartedAt,archiveClosedAt:room.archiveClosedAt,
-    members: room.members.map(({ name, username, displayName, avatar, participation, color, accountId, guestId, token, tokenHash, bot, autopilot, autopilotSince, reclaim, reclaimSerial, disconnectedAt, actionIds, actionReceipts }) =>
-      ({ name, username, displayName, avatar, participation, color, accountId, guestId, bot: !!bot, tokenHash: tokenHash || (token ? hashToken(token) : undefined), autopilot, autopilotSince, reclaim, reclaimSerial, disconnectedAt, actionIds, actionReceipts })) };
+    members: room.members.map(({ name, username, displayName, avatar, participation, color, accountId, guestId, token, tokenHash, bot, autopilot, autopilotSince, reclaim, reclaimSerial, disconnectedAt, actionIds, actionReceipts, chatId }) =>
+      ({ name, username, displayName, avatar, participation, color, accountId, guestId, chatId, bot: !!bot, tokenHash: tokenHash || (token ? hashToken(token) : undefined), autopilot, autopilotSince, reclaim, reclaimSerial, disconnectedAt, actionIds, actionReceipts })) };
 }
 function loadState(file) {
   file = path.resolve(file);
@@ -63,7 +63,7 @@ function loadState(file) {
       throw Object.assign(new Error("Versión de almacenamiento local no compatible; se conservan los archivos."),{code:"UNSUPPORTED_STORAGE_VERSION"});
     validateRooms(Array.isArray(data)?data:data.rooms);
     const result = data.version === 2 ? { rooms: data.rooms, archive: readArchive(file, data.archive) } : data;
-    checkpoints.set(file, { raw, manifests: data.version === 2 ? data.archive.matches : {} });
+    checkpoints.set(file, { raw, manifests: data.version === 2 ? data.archive.matches : {}, chatCodes:(Array.isArray(data)?data:data.rooms).filter(r=>r.chat).map(r=>r.code) });
     return result;
   }
   try { return read(file); }
@@ -124,10 +124,19 @@ function saveCheckpoint(file, { rooms: records, archive }) {
   writeDurable(temp, data);
   // Cache only verified/committed manifests; no repeated parse of old history.
   if (checkpoint.raw !== null) {
-    writeDurable(file + ".bak.tmp", checkpoint.raw);
+    // The recovery manifest may retain old game state, but a closed room's
+    // ephemeral chat must not survive there or reappear on fallback recovery.
+    let backup = checkpoint.raw;
+    const live = new Set(records.map(room => room.code));
+    if ((checkpoint.chatCodes || []).some(code=>!live.has(code))) {
+      const previous = JSON.parse(backup), priorRooms = Array.isArray(previous) ? previous : previous.rooms;
+      for (const room of priorRooms || []) if (!live.has(room.code)) delete room.chat;
+      backup = JSON.stringify(previous);
+    }
+    writeDurable(file + ".bak.tmp", backup);
     fs.renameSync(file + ".bak.tmp", file + ".bak");
   }
   fs.renameSync(temp, file);
-  checkpoints.set(file, { raw: data, manifests });
+  checkpoints.set(file, { raw: data, manifests, chatCodes:records.filter(r=>r.chat).map(r=>r.code) });
 }
 module.exports = { loadState, hashToken, loadRooms, saveRooms, saveCheckpoint, serializableRoom, validateRooms };

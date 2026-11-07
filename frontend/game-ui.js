@@ -3,7 +3,7 @@
 // Pure view helpers. The server remains authoritative for every game action.
 const GameUI = (() => {
   const I18n = typeof module !== "undefined" && module.exports ? require('../shared/i18n') : globalThis.TrencitosI18n;
-  const MIN_ZOOM = .25, MAX_ZOOM = 6;
+  const MIN_ZOOM = .25, MAX_ZOOM = 12;
   const legacyRules = (typeof module !== "undefined" && module.exports ? require("./match-presentation") : MatchPresentation).legacyRules;
   const ROUTE_POINTS = legacyRules.routePoints;
   function cityLabelScale(zoom) { return Math.min(1.6, Math.max(1, 1 + (zoom - 2.5) * .24)); }

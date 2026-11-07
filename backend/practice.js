@@ -45,7 +45,7 @@ function createPracticeController({
     if(onRemove(room)===false){rooms.set(room.code,room);return;}
     room.members.forEach((member) => {
       if (member.ws) {
-        member.ws.send({ type: "room_closed" });
+        member.ws.send({ type: "room_closed", deleted:true });
         member.ws.room = null;
         member.ws.seat = -1;
         member.ws = null;

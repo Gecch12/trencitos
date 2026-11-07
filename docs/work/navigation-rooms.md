@@ -9,6 +9,9 @@ ediciones del tablero preexistentes conservadas. Publicado por solicitud del
 usuario en `bf1c5c1`, Live el 2026-10-31 a las 18:26:06 de Lima; comprobación
 remota y límites registrados en [producción](../production.md).
 
+Esta ficha conserva la evidencia de aquella entrega. El chat funcional posterior
+se describe y verifica por separado en [chat de mesa](room-chat.md).
+
 ## Aceptación
 
 - [x] Rooms / Play / More / Profile, acceso explícito al perfil y nombre junto a

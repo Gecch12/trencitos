@@ -49,10 +49,15 @@ La configuración ya está guardada, pero **la entrega automática aún no está
 operativa**: falta el acceso Git de Render a `Gecch12/trencitos`. Diagnóstico,
 evidencia y acción del propietario en [la ficha](work/continuous-delivery.md).
 
-El flujo acordado es `push a main → CI → Render`. CI instala con `npm ci`, ejecuta
-documentación y toda la suite Node, y comprueba en Chrome el lobby multijugador
-y la respuesta/recuperación de cartas. No accede a Supabase real. Si las pruebas
-fallan o no hay checks, Render no debe desplegar automáticamente ese commit.
+El flujo acordado es `push a main → CI → Render`. Para cambios funcionales, CI
+ejecuta documentación/arquitectura, toda la suite Node y todos los recorridos
+Chrome en trabajos independientes, instalando con `npm ci`. El check agregado
+`Tests, docs and browser` exige que todos pasen. Los cambios exclusivamente
+documentales admitidos por el [selector](../scripts/ci.js) validan documentación
+y controles sin repetir el juego; no acreditan una nueva revisión ejecutable.
+El [detalle del pipeline](work/continuous-delivery.md) conserva grupos, alcance y
+evidencia. No accede a Supabase real. Si las pruebas fallan o no hay checks
+completos para la revisión funcional, Render no debe desplegar ese commit.
 La instalación del servicio sigue usando únicamente dependencias de producción.
 
 Los filtros en [render.yaml](../render.yaml) ignoran cambios exclusivamente en

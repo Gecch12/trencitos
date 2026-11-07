@@ -10,7 +10,7 @@ const reconnectGrace = room => soloWithBots(room) ? 24*60*60*1000 : room.game ? 
 const connected = member => !!member.ws && !member.ws.closed;
 function shiftDeadlines(game, elapsed) {
   if (!game || elapsed <= 0) return;
-  for (const key of ["turnDeadline", "initialDeadline"])
+  for (const key of ["turnDeadline", "initialDeadline", "initialRevealAt"])
     if (Number.isFinite(game[key])) game[key] += elapsed;
   if(game.construction){game.construction.startedAt+=elapsed;game.construction.until+=elapsed;}
   for (const player of game.players)

@@ -36,9 +36,10 @@ humanos permanece la ventana de 120 s cuando todos se desconectan.
 La tabla final y sus mapas por categoría se presentan dentro del área útil del
 tablero, como región accesible sin bloquear el lateral de escritorio/tablet.
 Se mantienen clasificación, selección de jugadores/categorías, detalles, revancha
-existente y salida. El chat lateral empieza plegado y recupera espacio para el historial; abierto
-muestra una conversación vacía y un compositor **deshabilitado**, sin anuncio de
-próxima disponibilidad. En móvil se conserva el panel desplegable. No hay transporte de mensajes.
+existente y salida. El chat lateral empieza plegado y recupera espacio para el
+historial; en móvil conserva el panel desplegable. Su conversación continúa desde
+la sala de espera hasta los resultados, según el [contrato del chat](room-chat.md).
+Los mensajes no forman parte del archivo ni aparecen al reproducir la partida.
 
 `postgame.js` coordina resultados, mapa, recuento y repetición. Resultados y recuento
 mantienen el tablero ensombrecido. La acción única «Mapa» restaura cámara, zoom
@@ -61,8 +62,18 @@ salto automático ni reproducción obligatoria.
   Un billete incompleto no inventa un recorrido. Un registro sin detalles conserva
   su total y muestra que no dispone de detalle, sin animación ficticia.
 
-`score-medals.js` dibuja fichas con volumen encima de los vagones, orientadas hacia
-la cámara y con separación frente a otras fichas y nombres de ciudades. El contador acumulado se ubica abajo
+El aterrizaje del último vagón de cada paso actualiza simultáneamente ficha y
+total. El nombre y el resaltado permanecen durante la pausa de lectura; recién
+después empieza el siguiente tramo. Pausa, salto y reinicio no duplican puntos;
+los callbacks de un recuento cancelado no afectan al siguiente. Una nueva velocidad
+entra en vigor al comenzar el siguiente paso, tanto para animación como para pausa.
+Un golpe suave de 90 ms acompaña ese aterrizaje: uno por vagón del camino largo,
+por grupo de una ruta o por conjunto simultáneo de un destino. Los pasos sin
+vagones, el salto y los callbacks cancelados no emiten golpes. Se comparte el
+silencio general y la protección de pestaña oculta; el audio no modifica el ritmo.
+
+`score-medals.js` dibuja fichas con volumen junto a los vagones, orientadas hacia
+la cámara y con separación frente al ancla, otras fichas y nombres de ciudades. El contador acumulado se ubica abajo
 a la derecha del mapa en escritorio/tablet y en una franja compacta encima de la
 mano en móvil; el encuadre reserva ese espacio. Pausa, velocidad y salto están
 accesibles por teclado/tap; cambiar de pestaña pausa y movimiento reducido muestra
@@ -75,6 +86,11 @@ cierre. La vista de replay no envía jugadas y restaura el contexto de la mesa a
 salir. La URL autónoma `/replay` continúa funcionando.
 
 Aceptación local y pendientes en [la ficha de experiencia](work/summary-postgame-experience.md).
+
+La tabla final conserva el desplazamiento horizontal directo y por teclado, sin
+barra auxiliar sobre el pie móvil. El desglose se ajusta al ancho visible incluso
+al desplazar las columnas. Al salir de una partida terminada se vuelve a
+salas sin aviso de abandono ni bot de reemplazo. Los resultados guardados permanecen.
 
 ## Acceso
 
@@ -333,6 +349,11 @@ muestra selector de acción, hitos, estadísticas adicionales ni enlaces de audi
 Se elimina el botón de vista general; las grabaciones sin detalle privado conservan
 únicamente su información disponible.
 
+La barra de posición usa el último índice de los estados cargados; al terminar
+su valor coincide con el máximo y su pista no hereda padding de los formularios.
+El historial utiliza separadores rectos y un resaltado del ancho útil completo,
+con avatar y línea de agrupación dentro del margen interior de cada fila.
+
 La repetición reutiliza mercado, mano, jugadores e historial de la mesa, pero
 reubica sus controles: en escritorio/tablet, bloque plegable arriba del mapa,
 fuera del lateral; en móvil, mercado y jugadores arriba, mano abajo y transporte
@@ -369,7 +390,7 @@ los plazos del servidor.
 El cambio recarga la ruta actual, conservando los mecanismos de reconexión.
 Las plantillas se traducen antes de interpolar nombres, códigos y otros valores:
 los datos del jugador no se traducen ni cambian de identidad. Las ciudades conservan
-sus nombres propios. No se han inventado contenidos para Jugar, chat o las
+sus nombres propios. No se han inventado contenidos para Jugar o las
 secciones futuras.
 
 ## Verificación y auditoría local

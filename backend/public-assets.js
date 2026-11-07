@@ -5,6 +5,9 @@ const ROOT = path.resolve(__dirname, "..");
 // Public URLs are a transport contract, independent of the repository layout.
 // Never expose a directory wholesale: shared modules are public only if listed.
 const ASSETS = Object.freeze({
+  "/chat-art.js": ["frontend/chat-art.js", "text/javascript; charset=utf-8"],
+  "/room-chat.js": ["frontend/room-chat.js", "text/javascript; charset=utf-8"],
+  "/room-chat.css": ["frontend/room-chat.css", "text/css; charset=utf-8"],
   "/profile-style.js": ["frontend/profile-style.js", "text/javascript; charset=utf-8"],
   ...Object.fromEntries([
     'passenger', 'tanker', 'alfalfa', 'grain', 'goods', 'timber', 'auto-carrier', 'coal', 'stone', 'mail',

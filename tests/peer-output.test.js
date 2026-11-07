@@ -21,6 +21,13 @@ test('failed persistence neither sends nor advances the metadata cache',async()=
  const run=()=>q.run(()=>{q.dirty();q.defer(()=>f.output.send(message,true));});await run();f.flush();assert.deepEqual(f.writes,[]);fail=false;await run();f.flush();assert.ok(JSON.parse(f.writes[0]).definition);
 });
 test('closing a peer drops a pending batch',()=>{const f=fixture();f.output.send('{"type":"ack"}');f.close();f.flush();assert.deepEqual(f.writes,[]);});
+test('returning to the same room sends chat context again after an exit',()=>{
+ const f=fixture(),context=JSON.stringify({type:'chat_context',chatId:'one',revision:0}),lobby=JSON.stringify({type:'lobby',code:'one',seat:0});
+ f.output.send(context,2);f.output.send(context,2);f.flush();assert.equal(JSON.parse(f.writes[0]).type,'chat_context');
+ f.output.send(lobby,2);f.flush();
+ f.output.send(JSON.stringify({type:'room_closed'}),2);f.output.send(lobby,2);f.output.send(context,2);f.flush();
+ assert.deepEqual(JSON.parse(f.writes[2]).messages.map(m=>m.type),['room_closed','lobby','chat_context']);
+});
 
 test('version two envelopes state and ack in one frame while preserving ordered legacy negotiation',()=>{
  const f=fixture();f.output.send(JSON.stringify({type:'directory'}),0);for(const type of ['lobby','storage','state','ack'])f.output.send(JSON.stringify({type}),2);

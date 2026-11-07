@@ -588,6 +588,9 @@
   ],
   "work/continuous-delivery.md": [
     ".github/workflows/ci.yml",
+    "scripts/ci.js",
+    "tests/ci.test.js",
+    "skills/trencitos-publicar/SKILL.md",
     "render.yaml",
     "package.json",
     "tests/browser-room-setup.cjs",
@@ -626,6 +629,8 @@
     "tests/native-android.cjs"
   ],
   "iconography.md": [
+    "frontend/chat-art.js",
+    "frontend/room-chat.css",
     "frontend/shell-icons.js",
     "frontend/history-ui.js",
     "frontend/game.css",
@@ -723,5 +728,20 @@
     "tests/state-stream.test.js",
     "tests/peer-output.test.js",
     "tests/browser-transport.cjs"
+  ],
+  "room-chat.md": [
+    "frontend/chat-art.js",
+    "backend/room-chat.js",
+    "backend/chat-moderation.js",
+    "backend/peer-output.js",
+    "backend/practice.js",
+    "backend/server.js",
+    "backend/room-store.js",
+    "frontend/room-chat.js",
+    "frontend/room-chat.css",
+    "tests/room-chat.test.js",
+    "tests/chat-server.test.js",
+    "tests/chat-remote.test.js",
+    "tests/browser-chat.cjs"
   ]
 }

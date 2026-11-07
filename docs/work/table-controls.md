@@ -48,6 +48,11 @@ al tiempo restante del turno; el siguiente jugador continúa mientras se elige.
 
 ## Contratos y evidencia
 
+La ampliación del 2026-11-06 añade avisos de incorporaciones y bots, campana de
+inicio con tiempo reservado, interruptor de destinos y sonidos de recuento.
+Su aceptación y ejecución están en [la ficha de cierre](summary-postgame-experience.md#señales-de-controles-sala-y-recuento--2026-11-06);
+el contrato vigente de tiempos está en [dominio](../domain.md#fases-y-turno).
+
 Refinamiento aprobado e integrado en `main`: sonido de renovación independiente del panel,
 atajo H y menú de recuperación claro; perfil sin autocompletado, historial
 compacto con puesto propio y tres vagones fantásticos (hongos, cristales,

@@ -40,7 +40,7 @@ test("pinch translates the midpoint while scaling and remains anchored at both z
     const scale = start.scale * start.zoom / next.zoom;
     assert.equal(next.center.x + midpoint.x * scale, start.center.x + start.midpoint.x * start.scale);
     assert.equal(next.center.y + midpoint.y * scale, start.center.y + start.midpoint.y * start.scale);
-    assert.ok(next.zoom >= .25 && next.zoom <= 6);
+    assert.ok(next.zoom >= UI.MIN_ZOOM && next.zoom <= UI.MAX_ZOOM);
   }
 });
 

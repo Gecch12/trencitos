@@ -1,7 +1,7 @@
 {
   "name": "trencitos",
   "version": "0.7.0-beta",
-  "description": "Original-asset browser railway game with private authoritative WebSocket rooms for 2\u20135 players",
+  "description": "Original-asset browser railway game with private authoritative WebSocket rooms for 2–5 players",
   "private": true,
   "engines": {
     "node": ">=20"
@@ -29,6 +29,7 @@
   },
   "license": "UNLICENSED",
   "dependencies": {
+    "@2toad/profanity": "3.3.0",
     "three": "0.187.0"
   },
   "devDependencies": {

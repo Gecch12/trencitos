@@ -1,0 +1,161 @@
+{
+  "date": "2026-11-06",
+  "timezone": "America/Lima",
+  "scope": "Local chat redesign on main; uncommitted; prior chat, CI, results and table/sound changes preserved",
+  "baseCommit": "9b61839062b62d2b8edf6feb2c66375fb93ab104",
+  "node": {
+    "command": "npm run test:ci",
+    "version": "v25.6.1",
+    "tests": 765,
+    "pass": 765,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "durationMs": 168815.132042
+  },
+  "browser": {
+    "engine": "Chrome 156.0.8078.80",
+    "chat": {
+      "command": "QA_OUT=.qa/chat-redesign node tests/browser-chat.cjs",
+      "checks": [
+        "Room text/emoji, safe HTML, anonymous filter notice, retained rejected draft, player mention, reaction and mute across reload",
+        "Continuous chat, distinct parallel-route IDs with city-only labels, local highlight without wagons/state mutation, unread and reconnect",
+        "Spectators read during play and can write after the game ends",
+        "Desktop/phone composer grows from two to five lines, upward suggestions, header mute menus and touch long-press reaction picker fit the viewport"
+      ],
+      "errors": [],
+      "date": "2026-11-07T01:13:18.179Z",
+      "passed": true,
+      "additionalCoverage": [
+        "Empty placeholder without a scrollbar; textarea grows from two to five lines and scrolls only beyond five.",
+        "Arrow keys/Enter select mentions; keyboard opens and changes reactions; Escape closes popovers.",
+        "Identical endpoint labels keep distinct parallel-route IDs when text is inserted before them.",
+        "Only used reactions are visible; all six options use original SVG drawings; change/removal is confirmed by the server.",
+        "Author names do not mute; the header icon opens mute/unmute controls, restored after reload.",
+        "Mobile Enter inserts a newline and the send button persists it.",
+        "CDP touch long-press opens the reaction tray in portrait and landscape.",
+        "Landscape chat header does not overlap map controls."
+      ],
+      "viewports": [
+        [
+          1440,
+          900
+        ],
+        [
+          390,
+          844
+        ],
+        [
+          844,
+          390
+        ]
+      ]
+    },
+    "shell": {
+      "command": "QA_OUT=.qa/chat-redesign-shell node tests/browser-shell.cjs",
+      "passed": true,
+      "groups": 3,
+      "layouts": 55,
+      "errors": []
+    },
+    "table": {
+      "command": "QA_OUT=.qa/chat-redesign-table node tests/browser-table-ui.cjs",
+      "checks": [
+        "Public construction score matches owner/rival/spectator; private breakdown only belongs to owner",
+        "Distinct phone/tablet/desktop layouts: permanent sidebar and hand/destinations on larger screens; phone portrait/landscape preserved; unique controls and unchanged renderer across rotations; 44px market/tools and stable camera on panel open",
+        "Rules derive match values; chat opens with enabled composer; keyboard opens full hand and Escape closes panels",
+        "Two real draws update authoritative hand, second-draw hint and active clock; rival draws preserve reading position with unread/scrollbar; history route focuses and returns camera",
+        "Actual route payment updates ownership/score/trains and triggers the final round at exactly two remaining trains; English rule help"
+      ],
+      "errors": [],
+      "viewports": [
+        [
+          320,
+          568
+        ],
+        [
+          390,
+          844
+        ],
+        [
+          430,
+          932
+        ],
+        [
+          700,
+          900
+        ],
+        [
+          768,
+          1024
+        ],
+        [
+          1024,
+          768
+        ],
+        [
+          1280,
+          720
+        ],
+        [
+          1366,
+          768
+        ],
+        [
+          1440,
+          900
+        ],
+        [
+          1920,
+          1080
+        ],
+        [
+          844,
+          390
+        ],
+        [
+          390,
+          844
+        ]
+      ]
+    },
+    "postgame": {
+      "command": "QA_OUT=.qa/chat-redesign-postgame node tests/browser-postgame-summary.cjs",
+      "ok": true,
+      "checks": [
+        "optional recount categories and immutable result",
+        "persistent shade and map restoration",
+        "inline replay return",
+        "tablet and mobile layout",
+        "reduced motion",
+        "dashboard charts and touch help"
+      ],
+      "screenshots": "/Users/angelaltarodri/Desktop/free/trains/trencitos/.qa/chat-redesign-postgame"
+    }
+  },
+  "artwork": {
+    "source": "frontend/chat-art.js",
+    "format": "Original repo-native SVG geometry; six semantic emoji IDs retained",
+    "preview": ".qa/chat-redesign/reaction-art.png"
+  },
+  "checks": {
+    "documentation": "passed",
+    "architecture": "29 protected modules passed",
+    "gitDiffCheck": "passed",
+    "syntax": "passed"
+  },
+  "screenshotsReviewed": [
+    ".qa/chat-redesign/empty-room-desktop.png",
+    ".qa/chat-redesign/mentions-desktop.png",
+    ".qa/chat-redesign/mentions-390.png",
+    ".qa/chat-redesign/chat-390.png",
+    ".qa/chat-redesign/chat-844.png",
+    ".qa/chat-redesign/reactions-844.png",
+    ".qa/chat-redesign/reaction-art.png"
+  ],
+  "limits": [
+    "Isolated temporary file servers and simulated remote persistence only; no production database accessed.",
+    "Chrome with emulated touch; no new native iPhone/Android build or physical-device check.",
+    "No commit, push, deploy or remote CI run."
+  ]
+}

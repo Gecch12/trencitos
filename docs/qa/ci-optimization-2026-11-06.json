@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-06",
+  "scope": "local-only, uncommitted CI and skill changes",
+  "baseCommit": "9b61839062b62d2b8edf6feb2c66375fb93ab104",
+  "node": {
+    "command": "npm run test:ci",
+    "version": "v25.6.1",
+    "tests": 744,
+    "pass": 744,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "durationMs": 161444.215625
+  },
+  "workflow": {
+    "actionlint": "1.7.12: passed",
+    "browserCommandsPreserved": 13,
+    "environmentsPreserved": true,
+    "groups": {
+      "identity": [
+        "node tests/browser-profile-social.cjs",
+        "node tests/browser-profile-style.cjs",
+        "node tests/browser-room-setup.cjs",
+        "node tests/browser-account-resume.cjs",
+        "node tests/browser-mobile-continuity.cjs"
+      ],
+      "cards": [
+        "node tests/browser-draw-feedback.cjs",
+        "node tests/browser-card-ui.cjs"
+      ],
+      "table": [
+        "node tests/browser-pwa.cjs",
+        "node tests/browser-table-ui.cjs",
+        "node tests/browser-table-refinement.cjs"
+      ],
+      "replay": [
+        "node tests/browser-postgame-summary.cjs",
+        "node tests/browser-replay-analysis.cjs",
+        "node tests/browser-transport.cjs"
+      ]
+    },
+    "independentNodeAndBrowserJobs": true
+  },
+  "checks": {
+    "documentation": "passed",
+    "architecture": "29 modules passed",
+    "gitDiffCheck": "passed",
+    "skillQuickValidate": "passed",
+    "installedSkillMatchesRepository": true
+  },
+  "limits": [
+    "Browser commands and environments compared with the original workflow; no new Chrome run in this task.",
+    "The initial sandbox run was stopped after loopback listen EPERM; the complete successful run used isolated local servers with permission.",
+    "GitHub jobs use Node 26; remote matrix behavior and elapsed time remain to be measured after an authorized push."
+  ],
+  "delivery": {
+    "pushed": false,
+    "remoteCIRun": false,
+    "renderDeployed": false,
+    "mobileBuiltOrInstalled": false,
+    "githubReleaseCreated": false
+  }
+}

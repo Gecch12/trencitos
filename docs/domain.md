@@ -109,6 +109,11 @@ El primer jugador se sortea una vez. Cada jugador recibe un billete largo y tres
 cortos y conserva al menos dos, simultáneamente, dentro del plazo compartido configurado de 30, 60 o 90 segundos.
 Al terminar todos, juega el sorteado. El vencimiento conserva dos al azar por
 jugador pendiente. Reconectar no reinicia los plazos.
+Los inicios nuevos reservan 700 ms de presentación antes de esos segundos:
+`initialRevealAt` conserva el final de la transición y `initialDeadline` añade
+el plazo completo de elección. Son tiempos del servidor; la carga o el silencio
+de un cliente no los prolongan. Los estados antiguos sin esa marca conservan
+sus plazos; una pausa de sala desplaza ambos tiempos juntos.
 Los billetes iniciales no elegidos salen de la partida, incluidos los cortos.
 Los largos que no se repartieron tampoco entran en el mazo de nuevas ofertas.
 

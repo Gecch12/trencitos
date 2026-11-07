@@ -1,0 +1,156 @@
+{
+  "date": "2026-11-06",
+  "timezone": "America/Lima",
+  "scope": "Local implementation on main, uncommitted, preserving pre-existing CI/postgame/presentation changes",
+  "baseCommit": "9b61839062b62d2b8edf6feb2c66375fb93ab104",
+  "node": {
+    "command": "npm run test:ci",
+    "version": "v25.6.1",
+    "tests": 761,
+    "pass": 761,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "durationMs": 158559.79125
+  },
+  "browser": {
+    "engine": "Chrome 156.0.8078.80",
+    "chat": {
+      "command": "node tests/browser-chat.cjs",
+      "passed": true,
+      "checks": [
+        "Room text/emoji, safe HTML, anonymous filter notice, retained rejected draft, player mention, reaction and mute across reload",
+        "Continuous game chat, route reference highlights without wagons/state mutation, unread badge and reconnect history",
+        "Spectators read during play and can write after the game ends",
+        "Desktop, phone portrait and landscape composer stay within the viewport"
+      ],
+      "errors": [],
+      "viewports": [
+        [
+          1440,
+          900
+        ],
+        [
+          390,
+          844
+        ],
+        [
+          844,
+          390
+        ]
+      ],
+      "alsoVerified": [
+        "Spectator exits and reenters the same room through the same WebSocket",
+        "Mute and unmute menus work at all three viewports"
+      ],
+      "evidence": ".qa/chat/"
+    },
+    "shell": {
+      "command": "QA_OUT=.qa/chat-shell node tests/browser-shell.cjs",
+      "passed": true,
+      "groups": 3,
+      "layouts": 55,
+      "errors": [],
+      "evidence": ".qa/chat-shell/"
+    },
+    "table": {
+      "command": "node tests/browser-table-ui.cjs",
+      "passed": true,
+      "checks": [
+        "Public construction score matches owner/rival/spectator; private breakdown only belongs to owner",
+        "Distinct phone/tablet/desktop layouts: permanent sidebar and hand/destinations on larger screens; phone portrait/landscape preserved; unique controls and unchanged renderer across rotations; 44px market/tools and stable camera on panel open",
+        "Rules derive match values; chat opens with enabled composer; keyboard opens full hand and Escape closes panels",
+        "Two real draws update authoritative hand, second-draw hint and active clock; rival draws preserve reading position with unread/scrollbar; history route focuses and returns camera",
+        "Actual route payment updates ownership/score/trains and triggers the final round at exactly two remaining trains; English rule help"
+      ],
+      "viewports": [
+        [
+          320,
+          568
+        ],
+        [
+          390,
+          844
+        ],
+        [
+          430,
+          932
+        ],
+        [
+          700,
+          900
+        ],
+        [
+          768,
+          1024
+        ],
+        [
+          1024,
+          768
+        ],
+        [
+          1280,
+          720
+        ],
+        [
+          1366,
+          768
+        ],
+        [
+          1440,
+          900
+        ],
+        [
+          1920,
+          1080
+        ],
+        [
+          844,
+          390
+        ],
+        [
+          390,
+          844
+        ]
+      ],
+      "errors": []
+    },
+    "postgame": {
+      "command": "node tests/browser-postgame-summary.cjs",
+      "ok": true,
+      "checks": [
+        "optional recount categories and immutable result",
+        "persistent shade and map restoration",
+        "inline replay return",
+        "tablet and mobile layout",
+        "reduced motion",
+        "dashboard charts and touch help"
+      ],
+      "screenshots": "/Users/angelaltarodri/Desktop/free/trains/trencitos/.qa/postgame-summary"
+    }
+  },
+  "checks": {
+    "documentation": "passed",
+    "architecture": "29 protected modules passed",
+    "gitDiffCheck": "passed",
+    "syntax": "frontend/app.js, frontend/room-chat.js, backend/room-chat.js passed"
+  },
+  "screenshotsReviewed": [
+    ".qa/chat/room-desktop.png",
+    ".qa/chat/route-highlight.png",
+    ".qa/chat/chat-390.png",
+    ".qa/chat/chat-844.png"
+  ],
+  "limits": [
+    "All HTTP/WebSocket/browser servers used isolated temporary file state and random local ports.",
+    "Remote commit delay/failure/lost-response scenarios used fake Supabase; no production service was contacted.",
+    "The ES/EN filter is lexical and can miss contextual harassment or produce false positives; human abuse reports remain deferred.",
+    "No native phone testing, production latency measurement or remote CI run was performed."
+  ],
+  "delivery": {
+    "committed": false,
+    "pushed": false,
+    "deployed": false,
+    "mobileBuiltOrInstalled": false
+  }
+}

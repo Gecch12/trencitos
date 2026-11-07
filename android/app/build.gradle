@@ -10,7 +10,7 @@ android {
         resValue "string", "title_activity_main", mobileConfig.appName
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 6
+        versionCode 7
         versionName "0.7.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {

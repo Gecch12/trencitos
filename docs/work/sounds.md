@@ -18,6 +18,8 @@ construcción, turno, trazos de pluma al elegir billetes y tic-tac de cuenta atr
 La selección de billetes, los avisos de reloj y el acceso a sonido/atajo M se implementan y verifican
 en [Controles de mesa y sala](table-controls.md); la preferencia de silencio
 actual es local. Esta ficha conserva únicamente el futuro alcance de packs.
+Los avisos de sala, campana de inicio e impactos de recuento se incorporan en
+[la ampliación de mesa y cierre](summary-postgame-experience.md); no requieren packs.
 
 ## Evidencia y siguiente paso
 

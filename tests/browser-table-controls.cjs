@@ -41,9 +41,12 @@ let browser,host;
     previewVisible:preview.bottom<=footer.top,footerVisible:footer.bottom<=innerHeight,numberSize:parseFloat(getComputedStyle(number).fontSize)};
   });
   report.layouts.push({width,height,...layout});
-  assert.ok(layout.scroll<=1,`Room should fit ${width}×${height}: ${JSON.stringify(layout)}`);
   assert.ok(layout.playersScroll<=1,`Full player panel should fit ${width}×${height}`);
-  assert.equal(layout.overflow,0);assert.ok(layout.previewVisible&&layout.footerVisible);assert.ok(layout.numberSize>=30);
+  // The map cards and room chat now share the lobby; settings may scroll.
+  // Keep the start action fixed and prove the lower appearance controls reachable.
+  assert.equal(layout.overflow,0);assert.ok(layout.footerVisible);
+  await host.locator('#wagonPreview').scrollIntoViewIfNeeded();
+  assert.ok(await host.locator('#wagonPreview').evaluate(n=>n.getBoundingClientRect().bottom<=document.querySelector('.room-start').getBoundingClientRect().top));
   await shot(host,`room-${width}`);
  }
  await host.setViewportSize({width:1366,height:600});
@@ -54,7 +57,7 @@ let browser,host;
  await host.setViewportSize({width:1440,height:900});await host.reload();await host.waitForFunction(()=>roomTiming.turnSeconds===90&&!!room);assert.equal(await host.locator('#roomTurnSeconds').inputValue(),'90');
  for(let count=4;count>=2;count--){host.once('dialog',d=>d.accept());await host.locator('#members [data-kick]').last().click();await host.waitForFunction(count=>members.length===count,count);}
  await step('roomCapacity',-1,4);
- report.checks.push('Full five-player room fits desktop at 1366×768, 1440×900 and 1920×1080; short windows and mobile keep scrolling with an accessible start button');
+ report.checks.push('Five-player room at 1366×768, 1440×900 and 1920×1080 retains reachable settings, fixed start and no horizontal overflow; short windows and mobile keep scrolling');
  report.checks.push('Host/guest room controls, all discrete settings, visibility, persistence, directory and rejected tampering');
  await host.locator('#start').click();await Promise.all([host,guest].map(p=>p.waitForSelector('#keep')));
  assert.equal(app.rooms.get(code).game.timing.initialSeconds,90);

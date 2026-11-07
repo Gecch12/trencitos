@@ -74,8 +74,8 @@ Los espectadores tampoco prolongan la vida de una sala abandonada. Las salas
 privadas solo admiten jugadores con invitación; no se pueden observar.
 
 La sala de espera distribuye jugadores/amigos, configuración y chat en tres
-columnas; en pantallas pequeñas se usan pestañas. Amigos y chat son componentes
-preparados para una integración posterior. Modo Clásico, selector y miniatura de mapa,
+columnas; en pantallas pequeñas se usan pestañas. El chat permite conversar desde
+la espera hasta los resultados; consulta [su funcionamiento](docs/room-chat.md). Modo Clásico, selector y miniatura de mapa,
 visibilidad pública/privada y número destacado de jugadores aparecen en una fila.
 El anfitrión puede elegir **Europa**, **Sudamérica · beta** o **Laboratorio** antes de iniciar;
 Laboratorio es un tablero ficticio de prueba con las mismas reglas. La selección
@@ -115,6 +115,12 @@ el sonido. No actúa al escribir ni dentro de los diálogos. El menú agrupa
 **Copiar enlace de recuperación** y **Cambiar enlace de recuperación** bajo
 **Recuperar mi puesto**, para invitados o puestos aún sin vincular. Cambiarlo invalida el anterior; luego debes copiar el
 nuevo. No reinicia la partida ni prolonga la vida de la sala.
+
+El botón de resaltado emite arcos de luz dorada que alternan entre esquinas y
+bordes hasta su primer uso en cada partida. Recargar o reconectar conserva ese
+uso; una partida nueva reinicia el aura. Con movimiento reducido, la señal es
+estática. Una ayuda breve aparece una sola vez al disponer de billetes conservados.
+La cabecera de la mano conserva su nombre y cantidad, sin «Solo tú la ves».
 
 En H se ven todos tus tramos construidos con resaltado azul claro. Los caminos
 que conectan destinos cumplidos tienen un halo dorado suave; los préstamos de
@@ -156,10 +162,11 @@ variaciones se combinan automáticamente al construir rutas, sin elegir una fija
 
 El mapa se mueve arrastrando y se acerca con rueda o pellizco. **Ver mapa completo**
 restaura el encuadre; con el mapa enfocado, las flechas desplazan, `+`/`−`
-cambian el zoom e **Inicio** centra. El zoom permite de 25 % a 600 %.
+cambian el zoom e **Inicio** centra. El tablero principal permite de 25 % a 1200 %;
+los nombres conservan un tamaño máximo para dejar ver los detalles de los vagones.
 
 La mesa comparte controles y estado, con distribuciones distintas y sin scroll de
-página. En escritorio, el lateral derecho contiene historial, chat deshabilitado, robos y jugadores;
+página. En escritorio, el lateral derecho contiene historial, chat, robos y jugadores;
 la franja inferior contiene la mano y los destinos. Tablet conserva estos paneles
 permanentes: en vertical la franja inferior ocupa el ancho disponible y en
 horizontal deja sitio al lateral. El mapa mantiene su renderizado y gestos.
@@ -173,21 +180,34 @@ Tocar tu jugador permite consultar el desglose privado. Al finalizar se muestran
 los puntos finales.
 
 En móvil, el mercado reúne cinco cartas con separación constante y el mazo al extremo
-derecho, con dorsos apilados horizontalmente. La mano queda separada por un pequeño
+derecho. Las tres cartas del mazo tienen el mismo ancho y alto que las cartas
+visibles de la mesa, en móvil, tablet y escritorio. La frontal queda alineada con
+las demás; las dos traseras se desplazan 4 y 8 px hacia abajo y a la derecha.
+El panel reserva ese espacio adicional sin reducir las cartas ni añadir un
+recuadro de fondo. El hover ilumina las cartas sin elevarlas; la presión las comprime ligeramente
+hacia dentro. La mano queda separada por un pequeño
 espacio y agrupa colores con contadores. Las áreas de robo siguen midiendo al menos
 44 px; tras el primero aparece **Roba una carta más**. Los iconos del mapa permiten
 consultar destinos o **robar nuevos destinos**. En tablet y escritorio, el mercado
 dispone las cinco cartas y el mazo en dos filas de tres, en horizontal para liberar altura; al llegar a la mano vuelven a vertical; el botón para robar destinos
-ocupa el ancho completo encima de las cartas y los destinos propios quedan junto a la mano. **Robar nuevos destinos** pide confirmación y solo
+ocupa el tercio derecho de una cabecera fija, con la etiqueta **Destinos** y el
+contador de robos a la izquierda, precedido por **ROBAR**, con la misma tipografía
+que **TU MANO**. La mesa móvil también identifica los robos con ese rótulo.
+Mostrar `0/2` o el recordatorio del segundo robo
+no mueve las cartas ni el historial. Los destinos propios quedan junto a la mano. **Robar nuevos destinos** pide confirmación y solo
 está disponible cuando la acción es legal. Abrir/cancelar no revela billetes ni
 gasta el turno; confirmar envía el comando y obliga a conservar el mínimo indicado.
-El chat lateral empieza plegado; abrirlo muestra una conversación vacía con escritura/envío deshabilitados. Al plegarlo, el historial recupera ese espacio. Historial, mercado y jugadores conservan etiquetas accesibles sin cabeceras visibles redundantes; los movimientos sencillos del historial comparten una línea.
+El chat lateral empieza plegado; al abrirlo permite conversar, mencionar jugadores o tramos y reaccionar con emojis. Incluye moderación local y silencio por jugador. Al plegarlo, el historial recupera ese espacio. Historial, mercado y jugadores conservan etiquetas accesibles sin cabeceras visibles redundantes; los movimientos sencillos del historial comparten una línea.
 
 Los paneles temporales se superponen sin reencuadrar el mapa. El icono **i** abre
 una ficha de puntos y última ronda según la definición de la partida. Las existencias
 de los mazos se consultan en el mercado y en los controles respectivos. El engranaje
-agrupa ajustes; pantalla completa está dentro del menú móvil y en los controles
-laterales de tablet/escritorio. **Última ronda** conserva el aviso ámbar.
+agrupa ajustes; en navegador, pantalla completa está dentro del menú móvil y en los controles
+laterales de tablet/escritorio. La app nativa oculta esa acción. **Ver mapa completo**
+usa una mira para distinguir el reencuadre de pantalla completa. **Última ronda** conserva el aviso ámbar.
+Al terminar desaparece el distintivo sobre los jugadores; la franja principal indica **Partida terminada**.
+Al finalizar, el menú ofrece **Volver a salas**, sin abandono ni confirmación.
+Los avisos al salir son notificaciones neutrales descartables y desaparecen a los cuatro segundos.
 
 El historial conserva scroll, barra y aviso **Nuevos ↓**. Una ocupación se presenta
 como **Ocupó** y su botón **Ver** enfoca el tramo, oscurece el entorno y eleva los
@@ -216,7 +236,7 @@ El clic inicia una recogida de 150 ms. El recorrido propio apunta a 520 ms; una 
 
 Los grupos existentes de la mano se conservan y abren espacio en 230 ms al aparecer un color nuevo. Con dos comodines visibles, tomar una carta de la mesa requiere esperar su reemplazo antes de elegir la segunda; los dos robos del mazo siguen disponibles sin esa espera.
 
-Los efectos de sonido son originales y sintetizados localmente: papel al robar cada carta o pedir una oferta de destinos, barajado al renovar la mesa, golpe de madera al completar una ruta o colocar una estación, y campana solo al comenzar tu turno. Los movimientos públicos de rivales también se oyen, sin revelar cartas ocultas. El altavoz del menú o la tecla **M** permiten silenciar y recuerdan la preferencia;
+Los efectos de sonido son originales y sintetizados localmente: papel al robar cada carta o pedir una oferta de destinos, barajado al renovar la mesa, golpe de madera al completar una ruta o colocar una estación, y campana al comenzar tu turno. La sala avisa cuando entra o se reconecta otro jugador y usa una señal distinta al añadirse un bot manualmente; cambios de ajustes, listas iniciales y restauración de la propia conexión no repiten avisos. Al iniciar todos oyen una campana de hasta 700 ms, con una transición que prepara el selector de billetes y termina también con el sonido silenciado o bloqueado. El módulo del mapa se precarga desde la sala; una carga lenta conserva el indicador local del mapa sin bloquear la elección. Los movimientos públicos de rivales también se oyen, sin revelar cartas ocultas. El altavoz del menú o la tecla **M** permiten silenciar y recuerdan la preferencia;
 un toast confirma el cambio y el atajo no actúa al escribir ni se repite al mantener
 la tecla pulsada. Marcar un billete inicial o nuevo produce un solo roce continuo
 de pluma de 130–150 ms, desmarcarlo uno de 105 ms y confirmar conserva la firma
@@ -348,7 +368,9 @@ según la sala. Por ejemplo, 20 s restantes con +30 s dan 50 s para elegir. **Ve
 
 El botón **Ver recuento** ofrece animaciones opcionales: rutas construidas con sus
 puntos, camino más largo vagón por vagón (700 ms a 1× y una pausa de 350 ms entre tramos) y destinos con su recorrido y puntos o
-penalización. Las fichas flotan encima del tablero; las rutas y puntos anteriores
+penalización. El total y la ficha se actualizan al aterrizar el último vagón del
+paso, manteniendo su nombre durante una breve pausa antes del siguiente. Los cambios
+de velocidad se aplican al siguiente paso. Las fichas flotan junto al tramo; las rutas y puntos anteriores
 permanecen visibles. El contador queda abajo a la derecha en escritorio/tablet y
 sobre la mano en móvil. Permite pausar, cambiar velocidad, saltar y repetir; respeta
 movimiento reducido. Al terminar, el mapa sigue sombreado y vuelve el botón
@@ -454,7 +476,7 @@ Si falla el guardado remoto, no hay fallback al disco efímero: se pausa y no se
 
 ## Interfaz Trencitos v0.6.1
 
-- Mapa continuo de fondo, zoom 25%–300%, arrastre a cualquier escala y pantalla completa conservando los controles.
+- Mapa continuo de fondo, zoom 25%–1200%, arrastre a cualquier escala y pantalla completa en navegador conservando los controles.
 - Etiquetas de ciudades reforzadas, rutas coloreadas con mayor contraste y selección visible.
 - Mesa adaptable con distribuciones separadas para móvil y tablet/escritorio,
   descritas en [Mapa y selección de destinos](#mapa-y-selección-de-destinos-escritorio).

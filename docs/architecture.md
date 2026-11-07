@@ -6,6 +6,11 @@ Evidencia, integración y límites en [la ficha del tablero](work/board-3d.md).
 
 ## Organización del monorepo
 
+El [chat de mesa](room-chat.md) es un componente de sala separado del motor y
+del replay. `backend/room-chat.js` autoriza/modera mensajes y `frontend/room-chat.js`
+presenta la conversación; usa el WebSocket y el checkpoint de sala existentes.
+Las entregas del chat no vuelven a enviar el tablero ni cambian su revisión.
+
 La integración de desarrollo móvil usa [capacitor.config.js](../capacitor.config.js),
 los proyectos `android/` e `ios/` y los lanzadores `scripts/mobile*.js`.
 Las WebViews cargan el servidor local aislado; `mobile/web/` contiene ayuda y

@@ -199,7 +199,7 @@ test("leaving deletes the room, releases the socket and cancels every timer", ()
   assert.equal(rooms.size, 0);
   assert.equal(human.room, null);
   assert.equal(human.seat, -1);
-  assert.deepEqual(messages, [{ type: "room_closed" }]);
+  assert.deepEqual(messages, [{ type: "room_closed", deleted:true }]);
   assert.equal(clock.timers.size, 0);
   controller.remove(room);
   controller.sync(room);

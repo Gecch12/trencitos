@@ -8,7 +8,8 @@ móvil; recuperar la distribución de tablet/escritorio con historial, robos y
 jugadores laterales y mano/destinos abajo. La entrega original generalizó la mesa
 compacta a todos los tamaños; los apartados históricos siguientes registran esa
 implementación, no una autorización para volver a unificar las distribuciones.
-El chat continúa como panel de próxima implementación, sin transporte ni envío.
+En esa entrega el chat era un panel sin transporte ni envío. Su implementación
+posterior se registra en [chat de mesa](room-chat.md), con evidencia propia.
 
 ## Recuperación de tablet y escritorio · 2026-11-05
 

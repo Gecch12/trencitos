@@ -31,14 +31,14 @@ export function createScoreMedals({scene,camera,container}){
    dirty=false;layoutKey=key;
   }
   const area=bounds||{x:0,y:0,width,height},used=[],radius=21,scale=(camera.right-camera.left)/Math.max(1,width)*19;
-  const offsets=[[0,0]];
+  const offsets=[];
   for(const r of [42,84,126,168])offsets.push([0,-r],[-r,-r/2],[r,-r/2],[-r,0],[r,0],[0,r],[-r,r/2],[r,r/2]);
   for(const item of items.values()){
    const v=item.value;item.group.position.set(v.x,-v.y,30);item.group.quaternion.copy(camera.quaternion);item.group.scale.setScalar(scale);
    const p=item.group.position.clone().project(camera),original={x:(p.x+1)*width/2,y:(1-p.y)*height/2};
    const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
    const candidates=offsets.map(([dx,dy])=>({x:clamp(original.x+dx,area.x+radius,area.x+area.width-radius),y:clamp(original.y+dy,area.y+radius,area.y+area.height-radius)}));
-   const blocked=q=>used.some(u=>Math.hypot(u.x-q.x,u.y-q.y)<radius*2)||obstacles.some(r=>q.x+radius>r.left&&q.x-radius<r.right&&q.y+radius>r.top&&q.y-radius<r.bottom);
+   const blocked=q=>Math.hypot(q.x-original.x,q.y-original.y)<radius+12||used.some(u=>Math.hypot(u.x-q.x,u.y-q.y)<radius*2)||obstacles.some(r=>q.x+radius>r.left&&q.x-radius<r.right&&q.y+radius>r.top&&q.y-radius<r.bottom);
    const point=candidates.find(q=>!blocked(q))||candidates.find(q=>!used.some(u=>Math.hypot(u.x-q.x,u.y-q.y)<radius*2))||candidates[0];
    used.push(point);item.screen={...point,radius:19,text:v.text};p.x=2*point.x/width-1;p.y=1-2*point.y/height;item.group.position.copy(p.unproject(camera));
    const anchor=new THREE.Vector3(v.x,-v.y,12);item.group.updateMatrixWorld();item.group.worldToLocal(anchor);

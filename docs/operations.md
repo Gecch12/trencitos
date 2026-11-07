@@ -30,11 +30,14 @@ node scripts/benchmark-bots.js --seed 3001 --seeds 25 --players 4 --opponent sta
 avisos de fuentes afectadas solicitan revisión semántica; no exigen editar un
 documento que sigue siendo correcto.
 
-[GitHub Actions](../.github/workflows/ci.yml) ejecuta la suite completa en serie,
-valida documentación y prueba el lobby y los robos de cartas en Chrome sobre
-Ubuntu/Node 26. Usa estado temporal y un doble local para guardado remoto, sin
-credenciales de producción. La evidencia del navegador se conserva siete días.
-Avance de activación y entrega en [CI y Render](work/continuous-delivery.md).
+[GitHub Actions](../.github/workflows/ci.yml) valida documentación y arquitectura;
+para cambios funcionales ejecuta la suite Node completa y todos los recorridos
+Chrome sobre Ubuntu/Node 26 en trabajos independientes. Node conserva ejecución
+serial dentro de su job; los navegadores se reparten en cuatro grupos aislados.
+Usa estado temporal y un doble local para guardado remoto, sin credenciales de
+producción. La evidencia del navegador se conserva siete días. El alcance
+documental y el check final están definidos en [CI y Render](work/continuous-delivery.md).
+La ejecución manual del workflow siempre valida toda la revisión.
 
 El benchmark enfrenta un bot nuevo con tres rivales (para cuatro jugadores),
 rotándolo por todos los asientos para cada semilla. `--opponent stage1` usa la

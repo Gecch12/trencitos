@@ -32,8 +32,13 @@ function createPeerOutput({ write, frame, live, schedule = queueMicrotask }) {
         const scope = JSON.stringify([value.code, value.seat, !!value.spectator, value.matchId]);
         if (scope !== streamScope) { stream.reset(); streamScope = scope; }
       }
-      if (['room_closed', 'session_replaced'].includes(value.type)) { stream.reset(); streamScope = null; }
-      if (["lobby", "storage", "directory"].includes(value.type)) {
+      if (['room_closed', 'session_replaced'].includes(value.type)) {
+        stream.reset(); streamScope = null;
+        // A client clears its conversation on exit, including when it returns
+        // to the same seat through this still-open WebSocket.
+        for(const type of ['lobby','storage','chat_context'])previous.delete(type);
+      }
+      if (["lobby", "storage", "directory", "chat_context"].includes(value.type)) {
         if (previous.get(value.type) === data) return;
         previous.set(value.type, data);
         if (value.type === 'storage') stream.reset();

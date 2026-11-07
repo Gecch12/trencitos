@@ -64,7 +64,7 @@ function selectRoomColor(color) {
   renderHomeColors();
   flushRoomColor();
 }
-let account = null, shell = null;
+let account = null, shell = null, roomChat = null;
 let replayMode = location.pathname === "/replay";
 let inlineReplaySnapshot=null, currentMatchId=null;
 let replayAt = null;
@@ -203,6 +203,13 @@ let marketRefresh = null;
 const pendingMarketRefreshes = [];
 let lastEffectId = null, serverOffset = 0, seenOfferId = null;
 let waitingForGameStart = false;
+let lobbySoundSnapshot = null, startPresentationTimer = null, startPresentationUntil = 0, destinationHintTimer = null;
+let destinationAttentionMatch = null;
+const usedDestinationHighlights = new Set();
+let ticketMapModule = null;
+function preloadTicketMap() {
+  return ticketMapModule ||= import('./ticket-map.js').catch(error => { ticketMapModule = null; throw error; });
+}
 let retainedVisible = new Set();
 const effectTimers = new Set();
 const cardFlights = new Set();
@@ -222,7 +229,6 @@ let resultsSeen = false, resultMapSelection = null;
 const expandedResults = new Set();
 const resultViews = new Map();
 let resultMapCleanup = null, resultCamera = null, resultCameraKey = "";
-let resultScrollCleanup = null;
 let toastTimer = null;
 const ticketColor = i => TICKET_COLORS[i % TICKET_COLORS.length];
 let pendingChoiceKey = null,
@@ -287,14 +293,17 @@ function error(s) {
 }
 function toast(message, duration = 4000) {
   clearTimeout(toastTimer);
-  $("toast").textContent = message;
+  $("toastMessage").textContent = message;
   $("toast").classList.remove("hidden");
   toastTimer = setTimeout(() => $("toast").classList.add("hidden"), duration);
 }
+$("dismissToast").onclick = () => { clearTimeout(toastTimer); $("toast").classList.add("hidden"); };
 function identityKey(code) {
   return "rr-room-" + code;
 }
-function resetToLobby(message = "", preserveIdentity = false) {
+function resetToLobby(message = "", preserveIdentity = false, transient = false) {
+  finishGameStart(false); dismissDestinationHint(); lobbySoundSnapshot = null;
+  roomChat?.reset();
   Postgame.reset();currentMatchId=null;
   pendingRoomColor = colorRequest = null;
   message = I18n.t(message);
@@ -355,16 +364,26 @@ function resetToLobby(message = "", preserveIdentity = false) {
   $("createCode").value = LobbyUI.randomCode();
   setHomeMode("create");
   renderHomeColors();
-  $("lobbyError").textContent = message;
+  $("lobbyError").textContent = transient ? "" : message;
   history.replaceState(null, "", "/");
   status(sock?.readyState === WebSocket.OPEN ? I18n.t("● Conectado") : I18n.t("○ Desconectado"));
   shell?.reset();
   account?.listRooms().catch(() => {});
+  if (transient && message) toast(message);
 }
 const resumedRooms = new Set();
 let resolvingJoin = false;
 function syncRecoveryControls() {
-  $("privateSession").hidden = spectating || practiceMode || !sessionSupported || !!account?.ownsCurrentSeat();
+  $("privateSession").hidden = spectating || practiceMode || game?.phase === "finished" || !sessionSupported || !!account?.ownsCurrentSeat();
+}
+function syncSessionControls() {
+  const finished = game?.phase === "finished";
+  $("leaveRoom").innerHTML = ShellIcons.svg('exit') + I18n.t(finished ? 'Volver a salas' : practiceMode ? 'Abandonar partida' : 'Salir temporalmente');
+  $("leaveRoom").classList.toggle('is-finished', finished);
+  $("leaveRoom").hidden = spectating || replayMode;
+  $("abandonRoom").hidden = practiceMode || spectating || replayMode || !lobbyStarted || finished || game?.phase === "closing";
+  $("commitmentNotice").hidden = finished || replayMode;
+  syncRecoveryControls();
 }
 async function joinDesiredRoom(automatic = false) {
   if (resolvingJoin || sessionReplaced || !desiredRoom) return;
@@ -386,11 +405,74 @@ async function joinDesiredRoom(automatic = false) {
     if (connection !== sock && sock?.readyState === WebSocket.OPEN && !sessionReplaced) joinDesiredRoom(automatic);
   }
 }
+// Compare confirmed rosters, not renders. A multiset also handles equal names
+// and seat renumbering; color/settings changes never announce new arrivals.
+function lobbyArrivalSounds(previous, next) {
+  if (!previous || previous.code !== next.code || previous.started || next.started || next.spectator || next.practice) return [];
+  const counts = message => {
+    const result = new Map();
+    message.members.forEach((m, i) => {
+      if (i === message.seat || !m.connected) return;
+      const key = JSON.stringify([!!m.bot, m.name]);
+      result.set(key, (result.get(key) || 0) + 1);
+    });
+    return result;
+  };
+  const before = counts(previous), after = counts(next), sounds = new Set();
+  for (const [key, count] of after) if (count > (before.get(key) || 0)) sounds.add(JSON.parse(key)[0] ? 'bot-added' : 'join');
+  return [...sounds];
+}
+function finishGameStart(focus = true) {
+  clearTimeout(startPresentationTimer); startPresentationTimer = null;
+  $('gameStart').classList.add('hidden');
+  $('game').inert = $('overlay').inert = false;
+  if (focus && game?.initial) $('dialog').querySelector('.keep')?.focus({preventScroll:true});
+}
+function beginGameStart(view) {
+  if (document.hidden) return;
+  const remaining = Math.min(GameTiming.startMs, Math.max(0, (view.initialRevealAt || 0) - view.serverNow));
+  playSound('start', remaining ? remaining / 1000 : .7);
+  if (!remaining) return; // Legacy servers/reconnections do not reserve a transition.
+  startPresentationUntil = performance.now() + remaining;
+  $('gameStart').classList.remove('hidden');
+  $('game').inert = $('overlay').inert = true;
+  clearTimeout(startPresentationTimer);
+  startPresentationTimer = setTimeout(finishGameStart, remaining);
+}
+function syncDestinationAttention(used = false) {
+  const key = room && seat >= 0 && !replayMode && !spectating ? `rr-destination-used:${currentMatchId || room}:${seat}` : null;
+  if (key !== destinationAttentionMatch) {
+    destinationAttentionMatch = key;
+    try { if (key && localStorage.getItem(key)) usedDestinationHighlights.add(key); } catch {}
+  }
+  if (used && key) {
+    usedDestinationHighlights.add(key);
+    try { localStorage.setItem(key, 'used'); } catch {}
+  }
+  // The match ID survives reload/reconnection and changes for a rematch.
+  // Keep the in-memory record too when browser storage is unavailable.
+  $('toggleDestinations').classList.toggle('needs-attention', !!key && !usedDestinationHighlights.has(key) && !!game?.tickets.length);
+}
+function dismissDestinationHint() {
+  clearTimeout(destinationHintTimer); destinationHintTimer = null;
+  $('destinationHint').hidden = true;
+  $('toggleDestinations').removeAttribute('aria-describedby');
+}
+function maybeShowDestinationHint() {
+  if (!game?.tickets.length || !['initial', 'play'].includes(game.phase) || replayMode || spectating || allDestinationsVisible || !$('overlay').classList.contains('hidden')) return;
+  try { if (localStorage.getItem('rr-destination-hint')) return; localStorage.setItem('rr-destination-hint', 'seen'); } catch { return; }
+  $('destinationHint').textContent = I18n.t('Resalta tus destinos en el mapa');
+  $('destinationHint').hidden = false;
+  $('toggleDestinations').setAttribute('aria-describedby', 'destinationHint');
+  destinationHintTimer = setTimeout(dismissDestinationHint, 6000);
+}
 function connect() {
   if (sessionReplaced) return;
   sock = TrencitosConnection.socket();
   status(I18n.t("Conectando…"));
   sock.onopen = async () => {
+    lobbySoundSnapshot = null;
+    waitingForGameStart = false;
     resendPending = true;
     lastDrawId = null;
     lastEffectId = null;
@@ -400,6 +482,7 @@ function connect() {
     else if (desiredRoom) await joinDesiredRoom(true);
   };
   const receive = m => {
+    if (roomChat?.receive(m)) return;
     if (m.type === 'directory') { shell?.receiveDirectory(m); return; }
     if (m.type === "error") {
       if (m.id && inflightDraws.has(m.id)) {
@@ -438,12 +521,13 @@ function connect() {
     }
     if (m.type === "room_closed") {
       const wasWatching = spectating;
-      resetToLobby(m.message || "", !!m.preserveIdentity);
+      resetToLobby(m.deleted ? "La sala se cerró y su chat ya no está disponible." : m.message || "", !!m.preserveIdentity, true);
       if (wasWatching && m.message) shell.watchUnavailable();
       return;
     }
     if (m.type === "session_replaced") {
       sessionReplaced = true; pendingAction = null;
+      roomChat?.disconnected();
       inflightDraws.clear();
       cancelDrawFeedback();document.body.classList.remove("is-confirming-action");
       if (game) renderMarket();
@@ -454,6 +538,8 @@ function connect() {
     }
     if (m.type === "storage") {
       storagePaused = m.paused;
+      if (storagePaused) roomChat?.disconnected();
+      roomChat?.changed();
       if (storagePaused) { cancelDrawFeedback(); if (game) renderMarket(); }
       if (storagePaused) cancelRoomColor();
       syncHomeAvailability();
@@ -479,6 +565,9 @@ function connect() {
       return;
     }
     if (m.type === "lobby") {
+      if (!replayMode) for (const sound of lobbyArrivalSounds(lobbySoundSnapshot, m)) playSound(sound);
+      lobbySoundSnapshot = m;
+      if (!m.started) preloadTicketMap().catch(() => {});
       if(inlineReplaySnapshot){
         if(m.started&&m.matchId===currentMatchId){inlineReplaySnapshot.members=m.members;host=m.host;return;}
         Postgame.reset();
@@ -501,15 +590,13 @@ function connect() {
       members = m.members;
       if (enteringRoom || lobbyStarted || spectating) pendingRoomColor = colorRequest = null;
       if (colorRequest === members[seat]?.color) {colorRequest=null;if(pendingRoomColor===members[seat]?.color)pendingRoomColor=null;}
-      $('abandonRoom').hidden=spectating||practiceMode||!m.started;
       $('commitmentNotice').textContent=I18n.t(m.commitment?.disabled?'Puedes salir sin penalización por abandono.':m.commitment?.eligible?'Compromiso: tienes 120 segundos para reconectarte.':'Esta partida no afecta tu Compromiso.');
       host = m.host;
       practiceMode = !!m.practice;
       sessionSupported = m.sessionVersion >= 1;
       drawFeedbackSupported = m.drawFeedbackVersion === 1;
       drawPipelineSupported = m.drawPipelineVersion === 1;
-      syncRecoveryControls();
-      $("leaveRoom").hidden = spectating;
+      syncSessionControls();
       $("reclaimControl").classList.toggle("hidden", !members[seat]?.autopilot);
       $("reclaimControl").disabled = !!members[seat]?.reclaim;
       $("reclaimControl").textContent = members[seat]?.reclaim ? I18n.t("Volverás en tu siguiente turno") : I18n.t("Recuperar control");
@@ -534,6 +621,7 @@ function connect() {
         Postgame.reset();
       }
       try { useMatchDefinition(m.game, m.definition); } catch { return; }
+      if (waitingForGameStart && m.game.phase === 'initial' && game?.phase !== 'initial' && !replayMode && !spectating) beginGameStart(m.game);
       const effects = prepareEffects(m.game), oldTurn = game?.turnSerial, oldOffer = game?.ticketOffer;
       if (oldOffer && oldOffer.id !== m.game.ticketOffer?.id) localStorage.removeItem(`rr-choice-${room}-${seat}-${oldOffer.id}`);
       if (game?.initial && !m.game.initial) localStorage.removeItem(`rr-choice-${room}-${seat}-initial-${game.initial.map(t => t.id).join("-")}`);
@@ -578,6 +666,7 @@ function connect() {
     }else if(message&&typeof message==='object')receiveWire(message);
   };
   sock.onclose = () => {
+    roomChat?.disconnected();
     cancelRoomColor();
     cancelTunnelReveal();
     cancelCardFlights();
@@ -972,7 +1061,7 @@ function render() {
   $("lobby").classList.add("hidden");
   $("game").classList.remove("hidden");
   $("commitmentBanner").hidden=!game.commitment?.disabled || ["finished","closing"].includes(game.phase);
-  $("abandonRoom").hidden=practiceMode||spectating||["finished","closing"].includes(game.phase);
+  syncSessionControls();
   renderPracticeControls();
   $("serverWarning").classList.toggle("hidden", game.uiVersion >= 10 && sessionSupported);
   const active = amIUp();
@@ -1025,7 +1114,7 @@ function render() {
           ? I18n.t("Tu turno")
           : I18n.t`Turno de ${game.players[game.current].name}`;
   $("roundStatus").dataset.phase = game.phase === "finished" ? "finished" : game.finalRemaining !== null ? "last" : "normal";
-  $("roundStatus").textContent = game.phase === "finished" ? I18n.t("Final") : game.phase === "initial" ? I18n.t`${game.initialReadyCount}/${game.players.length} listos` : game.finalRemaining !== null ? I18n.t("Última ronda") : "";
+  $("roundStatus").textContent = game.phase === "finished" ? "" : game.phase === "initial" ? I18n.t`${game.initialReadyCount}/${game.players.length} listos` : game.finalRemaining !== null ? I18n.t("Última ronda") : "";
   const lastRound = Number.isInteger(game.finalRemaining) && game.finalRemaining > 0 && !["finished", "abandoned"].includes(game.phase);
   $("finalRoundNotice").classList.toggle("hidden", !lastRound);
   $("finalRoundNotice").textContent = lastRound ? I18n.t`Última ronda · ${game.finalRemaining} turno(s) restante(s)` : "";
@@ -1053,6 +1142,7 @@ function render() {
   if (compactPanel === "rules") renderTableRules();
   if (compactPanel === "hand") renderTableHand();
   updateClocks();
+  maybeShowDestinationHint();
 }
 function updateClocks() {
   if (!game) return;
@@ -1064,7 +1154,8 @@ function updateClocks() {
   for (const node of document.querySelectorAll("[data-clock]")) {
     const deadline = deadlines[node.dataset.clock];
     const frozen = game.sharedTunnel && (node.dataset.clock === "offer" ? game.sharedTunnel.offerRemaining : node.dataset.clock === "turn" && game.sharedTunnel.stage === "reveal" ? game.sharedTunnel.turnRemaining : null);
-    const remaining = frozen != null ? frozen : Number.isFinite(deadline) ? Math.max(0, deadline - now) : null;
+    const clockNow = game.phase === 'initial' ? Math.max(now, game.initialRevealAt || now) : now;
+    const remaining = frozen != null ? frozen : Number.isFinite(deadline) ? Math.max(0, deadline - clockNow) : null;
     const seconds = remaining === null ? null : Math.ceil(remaining / 1000);
     node.textContent = seconds === null ? "" : node.dataset.clockFormat === "timer" ? `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}` : `${seconds}s`;
     node.classList.toggle("clock-warning", seconds !== null && seconds <= 10);
@@ -1287,7 +1378,7 @@ function playEffects(events, speed=1) {
     }
     else if (event.type === "tickets") playSound("card");
     else if (event.type === "build" && !event.deferredForTunnel) animateConstruction(event,speed);
-    else if (event.type === "turn" && event.seat === seat && !replayMode) {
+    else if (event.type === "turn" && event.seat === seat && !replayMode && performance.now() >= startPresentationUntil) {
       const timer=setTimeout(()=>{effectTimers.delete(timer);if(!document.hidden)playSound("bell");},Math.max(0,(game.construction?.until||0)-(Date.now()+serverOffset)));
       effectTimers.add(timer);
     }
@@ -1344,7 +1435,7 @@ document.addEventListener("keydown", event => {
   }
 });
 soundLabel();
-function playSound(kind) {
+function playSound(kind, length = .7) {
   if (muted || document.hidden || soundContext?.state !== "running") return;
   const ctx = soundContext, at = ctx.currentTime;
   if (kind === "shuffle") {
@@ -1415,6 +1506,15 @@ function playSound(kind) {
     source.connect(gain).connect(ctx.destination); source.start(at); source.stop(at + duration);
     soundNodes.add(source); source.onended = () => { soundNodes.delete(source); source.disconnect(); gain.disconnect(); };
   };
+  if (kind === 'join' || kind === 'bot-added') {
+    const bot = kind === 'bot-added';
+    tone(bot ? 520 : 660, .18, .055); tone(bot ? 780 : 990, .13, .022); return;
+  }
+  if (kind === 'start') {
+    const duration = Math.min(.7, Math.max(.01, length));
+    tone(660, duration, .085); tone(1320, duration * .7, .03); tone(1782, duration * .4, .012); return;
+  }
+  if (kind === 'recount-land') { tone(155, .09, .09, 'triangle'); tone(310, .055, .035); return; }
   if (kind === "bell") { tone(880, .7, .085); tone(1760, .42, .035); tone(2376, .2, .012); return; }
   if (kind === "build") { tone(155, .16, .14 * 1.15, "triangle"); tone(310, .09, .045 * 1.15); }
   const duration = kind === "card" ? .19 : .065;
@@ -1931,7 +2031,7 @@ function syncBoard3D(transitionMs = 0) {
     spotlight = { ...spotlight, routes: [...routes], endpoints: [...endpoints],
       activeRoutes: active.routeId === undefined ? [] : [active.routeId] };
   }
-  if(Postgame.spotlight())spotlight=Postgame.spotlight();
+  if(Postgame.spotlight()&&!tableFocus?.chat)spotlight=Postgame.spotlight();
   const focus = document.activeElement.closest?.("#board [data-route-id]");
   const cityFocus = document.activeElement.closest?.("#board [data-city]");
   board3D.update({ routes: game.routes.map(({ id, owner, color, tunnel, ferry, a, b }) => ({ id, owner, color, tunnel, ferry, a, b })),
@@ -2310,7 +2410,7 @@ $("drawtickets").onclick = confirmDestinationDraw;
 $("pass").onclick = () => act("pass");
 function showDialog(title, body, ticketDialog = false, dismissible = false) {
   disposeTicketMap();
-  resultScrollCleanup?.(); resultScrollCleanup=null;ShellIcons.hideTooltip();
+  ShellIcons.hideTooltip();
   resultMapCleanup?.(); resultMapCleanup = null;
   closeMapMenu();
   hoveredDestination = null;
@@ -2339,7 +2439,7 @@ function closeOptionalDialog() {
   disposeTicketMap();
   const choosing = uiDialog === "tickets";
   const closingResults = uiDialog === "results";
-  if (closingResults) { Postgame.map();resultMapCleanup?.(); resultMapCleanup = null; resultScrollCleanup?.(); resultScrollCleanup=null;ShellIcons.hideTooltip(); }
+  if (closingResults) { Postgame.map();resultMapCleanup?.(); resultMapCleanup = null;ShellIcons.hideTooltip(); }
   const returningToMap = uiDialog === "routes";
   uiDialog = buildTarget = null;
   buildSubmitting = false;
@@ -2384,6 +2484,9 @@ for (const type of ["pointerover", "pointerout"]) $("ticketList").addEventListen
 });
 function toggleDestinationHighlight() {
   if (!game?.tickets.length) return;
+  syncDestinationAttention(true);
+  dismissDestinationHint();
+  try { localStorage.setItem('rr-destination-hint', 'seen'); } catch {}
   clearTableFocus();
   allDestinationsVisible = !allDestinationsVisible;
   hoveredDestination = null;
@@ -2421,7 +2524,9 @@ function updateDestinationSpotlight() {
   badge.parentElement.setAttribute('aria-label',I18n.t('Tus destinos')+`: ${completed}/${total}`);
   const toggle = $("toggleDestinations");
   toggle.disabled = !game?.tickets.length;
+  syncDestinationAttention();
   toggle.setAttribute("aria-pressed", String(allDestinationsVisible && !toggle.disabled));
+  toggle.setAttribute('aria-label', I18n.t(allDestinationsVisible ? 'Ocultar mis destinos' : 'Resaltar mis destinos'));
   toggle.title = toggle.disabled ? I18n.t("Conserva billetes para resaltar tus destinos") : allDestinationsVisible ? I18n.t("Ocultar mis destinos") : I18n.t("Resaltar mis destinos");
   if (!toggle.disabled) toggle.title += " (H)";
   for (const label of $("board").querySelectorAll("[data-city-label]")) label.style.removeProperty("opacity");
@@ -2511,7 +2616,7 @@ function renderTicketMap(tickets) {
   if (!ticketMapView) {
     if (ticketMapLoadingNode === container || container.dataset.failed) return;
     ticketMapLoadingNode = container;
-    import('./ticket-map.js').then(({ createTicketMap }) => {
+    preloadTicketMap().then(({ createTicketMap }) => {
       if (ticketMapLoadingNode !== container || !container.isConnected) return;
       const preview = key => {
         if (hoveredTicket === key && pinnedTicket === null) return;
@@ -2849,7 +2954,6 @@ function showResults() {
   $("watchRecount").onclick=()=>Postgame.start(game.result.find(r=>r.seat===seat)||game.result[0],"routes");
   Postgame.layout();
   ShellIcons.mount($("dialog"));
-  resultScrollCleanup?.();resultScrollCleanup=ShellIcons.scrollTrack($("dialog").querySelector('.results-table-scroll'));
   $("dialog")._resultSignature = signature;
   const heading = document.createElement("div"); heading.className = "results-header";
   $("dialog").prepend(heading); heading.append($("dialogTitle"), $("dialog").querySelector(".dialog-close"));
@@ -3369,6 +3473,7 @@ function syncTableLayout() {
   layoutHand();
 }
 function setCompactPanel(next = compactPanel) {
+  requestAnimationFrame(()=>roomChat?.changed());
   if (next === "cards") next = "map"; // The market is always on the table.
   if (!compactMedia.matches && ["history", "destinations", "chat"].includes(next)) next = "map";
   if (next !== "map" && !compactSections[next]) return;
@@ -3509,6 +3614,17 @@ function focusHistoryRoute(id) {
   fitTableRoutes([id]); syncBoard3D(180);
   const finish = () => { if (tableFocus === focus) tableFocusTimer = setTimeout(()=>clearTableFocus(),1100); };
   if (reducedMotion.matches || route.owner === null || !board3D?.animateConstruction({routeId:id},finish,{delay:180,duration:1100,liftFirst:true})) finish();
+}
+function focusChatRoute(id) {
+  if (!game || replayMode || !game.routes.some(r=>r.id===id) || !geometryFor(id)) return;
+  if (constructionFocus || constructionBusy() || game.sharedTunnel || Postgame.mode()==='recount') {
+    toast(I18n.t('Espera a que termine la animación para resaltar el tramo.')); return;
+  }
+  if(Postgame.mode()==='results')Postgame.map();
+  clearTableFocus();setCompactPanel('map');historyCamera={zoom,center:{...mapCenter}};
+  tableFocus={routes:[id],chat:true};const focus=tableFocus;
+  fitTableRoutes([id]);syncBoard3D(350);
+  tableFocusTimer=setTimeout(()=>{if(tableFocus===focus)clearTableFocus();},3500);
 }
 function renderTableRules() {
   const rules = TableUI.rulesSummary(gameRules);
@@ -3717,13 +3833,14 @@ $("mapscroll").addEventListener("click", (event) => {
 const cameraResize = new ResizeObserver(() => { closeMapMenu(); applyZoom(); layoutHand(); if (game && $("ticketMap") && !$("overlay").classList.contains("hidden")) renderTicketMap(uiDialog === "routes" ? game.tickets : game.ticketOffer?.tickets || game.initial || []); });
 for (const id of ["mapscroll", "gameSidebar", "handdock", "turnBanner", "compactPanel", "compactHud", "compactPlayers", "boardtools", "boardStatusActions"]) cameraResize.observe($(id));
 function updateFullscreenControl() {
-  const available = !!document.fullscreenElement ||
-    (document.fullscreenEnabled === true && typeof document.documentElement.requestFullscreen === "function");
+  const available = !globalThis.Capacitor?.isNativePlatform?.() && (!!document.fullscreenElement ||
+    (document.fullscreenEnabled === true && typeof document.documentElement.requestFullscreen === "function"));
   $("expandboard").classList.toggle("hidden", !available);
   $("expandboard").setAttribute("aria-label", document.fullscreenElement ? I18n.t("Salir de pantalla completa") : I18n.t("Pantalla completa"));
 }
 updateFullscreenControl();
 $("expandboard").onclick = async () => {
+  if (globalThis.Capacitor?.isNativePlatform?.()) return;
   try {
     if (document.fullscreenElement) await document.exitFullscreen();
     else await document.documentElement.requestFullscreen();
@@ -3864,6 +3981,7 @@ const replayOptions={cancelEffects:cancelReplayEffects,avatar:i=>playerAvatar(i)
     }
   }};
 Postgame.setup({
+ landed:()=>playSound('recount-land'),
  board:()=>board3D, sync:()=>{if(game)updateDestinationSpotlight();}, refresh:()=>{if(game)applyZoom();}, area:r=>mapSafeArea(r,true),
  capture:()=>({zoom,center:{...mapCenter},destinations:allDestinationsVisible,labels:[...labelPriority]}),
  restore:s=>{zoom=s.zoom;mapCenter={...s.center};allDestinationsVisible=s.destinations;labelPriority=s.labels;resultMapSelection=null;applyZoom();},
@@ -3886,6 +4004,13 @@ Postgame.setup({
   zoom=saved.zoom;mapCenter=saved.center;document.body.classList.remove('is-replaying');document.body.classList.toggle('is-spectating',spectating);
   $('leaveRoom').hidden=spectating;$('connection').classList.remove('hidden');uiDialog=null;resultsSeen=true;render();applyZoom();
  }
+});
+roomChat=RoomChatUI.create({send,focusRoute:focusChatRoute,
+  available:()=>!!room&&!replayMode&&!sessionReplaced&&!storagePaused&&sock?.readyState===WebSocket.OPEN,
+  routes:()=>!game||replayMode?[]:game.routes.map(r=>{
+    const parallel=game.routes.filter(other=>other.a===r.a&&other.b===r.b||other.a===r.b&&other.b===r.a);
+    return {id:r.id,label:cityName(r.a)+' – '+cityName(r.b),color:r.color,lane:parallel.findIndex(other=>other.id===r.id),lanes:parallel.length};
+  })
 });
 if(replayMode){document.body.classList.add('is-replaying');HistoryUI.replay(new URLSearchParams(location.search).get('id')||'',paintReplay,replayOptions);}else connect();
 

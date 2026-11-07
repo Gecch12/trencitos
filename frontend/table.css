@@ -1,6 +1,6 @@
 /* Shared controls, distinct table layouts. The Three.js board is unchanged. */
 @media (max-width: 699px), (max-width: 1100px) and (max-height: 600px) {
-body.is-playing { --table-top: calc(52px + env(safe-area-inset-top)); --table-players: 96px; --table-dock: calc(152px + env(safe-area-inset-bottom)); --compact-bottom: var(--table-dock); --compact-players-height: var(--table-players); }
+body.is-playing { --table-top: calc(52px + env(safe-area-inset-top)); --table-players: 96px; --table-dock: calc(160px + env(safe-area-inset-bottom)); --compact-bottom: var(--table-dock); --compact-players-height: var(--table-players); }
 .game .sidebar, .game .handdock { display: none; }
 .game .boardtools, .game[data-compact-panel]:not([data-compact-panel="map"]) .boardtools { top: max(6px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); right: auto; flex-direction: row; gap: 5px; }
 .game .boardtools .boardexpand { display: none; }
@@ -53,7 +53,7 @@ body.is-playing { --table-top: calc(52px + env(safe-area-inset-top)); --table-pl
 }
 .final-round-notice { display: block; max-width: 100%; padding: 6px 10px; border-radius: 7px; background: #fff0c6; color: #745018; font-weight: 650; }
 .game .compact-hud { display: grid; grid-template-columns: 1fr; position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 6px env(safe-area-inset-bottom); background: #fffcf5; box-shadow: 0 -3px 16px #193e4c20; }
-#compactMarket { height: 78px; min-width: 0; }
+#compactMarket { height: 86px; min-width: 0; }
 .game #compactMarket .sidepanel { position: relative; padding: 0; margin: 0; border: 0; box-shadow: none; background: none; height: 100%; }
 .game #compactMarket .market-toolbar { height: 16px; min-height: 16px; margin: 0; padding: 1px 4px 0; font-size: 10px; letter-spacing: .06em; }
 .game #compactMarket .market-heading { font-size: 10px; }
@@ -63,13 +63,9 @@ body.is-playing { --table-top: calc(52px + env(safe-area-inset-top)); --table-pl
 .game #compactMarket #market .traincard, .game #compactMarket #market .train-deck { width: 44px; flex: 0 0 44px; min-width: 44px; height: 60px; min-height: 44px; max-width: none; aspect-ratio: auto; padding: 0; background: transparent; border: 0; box-shadow: none; }
 .game #compactMarket #market img { width: 100%; height: 60px; object-fit: contain; display: block; }
 .game #compactMarket #market .traincard:hover:not(:disabled) { transform: translateY(-2px); }
-.game #compactMarket #market .train-deck { margin-left: auto; width: 54px; flex-basis: 54px; padding-right: 10px; }
-.game #compactMarket .deck-stack { height: 60px; width: 44px; isolation: isolate; }
-.game #compactMarket .deck-stack::before, .game #compactMarket .deck-stack::after, .game #compactMarket .deck-stack i { content: ""; display: block; position: absolute; inset: 0; border: 0; border-radius: 0; background: url('assets/cards/back.svg') center / contain no-repeat; box-shadow: none; }
-.game #compactMarket .deck-stack::before { transform: translateX(9px); z-index: -3; }
-.game #compactMarket .deck-stack::after { transform: translateX(6px); z-index: -2; }
-.game #compactMarket .deck-stack i { transform: translateX(3px); z-index: -1; }
-.game #compactMarket .deck-stack img { border-radius: 0; box-shadow: none; }
+.game #compactMarket #market .train-deck { margin-left: auto; width: 54px; flex-basis: 54px; height: 68px; }
+.game #compactMarket .deck-stack { inset: 0 auto auto 0; height: 60px; width: 44px; }
+.game #compactMarket #market .deck-stack img { height: 100%; }
 .game #compactMarket #market .train-deck, .game #compactMarket #market .train-deck:hover, .game #compactMarket #market .train-deck:disabled { box-shadow: none; background: transparent; }
 .game #compactMarket .market-info { display: inline-flex; margin-left: 3px; }
 .game #compactMarket .market-info button { width: 20px; height: 16px; min-height: 0; padding: 0; font-size: 11px; background: transparent; box-shadow: none; }
@@ -146,12 +142,12 @@ body.is-playing { --table-top: calc(52px + env(safe-area-inset-top)); --table-pl
 .table-rules dl { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 0; }
 .table-rules dd { margin: 0; font-weight: 750; font-variant-numeric: tabular-nums; }
 .table-chat { min-height:0; }
-.table-chat summary{display:flex;align-items:center;justify-content:space-between;list-style:none;cursor:pointer;min-height:36px;padding:7px 10px;font-size:12px;font-weight:650;color:#345963}
-.table-chat summary::-webkit-details-marker{display:none}
+.table-chat > summary{display:flex;align-items:center;justify-content:space-between;list-style:none;cursor:pointer;min-height:36px;padding:7px 10px;font-size:12px;font-weight:650;color:#345963}
+.table-chat > summary::-webkit-details-marker{display:none}
 .chat-chevron{transform:rotate(180deg);font-size:17px;line-height:1}.table-chat[open] .chat-chevron{transform:none}
 .chat-body{display:flex;flex-direction:column;height:160px;gap:6px;padding:0 8px 8px}
 .chat-messages{flex:1;min-height:0;overflow:auto}.chat-composer{opacity:.55}
-.game .compact-panel .table-chat{height:100%}.game .compact-panel .table-chat summary{display:none}.game .compact-panel .chat-body{height:100%;padding:0}
+.game .compact-panel .table-chat{height:100%}.game .compact-panel .table-chat > summary{display:none}.game .compact-panel .chat-body{height:100%;padding:0}
 .chat-placeholder { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; text-align: center; color: #517078; }
 .chat-placeholder .shell-icon { width: 28px; height: 28px; }
 .chat-placeholder p { margin: 0; font-size: 12px; }
@@ -197,7 +193,7 @@ body.is-playing { --table-top: calc(52px + env(safe-area-inset-top)); --table-pl
   .game #compactHand .hand { gap: 3px; }.game #compactHand .cardcount { min-width: 18px; font-size: 11px; padding-inline: 2px; }
 }
 @media (max-height:600px) and (min-width:700px) {
-  body.is-playing { --top-height: 0px; --table-dock: calc(86px + env(safe-area-inset-bottom)); }
+  body.is-playing { --top-height: 0px; --table-dock: calc(94px + env(safe-area-inset-bottom)); }
   .game .compact-hud { left: 60px; right: 60px; padding-top: 2px; padding-bottom: calc(2px + env(safe-area-inset-bottom)); gap: 8px; }
   .game .compact-panel { max-height: calc(100% - var(--table-dock) - 18px); }
   .game .compact-players { width: auto; }
@@ -296,7 +292,9 @@ body.is-playing { --table-top: calc(52px + env(safe-area-inset-top)); --table-pl
 .game .sidebar{gap:6px}
 .game .history-heading{height:auto;min-height:0;margin:0}
 .game .history-heading:has(#historyLatest:not(.hidden)){margin-bottom:4px}
-.game #historyEntries>.turn-history-row{padding:5px 0;line-height:1.4}
+.game #historyEntries>.turn-history-row{padding:8px 10px;line-height:1.4;border-radius:0}
+.game #historyEntries>.turn-history-row:first-child{padding-top:8px}
+.game #historyEntries>.turn-history-row:last-child{border-bottom:0}
 .game .history-step{margin:3px 0 0 5px;padding:1px 0 1px 7px;line-height:1.4}
 .game .history-compact .history-step{display:inline;border:0;margin:0 0 0 4px;padding:0;line-height:inherit}
 .game .history-compact .history-turn-heading{display:inline}
@@ -319,17 +317,24 @@ body.is-playing { --table-top: calc(52px + env(safe-area-inset-top)); --table-pl
  .game .sidebar>#tableChat{flex:none;height:auto;border:1px solid #d5d2c4;border-radius:9px;background:#fffcf5}
  .game .sidebar>#tableChat[open] .chat-body{height:clamp(110px,19dvh,200px)}
  .table-tools [data-panel=chat]{display:none}
- .game .sidebar .sidepanel{padding:8px}
- .game .sidebar .market-toolbar{margin:0;display:block}
- .game .sidebar #drawtickets{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:44px;min-height:44px;padding:6px 10px;border-radius:6px;background:#f5ebd8;border:1px solid #d5c49e}
- .game .sidebar #drawtickets svg{width:22px;height:22px;filter:none}
+ .game .sidebar .sidepanel{padding:8px 16px 16px 8px;margin-right:-8px}
+ .game .sidebar .market-toolbar{margin:0;display:flex;align-items:center;gap:6px;height:36px}
+ .game .sidebar #drawstats{display:block;flex:1;min-width:0;min-height:16px;margin:0;text-align:left}
+ .game .sidebar #drawtickets{display:flex;flex:0 0 33.333%;align-items:center;justify-content:center;gap:4px;width:33.333%;height:34px;min-height:34px;padding:4px;border-radius:6px;background:#f5ebd8;border:1px solid #d5c49e}
+ .game .sidebar #drawtickets .destination-deck-label{font-size:11px}
+ .game .sidebar #drawtickets svg{width:18px;height:18px;filter:none;flex:none}
  .game .sidebar #drawtickets:disabled{opacity:.6}
 }
 @media(max-width:699px),(max-width:1100px) and (max-height:600px){
- .game #compactMarket .market-toolbar{display:none}
+ .game #compactMarket .market-toolbar{display:block;height:0;min-height:0;margin:0}
+ .game #compactMarket .market-label{position:absolute;left:4px;top:0;font-size:10px;line-height:14px}
  .game #compactMarket .draw-status{position:absolute;right:0;top:0;font-size:10px;line-height:14px}
  .game #compactMarket #market{padding-top:14px;height:74px}
  #tunnelBoardNotice:has(#tunnelDecisionReturn:not([hidden])){font-size:11px;gap:2px;padding:6px 8px}
  #tunnelDecisionReturn:not([hidden]){margin-left:0}
 }
-@media(pointer:coarse){.game .sidebar #drawtickets,.table-chat summary{min-height:44px;height:auto}}
+@media(pointer:coarse) and (min-width:700px) and (min-height:601px), (pointer:coarse) and (min-width:1101px){
+ .game .sidebar .market-toolbar{height:44px}
+ .game .sidebar #drawtickets{height:44px;min-height:44px}
+}
+@media(pointer:coarse){.game .sidebar #drawtickets,.table-chat > summary{min-height:44px;height:auto}}

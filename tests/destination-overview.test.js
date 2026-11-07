@@ -7,6 +7,43 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 const source = fs.readFileSync(require.resolve("../frontend/app.js"), "utf8");
 
+test("destination attention survives use and reconnects, resets per match, and excludes inactive views", () => {
+  for (const storageBlocked of [false, true]) {
+    const stored = new Map();
+    let visible;
+    const context = vm.createContext({
+      room: "ROOM", seat: 0, currentMatchId: "match-1", replayMode: false, spectating: false,
+      game: { phase: "initial", tickets: [] }, destinationAttentionMatch: null, usedDestinationHighlights: new Set(),
+      localStorage: {
+        getItem(key) { if (storageBlocked) throw Error("blocked"); return stored.get(key); },
+        setItem(key, value) { if (storageBlocked) throw Error("blocked"); stored.set(key, value); },
+      },
+      $: () => ({ classList: { toggle: (_, value) => { visible = value; } } }),
+    });
+    vm.runInContext(source.slice(source.indexOf("function syncDestinationAttention("), source.indexOf("function dismissDestinationHint(")), context);
+    const sync = used => { context.syncDestinationAttention(used); return visible; };
+    assert.equal(sync(), false, "no kept tickets yet");
+    context.game.tickets = [{ id: 3 }];
+    assert.equal(sync(), true);
+    assert.equal(sync(true), false);
+    assert.equal(sync(), false, "later state updates do not restart the aura");
+    context.game = null; assert.equal(sync(), false);
+    context.destinationAttentionMatch = null;
+    context.game = { phase: "play", tickets: [{ id: 3 }, { id: 8 }] };
+    assert.equal(sync(), false, "reconnection and new tickets keep the first use");
+    if (!storageBlocked) {
+      context.usedDestinationHighlights = new Set(); context.destinationAttentionMatch = null;
+      assert.equal(sync(), false, "reload restores the stored first use");
+    }
+    context.currentMatchId = "match-2";
+    assert.equal(sync(), true, "new match in the same room resets the aura");
+    context.replayMode = true; assert.equal(sync(), false);
+    context.replayMode = false; context.spectating = true; assert.equal(sync(), false);
+    context.spectating = false; context.game.phase = "finished"; assert.equal(sync(), true, "only first use dismisses the cue, including after the match ends");
+    context.game.phase = "play"; assert.equal(sync(), true, "view changes never count as a use");
+  }
+});
+
 test("ticket numbers survive completion, display sorting and appending newly kept tickets", () => {
   const game = { tickets: [8, 3, 42].map(id => ({ id })), ticketProgress: [{ id: 8, completed: true }] };
   const numbers = () => UI.destinationEntries(game, game.tickets).map(({ ticket }) => UI.destinationNumber(game, ticket.id));

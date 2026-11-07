@@ -15,8 +15,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  verify:
-    name: Tests, docs and browser
+  checks:
+    name: Scope, docs and architecture
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      scope: ${{ steps.scope.outputs.scope }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '26'
+      - name: Determine validation scope
+        id: scope
+        run: node scripts/ci.js scope
+      - name: Validate documentation
+        run: node scripts/check-docs.js
+      - name: Enforce domain, application and query boundaries
+        run: node scripts/check-architecture.js
+      - name: Check CI selection and failure handling
+        run: node --test tests/ci.test.js
+
+  node:
+    name: Full Node suite
+    needs: checks
+    if: needs.checks.outputs.scope == 'full'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -32,61 +58,105 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci
-      - name: Validate documentation
-        run: node scripts/check-docs.js
-      - name: Enforce domain, application and query boundaries
-        run: node scripts/check-architecture.js
       - name: Run full Node suite
         run: npm run test:ci
+
+  browser:
+    name: Browser (${{ matrix.group }})
+    needs: checks
+    if: needs.checks.outputs.scope == 'full'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        group: [identity, cards, table, replay]
+    env:
+      STATE_BACKEND: file
+      AUTH_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '26'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
       - name: Install Chrome for browser checks
         run: npx playwright install --with-deps chrome
+      - name: Check room chat, moderation and map mentions
+        if: matrix.group == 'table'
+        env:
+          QA_OUT: .qa/ci/chat
+        run: node tests/browser-chat.cjs
       - name: Check profiles, social features and identity linking
+        if: matrix.group == 'identity'
         env:
           QA_OUT: .qa/ci/profile-social
         run: node tests/browser-profile-social.cjs
       - name: Check visual wagon preferences and avatar previews
+        if: matrix.group == 'identity'
         env:
           QA_OUT: .qa/ci/profile-style
         run: node tests/browser-profile-style.cjs
       - name: Check postgame recounts and responsive replay
+        if: matrix.group == 'replay'
         env:
           QA_OUT: .qa/ci/postgame-summary
         run: node tests/browser-postgame-summary.cjs
       - name: Check recorded hands at every playback speed
+        if: matrix.group == 'replay'
         env:
           QA_OUT: .qa/ci/replay-analysis
         run: node tests/browser-replay-analysis.cjs
       - name: Check installable web and offline privacy
+        if: matrix.group == 'table'
         run: node tests/browser-pwa.cjs
       - name: Check two-client lobby
+        if: matrix.group == 'identity'
         env:
           QA_OUT: .qa/ci/lobby
         run: node tests/browser-room-setup.cjs
       - name: Check incremental state and snapshot recovery
+        if: matrix.group == 'replay'
         env:
           QA_OUT: .qa/ci/transport
         run: node tests/browser-transport.cjs
       - name: Check immediate draw feedback and recovery
+        if: matrix.group == 'cards'
         env:
           QA_OUT: .qa/ci/draw-feedback
         run: node tests/browser-draw-feedback.cjs
       - name: Check public card motions and market history
+        if: matrix.group == 'cards'
         env:
           QA_OUT: .qa/ci/card-ui
         run: node tests/browser-card-ui.cjs
+      - name: Check bot blind draws stay private until replay
+        if: matrix.group == 'cards'
+        env:
+          QA_OUT: .qa/ci/bot-draw-privacy
+        run: node tests/browser-bot-draw-privacy.cjs
       - name: Check compact table and map space
+        if: matrix.group == 'table'
         env:
           QA_OUT: .qa/ci/table-ui
         run: node tests/browser-table-ui.cjs
       - name: Check route consultation, touch gestures and destination confirmation
+        if: matrix.group == 'table'
         env:
           QA_OUT: .qa/ci/table-refinement
         run: node tests/browser-table-refinement.cjs
       - name: Check automatic account seat recovery
+        if: matrix.group == 'identity'
         env:
           QA_OUT: .qa/ci/account-resume
         run: node tests/browser-account-resume.cjs
       - name: Check mobile continuity, score tables and destination indicators
+        if: matrix.group == 'identity'
         env:
           QA_OUT: .qa/ci/mobile-continuity
         run: node tests/browser-mobile-continuity.cjs
@@ -94,8 +164,27 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: browser-evidence
+          name: browser-evidence-${{ matrix.group }}
           path: .qa/ci/
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7
+
+  verify:
+    # Keep the existing check name for branch protection and release tooling.
+    name: Tests, docs and browser
+    needs: [checks, node, browser]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '26'
+      - name: Require every selected check to pass
+        env:
+          CI_NEEDS: ${{ toJSON(needs) }}
+        run: node scripts/ci.js verify

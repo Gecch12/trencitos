@@ -6,9 +6,11 @@ El resultado de una ejecución nueva se registra en su ficha de trabajo.
 
 | Área | Evidencia existente |
 | --- | --- |
+| Chat de mesa · 2026-11-06 | [Pruebas iniciales](qa/room-chat-2026-11-06.json), [rediseño y reacciones originales](qa/room-chat-design-2026-11-06.json), [alcance](work/room-chat.md) |
 | Latencia y arquitectura · 2026-11-06 | [Resultado final y límites](qa/match-performance-results.md), [referencia](work/match-performance-baseline.md) y [controles de regresión](work/match-performance-guardrails.md) |
 | Capacitor y beta gratuita en teléfonos | [Pruebas nativas y límites](work/mobile-beta.md), [servidor publicado](qa/mobile-beta-release/production-report.json) y [APK firmado](qa/mobile-beta-release/package-report.json) |
 | CI en GitHub y enlace con Render | [Pruebas, configuración y bloqueo de acceso Git](work/continuous-delivery.md) |
+| Optimización local de CI y skill · 2026-11-06 | [Validación y límites, sin publicación](qa/ci-optimization-2026-11-06.json) |
 | Consolidación en main, lobby y cartas | [Validación y respaldo de worktrees](work/workspace-consolidation.md) |
 | Base para arquitectura modular y mapas | [Fase 0 y límites de la referencia](work/modular-platform-baseline.md) |
 | Contratos de partida y construcción | [Fase 1 y pruebas de comportamiento](work/modular-platform-contracts.md) |

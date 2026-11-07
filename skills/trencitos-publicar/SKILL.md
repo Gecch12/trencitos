@@ -16,14 +16,39 @@ publicar autoriza esos pasos; su mera disponibilidad, creación o revisión no.
 
 ## Preparar la entrega
 
-- Lee `docs/production.md`, `docs/work/continuous-delivery.md` y
-  `docs/mobile-development.md` según los destinos pedidos. Usa los scripts
-  existentes de `package.json`; no inventes otro pipeline ni otra firma.
-- Identifica la revisión y los cambios incluidos. Conserva trabajo ajeno y
-  ejecuta las comprobaciones pertinentes y `node scripts/check-docs.js`.
-- Comprueba CI para el commit que se entrega. Si falla, diagnostica/corrige dentro
-  del alcance y espera su resultado. Nunca omitas CI ni confundas un run antiguo
-  correcto con la verificación de la revisión nueva.
+- Lee la entrega vigente de `docs/production.md` y las secciones operativas de
+  `docs/work/continuous-delivery.md` y `docs/mobile-development.md` según los
+  destinos pedidos. Consulta historial e informes QA solo ante una duda concreta.
+  Usa los scripts existentes de `package.json`; no inventes otro pipeline ni firma.
+- Fija revisión, versión y builds antes de iniciar CI; agrupa los cambios de
+  entrega para evitar pushes que cancelen una validación en curso. Conserva
+  trabajo ajeno y ejecuta las pruebas locales pertinentes, documentación y
+  arquitectura. No repitas localmente toda la regresión ya verificada para el
+  mismo contenido salvo cambios, fallos o una duda concreta.
+- Reutiliza un CI completo aprobado del commit exacto; si está en curso, sigue
+  ese run sin crear otro. El check final `Tests, docs and browser` debe aprobar
+  la suite Node y todos los grupos Chrome del workflow. Un run de alcance `docs` no certifica
+  el juego: elige el commit de código ya validado o ejecuta CI manual completo
+  sobre la revisión que realmente se entregará. El workflow anterior de un solo
+  job también sirve si acredita todas sus pruebas para ese commit.
+- Si CI falla, diagnostica/corrige dentro del alcance. Sin cambios de código,
+  reutiliza los jobs aprobados del mismo run y reintenta los fallidos solo cuando
+  cambie la causa; si cambia el commit, exige la validación completa nueva.
+
+## Aprovechar las esperas
+
+Mientras corre CI remoto, detecta el iPhone, prepara notas y compila/verifica los
+paquetes de la revisión fijada. Publicar Render/Release e instalar en el teléfono
+esperan al CI completo aprobado. No paralelices las sincronizaciones Android/iOS
+en este checkout: ambos scripts regeneran `mobile/bundle` y configuración iOS.
+Reutiliza las cachés de Gradle/Xcode y una ruta estable de DerivedData. Reinstala
+dependencias cuando cambie el lockfile o falte una instalación válida; reserva
+las limpiezas para fallos que las justifiquen. Un artefacto existente solo se reutiliza
+si revisión, contenido, versión/build, firma y servidor son los esperados.
+
+Consulta cada estado con esperas acotadas y registra duración de CI, compilación,
+despliegue e instalación. Distingue tiempo de ejecución de espera por dispositivo
+o servicio; no vuelvas a diagnosticar un bloqueo conocido sin evidencia nueva.
 
 ## Render
 
@@ -64,7 +89,10 @@ publiques en App Store/TestFlight salvo solicitud específica.
 
 ## Cierre y fallos
 
-Registra la entrega y evidencia real en `docs/production.md` y la ficha afectada.
+Registra la entrega y evidencia real en `docs/production.md` y la ficha afectada
+una vez terminadas las comprobaciones. El commit documental de cierre conserva
+la revisión de código entregada; su CI documental no obliga a recompilar ni
+republicar los mismos paquetes. No cambies código en ese cierre sin nueva CI.
 Informa por separado Render, APK y iPhone: revisión Live, enlace a Release y
 versión instalada. Si una parte falla, conserva lo completado y describe la
 causa concreta; reintenta solo después de corregirla o cambiar la condición.

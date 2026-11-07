@@ -25,11 +25,67 @@ habitual y un servicio; el pipeline no crea previews ni usa Supabase real.
 ## Implementación
 
 [CI](../../.github/workflows/ci.yml) usa Ubuntu 24.04, Node 26 y Chrome instalado
-por Playwright. `npm run test:ci` ejecuta los archivos Node en serie para mantener
-aislados los recursos y reducir variabilidad. Los navegadores usan servidores
-temporales; el caso remoto de cartas emplea un doble local de Supabase.
-En CI, Chrome usa SwiftShader explícito para WebGL sin GPU. Los informes y
-capturas se guardan en `.qa/ci/` y en el artefacto `browser-evidence`.
+por Playwright. Primero comprueba alcance, documentación, arquitectura y las
+regresiones del selector/resultado de CI. Para cambios funcionales lanza la suite
+Node y cuatro grupos Chrome en runners independientes. `npm run test:ci` conserva
+los archivos Node en serie para mantener aislados los recursos; cada grupo de
+navegador también mantiene sus recorridos en serie. No se elimina ninguna prueba.
+
+| Grupo Chrome | Recorridos |
+| --- | --- |
+| `identity` | perfiles, estilos, lobby, recuperación de cuenta, continuidad móvil |
+| `cards` | respuesta de robos, movimientos e historial de cartas, privacidad de robos de bots en vivo y replay |
+| `table` | chat/moderación/menciones, PWA, mesa compacta, rutas/gestos/destinos |
+| `replay` | recuento final, cartas del replay, transporte/recuperación |
+
+`fail-fast: false` conserva el resultado de los demás grupos si uno falla. El
+check final mantiene el nombre **Tests, docs and browser** y falla si un trabajo
+obligatorio falla, se cancela o se omite inesperadamente. Los navegadores usan
+servidores temporales; el caso remoto de cartas usa un doble local de Supabase.
+Los recorridos que requieren SwiftShader conservan su configuración. Informes
+y capturas se guardan en `.qa/ci/` y en cuatro artefactos
+`browser-evidence-<grupo>` durante siete días, también al fallar.
+
+[El selector](../../scripts/ci.js) compara todo el push o el PR contra su base,
+sin el límite de archivos de un filtro API. Solo texto documental conocido y
+JSON/imágenes de `docs/qa/` pueden usar alcance `docs`: ejecuta los validadores
+y las pruebas del control de CI, sin reinstalar dependencias ni repetir el juego.
+`docs/references/`, otros datos/configuración, ejecutables, código, tests y
+workflow requieren todo. Renombrar código hacia docs también requiere todo.
+Una base ausente, rango vacío o evento desconocido usa la suite completa.
+**`workflow_dispatch` siempre ejecuta todo**, incluso sobre un cierre documental.
+El resultado documental se identifica como tal y no acredita una nueva entrega
+del juego; publicar exige el CI completo del commit de código exacto.
+
+## Optimización local · 2026-11-06
+
+Ángel solicitó reducir las esperas del skill y CI conservando pruebas, sin
+publicar todavía. El reparto usa como referencia la entrega `51cb1ea`: el job
+duró 12 min 26 s, de los cuales Node consumió 3 min 6 s y Chrome 8 min 29 s.
+[Tiempos históricos](../qa/postgame-release-2026-11-06/ci-result.json).
+El tiempo nuevo depende de las colas de runners y queda pendiente de medición
+en GitHub; no se presenta una estimación como una mejora ya observada.
+
+El [skill](../../skills/trencitos-publicar/SKILL.md) reutiliza CI completo del
+commit exacto, prepara paquetes durante la espera remota, conserva las cachés y
+evita repetir compilaciones por el cierre documental. Las sincronizaciones
+móviles siguen en serie porque comparten archivos generados. La distribución
+permanece condicionada a la validación completa.
+
+[Validación local](../qa/ci-optimization-2026-11-06.json): **744/744 pruebas Node**,
+incluidos los casos nuevos de selección y fallo del CI, en 161,4 s con Node 25.6.1.
+`actionlint` 1.7.12, documentos, arquitectura y validador del skill aprobados.
+Comparación del workflow: los 13 comandos Chrome y sus variables se conservan
+exactamente, cada uno en un solo grupo; no se volvieron a ejecutar navegadores.
+Skill instalado y copia canónica idénticos. Cambios locales sin push, ejecución
+remota, despliegue, Release ni compilación/instalación móvil.
+
+Próxima verificación del pipeline: cuando se autorice subir estos cambios,
+comprobar los cinco trabajos de pruebas y el check agregado; medir duración y
+verificar por separado un cierre documental. El bloqueo Git de Render descrito
+abajo continúa independiente de esta optimización.
+
+## Ampliaciones previas
 
 La ampliación del 2026-11-06 añade `browser-profile-style.cjs` al workflow,
 con capturas en `.qa/ci/profile-style/`: selector visual, teclado, scroll táctil y

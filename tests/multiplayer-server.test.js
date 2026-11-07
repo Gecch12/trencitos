@@ -34,6 +34,38 @@ test("explicit lobby exit frees a seat and transfers starting authority", async 
   await f.b.next("lobby", m => m.members.length === 2);
   f.b.send({ type: "start" }); assert.equal((await f.b.next("state")).game.phase, "initial");
 });
+test("opening cue reserves 700 ms before the full shared selection clock and reconnect preserves it", async () => {
+  const f=await lobby();f.a.send({type:'start'});
+  const a=(await f.a.next('state')).game,b=(await f.b.next('state')).game;
+  assert.ok(a.initialRevealAt>a.serverNow);
+  assert.ok(a.initialRevealAt-a.serverNow<=700);
+  assert.equal(a.initialDeadline-a.initialRevealAt,60000);
+  assert.equal(a.turnDeadline,a.initialDeadline);assert.equal(b.initialRevealAt,a.initialRevealAt);
+  const saved=require('../backend/room-store').loadRooms(process.env.STATE_FILE).find(r=>r.code===f.la.code);
+  assert.equal(saved.game.initialRevealAt,a.initialRevealAt);
+  const c=await client();c.send({type:'join',code:f.la.code,token:f.la.token});
+  const restored=(await c.next('state')).game;
+  assert.equal(restored.initialDeadline,a.initialDeadline);assert.equal(restored.initialRevealAt,a.initialRevealAt);
+});
+test("leaving a completed game preserves its result without abandonment or replacement bots", async () => {
+  for (const type of ['leave', 'abandon']) {
+    const f=await playing();E.finish(f.r.game);
+    const result=JSON.stringify(f.r.game.result),participation=JSON.stringify(f.r.members.map(m=>m.participation));
+    f.a.send({type});const closed=await f.a.next('room_closed');
+    assert.equal(closed.message,'');assert.equal(closed.preserveIdentity,true);
+    assert.equal(!!f.r.members[0].autopilot,false);
+    assert.equal(JSON.stringify(f.r.game.result),result);
+    assert.equal(JSON.stringify(f.r.members.map(m=>m.participation)),participation);
+  }
+});
+test("a completed solo game closes without the abandoned-game notice", async () => {
+  const a=await client();a.send({type:'create',name:'A'});const lobby=await a.next('lobby');
+  a.send({type:'add_bot'});await a.next('lobby',m=>m.members.length===2);
+  a.send({type:'start'});await a.next('state');
+  const room=rooms.get(lobby.code);E.finish(room.game);const result=JSON.stringify(room.game.result);
+  a.send({type:'leave'});const closed=await a.next('room_closed');
+  assert.equal(closed.message,'');assert.equal(rooms.has(lobby.code),false);assert.equal(JSON.stringify(room.game.result),result);
+});
 test("host removal works only in lobby and invalidates the removed identity", async () => {
   const f = await lobby(); f.b.send({ type: "kick", seat: 0 }); await f.b.next("error");
   f.a.send({ type: "kick", seat: 1 }); await f.b.next("room_closed");

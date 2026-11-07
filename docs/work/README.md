@@ -51,6 +51,8 @@ Para después:
 
 Mejoras solicitadas del juego:
 
+- [Chat de mesa, moderación y referencias al mapa](room-chat.md).
+
 - [Resumen visual y cierre con recuentos](summary-postgame-experience.md).
 
 - [Continuidad móvil, cuenta y skill de publicación](mobile-continuity.md).

@@ -45,7 +45,7 @@ const report = {checks:[], errors:[], layouts:[]}; let browser;
       return {width:innerWidth,height:innerHeight,overflow:document.documentElement.scrollWidth>innerWidth,
         cards:[...document.querySelectorAll('#market button')].map(el=>({rect:rect(el),onTop:onTop(el)})),
         hand:[...document.querySelectorAll('#hand .traincard')].map(rect),clockVisible:onTop(document.querySelector('#compactClock')),
-        tools:[...document.querySelectorAll('.table-tools button:not(.hidden), #tableRules, #playerDetailsToggle, .session-controls > summary, #drawtickets')].filter(el=>el.getClientRects().length).map(el=>({rect:rect(el),onTop:onTop(el)})),
+        tools:[...document.querySelectorAll('.table-tools button:not(.hidden), #tableRules, #playerDetailsToggle, .session-controls > summary, #drawtickets')].filter(el=>el.getClientRects().length).map(el=>({id:el.id,rect:rect(el),onTop:onTop(el)})),
         sidebar:rect(document.querySelector('#gameSidebar')),dock:rect(document.querySelector('#handdock')),
         market:rect(document.querySelector('#market')),scores:rect(document.querySelector('#scores')),history:rect(document.querySelector('#history')),
         destinations:rect(document.querySelector('.dockdestinations')),handRect:rect(document.querySelector('#hand')),
@@ -56,7 +56,17 @@ const report = {checks:[], errors:[], layouts:[]}; let browser;
     assert.equal(layout.overflow,false); assert.equal(layout.cards.length,6); assert.equal(layout.hand.length,9);
     assert.ok(layout.cards.every(c=>c.rect.width>=44 && c.rect.height>=44 && c.onTop),JSON.stringify(layout));
     assert.ok(layout.hand.every(r=>r.x>=0 && r.right<=width && r.bottom<=height));
-    assert.ok(layout.tools.every(t=>t.rect.width>=44 && t.rect.height>=44 && t.onTop));
+    assert.ok(layout.tools.every(t=>t.rect.width>=44 && t.rect.height>=(t.id==='drawtickets'&&!compact?34:44) && t.onTop));
+    const stableMarket=await p.evaluate(()=>{
+      const status=document.getElementById('drawstats'),saved=status.textContent;
+      const bounds=()=>document.getElementById('market').getBoundingClientRect().toJSON();
+      status.textContent='';const empty=bounds();status.textContent='0/2';const active=bounds();
+      status.textContent='Roba una carta más';const reminder=bounds();status.textContent=saved;
+      return {empty,active,reminder};
+    });
+    assert.deepEqual(stableMarket.empty,stableMarket.active,'draw count cannot move the market');
+    assert.deepEqual(stableMarket.empty,stableMarket.reminder,'second-draw reminder cannot move the market');
+    if(!compact){const button=layout.tools.find(t=>t.id==='drawtickets').rect;assert.ok(Math.abs(button.width/layout.market.width-1/3)<.02);assert.ok(Math.abs(button.right-layout.market.right)<2);}
     assert.equal(layout.clockVisible,true,'active clock must not be clipped');
     assert.equal(layout.boardUnchanged,true,'resizing must preserve the renderer and canvas');
     assert.equal(layout.unique,true,'resizing must not duplicate controls');
@@ -85,7 +95,7 @@ const report = {checks:[], errors:[], layouts:[]}; let browser;
   assert.deepEqual(await p.locator('#tableRulesContent tr').last().locator('td').allTextContents(),['1','2','4','7','15','21']);
   await p.screenshot({path:path.join(out,'table-rules.png')});
   await p.locator('#closeTablePanel').click();
-  await p.locator('[data-panel="chat"]').click(); assert.equal(await p.locator('#tableChat input').isDisabled(),true);assert.equal(await p.locator('#tableChat button').isDisabled(),true);
+  await p.locator('[data-panel="chat"]').click(); assert.equal(await p.locator('#tableChatInput').isDisabled(),false);
   await p.screenshot({path:path.join(out,'table-chat.png')});
   await p.keyboard.press('Escape'); await p.locator('#hand').press('Enter');assert.equal(await p.locator('#tableHandDetail .traincard').count(),9);
   await p.keyboard.press('Escape');
@@ -93,7 +103,7 @@ const report = {checks:[], errors:[], layouts:[]}; let browser;
   await p.waitForSelector('#ticketMap');await p.keyboard.press('Escape');
   assert.equal(await p.locator('#overlay').isVisible(),false);
   assert.equal(await p.locator('[data-panel="destinations"]').evaluate(el=>document.activeElement===el),true);
-  report.checks.push('Rules derive match values; chat opens with disabled composer; keyboard opens full hand and Escape closes panels');
+  report.checks.push('Rules derive match values; chat opens with enabled composer; keyboard opens full hand and Escape closes panels');
   const count=g.players[0].hand.length;
   await p.locator('#drawblind').click(); await p.waitForFunction(()=>game.drawCount===1 && !pendingAction);
   assert.equal(g.players[0].hand.length,count+1); assert.match(await p.locator('#drawstats').innerText(),/Roba una carta más/);
